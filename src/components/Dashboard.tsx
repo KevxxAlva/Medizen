@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { Link } from "@tanstack/react-router";
 import { 
-  Search, Bell, Settings, MoreHorizontal, MapPin, Edit2, ChevronDown, ChevronLeft, ChevronRight, Users, CalendarClock, Plus, Check
+  Search, Bell, Settings, MoreHorizontal, MapPin, Edit2, ChevronDown, ChevronLeft, ChevronRight, Users, CalendarClock, Plus, Check, Clock
 } from "lucide-react";
 import { useAuthSession, useRoles } from "@/hooks/useAuth";
 import { useMyProfile, useDoctors } from "@/lib/api/profiles";
@@ -95,6 +95,32 @@ function DonutChart({ percentage }: { percentage: number }) {
 
 export function Dashboard() {
   const { user } = useAuthSession();
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formattedTime = useMemo(() => {
+    return currentTime.toLocaleTimeString("es-VE", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    });
+  }, [currentTime]);
+
+  const formattedDate = useMemo(() => {
+    return currentTime.toLocaleDateString("es-VE", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    });
+  }, [currentTime]);
+
   const { data: roles = [] } = useRoles();
   const { data: profile } = useMyProfile(user?.id);
   const { data: doctors = [] } = useDoctors();
@@ -318,15 +344,45 @@ export function Dashboard() {
     <div className="min-h-full bg-muted/50 rounded-[2rem] p-4 md:p-8 font-sans text-foreground">
       {/* Header Bar */}
       <header className="flex flex-wrap items-center justify-between gap-4 mb-8">
-        <div id="search-bar" className="relative w-full max-w-sm flex items-center bg-card rounded-full px-4 py-2.5 shadow-sm">
-          <Search className="h-4 w-4 text-muted-foreground shrink-0" />
-          <input 
-            type="text" 
-            placeholder="Search for events, patients etc." 
-            className="w-full bg-transparent outline-none pl-3 text-sm placeholder:text-muted-foreground text-foreground"
-          />
-        </div>
-        <div className="flex items-center gap-4">
+        <button 
+          id="search-bar" 
+          type="button"
+          onClick={() => {
+            document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true }));
+          }}
+          className="relative w-full max-w-sm flex items-center justify-between bg-card rounded-full px-4 py-2.5 shadow-sm text-left hover:bg-muted/40 transition-colors cursor-pointer group focus:outline-none focus:ring-2 focus:ring-primary/20"
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <Search className="h-4 w-4 text-muted-foreground shrink-0 group-hover:text-primary transition-colors" />
+            <span className="text-sm text-muted-foreground truncate">Buscar pacientes, citas o acciones...</span>
+          </div>
+          <kbd className="hidden sm:inline-flex items-center text-[10px] font-bold text-muted-foreground bg-muted/80 px-2 py-0.5 rounded-full border border-border/50 shrink-0">
+            Ctrl + K
+          </kbd>
+        </button>
+        <div className="flex items-center gap-3">
+          {/* Reloj en Tiempo Real */}
+          <div 
+            className="flex items-center gap-2.5 bg-card rounded-full px-3.5 py-2 shadow-sm border border-border/40 text-foreground transition-all hover:border-primary/30 select-none"
+            title={currentTime.toLocaleDateString("es-VE", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+          >
+            <div className="relative flex items-center justify-center shrink-0">
+              <Clock className="h-4 w-4 text-primary" />
+              <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 font-mono">
+              <span className="hidden lg:inline text-[11px] font-medium text-muted-foreground uppercase tracking-tight">
+                {formattedDate} •
+              </span>
+              <span className="text-xs font-bold tabular-nums text-foreground tracking-wider uppercase">
+                {formattedTime}
+              </span>
+            </div>
+          </div>
+
           <Popover>
             <PopoverTrigger asChild>
               <button className="flex items-center justify-center h-10 w-10 bg-card rounded-full shadow-sm text-primary relative transition hover:bg-muted focus:outline-none">
@@ -381,10 +437,10 @@ export function Dashboard() {
           <div className="relative bg-gradient-to-br from-primary to-primary/80 rounded-3xl p-8 overflow-hidden text-primary-foreground shadow-xl shadow-primary/20 flex justify-between items-center h-48 border border-white/10">
             <div className="relative z-10">
               <div className="flex items-center gap-2 bg-black/10 w-max px-3 py-1.5 rounded-full backdrop-blur-md mb-4 border border-white/10 shadow-sm">
-                <span className="text-xs font-medium">📅 {today.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} {today.toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit' })}</span>
+                <span className="text-xs font-medium">📅 {currentTime.toLocaleDateString("es-ES", { month: "short", day: "numeric", year: "numeric" })} {formattedTime}</span>
               </div>
               <h1 className="font-display text-4xl font-bold mb-1 tracking-tight">¡Buen día, {displayName}!</h1>
-              <p className="text-primary-foreground/90 font-medium">¡Que tengas un excelente {today.toLocaleDateString("es-ES", { weekday: "long" })}!</p>
+              <p className="text-primary-foreground/90 font-medium">¡Que tengas un excelente {currentTime.toLocaleDateString("es-ES", { weekday: "long" })}!</p>
             </div>
             
             {/* Abstract Doctor Illustration using CSS/Icons */}
