@@ -26,7 +26,7 @@ Este directorio contiene la documentación formal completa y rigurosa del Proyec
 ### 🎓 Ficha Académica del Proyecto
 
 * **Título Oficial**:  
-  `DESARROLLO DE UN SISTEMA WEB PARA LA GESTIÓN DE HISTORIAS CLÍNICAS GINECOLÓGICAS Y CONTROL OPERATIVO EN EL CONSULTORIO FEMESALUD, VALLE DE LA PASCUA ESTADO GUÁRICO`
+  `DESARROLLO DE UN SISTEMA WEB MEDIZEN PARA LA GESTIÓN DE HISTORIAS CLÍNICAS MULTIESPECIALIDAD Y CONTROL OPERATIVO EN LA CLÍNICA FEMESALUD, VALLE DE LA PASCUA ESTADO GUÁRICO`
 * **Institución**: Universidad Politécnica Territorial de los Llanos "Juana Ramírez" (UPTLLJR).
 * **Programa Académico**: PNF en Informática.
 * **Trayecto**: Trayecto III (Ingeniería en Informática).
@@ -34,6 +34,6 @@ Este directorio contiene la documentación formal completa y rigurosa del Proyec
   * Kevin Quintero, C.I. V-32.276.060
   * Charlys Villarroel, C.I. V-32.337.825
 * **Tutor Académico**: Prof. José Pérez
-* **Organización / Centro Asistencial**: Clínica FemeSalud / Dra. Carli Sole (Especialista en Ginecología y Obstetricia).
+* **Organización / Centro Asistencial**: Clínica FemeSalud / Dra. Carli Sole (y equipo médico) (Especialista en Múltiples Especialidades Médicas).
 * **Ubicación**: Casco Central de Valle de la Pascua, Municipio Autónomo Leonardo Infante, Estado Guárico.
 * **Fecha de Presentación**: Valle de la Pascua, Abril de 2026.

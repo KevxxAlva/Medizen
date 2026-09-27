@@ -13,7 +13,7 @@
 
 <br><br><br>
 
-### **DESARROLLO DE UN SISTEMA WEB PARA LA GESTIÓN DE HISTORIAS CLÍNICAS GINECOLÓGICAS Y CONTROL OPERATIVO EN EL CONSULTORIO FEMESALUD, VALLE DE LA PASCUA ESTADO GUÁRICO**
+### **DESARROLLO DE UN SISTEMA WEB MEDIZEN PARA LA GESTIÓN DE HISTORIAS CLÍNICAS MULTIESPECIALIDAD Y CONTROL OPERATIVO EN LA CLÍNICA FEMESALUD, VALLE DE LA PASCUA ESTADO GUÁRICO**
 
 <br><br>
 *(Carátula Oficial: Color Azul Oscuro)*  
@@ -47,7 +47,7 @@ Prof. José Pérez
 
 <br><br>
 
-### **DESARROLLO DE UN SISTEMA WEB PARA LA GESTIÓN DE HISTORIAS CLÍNICAS GINECOLÓGICAS Y CONTROL OPERATIVO EN EL CONSULTORIO FEMESALUD, VALLE DE LA PASCUA ESTADO GUÁRICO**
+### **DESARROLLO DE UN SISTEMA WEB MEDIZEN PARA LA GESTIÓN DE HISTORIAS CLÍNICAS MULTIESPECIALIDAD Y CONTROL OPERATIVO EN LA CLÍNICA FEMESALUD, VALLE DE LA PASCUA ESTADO GUÁRICO**
 
 <br>
 
@@ -63,8 +63,8 @@ Charlys Villarroel, C.I. V-32.337.825
 Prof. José Pérez  
 
 **Asesora Comunitaria / Institucional:**  
-Dra. Carli Sole  
-*(Especialista en Ginecología y Obstetricia - Clínica FemeSalud)*  
+Dra. Carli Sole (y equipo médico)  
+*(Especialista en Múltiples Especialidades Médicas - Clínica FemeSalud)*  
 
 <br><br>
 
@@ -82,7 +82,7 @@ Dra. Carli Sole
 
 En atención a lo dispuesto en la normativa académica vigente y según lo establecido por el Consejo Universitario de la **UNIVERSIDAD POLITÉCNICA TERRITORIAL DE LOS LLANOS "JUANA RAMÍREZ" (UPTLLJR)** en la sesión extraordinaria N.º 029 de fecha 03 de marzo de 2026, los abajo firmantes, designados como miembros del Jurado Evaluador del Proyecto Socio-Integrador titulado:
 
-> **"DESARROLLO DE UN SISTEMA WEB PARA LA GESTIÓN DE HISTORIAS CLÍNICAS GINECOLÓGICAS Y CONTROL OPERATIVO EN EL CONSULTORIO FEMESALUD, VALLE DE LA PASCUA ESTADO GUÁRICO"**
+> **"DESARROLLO DE UN SISTEMA WEB MEDIZEN PARA LA GESTIÓN DE HISTORIAS CLÍNICAS MULTIESPECIALIDAD Y CONTROL OPERATIVO EN LA CLÍNICA FEMESALUD, VALLE DE LA PASCUA ESTADO GUÁRICO"**
 
 Presentado por los estudiantes cursantes del Programa Nacional de Formación en Informática (Trayecto III):
 * **Kevin Quintero**, Cédula de Identidad: **V-32.276.060**
@@ -133,7 +133,7 @@ A la **Universidad Politécnica Territorial de los Llanos "Juana Ramírez" (UPTL
 
 A nuestro Tutor Académico, el **Prof. José Pérez**, por su asesoría metodológica permanente, paciencia, dedicación e invaluables orientaciones técnicas que permitieron darle forma y rigor científico a cada una de las fases de este proyecto.
 
-A la **Dra. Carli Sole** y al equipo de la **Clínica FemeSalud**, por abrirnos generosamente las puertas de su consultorio, depositar su plena confianza en nuestra propuesta tecnológica, brindar su tiempo y suministrar los requerimientos clínicos esenciales para la concepción y puesta en marcha del sistema.
+A la **Dra. Carli Sole (y equipo médico)** y al equipo de la **Clínica FemeSalud**, por abrirnos generosamente las puertas de su consultorio, depositar su plena confianza en nuestra propuesta tecnológica, brindar su tiempo y suministrar los requerimientos clínicos esenciales para la concepción y puesta en marcha del sistema.
 
 A nuestros profesores y facilitadores universitarios, que con su vocación y ejemplo pedagógico nos inspiraron a emplear las tecnologías de la información como motores de desarrollo comunitario y bienestar social.
 
@@ -187,7 +187,7 @@ FASE II: REVISIÓN LITERARIA (EL SOPORTE CIENTÍFICO) ..........................
     Antecedentes Nacionales y Regionales ....................................... 21
   Bases Teóricas ............................................................... 23
     Sistemas de Información en Salud y Expedientes Clínicos Electrónicos ....... 23
-    Flujos Especializados en Ginecología y Obstetricia ......................... 24
+    Flujos Especializados en Múltiples Especialidades Médicas ......................... 24
     Arquitectura Web Moderna: React 19, TypeScript y Vite ...................... 25
     Backend-as-a-Service, PostgreSQL y Políticas de Seguridad RLS .............. 26
     Seguridad Criptográfica en Clientes: Web Crypto API, PBKDF2 y AES-GCM ...... 27
@@ -238,7 +238,7 @@ ANEXOS .........................................................................
 
 | Número | Título | Pág. |
 | :--- | :--- | :---: |
-| **Tabla 1** | *Matriz FODA del Consultorio FemeSalud* | 7 |
+| **Tabla 1** | *Matriz FODA del Clínica FemeSalud* | 7 |
 | **Tabla 2** | *Tabla de Priorización y Jerarquización de Necesidades* | 8 |
 | **Tabla 3** | *Matriz de Marco Lógico (MML) del Proyecto* | 13 |
 | **Tabla 4** | *Matriz de Operacionalización de Variables* | 33 |
@@ -262,17 +262,17 @@ ANEXOS .........................................................................
 
 | Número | Título | Pág. |
 | :--- | :--- | :---: |
-| **Figura 1** | *Croquis de Ubicación Geográfica del Consultorio FemeSalud* | 4 |
+| **Figura 1** | *Croquis de Ubicación Geográfica del Clínica FemeSalud* | 4 |
 | **Figura 2** | *Árbol de Problemas del Control Clínico en FemeSalud* | 9 |
-| **Figura 3** | *Árbol de Objetivos del Sistema Web FemeSalud* | 12 |
+| **Figura 3** | *Árbol de Objetivos del Sistema Web MediZen* | 12 |
 | **Figura 4** | *Pirámide de Kelsen Aplicada al Marco Legal del Software Clínico* | 29 |
-| **Figura 5** | *Diagrama de Casos de Uso General del Sistema FemeSalud* | 46 |
-| **Figura 6** | *Diagrama de Actividades: Flujo Integral de Consulta Gineco-Obstétrica* | 47 |
+| **Figura 5** | *Diagrama de Casos de Uso General del Sistema MediZen* | 46 |
+| **Figura 6** | *Diagrama de Actividades: Flujo Integral de Consulta Médica Integral* | 47 |
 | **Figura 7** | *Diagrama de Secuencia: Desbloqueo Seguro mediante Bóveda PIN Cifrada* | 48 |
 | **Figura 8** | *Diagrama Entidad-Relación de la Base de Datos (PostgreSQL / Supabase)* | 52 |
 | **Figura 9** | *Interfaz de Desbloqueo Rápido por PIN de 4 Dígitos en Móvil y Escritorio* | 53 |
 | **Figura 10** | *Tablero de Control Operativo y Estadísticas Clínicas en Tiempo Real* | 54 |
-| **Figura 11** | *Módulo de Historia Clínica Digital Especializada en Ginecología y Obstetricia* | 54 |
+| **Figura 11** | *Módulo de Historia Clínica Digital Especializada en Múltiples Especialidades Médicas* | 54 |
 | **Figura 12** | *Agenda Médica Interactiva con Sincronización WebSockets en Tiempo Real* | 55 |
 | **Figura 13** | *Diseñador Visual y Generador de Récipes Médicos Oficiales en PDF* | 55 |
 | **Figura 14** | *Diagrama de Arquitectura de Software en Capas de la Solución Web* | 56 |
@@ -287,11 +287,11 @@ ANEXOS .........................................................................
 
 | Número | Título | Pág. |
 | :--- | :--- | :---: |
-| **Anexo A** | *Guía de Entrevista Aplicada a la Especialista Médica (Dra. Carli Sole)* | 76 |
+| **Anexo A** | *Guía de Entrevista Aplicada a la Especialista Médica (Dra. Carli Sole (y equipo médico))* | 76 |
 | **Anexo B** | *Cuestionario de Usabilidad y Evaluación Tecnológica (Escala Likert)* | 78 |
 | **Anexo C** | *Instrumento de Validación por Juicio de Expertos de la UPTLLJR* | 80 |
 | **Anexo D** | *Carta de Aceptación y Aval Comunitario de la Clínica FemeSalud* | 82 |
-| **Anexo E** | *Manual Rápido de Usuario del Sistema Web FemeSalud* | 83 |
+| **Anexo E** | *Manual Rápido de Usuario del Sistema Web MediZen* | 83 |
 
 <div style="page-break-after: always;"></div>
 
@@ -308,7 +308,7 @@ ANEXOS .........................................................................
 
 <br>
 
-### **DESARROLLO DE UN SISTEMA WEB PARA LA GESTIÓN DE HISTORIAS CLÍNICAS GINECOLÓGICAS Y CONTROL OPERATIVO EN EL CONSULTORIO FEMESALUD, VALLE DE LA PASCUA ESTADO GUÁRICO**
+### **DESARROLLO DE UN SISTEMA WEB MEDIZEN PARA LA GESTIÓN DE HISTORIAS CLÍNICAS MULTIESPECIALIDAD Y CONTROL OPERATIVO EN LA CLÍNICA FEMESALUD, VALLE DE LA PASCUA ESTADO GUÁRICO**
 
 <br>
 
@@ -322,9 +322,9 @@ ANEXOS .........................................................................
 
 </div>
 
-El presente proyecto socio-integrador tuvo como propósito fundamental desarrollar un sistema web para la gestión integral de historias clínicas ginecológicas y el control operativo en el consultorio privado Clínica FemeSalud, bajo la dirección de la Dra. Carli Sole en Valle de la Pascua, estado Guárico. La investigación se enmarcó dentro de la línea de investigación de Desarrollo de Soluciones Informáticas del PNF en Informática de la UPTLLJR. Epistemológicamente, se sustentó en el paradigma sociocrítico con enfoque mixto, adoptando la metodología de Investigación Acción Participativa (IAP) combinada con la modalidad de Proyecto Factible. El diseño de la investigación fue de campo, descriptivo y no experimental. La población y muestra se constituyó bajo un criterio no probabilístico intencional conformada por el personal médico y administrativo del consultorio ($n=3$). Como técnicas de recolección de datos se emplearon la entrevista semiestructurada, la observación directa participante y la revisión documental, utilizando guías de entrevista y matrices de requerimientos técnicos validadas mediante juicio de tres expertos. El sistema fue desarrollado sobre una arquitectura cliente-servidor de última generación, utilizando React 19, TypeScript, Tailwind CSS y Supabase (PostgreSQL y WebSockets en tiempo real), complementado con una bóveda criptográfica local (Web Crypto API, PBKDF2 y AES-GCM) para el desbloqueo rápido por PIN de 4 dígitos y un motor automatizado de generación de récipes en PDF con jsPDF. La evaluación funcional evidenció una disminución del 68% en el tiempo de llenado de consultas, erradicación total del extravío de expedientes físicos y agilización de la agenda médica en tiempo real, garantizando una administración clínica segura, eficiente y moderna.
+El presente proyecto socio-integrador tuvo como propósito fundamental desarrollar un sistema web para la gestión integral de historias clínicas médicas multiespecialidad y el control operativo en la clínica privado Clínica FemeSalud, bajo la dirección de la Dra. Carli Sole (y equipo médico) en Valle de la Pascua, estado Guárico. La investigación se enmarcó dentro de la línea de investigación de Desarrollo de Soluciones Informáticas del PNF en Informática de la UPTLLJR. Epistemológicamente, se sustentó en el paradigma sociocrítico con enfoque mixto, adoptando la metodología de Investigación Acción Participativa (IAP) combinada con la modalidad de Proyecto Factible. El diseño de la investigación fue de campo, descriptivo y no experimental. La población y muestra se constituyó bajo un criterio no probabilístico intencional conformada por el personal médico y administrativo de la clínica ($n=3$). Como técnicas de recolección de datos se emplearon la entrevista semiestructurada, la observación directa participante y la revisión documental, utilizando guías de entrevista y matrices de requerimientos técnicos validadas mediante juicio de tres expertos. El sistema fue desarrollado sobre una arquitectura cliente-servidor de última generación, utilizando React 19, TypeScript, Tailwind CSS y Supabase (PostgreSQL y WebSockets en tiempo real), complementado con una bóveda criptográfica local (Web Crypto API, PBKDF2 y AES-GCM) para el desbloqueo rápido por PIN de 4 dígitos y un motor automatizado de generación de récipes en PDF con jsPDF. La evaluación funcional evidenció una disminución del 68% en el tiempo de llenado de consultas, erradicación total del extravío de expedientes físicos y agilización de la agenda médica en tiempo real, garantizando una administración clínica segura, eficiente y moderna.
 
-*Palabras clave:* historias clínicas electrónicas, ginecología y obstetricia, sistema web, criptografía local, supabase, react 19.
+*Palabras clave:* historias clínicas electrónicas, múltiples especialidades médicas, sistema web, criptografía local, supabase, react 19.
 
 <div style="page-break-after: always;"></div>
 
@@ -336,9 +336,9 @@ El presente proyecto socio-integrador tuvo como propósito fundamental desarroll
 
 En la contemporaneidad, la integración de las tecnologías de la información y la comunicación (TIC) ha redefinido radicalmente la gestión operativa y asistencial de los servicios de salud a escala global. Los sistemas de información clínica (HIS, por sus siglas en inglés *Hospital Information Systems*) y los registros médicos electrónicos (EHR) se han consolidado como herramientas indispensables para superar las severas limitaciones impuestas por los métodos manuales basados en papel, los cuales acarrean riesgos inminentes de deterioro físico, pérdida documental, lentitud en el acceso a antecedentes y falta de confidencialidad en los datos sensibles de los pacientes. En este contexto, el Programa Nacional de Formación (PNF) en Informática de la Universidad Politécnica Territorial de los Llanos "Juana Ramírez" (UPTLLJR) concibe la ingeniería de software y la investigación aplicada como vehículos estratégicos para dar respuesta a necesidades tangibles de las comunidades y unidades socioproductivas venezolanas.
 
-Dentro del ámbito de la medicina privada en la ciudad de Valle de la Pascua, estado Guárico, el consultorio médico de la Clínica FemeSalud, encabezado por la especialista en Ginecología y Obstetricia Dra. Carli Sole, brinda atención médica fundamental a un significativo número de pacientes de la entidad llanera. No obstante, las dinámicas operativas diarias vinculadas al agendamiento de turnos, el registro de evoluciones ginecológicas y prenatales, la redacción manual de prescripciones y la conciliación de honorarios médicos se ven afectadas por la dispersión de la información y la carencia de una plataforma tecnológica centralizada, flexible y adaptada a la velocidad exigida durante el acto médico.
+Dentro del ámbito de la medicina privada en la ciudad de Valle de la Pascua, estado Guárico, la clínica médico de la Clínica FemeSalud, encabezado por la especialista en Múltiples Especialidades Médicas Dra. Carli Sole (y equipo médico), brinda atención médica fundamental a un significativo número de pacientes de la entidad llanera. No obstante, las dinámicas operativas diarias vinculadas al agendamiento de turnos, el registro de evoluciones médicas multiespecialidad y prenatales, la redacción manual de prescripciones y la conciliación de honorarios médicos se ven afectadas por la dispersión de la información y la carencia de una plataforma tecnológica centralizada, flexible y adaptada a la velocidad exigida durante el acto médico.
 
-Frente a este escenario, surge la presente investigación cuyo propósito general es desarrollar un sistema web de vanguardia para la gestión de historias clínicas ginecológicas y el control operativo en el consultorio FemeSalud. La solución tecnológica no solo automatiza el flujo documental del consultorio, sino que incorpora estándares contemporáneos de experiencia de usuario (*Mobile-First*), sincronización en tiempo real mediante WebSockets y un robusto mecanismo de autenticación rápida mediante bóveda local criptográfica cifrada con los estándares `PBKDF2` y `AES-GCM` de 256 bits, garantizando la inviolabilidad del secreto médico y facilitando la labor diaria del personal médico-asistencial.
+Frente a este escenario, surge la presente investigación cuyo propósito general es desarrollar un sistema web de vanguardia para la gestión de historias clínicas médicas multiespecialidad y el control operativo en el clínica FemeSalud. La solución tecnológica no solo automatiza el flujo documental de la clínica, sino que incorpora estándares contemporáneos de experiencia de usuario (*Mobile-First*), sincronización en tiempo real mediante WebSockets y un robusto mecanismo de autenticación rápida mediante bóveda local criptográfica cifrada con los estándares `PBKDF2` y `AES-GCM` de 256 bits, garantizando la inviolabilidad del secreto médico y facilitando la labor diaria del personal médico-asistencial.
 
 El informe escrito se encuentra estructurado rigurosamente en cuatro fases procedimentales de conformidad con las normativas académicas de la institución:
 
@@ -367,7 +367,7 @@ La Fase I constituye el punto de partida del Proyecto Socio-Integrador, cuyo pro
 ## Descripción del Contexto
 
 ### Localización Geográfica
-El proyecto socio-integrador se localiza en la **Clínica FemeSalud**, consultorio de atención médica ginecológica y obstétrica bajo la responsabilidad de la **Dra. Carli Sole**, ubicado en el casco central de la ciudad de **Valle de la Pascua**, Parroquia Valle de la Pascua, Municipio Autónomo Leonardo Infante del Estado Bolivariano de Guárico.
+El proyecto socio-integrador se localiza en la **Clínica FemeSalud**, consultorio de atención médica médica multiespecialidad y obstétrica bajo la responsabilidad de la **Dra. Carli Sole (y equipo médico)**, ubicado en el casco central de la ciudad de **Valle de la Pascua**, Parroquia Valle de la Pascua, Municipio Autónomo Leonardo Infante del Estado Bolivariano de Guárico.
 
 * **Límites territoriales del sector**:
   * *Norte*: Avenida Las Industrias y urbanizaciones residenciales adyacentes.
@@ -377,30 +377,30 @@ El proyecto socio-integrador se localiza en la **Clínica FemeSalud**, consultor
 * **Coordenadas y acceso**: La ubicación céntrica cuenta con acceso peatonal y vehicular consolidado, cercanía a redes de transporte público urbano y articulación con centros asistenciales, farmacias y laboratorios clínicos de la zona central de la ciudad.
 
 ### Dimensión Histórica
-El consultorio médico de la Dra. Carli Sole surge como una iniciativa profesional orientada a cubrir la alta demanda de atención médico-quirúrgica y preventiva en las especialidades de Ginecología y Obstetricia en Valle de la Pascua y poblaciones circunvecinas del oriente del estado Guárico (Tucupido, Zaraza, El Socorro, Santa María de Ipire). A lo largo de su ejercicio profesional, la Dra. Carli Sole consolidó la marca asistencial **FemeSalud**, orientada a proporcionar una atención cálida, humanizada y tecnificada a la mujer en las distintas etapas de su ciclo biológico: adolescencia, preconcepción, embarazo, puerperio y climaterio. Históricamente, el consultorio gestionó la información médica de sus pacientes en cuadernos foliados, carpetas de manila y talonarios de récipes impresos tradicionales, esquema que con el incremento del volumen de pacientes comenzó a evidenciar retrasos, duplicidad y desgastes físicos de los expedientes.
+La clínica médico de la Dra. Carli Sole (y equipo médico) surge como una iniciativa profesional orientada a cubrir la alta demanda de atención médico-quirúrgica y preventiva en las especialidades de Múltiples Especialidades Médicas en Valle de la Pascua y poblaciones circunvecinas del oriente del estado Guárico (Tucupido, Zaraza, El Socorro, Santa María de Ipire). A lo largo de su ejercicio profesional, la Dra. Carli Sole (y equipo médico) consolidó la marca asistencial **FemeSalud**, orientada a proporcionar una atención cálida, humanizada y tecnificada a la pacientes en sus distintas etapas de su ciclo biológico: adolescencia, preconcepción, embarazo, puerperio y climaterio. Históricamente, la clínica gestionó la información médica de sus pacientes en cuadernos foliados, carpetas de manila y talonarios de récipes impresos tradicionales, esquema que con el incremento del volumen de pacientes comenzó a evidenciar retrasos, duplicidad y desgastes físicos de los expedientes.
 
 ### Dimensión Comunitaria
-Desde el punto de vista comunitario, la Clínica FemeSalud se articula directamente con la comunidad de usuarias de la entidad. Las pacientes provienen de diversos estratos sociales que acuden en búsqueda de diagnósticos tempranos, control prenatal exhaustivo y pesquisa de patologías ginecológicas mediante citología y ecografía. La clínica mantiene vínculos de comunicación directa a través de canales de mensajería instantánea y telefonía móvil, a través de los cuales las pacientes gestionan información sobre disponibilidad de citas, seguimiento de tratamientos y entrega de récipes o constancias médicas.
+Desde el punto de vista comunitario, la Clínica FemeSalud se articula directamente con la comunidad de usuarias de la entidad. Las pacientes provienen de diversos estratos sociales que acuden en búsqueda de diagnósticos tempranos, evaluación clínica exhaustiva y pesquisa de patologías médicas multiespecialidad mediante exámenes especializados y estudios por imágenes. La clínica mantiene vínculos de comunicación directa a través de canales de mensajería instantánea y telefonía móvil, a través de los cuales las pacientes gestionan información sobre disponibilidad de citas, seguimiento de tratamientos y entrega de récipes o constancias médicas.
 
 ### Dimensión Económica
-La organización se inscribe en el sector terciario de la economía regional, prestando servicios médicos privados de salud. Su modelo operativo sustenta los costos de personal auxiliar, suministros médicos (espéculos descartables, gel conductor, papel térmico para ecógrafos, guantes estériles) y mantenimiento de equipos diagnósticos de alta tecnología. La dinámica económica regional exige manejar esquemas de facturación y cobranza multimoneda (Bolívares soberanos a través de Pago Móvil/transferencias bancarias y Divisas en efectivo o plataformas electrónicas como Zelle), requiriendo un control estricto de caja chica, flujo de ingresos diarios y control de insumos consumibles.
+La organización se inscribe en el sector terciario de la economía regional, prestando servicios médicos privados de salud. Su modelo operativo sustenta los costos de personal auxiliar, suministros médicos (material médico descartable, insumos generales y equipos de diagnóstico) y mantenimiento de equipos diagnósticos de alta tecnología. La dinámica económica regional exige manejar esquemas de facturación y cobranza multimoneda (Bolívares soberanos a través de Pago Móvil/transferencias bancarias y Divisas en efectivo o plataformas electrónicas como Zelle), requiriendo un control estricto de caja chica, flujo de ingresos diarios y control de insumos consumibles.
 
 ### Dimensión Social
-La población beneficiaria directa está constituida por mujeres y familias del municipio Leonardo Infante. La atención oportuna de la salud sexual y reproductiva incide directamente en la reducción de tasas de morbimortalidad materna e infantil, el diagnóstico precoz de lesiones precursoras del cáncer de cuello uterino y la detección temprana de anomalías fetales. Al no existir una plataforma digital que agilice los expedientes clínicos, las pacientes experimentan tiempos de espera prolongados en sala, lo que dificulta la conciliación de su jornada laboral con la atención médica.
+La población beneficiaria directa está constituida por pacientes y familias del municipio Leonardo Infante. La atención oportuna de la salud integral incide directamente en la reducción de tasas de morbimortalidad general, el diagnóstico precoz de lesiones precursoras del patologías severas y prevención de enfermedades crónicas. Al no existir una plataforma digital que agilice los expedientes clínicos, las pacientes experimentan tiempos de espera prolongados en sala, lo que dificulta la conciliación de su jornada laboral con la atención médica.
 
 ### Dimensión Cultural
-En la región llanera venezolana, la salud ginecológica y reproductiva ha estado históricamente rodeada de temores, prejuicios culturales y vacilaciones que retardan la consulta preventiva. FemeSalud promueve un cambio de paradigma cultural donde la consulta ginecológica es un espacio de confianza, empatía, confidencialidad y educación sanitaria. Para consolidar esta visión cultural, resulta imperativo que la paciente reciba información clara, récipes legibles y una atención ágil que dignifique el acto médico.
+En la región llanera venezolana, la salud médica multiespecialidad y reproductiva ha estado históricamente rodeada de temores, prejuicios culturales y vacilaciones que retardan la consulta preventiva. FemeSalud promueve un cambio de paradigma cultural donde la consulta médica multiespecialidad es un espacio de confianza, empatía, confidencialidad y educación sanitaria. Para consolidar esta visión cultural, resulta imperativo que la paciente reciba información clara, récipes legibles y una atención ágil que dignifique el acto médico.
 
 ### Dimensión Ambiental
-El ejercicio de la medicina ambulatoria genera desechos físicos de naturaleza biológica y administrativa. En el orden administrativo, el uso masivo de papel para carpetas de historias clínicas, fichas de citas, récipes, notas manuscritas y talonarios de cobro genera un volumen acumulado de residuos sólidos y una huella ecológica evitable. La sustitución de expedientes impresos por una plataforma digital web con emisión de constancias y prescripciones en formato digital (PDF) enviado por canales electrónicos representa un salto cualitativo hacia la sustentabilidad ambiental y la reducción del consumo papelero dentro del consultorio.
+El ejercicio de la medicina ambulatoria genera desechos físicos de naturaleza biológica y administrativa. En el orden administrativo, el uso masivo de papel para carpetas de historias clínicas, fichas de citas, récipes, notas manuscritas y talonarios de cobro genera un volumen acumulado de residuos sólidos y una huella ecológica evitable. La sustitución de expedientes impresos por una plataforma digital web con emisión de constancias y prescripciones en formato digital (PDF) enviado por canales electrónicos representa un salto cualitativo hacia la sustentabilidad ambiental y la reducción del consumo papelero dentro de la clínica.
 
 ### Dimensión Institucional
-El consultorio opera bajo el marco regulatorio del Ministerio del Poder Popular para la Salud (MPPS), la Contraloría Sanitaria y el Colegio de Médicos del Estado Guárico. Asimismo, el proyecto socio-integrador formaliza un canal de cooperación interinstitucional entre la unidad de salud privada y la Universidad Politécnica Territorial de los Llanos "Juana Ramírez" (UPTLLJR), a través de su Departamento de Informática, propiciando la transferencia tecnológica, el desarrollo endógeno de soluciones informáticas y el cumplimiento de las metas curriculares de formación profesional.
+La clínica opera bajo el marco regulatorio del Ministerio del Poder Popular para la Salud (MPPS), la Contraloría Sanitaria y el Colegio de Médicos del Estado Guárico. Asimismo, el proyecto socio-integrador formaliza un canal de cooperación interinstitucional entre la unidad de salud privada y la Universidad Politécnica Territorial de los Llanos "Juana Ramírez" (UPTLLJR), a través de su Departamento de Informática, propiciando la transferencia tecnológica, el desarrollo endógeno de soluciones informáticas y el cumplimiento de las metas curriculares de formación profesional.
 
 ### Actores Involucrados
-1. **Dra. Carli Sole (Médico Especialista - Asesora Institucional)**: Responsable de la consulta médica, diagnóstico, evaluación ecográfica, prescripción de tratamientos, definición de requerimientos clínicos y validación del sistema.
+1. **Dra. Carli Sole (y equipo médico) (Médico Especialista - Asesora Institucional)**: Responsable de la consulta médica, diagnóstico, evaluación ecográfica, prescripción de tratamientos, definición de requerimientos clínicos y validación del sistema.
 2. **Personal Auxiliar y Asistente Administrativo**: Encargado de la recepción presencial de pacientes, confirmación de citas, apertura inicial de fichas demográficas y control de pagos y cobranza.
-3. **Comunidad de Pacientes Usuarias**: Receptores de los servicios clínicos, citas programadas, prescripciones médicas y seguimiento prenatal.
+3. **Comunidad de Pacientes Usuarias**: Receptores de los servicios clínicos, citas programadas, prescripciones médicas y seguimiento clínico continuo.
 4. **Investigadores del PNF en Informática (Kevin Quintero y Charlys Villarroel)**: Responsables de la captura de requerimientos, diseño conceptual y lógico, desarrollo de la arquitectura web, aseguramiento de la calidad del software, despliegue y adiestramiento técnico.
 5. **Tutor Académico (Prof. José Pérez)**: Coordinador y evaluador del rigor metodológico, científico y técnico exigido por la UPTLLJR.
 
@@ -408,14 +408,14 @@ El consultorio opera bajo el marco regulatorio del Ministerio del Poder Popular 
 
 ## Diagnóstico Situacional
 
-Para diagnosticar con rigor técnico y participativo la situación operativa y de gestión de datos en el consultorio, se aplicó la técnica de la matriz de Fortalezas, Oportunidades, Debilidades y Amenazas (FODA) en sesiones de trabajo conjunto entre el equipo de desarrollo de la UPTLLJR y la Dra. Carli Sole.
+Para diagnosticar con rigor técnico y participativo la situación operativa y de gestión de datos en la clínica, se aplicó la técnica de la matriz de Fortalezas, Oportunidades, Debilidades y Amenazas (FODA) en sesiones de trabajo conjunto entre el equipo de desarrollo de la UPTLLJR y la Dra. Carli Sole (y equipo médico).
 
 **Tabla 1**  
-*Matriz FODA del Consultorio FemeSalud*
+*Matriz FODA del Clínica FemeSalud*
 
 | Factores Internos | Fortalezas (F) | Debilidades (D) |
 | :--- | :--- | :--- |
-| | 1. Alta cualificación y reputación médica de la Dra. Carli Sole en Valle de la Pascua.<br>2. Equipamiento médico y ecográfico de última tecnología.<br>3. Disposición del personal hacia la innovación y modernización digital.<br>4. Existencia de conectividad a Internet y equipos de cómputo en el consultorio. | 1. Registro manuscrito de historias clínicas y evoluciones en carpetas físicas.<br>2. Dificultad para localizar antecedentes médicos de consultas anteriores de forma inmediata.<br>3. Tiempos prolongados en la redacción manual de récipe e indicaciones.<br>4. Falta de sincronización en tiempo real entre la recepción y el consultorio para la asignación de turnos. |
+| | 1. Alta cualificación y reputación médica de la Dra. Carli Sole (y equipo médico) en Valle de la Pascua.<br>2. Equipamiento médico y ecográfico de última tecnología.<br>3. Disposición del personal hacia la innovación y modernización digital.<br>4. Existencia de conectividad a Internet y equipos de cómputo en la clínica. | 1. Registro manuscrito de historias clínicas y evoluciones en carpetas físicas.<br>2. Dificultad para localizar antecedentes médicos de consultas anteriores de forma inmediata.<br>3. Tiempos prolongados en la redacción manual de récipe e indicaciones.<br>4. Falta de sincronización en tiempo real entre la recepción y la clínica para la asignación de turnos. |
 | **Factores Externos** | **Oportunidades (O)** | **Amenazas (A)** |
 | | 1. Existencia del convenio académico y socioproductivo con el PNF en Informática de la UPTLLJR.<br>2. Adopción masiva de teléfonos inteligentes por parte de las pacientes para recepción de récipes digitales.<br>3. Disponibilidad de tecnologías web y bases de datos seguras de código abierto o bajo consumo de recursos.<br>4. Políticas nacionales que impulsan la soberanía tecnológica y digitalización de servicios públicos y privados. | 1. Inestabilidad en el suministro eléctrico o fluctuaciones del servicio de telecomunicaciones en la entidad.<br>2. Riesgo de deterioro, incendio, extravío o acceso no autorizado a los archivos físicos de papel.<br>3. Costos crecientes de insumos de papelería, tinta de impresión y carpetas físicas.<br>4. Resistencia inicial de algunas pacientes de edad avanzada a los formatos estrictamente digitales. |
 
@@ -432,11 +432,11 @@ Mediante mesas de trabajo participativo, se listaron los nudos críticos detecta
 
 | Problema Identificado | G (1-5) | VT (1-5) | IC (1-5) | TE (1-5) | Total | Jerarquía |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Ineficiencia en el resguardo, búsqueda y registro de historias clínicas gineco-obstétricas y gestión operativa** | 5 | 5 | 5 | 5 | **20** | **Prioridad 1** |
+| **Ineficiencia en el resguardo, búsqueda y registro de historias clínicas médica integrals y gestión operativa** | 5 | 5 | 5 | 5 | **20** | **Prioridad 1** |
 | Retrasos en el agendamiento y confirmación de citas médicas y control de turnos en sala de espera | 4 | 5 | 4 | 4 | 17 | Prioridad 2 |
 | Lentitud en la emisión manual de récipes médicos, récipe gráfico y justificativos de reposo | 4 | 5 | 4 | 3 | 16 | Prioridad 3 |
 | Descontrol en la conciliación multimoneda de caja chica, pagos móviles y cobranza de honorarios | 3 | 4 | 3 | 4 | 14 | Prioridad 4 |
-| Ausencia de un inventario automatizado de insumos médicos descartables en el consultorio | 3 | 4 | 3 | 3 | 13 | Prioridad 5 |
+| Ausencia de un inventario automatizado de insumos médicos descartables en la clínica | 3 | 4 | 3 | 3 | 13 | Prioridad 5 |
 
 *Nota.* Elaboración propia (2026). La escala total suma los 4 criterios de impacto analizados.
 
@@ -445,7 +445,7 @@ Mediante mesas de trabajo participativo, se listaron los nudos críticos detecta
 ```mermaid
 flowchart TD
     subgraph Efectos["EFECTOS Y CONSECUENCIAS (COPA)"]
-        E1["Tiempos excesivos de espera y fatiga en pacientes gestantes"]
+        E1["Tiempos excesivos de espera y fatiga en pacientes en sala de espera"]
         E2["Riesgo de mala praxis por antecedentes ginecológicos omitidos o traspapelados"]
         E3["Pérdida de privacidad y vulnerabilidad de datos médicos confidenciales"]
         E4["Ineficiencia operativa y desgaste del personal médico y administrativo"]
@@ -453,7 +453,7 @@ flowchart TD
     end
 
     subgraph ProblemaCentral["PROBLEMA CENTRAL (TRONCO)"]
-        PC["INEFICIENTE GESTIÓN Y RESGUARDO DE HISTORIAS CLÍNICAS GINECOLÓGICAS Y CONTROL OPERATIVO EN EL CONSULTORIO FEMESALUD, VALLE DE LA PASCUA"]
+        PC["INEFICIENTE GESTIÓN Y RESGUARDO DE HISTORIAS CLÍNICAS MÉDICAS MULTIESPECIALIDAD Y CONTROL OPERATIVO EN EL CLÍNICA FEMESALUD, VALLE DE LA PASCUA"]
     end
 
     subgraph Causas["CAUSAS DIRECTAS E INDIRECTAS (RAÍCES)"]
@@ -461,8 +461,8 @@ flowchart TD
         C2["Inexistencia de un sistema automatizado de citas y turnos en tiempo real"]
         C3["Redacción manual y repetitiva de prescripciones, récipes y consentimientos"]
         C4["Carencia de herramientas de respaldo seguro de la información médica"]
-        C1_1["Falta de software especializado en flujos gineco-obstétricos"]
-        C2_1["Falta de sincronización entre el área de recepción y el consultorio"]
+        C1_1["Falta de software especializado en flujos médicos multiespecialidad"]
+        C2_1["Falta de sincronización entre el área de recepción y la clínica"]
         C3_1["Dependencia de formatos impresos y talonarios comerciales"]
         C4_1["Ausencia de infraestructura digital criptográfica para custodia de datos"]
         
@@ -485,25 +485,25 @@ flowchart TD
 Para formular con precisión la problemática de investigación, se da respuesta a las siete (07) interrogantes metodológicas exigidas por el manual de la UPTLLJR:
 
 1. **¿Cuál es la situación actual?**  
-   En el consultorio de la Clínica FemeSalud, la Dra. Carli Sole y su asistente administran las consultas, diagnósticos ecográficos y antecedentes médicos de decenas de pacientes semanales utilizando fichas de papel, libretas de citas y talonarios impresos. Esta dinámica manual genera saturación en el espacio de archivo, acumulación de documentos susceptibles a roturas y un flujo fragmentado entre la recepción de la clínica y el escritorio de la especialista médica.
+   En la clínica de la Clínica FemeSalud, la Dra. Carli Sole (y equipo médico) y su asistente administran las consultas, diagnósticos ecográficos y antecedentes médicos de decenas de pacientes semanales utilizando fichas de papel, libretas de citas y talonarios impresos. Esta dinámica manual genera saturación en el espacio de archivo, acumulación de documentos susceptibles a roturas y un flujo fragmentado entre la recepción de la clínica y el escritorio de la especialista médica.
 
 2. **¿Desde cuándo ocurre?**  
-   Esta situación ha prevalecido desde los inicios operativos del consultorio. Sin embargo, en los últimos dos años, con el crecimiento sostenido de la cartera de pacientes y la complejidad de los controles de gestantes de alto riesgo obstétrico, el volumen documental sobrepasó la capacidad de control manual, haciendo urgente la adopción de un sistema automatizado.
+   Esta situación ha prevalecido desde los inicios operativos de la clínica. Sin embargo, en los últimos dos años, con el crecimiento sostenido de la cartera de pacientes y la complejidad de los controles de gestantes de alto riesgo clínico integral, el volumen documental sobrepasó la capacidad de control manual, haciendo urgente la adopción de un sistema automatizado.
 
 3. **¿A quiénes afecta y cómo?**  
-   Afecta principalmente a la especialista médica (Dra. Carli Sole), quien debe destinar minutos valiosos de la consulta a buscar hojas de evolución previas o redactar a mano tratamientos repetitivos; al personal de recepción, sobrecargado por la búsqueda de expedientes físicos en archivadores; y a las pacientes, quienes padecen retrasos innecesarios en la sala de espera y corren el riesgo de que sus prescripciones manuales resulten difíciles de descifrar en farmacia.
+   Afecta principalmente a la especialista médica (Dra. Carli Sole (y equipo médico)), quien debe destinar minutos valiosos de la consulta a buscar hojas de evolución previas o redactar a mano tratamientos repetitivos; al personal de recepción, sobrecargado por la búsqueda de expedientes físicos en archivadores; y a las pacientes, quienes padecen retrasos innecesarios en la sala de espera y corren el riesgo de que sus prescripciones manuales resulten difíciles de descifrar en farmacia.
 
 4. **¿Qué se ha hecho al respecto?**  
-   Previamente se intentó emplear hojas de cálculo en Microsoft Excel para registrar listas de asistencia y una agenda básica en aplicaciones móviles comerciales. No obstante, dichas herramientas son aisladas, carecen de formatos clínicos especializados (fórmulas obstétricas, FUM, FPP, ecografías), no permiten el trabajo colaborativo simultáneo y representan una grave vulnerabilidad de seguridad al no estar cifradas ni contar con control de acceso por roles.
+   Previamente se intentó emplear hojas de cálculo en Microsoft Excel para registrar listas de asistencia y una agenda básica en aplicaciones móviles comerciales. No obstante, dichas herramientas son aisladas, carecen de formatos clínicos especializados (antecedentes patológicos, exámenes físicos y estudios complementarios), no permiten el trabajo colaborativo simultáneo y representan una grave vulnerabilidad de seguridad al no estar cifradas ni contar con control de acceso por roles.
 
 5. **¿Qué pasa si no se resuelve?**  
-   De mantenerse el esquema manual, el consultorio enfrentará la pérdida o deterioro irreversible de expedientes médicos ante la humedad, el paso del tiempo o accidentes imprevistos. Asimismo, aumentará la probabilidad de incurrir en confusiones en antecedentes alérgicos de las pacientes, se perpetuará el gasto continuo en papelería y se limitará la capacidad de crecimiento del consultorio.
+   De mantenerse el esquema manual, la clínica enfrentará la pérdida o deterioro irreversible de expedientes médicos ante la humedad, el paso del tiempo o accidentes imprevistos. Asimismo, aumentará la probabilidad de incurrir en confusiones en antecedentes alérgicos de las pacientes, se perpetuará el gasto continuo en papelería y se limitará la capacidad de crecimiento de la clínica.
 
 6. **¿Qué nos motivó a investigarlo?**  
    La motivación principal radica en el compromiso social y la formación académica como estudiantes del Trayecto III del PNF en Informática de la UPTLLJR, aplicando los avances de la ingeniería web moderna (arquitecturas reactivas, bases de datos PostgreSQL en tiempo real y criptografía local) para dotar a un centro de salud de nuestra propia localidad con una herramienta de categoría profesional que optimice el ejercicio de la medicina.
 
 7. **¿Cuál es la interrogante central que el proyecto busca responder? (Hipótesis)**  
-   *¿De qué manera el desarrollo e implementación de un sistema web integral permitirá optimizar la gestión de historias clínicas ginecológicas y el control operativo en el consultorio FemeSalud de la ciudad de Valle de la Pascua, estado Guárico?*
+   *¿De qué manera el desarrollo e implementación de un sistema web integral permitirá optimizar la gestión de historias clínicas médicas multiespecialidad y el control operativo en el clínica FemeSalud de la ciudad de Valle de la Pascua, estado Guárico?*
 
 ---
 
@@ -515,12 +515,12 @@ flowchart TD
         F1["Disminución de tiempos de espera y confort de las pacientes"]
         F2["Garantía de precisión diagnóstica con acceso inmediato al historial médico"]
         F3["Confidencialidad absoluta y blindaje de datos bajo estándares criptográficos"]
-        F4["Máxima eficiencia operativa y sincronización integral del consultorio"]
+        F4["Máxima eficiencia operativa y sincronización integral de la clínica"]
         F1 --- F2 --- F3 --- F4
     end
 
     subgraph ObjetivoCentral["OBJETIVO CENTRAL (TRONCO)"]
-        OC["DESARROLLAR UN SISTEMA WEB PARA LA GESTIÓN DE HISTORIAS CLÍNICAS GINECOLÓGICAS Y CONTROL OPERATIVO EN EL CONSULTORIO FEMESALUD, VALLE DE LA PASCUA ESTADO GUÁRICO"]
+        OC["DESARROLLAR UN SISTEMA WEB MEDIZEN PARA LA GESTIÓN DE HISTORIAS CLÍNICAS MULTIESPECIALIDAD Y CONTROL OPERATIVO EN LA CLÍNICA FEMESALUD, VALLE DE LA PASCUA ESTADO GUÁRICO"]
     end
 
     subgraph Medios["MEDIOS Y ACCIONES OPERATIVAS (RAÍCES)"]
@@ -528,7 +528,7 @@ flowchart TD
         M2["Implementar un módulo de agenda interactiva y citas con sincronización WebSockets"]
         M3["Diseñar un generador visual de récipes e indicaciones médicas con exportación PDF"]
         M4["Incorporar una bóveda de seguridad local con cifrado criptográfico PBKDF2 y AES-GCM"]
-        M1_1["Modelado formal de entidades clínicas de ginecología y obstetricia"]
+        M1_1["Modelado formal de entidades clínicas de múltiples especialidades médicas"]
         M2_1["Comunicación en tiempo real entre recepción y consultorio médico"]
         M3_1["Plantillas configurables de récipe y envío directo vía WhatsApp"]
         M4_1["Desbloqueo rápido por PIN de 4 dígitos protegiendo la sesión del navegador"]
@@ -552,9 +552,9 @@ flowchart TD
 
 | Nivel de Objetivos | Resumen Narrativo | Indicadores Objetivamente Verificables | Medios de Verificación | Supuestos Críticos |
 | :--- | :--- | :--- | :--- | :--- |
-| **Fin** | Contribuir a la modernización tecnológica y calidad del servicio asistencial de salud ginecológica en Valle de la Pascua mediante soluciones informáticas seguras. | 1. Reducción del 50% o más en tiempos de espera general de las pacientes.<br>2. Cero pérdida o daño físico de expedientes médicos. | Encuestas de satisfacción a pacientes e informes semestrales del consultorio. | Estabilidad en el suministro de servicios básicos e internet en la región. |
-| **Propósito** | Optimizar la gestión de historias clínicas y el flujo administrativo-operativo del consultorio FemeSalud mediante un sistema web automatizado. | 1. 100% de las consultas y evoluciones registradas de manera digital.<br>2. Reducción de más del 60% en el tiempo de redacción de récipes y búsqueda de antecedentes. | Registros en la base de datos PostgreSQL y auditoría del sistema web. | Compromiso del personal médico y administrativo en el uso continuo de la aplicación. |
-| **Componentes (Resultados)** | 1. Módulo de Historia Clínica Digital (Ginecología y Obstetricia).<br>2. Módulo de Citas y Agenda en Tiempo Real.<br>3. Generador Visual de Récipes en PDF y envíos digitales.<br>4. Módulo de Facturación, Caja Chica e Inventario.<br>5. Bóveda Criptográfica Local de PIN para autenticación rápida. | 1. 5 módulos completamente funcionales e integrados.<br>2. Sistema de autenticación con cifrado PBKDF2/AES-GCM operativo en menos de 1 segundo.<br>3. Exportación de PDF clínicos con alta resolución visual. | Código fuente validado en repositorio Git, pruebas funcionales de caja negra y manuales técnicos. | Aceptación de los prototipos por parte de la especialista Dra. Carli Sole. |
+| **Fin** | Contribuir a la modernización tecnológica y calidad del servicio asistencial de salud médica multiespecialidad en Valle de la Pascua mediante soluciones informáticas seguras. | 1. Reducción del 50% o más en tiempos de espera general de las pacientes.<br>2. Cero pérdida o daño físico de expedientes médicos. | Encuestas de satisfacción a pacientes e informes semestrales de la clínica. | Estabilidad en el suministro de servicios básicos e internet en la región. |
+| **Propósito** | Optimizar la gestión de historias clínicas y el flujo administrativo-operativo del clínica FemeSalud mediante un sistema web automatizado. | 1. 100% de las consultas y evoluciones registradas de manera digital.<br>2. Reducción de más del 60% en el tiempo de redacción de récipes y búsqueda de antecedentes. | Registros en la base de datos PostgreSQL y auditoría del sistema web. | Compromiso del personal médico y administrativo en el uso continuo de la aplicación. |
+| **Componentes (Resultados)** | 1. Módulo de Historia Clínica Digital (Múltiples Especialidades Médicas).<br>2. Módulo de Citas y Agenda en Tiempo Real.<br>3. Generador Visual de Récipes en PDF y envíos digitales.<br>4. Módulo de Facturación, Caja Chica e Inventario.<br>5. Bóveda Criptográfica Local de PIN para autenticación rápida. | 1. 5 módulos completamente funcionales e integrados.<br>2. Sistema de autenticación con cifrado PBKDF2/AES-GCM operativo en menos de 1 segundo.<br>3. Exportación de PDF clínicos con alta resolución visual. | Código fuente validado en repositorio Git, pruebas funcionales de caja negra y manuales técnicos. | Aceptación de los prototipos por parte de la especialista Dra. Carli Sole (y equipo médico). |
 | **Actividades** | 1.1 Diagnóstico de requerimientos mediante entrevistas clínicas.<br>2.1 Modelado de base de datos relacional y diagramas UML.<br>3.1 Codificación frontend en React 19/Tailwind y backend en Supabase.<br>4.1 Ejecución de pruebas unitarias y de integración.<br>5.1 Despliegue en la nube (Vercel) y capacitación del personal. | 1. Cronograma de actividades cumplido al 100%.<br>2. Matriz de pruebas de software con 100% de casos aprobados.<br>3. 100% del personal capacitado satisfactoriamente. | Actas de reunión, repositorio de código, matriz de pruebas firmada y certificado de inducción. | Disponibilidad de tiempo de los involucrados para talleres de capacitación. |
 
 *Nota.* Elaboración propia (2026), según la metodología de Marco Lógico del ILPES/CEPAL.
@@ -564,10 +564,10 @@ flowchart TD
 ## Objetivos del Proyecto
 
 ### Objetivo General
-Desarrollar un sistema web para la gestión de historias clínicas ginecológicas y control operativo en el consultorio FemeSalud, Valle de la Pascua, estado Guárico.
+Desarrollar un sistema web para la gestión de historias clínicas médicas multiespecialidad y control operativo en el clínica FemeSalud, Valle de la Pascua, estado Guárico.
 
 ### Objetivos Específicos
-1. **Diagnosticar** la situación actual de los procesos de registro de historias clínicas, asignación de citas, prescripción médica y control financiero en el consultorio FemeSalud.
+1. **Diagnosticar** la situación actual de los procesos de registro de historias clínicas, asignación de citas, prescripción médica y control financiero en el clínica FemeSalud.
 2. **Diseñar** la arquitectura lógica y conceptual del sistema web, incluyendo los diagramas UML, modelado de la base de datos relacional y las interfaces gráficas con enfoque *Mobile-First*.
 3. **Desarrollar** los módulos funcionales de la aplicación web utilizando React 19, TypeScript, Tailwind CSS y Supabase (PostgreSQL), integrando la bóveda criptográfica local y el generador de récipes en PDF.
 4. **Evaluar** la funcionalidad, seguridad, usabilidad y rendimiento del sistema web mediante pruebas técnicas de caja negra y validación operativa directa con la especialista médica.
@@ -578,9 +578,9 @@ Desarrollar un sistema web para la gestión de historias clínicas ginecológica
 
 La presente investigación se fundamenta técnica, social y académicamente en virtud de las siguientes dimensiones:
 
-* **Aporte Económico**: El consultorio FemeSalud experimenta una disminución sustancial y permanente en el gasto recurrente de resmas de papel, carpetas de archivo, impresiones de talonarios comerciales y tintas. Asimismo, el módulo financiero permite consolidar los ingresos diarios en bolívares y divisas, previniendo fugas de capital y optimizando el cobro de consultas y procedimientos ecográficos.
+* **Aporte Económico**: El clínica FemeSalud experimenta una disminución sustancial y permanente en el gasto recurrente de resmas de papel, carpetas de archivo, impresiones de talonarios comerciales y tintas. Asimismo, el módulo financiero permite consolidar los ingresos diarios en bolívares y divisas, previniendo fugas de capital y optimizando el cobro de consultas y procedimientos ecográficos.
 * **Aporte Social**: El bienestar y dignidad de la mujer como núcleo familiar se ven directamente favorecidos. Al agilizarse la gestión de citas y acortarse los tiempos improductivos de espera en sala, las pacientes reciben una atención más oportuna y humana. Asimismo, se preserva el derecho a la intimidad y la confidencialidad de datos biológicos de alta sensibilidad.
-* **Aporte Práctico**: La solución ofrece una respuesta concreta a las necesidades operativas de la Dra. Carli Sole. Al disponer de una búsqueda instantánea de antecedentes médicos, cálculo automatizado de semanas de gestación y fecha probable de parto (FPP), y un generador visual de prescripciones exportables a PDF para su envío instantáneo por WhatsApp, se erradican los cuellos de botella del ejercicio diario.
+* **Aporte Práctico**: La solución ofrece una respuesta concreta a las necesidades operativas de la Dra. Carli Sole (y equipo médico). Al disponer de una búsqueda instantánea de antecedentes médicos, cálculo automatizado de semanas de gestación y fecha probable de parto (FPP), y un generador visual de prescripciones exportables a PDF para su envío instantáneo por WhatsApp, se erradican los cuellos de botella del ejercicio diario.
 * **Aporte Teórico**: El proyecto contribuye al acervo de la informática médica en Venezuela, aportando un modelo documentado de integración de arquitecturas reactivas en el cliente (*Single Page Applications* con React 19 y TanStack Router) con plataformas *Backend-as-a-Service* (Supabase/PostgreSQL) y algoritmos criptográficos nativos en el navegador (`SubtleCrypto`).
 * **Aporte Académico**: Constituye la materialización práctica de los conocimientos adquiridos a lo largo de tres años formativos en el PNF en Informática de la UPTLLJR, evidenciando el dominio de las fases del ciclo de vida del software, el diseño centrado en el usuario y la ingeniería de datos en contextos reales.
 * **Aporte Institucional**: Consolida la vinculación universidad-entorno productivo, demostrando la capacidad de la UPTLLJR para brindar asesoría tecnológica y soluciones de alto nivel a organizaciones de la región de los llanos guariqueños.
@@ -610,7 +610,7 @@ De conformidad con las directrices académicas de la UPTLLJR, se seleccionaron i
 ### Antecedentes Internacionales
 
 1. **Gómez, R. y Mendoza, L. (2023)**, en Colombia, desarrollaron un trabajo de grado titulado *"Diseño e implementación de un sistema web para el control de historias clínicas y asignación de citas en un centro de atención materno-infantil en Bogotá"*, presentado en la Universidad Distrital Francisco José de Caldas. La investigación tuvo como objetivo implementar una plataforma web para reducir los tiempos de atención y mejorar la precisión en el registro de consultas obstétricas. La metodología empleada fue aplicada, con diseño de campo y enfoque mixto, utilizando como técnicas la encuesta y la observación directa sobre una muestra de 25 profesionales de la salud. Los autores concluyeron que el uso de la plataforma digital disminuyó en un 45% los tiempos de espera de las gestantes y garantizó la disponibilidad inmediata de los registros prenatales en un 100% de los casos evaluados.  
-   *Aporte a la investigación*: Este antecedente aporta a nuestro proyecto la estructura metodológica para evaluar el impacto en los tiempos de espera asistenciales y valida la efectividad del uso de plataformas web en la especialidad gineco-obstétrica en el contexto latinoamericano. Asimismo, brinda pautas para la confección de formularios orientados a controles prenatales periódicos, diferenciándose el presente trabajo al incorporar un esquema de sincronización reactiva en tiempo real y una arquitectura de desbloqueo criptográfico con PIN local para la sesión del especialista.
+   *Aporte a la investigación*: Este antecedente aporta a nuestro proyecto la estructura metodológica para evaluar el impacto en los tiempos de espera asistenciales y valida la efectividad del uso de plataformas web en la especialidad médica integral en el contexto latinoamericano. Asimismo, brinda pautas para la confección de formularios orientados a controles prenatales periódicos, diferenciándose el presente trabajo al incorporar un esquema de sincronización reactiva en tiempo real y una arquitectura de desbloqueo criptográfico con PIN local para la sesión del especialista.
 
 2. **Castillo, E. y Paredes, S. (2022)**, en Ecuador, realizaron una investigación titulada *"Sistema web progresivo (PWA) para la gestión clínica y prescripción electrónica de medicamentos en consultorios médicos privados de Ambato"*, en la Universidad Técnica de Ambato. El objetivo principal fue diseñar un software bajo enfoque cliente-servidor que permitiera emitir recetas digitales con firmas verificables y control de stock farmacológico. La metodología se fundamentó en el paradigma cuantitativo con diseño cuasi-experimental y ciclo ágil Scrum. Como hallazgo principal, los investigadores constataron una reducción del 82% en los errores de interpretación de recetas médicas manuscritas y una satisfacción del usuario superior al 90%.  
    *Aporte a la investigación*: Esta investigación suministra fundamentos valiosos en torno a la normalización de la receta médica electrónica y la automatización de documentos clínicos en formato PDF. Aporta directamente a nuestro proyecto los criterios de estructuración visual del récipe médico (RP, indicaciones, datos de la paciente y credenciales del especialista), permitiendo diseñar en FemeSalud un generador visual interactivo que produce prescripciones limpias, exportables a PDF y listas para su remisión directa vía WhatsApp.
@@ -623,10 +623,10 @@ De conformidad con las directrices académicas de la UPTLLJR, se seleccionaron i
 ### Antecedentes Nacionales y Regionales
 
 1. **Rondón, J. y Alvarado, M. (2023)**, en San Juan de los Morros, Estado Guárico, presentaron en la Universidad Nacional Experimental Rómulo Gallegos (UNERG) el proyecto titulado *"Sistema automatizado para la gestión de expedientes clínicos y control de citas médicas en el Centro Clínico Universitario"*. El objetivo general consistió en desarrollar un software para agilizar el archivo médico y la coordinación de consultas externas. La metodología se rigió por la modalidad de Proyecto Factible apoyada en investigación de campo, aplicando entrevistas y guías de observación al personal médico y administrativo. Los autores determinaron que la digitalización erradicó el extravío de fichas de cartón y redujo el desorden en la asignación de turnos matutinos.  
-   *Aporte a la investigación*: Este trabajo suministra un referente directo en el ámbito regional guariqueño respecto a la receptividad y adaptabilidad del personal asistencial ante la transición digital. Aporta los requerimientos esenciales del flujo de admisión de pacientes y demuestra la viabilidad de implementar sistemas clínicos en la entidad, sirviendo de base comparativa para nuestra investigación, la cual profundiza en la especialización ginecológica y en la experiencia de usuario táctil para dispositivos móviles.
+   *Aporte a la investigación*: Este trabajo suministra un referente directo en el ámbito regional guariqueño respecto a la receptividad y adaptabilidad del personal asistencial ante la transición digital. Aporta los requerimientos esenciales del flujo de admisión de pacientes y demuestra la viabilidad de implementar sistemas clínicos en la entidad, sirviendo de base comparativa para nuestra investigación, la cual profundiza en la especialización médica multiespecialidad y en la experiencia de usuario táctil para dispositivos móviles.
 
 2. **Hernández, K. y Morales, G. (2022)**, en Caracas, presentaron ante la Universidad Central de Venezuela (UCV) el trabajo especial de grado *"Plataforma web para el seguimiento clínico de pacientes obstétricas y control de citas bajo estándares de privacidad de datos"*. La investigación tuvo como propósito diseñar una herramienta que facilitara el control periódico del embarazo y alertara sobre factores de riesgo gestacional. La investigación fue de tipo proyectiva con enfoque sociocrítico e IAP. Los investigadores concluyeron que la centralización de datos clínicos mejora en un 38% el apego de las pacientes al calendario de controles prenatales.  
-   *Aporte a la investigación*: El estudio aporta elementos esenciales para la definición de los campos médicos de la historia obstétrica (cálculo de edad gestacional por FUM, fecha probable de parto por regla de Naegele, antecedentes obstétricos G-P-A-C y ecografías de control). Estos parámetros fueron adaptados al motor de formularios dinámicos de FemeSalud, permitiendo a la Dra. Carli Sole registrar de forma rápida y estructurada cada variable biomédica crítica.
+   *Aporte a la investigación*: El estudio aporta elementos esenciales para la definición de los campos médicos de la historia obstétrica (cálculo de edad gestacional por FUM, fecha probable de parto por regla de Naegele, antecedentes clínico integrals G-P-A-C y ecografías de control). Estos parámetros fueron adaptados al motor de formularios dinámicos de FemeSalud, permitiendo a la Dra. Carli Sole (y equipo médico) registrar de forma rápida y estructurada cada variable biomédica crítica.
 
 3. **Torres, V. y Bravo, P. (2024)**, en Valle de la Pascua, desarrollaron en la UPTLL "Juana Ramírez" el proyecto socio-integrador de PNF en Informática titulado *"Desarrollo de un sistema de información web para la gestión de inventario y facturación de servicios en una unidad médica privada del Municipio Leonardo Infante"*. La investigación persiguió automatizar la cobranza multimoneda y el control de suministros médicos. Con un diseño de campo no experimental y apoyados en la metodología ágil Scrum, lograron reducir a cero las discrepancias en el arqueo diario de caja chica.  
    *Aporte a la investigación*: Aporta un conocimiento directo sobre el ecosistema operativo y financiero del comercio y los servicios privados en el casco central de Valle de la Pascua. Permite estructurar en nuestro proyecto el módulo de facturación, cuentas de pago y control de caja chica en bolívares y divisas, proporcionando la base conceptual para el cálculo de honorarios médicos y métodos de pago (Pago Móvil, Zelle, efectivo) vinculados a la consulta clínica.
@@ -635,14 +635,14 @@ De conformidad con las directrices académicas de la UPTLLJR, se seleccionaron i
 
 ## Bases Teóricas
 
-El desarrollo del sistema web FemeSalud se fundamenta en los siguientes conceptos, modelos y teorías de la ciencia computacional y la informática médica:
+El desarrollo del sistema web MediZen se fundamenta en los siguientes conceptos, modelos y teorías de la ciencia computacional y la informática médica:
 
 ### Sistemas de Información en Salud (HIS) y Expedientes Clínicos Electrónicos (EHR)
 Un Sistema de Información en Salud (*Hospital Information System*, HIS) es un conjunto organizado de componentes tecnológicos, humanos y procedimentales diseñados para capturar, almacenar, procesar y comunicar datos relacionados con la atención médica y la gestión administrativa de los pacientes (Shortliffe & Cimino, 2020). Dentro de estos sistemas, el Expediente Clínico Electrónico (*Electronic Health Record*, EHR) representa el repositorio digital longitudinal de la información de salud de una persona, el cual incluye antecedentes patológicos, diagnósticos, resultados paraclínicos, tratamientos farmacológicos y notas de evolución (O’Mahony, 2021).  
 *Relación con el proyecto*: FemeSalud implementa un EHR adaptado a la medicina ambulatoria privada, sustituyendo el archivo físico en papel por un registro digital centralizado y accesible al instante.
 
-### Flujos Clínicos Especializados en Ginecología y Obstetricia
-La práctica gineco-obstétrica exige parámetros clínicos específicos que difieren de la medicina general (Schorge et al., 2021). Entre ellos destacan la fórmula obstétrica (Gestas, Para, Abortos, Cesáreas), la Fecha de Última Menstruación (FUM), la Fecha Probable de Parto (FPP), la evolución del fondo uterino, frecuencia cardíaca fetal y registros ecográficos morfológicos y transvaginales.  
+### Flujos Clínicos Especializados en Múltiples Especialidades Médicas
+La práctica médica integral exige parámetros clínicos específicos que difieren de la medicina general (Schorge et al., 2021). Entre ellos destacan la fórmula obstétrica (Gestas, Para, Abortos, Cesáreas), la Fecha de Última Menstruación (FUM), la Fecha Probable de Parto (FPP), la evolución del fondo uterino, frecuencia cardíaca fetal y registros ecográficos morfológicos y transvaginales.  
 *Relación con el proyecto*: El sistema modela estas entidades en interfaces dedicadas que efectúan cálculos automáticos de semanas de gestación y organizan el historial de consultas de la paciente en una línea de tiempo escaneable.
 
 ### Arquitectura Web de una Sola Página (SPA) con React 19 y TypeScript
@@ -654,14 +654,14 @@ El modelo *Backend-as-a-Service* (BaaS) permite a los desarrolladores delegar la
 *Relación con el proyecto*: Asegura que los expedientes médicos alojados en FemeSalud solo puedan ser consultados o modificados por el personal médico autorizado, cumpliendo con la confidencialidad médica requerida.
 
 ### Bóveda Criptográfica en el Cliente: Web Crypto API, PBKDF2 y AES-GCM
-La *Web Cryptography API* es una interfaz estándar del W3C que permite ejecutar operaciones criptográficas de bajo nivel dentro del navegador web (W3C, 2022). Para garantizar que el dispositivo del consultorio se mantenga seguro pero accesible mediante un **código PIN de 4 dígitos**, se utiliza la función de derivación de claves `PBKDF2` (*Password-Based Key Derivation Function 2*) combinada con el algoritmo simétrico autenticado `AES-GCM` de 256 bits (*Advanced Encryption Standard - Galois/Counter Mode*).  
-*Relación con el proyecto*: Este mecanismo permite cifrar el token de acceso a la base de datos en el almacenamiento local del dispositivo (`localStorage`). Si un tercero no autorizado accede al computador o tablet, no podrá descifrar los datos sin ingresar el PIN de 4 dígitos definido por la Dra. Carli Sole.
+La *Web Cryptography API* es una interfaz estándar del W3C que permite ejecutar operaciones criptográficas de bajo nivel dentro del navegador web (W3C, 2022). Para garantizar que el dispositivo de la clínica se mantenga seguro pero accesible mediante un **código PIN de 4 dígitos**, se utiliza la función de derivación de claves `PBKDF2` (*Password-Based Key Derivation Function 2*) combinada con el algoritmo simétrico autenticado `AES-GCM` de 256 bits (*Advanced Encryption Standard - Galois/Counter Mode*).  
+*Relación con el proyecto*: Este mecanismo permite cifrar el token de acceso a la base de datos en el almacenamiento local del dispositivo (`localStorage`). Si un tercero no autorizado accede al computador o tablet, no podrá descifrar los datos sin ingresar el PIN de 4 dígitos definido por la Dra. Carli Sole (y equipo médico).
 
 ---
 
 ## Bases Legales (Pirámide de Kelsen)
 
-El desarrollo, despliegue y puesta en marcha del sistema web FemeSalud se fundamenta estrictamente en el ordenamiento jurídico de la República Bolivariana de Venezuela, organizado jerárquicamente bajo la estructura de la Pirámide de Kelsen.
+El desarrollo, despliegue y puesta en marcha del sistema web MediZen se fundamenta estrictamente en el ordenamiento jurídico de la República Bolivariana de Venezuela, organizado jerárquicamente bajo la estructura de la Pirámide de Kelsen.
 
 ```mermaid
 flowchart TD
@@ -689,7 +689,7 @@ flowchart TD
    * Establece principios de eficacia, transparencia, seguridad de los datos e interoperabilidad en el manejo de registros electrónicos e informáticos en el país.
 
 5. **Ley Especial contra los Delitos Informáticos (Gaceta Oficial N.º 37.313)**:
-   * Protege los sistemas tecnológicos y la privacidad de la información. El sistema FemeSalud implementa mecanismos de control de acceso, auditoría y cifrado para impedir el acceso indebido (Art. 6) y la revelación indebida de datos reservados (Art. 20).
+   * Protege los sistemas tecnológicos y la privacidad de la información. El sistema MediZen implementa mecanismos de control de acceso, auditoría y cifrado para impedir el acceso indebido (Art. 6) y la revelación indebida de datos reservados (Art. 20).
 
 6. **Ley sobre Mensajes de Datos y Firmas Electrónicas (Gaceta Oficial N.º 37.072)**:
    * Otorga plena validez jurídica a los documentos y récipes generados en formato digital (PDF), reconociendo su autenticidad y valor probatorio en el ejercicio profesional.
@@ -703,7 +703,7 @@ flowchart TD
 
 De acuerdo con lo establecido en el manual de la UPTLLJR (pág. 18-19 y pág. 47 del Anexo B/C de PNF en Informática), se desglosa la variable independiente (la solución tecnológica) y la variable dependiente (el problema operativo a optimizar).
 
-* **Variable Independiente (Causa / Solución)**: *Sistema Web para la Gestión de Historias Clínicas Ginecológicas y Control Operativo (FemeSalud)*.
+* **Variable Independiente (Causa / Solución)**: *Sistema Web para la Gestión de Historias Clínicas Médicas Multiespecialidad y Control Operativo (FemeSalud)*.
 * **Variable Dependiente (Efecto / Fenómeno a transformar)**: *Optimización de la Gestión de Historias Clínicas y el Flujo Operativo en el Consultorio*.
 
 **Tabla 4**  
@@ -711,8 +711,8 @@ De acuerdo con lo establecido en el manual de la UPTLLJR (pág. 18-19 y pág. 47
 
 | Variable | Definición Conceptual | Definición Operacional | Dimensiones | Indicadores | Escala de Medición |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Variable Independiente:**<br>Sistema Web para la Gestión de Historias Clínicas y Control Operativo | Aplicación informática modular que permite capturar, resguardar y sincronizar historias clínicas ginecológicas, turnos de citas, emisión de prescripciones y registros financieros en una organización médica (Shortliffe & Cimino, 2020). | Implementación de una plataforma web reactiva desarrollada en React 19, TypeScript y Supabase (PostgreSQL), dotada de autenticación criptográfica local por PIN, generador de récipes en PDF y agenda sincronizada por WebSockets, evaluada durante 3 meses en FemeSalud. | - Expediente Clínico Digital<br>- Agenda de Citas Médicas<br>- Prescripción y Récipes en PDF<br>- Seguridad y Bóveda Criptográfica<br>- Control Financiero y Caja | - Tiempo de registro por paciente (segundos)<br>- Precisión en cálculo de fórmulas obstétricas (FUM/FPP)<br>- Tiempo de generación de récipe médico (segundos)<br>- Latencia de desbloqueo seguro por PIN (segundos)<br>- Tiempo de sincronización de citas en tiempo real (segundos) | Razón<br>Razón<br>Razón<br>Razón<br>Razón |
-| **Variable Dependiente:**<br>Optimización de la Gestión de Historias Clínicas y Flujo Operativo | Nivel de mejora alcanzado en la administración del consultorio médico, reflejado en la reducción de tiempos de atención, erradicación de pérdidas documentales, seguridad de datos y fluidez operativa global (Hernández et al., 2022). | Medición cuantitativa y cualitativa comparando indicadores de desempeño antes y después de la implantación del sistema web, evaluando tiempos de espera, extravío de expedientes, satisfacción de la especialista y agilidad en sala. | - Tiempos de Atención y Espera<br>- Integridad y Custodia Documental<br>- Eficiencia Administrativa<br>- Satisfacción de la Usuaria y Médico | - Minutos promedio de espera en sala por paciente<br>- Porcentaje de expedientes extraviados o deteriorados<br>- Minutos destinados a la redacción y cobro de consulta<br>- Porcentaje de satisfacción de la especialista (Escala Likert 1-5) | Intervalo / Razón<br>Razón<br>Intervalo / Razón<br>Ordinal |
+| **Variable Independiente:**<br>Sistema Web para la Gestión de Historias Clínicas y Control Operativo | Aplicación informática modular que permite capturar, resguardar y sincronizar historias clínicas médicas multiespecialidad, turnos de citas, emisión de prescripciones y registros financieros en una organización médica (Shortliffe & Cimino, 2020). | Implementación de una plataforma web reactiva desarrollada en React 19, TypeScript y Supabase (PostgreSQL), dotada de autenticación criptográfica local por PIN, generador de récipes en PDF y agenda sincronizada por WebSockets, evaluada durante 3 meses en FemeSalud. | - Expediente Clínico Digital<br>- Agenda de Citas Médicas<br>- Prescripción y Récipes en PDF<br>- Seguridad y Bóveda Criptográfica<br>- Control Financiero y Caja | - Tiempo de registro por paciente (segundos)<br>- Precisión en cálculo de fórmulas obstétricas (FUM/FPP)<br>- Tiempo de generación de récipe médico (segundos)<br>- Latencia de desbloqueo seguro por PIN (segundos)<br>- Tiempo de sincronización de citas en tiempo real (segundos) | Razón<br>Razón<br>Razón<br>Razón<br>Razón |
+| **Variable Dependiente:**<br>Optimización de la Gestión de Historias Clínicas y Flujo Operativo | Nivel de mejora alcanzado en la administración de la clínica médico, reflejado en la reducción de tiempos de atención, erradicación de pérdidas documentales, seguridad de datos y fluidez operativa global (Hernández et al., 2022). | Medición cuantitativa y cualitativa comparando indicadores de desempeño antes y después de la implantación del sistema web, evaluando tiempos de espera, extravío de expedientes, satisfacción de la especialista y agilidad en sala. | - Tiempos de Atención y Espera<br>- Integridad y Custodia Documental<br>- Eficiencia Administrativa<br>- Satisfacción de la Usuaria y Médico | - Minutos promedio de espera en sala por paciente<br>- Porcentaje de expedientes extraviados o deteriorados<br>- Minutos destinados a la redacción y cobro de consulta<br>- Porcentaje de satisfacción de la especialista (Escala Likert 1-5) | Intervalo / Razón<br>Razón<br>Intervalo / Razón<br>Ordinal |
 
 *Nota.* Elaboración propia (2026), adaptado fielmente del modelo oficial de operacionalización para PNF en Informática de la UPTLLJR (pág. 47 del manual).
 
@@ -738,14 +738,14 @@ La presente investigación se inscribe en el **Paradigma Sociocrítico**, con un
 
 ### Metodología de la Investigación
 Se adopta como metodología la **Investigación Acción Participativa (IAP)**, articulada armónicamente con la modalidad de **Proyecto Factible** (Manual de Estilo, Tabla 5, pág. 20):
-* **Investigación Acción Participativa (IAP)**: Se basa en la espiral continua de *reflexión-acción-reflexión*, donde la especialista médica (Dra. Carli Sole) y los desarrolladores evalúan de forma iterativa cada módulo funcional, adaptando el software a las exigencias reales de la consulta ginecológica.
+* **Investigación Acción Participativa (IAP)**: Se basa en la espiral continua de *reflexión-acción-reflexión*, donde la especialista médica (Dra. Carli Sole (y equipo médico)) y los desarrolladores evalúan de forma iterativa cada módulo funcional, adaptando el software a las exigencias reales de la consulta médica multiespecialidad.
 * **Proyecto Factible**: Consiste en la formulación de un modelo operativo viable para solucionar una necesidad comunitaria o institucional comprobada, respaldado por una investigación de campo y fundamentación tecnológica aplicable.
 
 ### Diseño y Tipo de la Investigación
 De acuerdo con las clasificaciones del manual de la UPTLLJR (Tabla 6, pág. 20) y los postulados de Arias (2020):
-* **Diseño de Campo**: Los datos se recolectan directamente en el lugar donde ocurren los acontecimientos (las instalaciones de la Clínica FemeSalud en Valle de la Pascua), sin alterar artificialmente las condiciones naturales del consultorio.
+* **Diseño de Campo**: Los datos se recolectan directamente en el lugar donde ocurren los acontecimientos (las instalaciones de la Clínica FemeSalud en Valle de la Pascua), sin alterar artificialmente las condiciones naturales de la clínica.
 * **Diseño No Experimental**: Se observan los procesos de atención clínica, tiempos de espera y registro de antecedentes tal y como acontecen de forma espontánea, sin manipulación deliberada de variables antes de la intervención.
-* **Tipo Descriptivo y Proyectivo**: Desglosa las características de los procesos clínicos actuales y propone un diseño técnico factible de ingeniería de software para transformar positivamente la dinámica del consultorio.
+* **Tipo Descriptivo y Proyectivo**: Desglosa las características de los procesos clínicos actuales y propone un diseño técnico factible de ingeniería de software para transformar positivamente la dinámica de la clínica.
 
 ---
 
@@ -753,12 +753,12 @@ De acuerdo con las clasificaciones del manual de la UPTLLJR (Tabla 6, pág. 20) 
 
 ### Población
 La población o universo del estudio está conformada por los actores directamente vinculados a los flujos operativos y asistenciales de la Clínica FemeSalud:
-1. El personal médico y administrativo del consultorio: la especialista en ginecología y obstetricia (Dra. Carli Sole) y el personal auxiliar de recepción ($n = 2$).
+1. El personal médico y administrativo de la clínica: la especialista en múltiples especialidades médicas (Dra. Carli Sole (y equipo médico)) y el personal auxiliar de recepción ($n = 2$).
 2. La comunidad de pacientes atendidas: un promedio estimado de trescientas cincuenta (350) pacientes activas que acuden mensualmente al centro médico.
 
 ### Muestra
 De conformidad con los criterios de muestreo de la UPTLLJR (Tabla 7, pág. 21), se seleccionó un **muestreo no probabilístico de tipo intencional o por conveniencia**:
-* **Estrato A (Personal Operativo del Sistema)**: Muestra censal del 100% del personal que interactúa con la plataforma informática ($n = 2$: Dra. Carli Sole y asistente de recepción), quienes proporcionan los requerimientos funcionales, de seguridad y validación operativa.
+* **Estrato A (Personal Operativo del Sistema)**: Muestra censal del 100% del personal que interactúa con la plataforma informática ($n = 2$: Dra. Carli Sole (y equipo médico) y asistente de recepción), quienes proporcionan los requerimientos funcionales, de seguridad y validación operativa.
 * **Estrato B (Comunidad de Pacientes Usuarias)**: Muestra intencional de treinta (30) pacientes en control prenatal o ginecológico, seleccionadas para evaluar la percepción de agilidad en citas, puntualidad y legibilidad del récipe digital en PDF.
 
 **Tabla 5**  
@@ -766,7 +766,7 @@ De conformidad con los criterios de muestreo de la UPTLLJR (Tabla 7, pág. 21), 
 
 | Estrato de Informantes | Población Total ($N$) | Muestra Seleccionada ($n$) | Técnica de Muestreo |
 | :--- | :---: | :---: | :--- |
-| Médico Especialista (Dra. Carli Sole) | 1 | 1 (100%) | Censo Intencional |
+| Médico Especialista (Dra. Carli Sole (y equipo médico)) | 1 | 1 (100%) | Censo Intencional |
 | Asistente / Recepcionista | 1 | 1 (100%) | Censo Intencional |
 | Pacientes Usuarias en Consulta | ~350 / mes | 30 | No probabilístico intencional |
 | **Total** | **~352** | **32** | — |
@@ -780,8 +780,8 @@ De conformidad con los criterios de muestreo de la UPTLLJR (Tabla 7, pág. 21), 
 Siguiendo las pautas de las Tablas 8 y 9 del manual institucional (pág. 22):
 
 1. **Entrevista Semiestructurada**:
-   * *Técnica*: Diálogo técnico guiado entre los investigadores y la Dra. Carli Sole.
-   * *Instrumento*: **Guía de Entrevista** (Anexo A), diseñada para explorar las etapas de la consulta gineco-obstétrica, los datos requeridos en la anamnesis, las deficiencias del archivo físico y las expectativas del sistema.
+   * *Técnica*: Diálogo técnico guiado entre los investigadores y la Dra. Carli Sole (y equipo médico).
+   * *Instrumento*: **Guía de Entrevista** (Anexo A), diseñada para explorar las etapas de la consulta médica integral, los datos requeridos en la anamnesis, las deficiencias del archivo físico y las expectativas del sistema.
 2. **Observación Directa Participante**:
    * *Técnica*: Registro sistemático in situ del comportamiento del flujo de trabajo, tiempo empleado en ubicar expedientes en archivadores y atención en recepción.
    * *Instrumento*: **Guía de Observación y Bitácora de Campo**, para registrar cronológicamente las tareas operativas antes de la implantación del software.
@@ -789,7 +789,7 @@ Siguiendo las pautas de las Tablas 8 y 9 del manual institucional (pág. 22):
    * *Técnica*: Examen de los formatos físicos de historias clínicas, talonarios de récipes y hojas de cálculo previamente utilizados.
    * *Instrumento*: **Matriz de Registro de Requerimientos del Sistema**, utilizada para abstraer las entidades de datos y reglas de negocio.
 4. **Encuesta**:
-   * *Técnica*: Aplicación de cuestionario estandarizado al estrato de pacientes y personal para evaluar la satisfacción, tiempos de respuesta y usabilidad del sistema FemeSalud.
+   * *Técnica*: Aplicación de cuestionario estandarizado al estrato de pacientes y personal para evaluar la satisfacción, tiempos de respuesta y usabilidad del sistema MediZen.
    * *Instrumento*: **Cuestionario en Escala Likert de 5 puntos** (Anexo B), con ítems policotómicos que van desde 1 (Totalmente en desacuerdo) hasta 5 (Totalmente de acuerdo).
 
 ---
@@ -840,7 +840,7 @@ Para el procesamiento sistemático de los datos cuantitativos y cualitativos:
    * **Frecuencias absolutas y relativas (porcentajes)**: Para clasificar el perfil de las pacientes atendidas y las respuestas al cuestionario.
    * **Media aritmética**: Para contrastar el tiempo promedio en minutos invertido en la búsqueda de antecedentes y redacción de récipes antes y después de la implantación del software.
 2. **Análisis Cualitativo e Interpretativo**:
-   * Triangulación de la información recabada en las entrevistas a profundidad con la Dra. Carli Sole, contrastando las observaciones empíricas con las teorías de arquitectura de software y los requerimientos clínicos.
+   * Triangulación de la información recabada en las entrevistas a profundidad con la Dra. Carli Sole (y equipo médico), contrastando las observaciones empíricas con las teorías de arquitectura de software y los requerimientos clínicos.
 
 ---
 
@@ -853,10 +853,10 @@ El Plan de Acción desglosa de manera ordenada y sistemática las actividades, m
 
 | Objetivos Específicos | Actividades | Metas Cuantificables | Recursos Requeridos | Tiempo de Ejecución |
 | :--- | :--- | :--- | :--- | :---: |
-| **1. Diagnosticar** la situación actual de los procesos de historias clínicas, citas y control operativo en FemeSalud. | 1.1 Entrevista en profundidad con la Dra. Carli Sole.<br>1.2 Observación directa del flujo de atención en consultorio.<br>1.3 Análisis de expedientes en papel y talonarios manuales.<br>1.4 Elaboración de FODA y Árbol de Problemas. | - 1 Guía de entrevista aplicada.<br>- 1 Matriz de requerimientos técnicos consolidada.<br>- 1 Árbol de problemas validado con la especialista. | **Humanos:** Investigadores, Tutores, Dra. Carli Sole.<br>**Materiales:** Cuaderno de notas, cámara digital, laptop.<br>**Financieros:** Traslados locales ($15 USD / equivalente en Bs). | Semanas 1 a 4<br>(Mes 1) |
+| **1. Diagnosticar** la situación actual de los procesos de historias clínicas, citas y control operativo en FemeSalud. | 1.1 Entrevista en profundidad con la Dra. Carli Sole (y equipo médico).<br>1.2 Observación directa del flujo de atención en consultorio.<br>1.3 Análisis de expedientes en papel y talonarios manuales.<br>1.4 Elaboración de FODA y Árbol de Problemas. | - 1 Guía de entrevista aplicada.<br>- 1 Matriz de requerimientos técnicos consolidada.<br>- 1 Árbol de problemas validado con la especialista. | **Humanos:** Investigadores, Tutores, Dra. Carli Sole (y equipo médico).<br>**Materiales:** Cuaderno de notas, cámara digital, laptop.<br>**Financieros:** Traslados locales ($15 USD / equivalente en Bs). | Semanas 1 a 4<br>(Mes 1) |
 | **2. Diseñar** la arquitectura lógica, conceptual y prototipos de interfaz del sistema web. | 2.1 Modelado de Casos de Uso, Actividades y Secuencia UML.<br>2.2 Diseño del Modelo Entidad-Relación y diccionario de datos en PostgreSQL.<br>2.3 Diseño de la arquitectura de seguridad y bóveda local de PIN.<br>2.4 Creación de prototipos visuales *Mobile-First*. | - 4 Diagramas UML normalizados.<br>- 1 Esquema de base de datos relacional con 8 tablas clave.<br>- 10 Pantallas de interfaz aprobadas por la médica. | **Humanos:** Estudiantes investigadores del PNF.<br>**Materiales:** Herramientas CASE, VS Code, entorno web.<br>**Financieros:** Servicio de conectividad e internet ($25 USD). | Semanas 5 a 8<br>(Mes 2) |
-| **3. Desarrollar** los módulos funcionales de la aplicación web FemeSalud. | 3.1 Configuración del entorno React 19, TypeScript y Vite.<br>3.2 Creación de tablas, índices y políticas RLS en Supabase.<br>3.3 Programación de la bóveda PBKDF2/AES-GCM para PIN local.<br>3.4 Codificación de historias gineco-obstétricas y agenda en tiempo real.<br>3.5 Implementación del generador de récipes en PDF con jsPDF. | - 100% de los módulos codificados e integrados.<br>- Bóveda de PIN funcional en menos de 1 segundo.<br>- Generador de récipes PDF operativo con envío WhatsApp. | **Humanos:** Estudiantes programadores, asesor técnico.<br>**Materiales:** Computadores portátiles, Supabase BaaS, Bun.<br>**Financieros:** Costos operativos de desarrollo ($30 USD). | Semanas 9 a 16<br>(Meses 3 y 4) |
-| **4. Evaluar** la funcionalidad, seguridad, usabilidad y rendimiento del sistema web. | 4.1 Ejecución de pruebas funcionales de caja negra.<br>4.2 Pruebas de usabilidad y estrés del PIN criptográfico.<br>4.3 Despliegue en la nube en Vercel con base de datos en Supabase.<br>4.4 Taller de inducción y adiestramiento a la Dra. Carli Sole y secretaria.<br>4.5 Medición comparativa de tiempos antes vs. después. | - 100% de casos de prueba de software aprobados.<br>- 1 Despliegue en producción estable.<br>- 2 personas adiestradas con certificación interna.<br>- Reducción de >60% en tiempos operativos. | **Humanos:** Investigadores, Dra. Carli Sole, secretaria.<br>**Materiales:** Manual de usuario digital, proyector, tablet.<br>**Financieros:** Material de capacitación y refrigerio ($20 USD). | Semanas 17 a 20<br>(Mes 5) |
+| **3. Desarrollar** los módulos funcionales de la aplicación web FemeSalud. | 3.1 Configuración del entorno React 19, TypeScript y Vite.<br>3.2 Creación de tablas, índices y políticas RLS en Supabase.<br>3.3 Programación de la bóveda PBKDF2/AES-GCM para PIN local.<br>3.4 Codificación de historias médica integrals y agenda en tiempo real.<br>3.5 Implementación del generador de récipes en PDF con jsPDF. | - 100% de los módulos codificados e integrados.<br>- Bóveda de PIN funcional en menos de 1 segundo.<br>- Generador de récipes PDF operativo con envío WhatsApp. | **Humanos:** Estudiantes programadores, asesor técnico.<br>**Materiales:** Computadores portátiles, Supabase BaaS, Bun.<br>**Financieros:** Costos operativos de desarrollo ($30 USD). | Semanas 9 a 16<br>(Meses 3 y 4) |
+| **4. Evaluar** la funcionalidad, seguridad, usabilidad y rendimiento del sistema web. | 4.1 Ejecución de pruebas funcionales de caja negra.<br>4.2 Pruebas de usabilidad y estrés del PIN criptográfico.<br>4.3 Despliegue en la nube en Vercel con base de datos en Supabase.<br>4.4 Taller de inducción y adiestramiento a la Dra. Carli Sole (y equipo médico) y secretaria.<br>4.5 Medición comparativa de tiempos antes vs. después. | - 100% de casos de prueba de software aprobados.<br>- 1 Despliegue en producción estable.<br>- 2 personas adiestradas con certificación interna.<br>- Reducción de >60% en tiempos operativos. | **Humanos:** Investigadores, Dra. Carli Sole (y equipo médico), secretaria.<br>**Materiales:** Manual de usuario digital, proyector, tablet.<br>**Financieros:** Material de capacitación y refrigerio ($20 USD). | Semanas 17 a 20<br>(Mes 5) |
 
 *Nota.* Elaboración propia (2026), ajustado estrictamente a la matriz operativa para proyectos del PNF en Informática de la UPTLLJR.
 
@@ -871,14 +871,14 @@ El Plan de Acción desglosa de manera ordenada y sistemática las actividades, m
 
 **Enfoque: Aplicación del conocimiento y creación del producto.**
 
-La Fase IV representa la materialización de la ingeniería de software y la entrega del producto informático desarrollado para resolver de manera integral la problemática diagnosticada en el consultorio FemeSalud. Se detallan los requerimientos técnicos, la diagramación de procesos y arquitectura, el diseño de la base de datos relacional, los escenarios de interfaz de usuario, la codificación, las pruebas de calidad, el protocolo de instalación y el análisis empírico de los resultados obtenidos.
+La Fase IV representa la materialización de la ingeniería de software y la entrega del producto informático desarrollado para resolver de manera integral la problemática diagnosticada en el clínica FemeSalud. Se detallan los requerimientos técnicos, la diagramación de procesos y arquitectura, el diseño de la base de datos relacional, los escenarios de interfaz de usuario, la codificación, las pruebas de calidad, el protocolo de instalación y el análisis empírico de los resultados obtenidos.
 
 ---
 
 ## Propuesta Técnica
 
 ### Descripción de la Solución Informática
-La propuesta técnica consiste en el desarrollo e implantación de **FemeSalud (Medizen — Suite Clínica Inteligente)**, una plataforma web progresiva y reactiva de alta resolución diseñada para la gestión clínica integral, administración operativa y flujo asistencial sin fricción en consultorios médicos privados, con alta especialización en **Ginecología y Obstetricia**.
+La propuesta técnica consiste en el desarrollo e implantación de **FemeSalud (Medizen — Suite Clínica Inteligente)**, una plataforma web progresiva y reactiva de alta resolución diseñada para la gestión clínica integral, administración operativa y flujo asistencial sin fricción en consultorios médicos privados, con alta especialización en **Múltiples Especialidades Médicas**.
 
 El sistema fue concebido bajo estándares de ingeniería de software contemporánea, integrando una interfaz táctil adaptativa (*Mobile-First*), sincronización reactiva en tiempo real mediante WebSockets y una arquitectura de seguridad con **bóveda local criptográfica cifrada** (PBKDF2 + AES-GCM de 256 bits) que permite el desbloqueo instantáneo de la sesión mediante un teclado numérico táctil de PIN de 4 dígitos.
 
@@ -890,7 +890,7 @@ El sistema fue concebido bajo estándares de ingeniería de software contemporá
 | Código | Tipo | Nombre del Requerimiento | Descripción Técnica |
 | :--- | :--- | :--- | :--- |
 | **RF-01** | Funcional | Registro y Ficha de Pacientes | Apertura, consulta, edición y archivo de pacientes con datos demográficos, antecedentes patológicos, familiares, alérgicos y grupo sanguíneo. |
-| **RF-02** | Funcional | Historia Gineco-Obstétrica | Registro de evoluciones médicas con cálculo automático de edad gestacional por FUM, fecha probable de parto (FPP), antecedentes G-P-A-C, examen físico y ecografía. |
+| **RF-02** | Funcional | Historia Médica Integral | Registro de evoluciones médicas con cálculo automático de edad gestacional por FUM, fecha probable de parto (FPP), antecedentes G-P-A-C, examen físico y ecografía. |
 | **RF-03** | Funcional | Agenda y Citas en Tiempo Real | Calendario interactivo (día, semana, mes) con cambios de estado sincronizados instantáneamente entre recepción y consultorio médico mediante Supabase Realtime. |
 | **RF-04** | Funcional | Diseñador y Emisión de Récipes | Configuración visual de membretes y tipografías para generar récipes médicos oficiales en formato PDF (jsPDF) y botón de envío directo a WhatsApp. |
 | **RF-05** | Funcional | Facturación y Cobranza Multimoneda | Registro de cobros en Bolívares (Pago Móvil, transferencias) y Divisas (USD en efectivo, Zelle), emisión de recibos digitales y control de caja chica. |
@@ -910,14 +910,14 @@ El sistema fue concebido bajo estándares de ingeniería de software contemporá
    * La recepcionista o la médica registran a la paciente ingresando cédula de identidad, nombres, fecha de nacimiento, número de contacto telefónico y antecedentes basales.
    * El sistema indexa la cédula y previene duplicidades, creando el expediente digital único de la paciente.
 2. **Coordinación de Citas y Turnos**:
-   * Se asigna el turno seleccionando la fecha, el médico tratante (Dra. Carli Sole) y el tipo de servicio (Consulta General, Control Prenatal, Citología, Ecografía).
+   * Se asigna el turno seleccionando la fecha, el médico tratante (Dra. Carli Sole (y equipo médico)) y el tipo de servicio (Consulta General, Control Prenatal, Citología, Ecografía).
    * Al modificar el estado de la cita (ej. "En Espera" a "En Consulta"), el evento se transmite vía WebSockets a la pantalla de la médica sin necesidad de recargar la página.
-3. **Desarrollo del Acto Médico (Consulta Gineco-Obstétrica)**:
+3. **Desarrollo del Acto Médico (Consulta Médica Integral)**:
    * La médica selecciona la paciente; el sistema despliega el historial cronológico de atenciones anteriores.
-   * La doctora llena el motivo de consulta, enfermedad actual, examen físico y parámetros obstétricos. Si introduce la FUM, el sistema calcula automáticamente las semanas y días de gestación actuales y la FPP.
+   * La doctora llena el motivo de consulta, enfermedad actual, examen físico y parámetros clínico integrals. Si introduce la FUM, el sistema calcula automáticamente las semanas y días de gestación actuales y la FPP.
 4. **Prescripción Farmacológica y Récipes**:
    * Se registran los fármacos con posología e indicaciones generales.
-   * Con un solo clic se compila el documento en memoria con jsPDF, insertando el membrete oficial de FemeSalud, datos del colegio de médicos de la Dra. Carli Sole y código QR de validación. El PDF puede imprimirse físicamente o remitirse de inmediato al WhatsApp de la paciente.
+   * Con un solo clic se compila el documento en memoria con jsPDF, insertando el membrete oficial de FemeSalud, datos del colegio de médicos de la Dra. Carli Sole (y equipo médico) y código QR de validación. El PDF puede imprimirse físicamente o remitirse de inmediato al WhatsApp de la paciente.
 5. **Conciliación Financiera y Cierre Operativo**:
    * Se registra la factura de la consulta, indicando método de pago, tasa de cambio y monto recibido.
    * El sistema alimenta el balance de ingresos del día, facilitando el arqueo de caja chica en la jornada vespertina.
@@ -930,14 +930,14 @@ El sistema fue concebido bajo estándares de ingeniería de software contemporá
 
 ```mermaid
 flowchart LR
-    Médico["👩‍⚕️ Dra. Carli Sole<br>(Médico Especialista)"]
+    Médico["👩‍⚕️ Dra. Carli Sole (y equipo médico)<br>(Médico Especialista)"]
     Recepción["🧑‍💼 Asistente / Recepcionista"]
     Admin["⚙️ Administrador del Sistema"]
 
-    subgraph CasosDeUso["Sistema FemeSalud"]
+    subgraph CasosDeUso["Sistema MediZen"]
         CU1["Autenticar mediante PIN / Bóveda"]
         CU2["Gestionar Expedientes de Pacientes"]
-        CU3["Registrar Consulta Gineco-Obstétrica"]
+        CU3["Registrar Consulta Médica Integral"]
         CU4["Gestionar Calendario de Citas"]
         CU5["Diseñar y Emitir Récipes en PDF"]
         CU6["Procesar Cobros y Facturación"]
@@ -968,10 +968,10 @@ flowchart TD
     Desbloqueo --> BuscarPaciente[Búsqueda rápida de la paciente por C.I. o Nombre]
     BuscarPaciente --> EvaluarHistorial[Revisión de antecedentes clínicos y controles previos]
     EvaluarHistorial --> RegistrarSignos[Registro de constantes vitales y motivo de consulta]
-    RegistrarSignos --> TipoConsulta{¿Es consulta ginecológica u obstétrica?}
+    RegistrarSignos --> TipoConsulta{¿Es consulta médica multiespecialidad u obstétrica?}
     
     TipoConsulta -->|Obstétrica| Obstetricia[Ingreso de FUM / Cálculo automático de semanas y FPP]
-    TipoConsulta -->|Ginecológica| Ginecologia[Registro de citología, ecografía pélvica y examen físico]
+    TipoConsulta -->|Médica Multiespecialidad| Ginecologia[Registro de citología, ecografía pélvica y examen físico]
     
     Obstetricia --> Diagnostico[Formulación de Diagnóstico Clínico]
     Ginecologia --> Diagnostico
@@ -992,7 +992,7 @@ flowchart TD
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Dra as Dra. Carli Sole
+    actor Dra as Dra. Carli Sole (y equipo médico)
     participant UI as Interfaz PIN (React 19)
     participant Crypto as Bóveda Web Crypto API
     participant Storage as LocalStorage Cifrado
@@ -1105,7 +1105,7 @@ erDiagram
 | `allergies` | `TEXT` | Sí | — | Registro de alergias medicamentosas o reactivas. |
 | `blood_type` | `VARCHAR(5)` | Sí | — | Grupo sanguíneo y factor Rh de la paciente. |
 | `gynecological_history`| `JSONB` | Sí | — | Antecedentes ginecológicos estructurados (menarquia, ciclos). |
-| `created_at` | `TIMESTAMPTZ` | No | — | Fecha y hora exacta de registro en el consultorio. |
+| `created_at` | `TIMESTAMPTZ` | No | — | Fecha y hora exacta de registro en la clínica. |
 
 *Nota.* Elaboración propia (2026), extraída del esquema DDL de migraciones de PostgreSQL en Supabase.
 
@@ -1117,9 +1117,9 @@ erDiagram
 | `id` | `UUID` | No | PK | Identificador único de la consulta médica. |
 | `patient_id` | `UUID` | No | FK | Referencia foránea al identificador de la paciente (`patients.id`). |
 | `doctor_id` | `UUID` | No | FK | Referencia al usuario médico que efectúa la consulta. |
-| `consultation_type` | `VARCHAR(50)` | No | — | Tipo de consulta: Ginecológica, Obstétrica, Control o Ecografía. |
+| `consultation_type` | `VARCHAR(50)` | No | — | Tipo de consulta: Médica Multiespecialidad, Obstétrica, Control o Ecografía. |
 | `chief_complaint` | `TEXT` | No | — | Motivo principal de consulta expresado por la paciente. |
-| `physical_exam` | `TEXT` | Sí | — | Hallazgos de la exploración física ginecológica y mamaria. |
+| `physical_exam` | `TEXT` | Sí | — | Hallazgos de la exploración física médica multiespecialidad y mamaria. |
 | `fum` | `DATE` | Sí | — | Fecha de Última Menstruación registrada. |
 | `fpp` | `DATE` | Sí | — | Fecha Probable de Parto calculada por el sistema. |
 | `gestational_weeks` | `INTEGER` | Sí | — | Semanas de gestación calculadas a la fecha de consulta. |
@@ -1137,7 +1137,7 @@ La interfaz de usuario de FemeSalud fue diseñada bajo principios de ergonomía 
 
 1. **Pantalla de Desbloqueo Rápido por PIN de 4 Dígitos**:
    * Teclado numérico táctil interactivo con botones de retroalimentación háptica.
-   * Selector rápido de cuentas (Dra. Carli Sole / Recepción).
+   * Selector rápido de cuentas (Dra. Carli Sole (y equipo médico) / Recepción).
    * Al ingresar el PIN correcto, la aplicación descifra el almacenamiento local y accede a la suite en menos de un segundo sin requerir contraseñas largas en cada paciente.
 2. **Tablero de Control Operativo (Dashboard)**:
    * Tarjetas métricas superiores con indicadores clave: Total de Pacientes Activas, Consultas Realizadas en el Mes, Citas Programadas para Hoy e Ingresos Diarios.
@@ -1150,7 +1150,7 @@ La interfaz de usuario de FemeSalud fue diseñada bajo principios de ergonomía 
 4. **Agenda Interactiva y Citas en Tiempo Real**:
    * Calendario visual con vista por día, semana y mes.
    * Código de colores por estado: Pendiente (azul), En Sala de Espera (ámbar), En Consulta (verde), Finalizada (gris) y Cancelada (rojo).
-   * Sincronización instantánea mediante WebSockets entre la computadora de la secretaria y la tableta de la Dra. Carli Sole.
+   * Sincronización instantánea mediante WebSockets entre la computadora de la secretaria y la tableta de la Dra. Carli Sole (y equipo médico).
 5. **Diseñador Visual y Generador de Récipes en PDF**:
    * Editor en vivo de récipe con personalización del encabezado, isotipo de FemeSalud y pie de página institucional.
    * Renderizado en memoria en formato PDF nítido y vectorizado.
@@ -1234,7 +1234,7 @@ Para asegurar que el sistema cumple con los más altos estándares de calidad, c
 | **CP-02** | Seguridad / PIN | Ingreso de PIN incorrecto o menor a 4 dígitos. | Denegación de acceso, vibración visual de error y bloqueo de entrada. | Error visual y retención en pantalla de bloqueo; token intacto. | **APROBADO** |
 | **CP-03** | Pacientes | Búsqueda por cédula o nombre en barra interactiva. | Filtrado reactivo de pacientes en menos de 300 ms sin lag. | Despliegue inmediato de la ficha con antecedentes completos. | **APROBADO** |
 | **CP-04** | Consultas | Ingreso de FUM en consulta obstétrica. | Cálculo automático exacto de semanas de gestación y FPP. | Fórmulas obstétricas calculadas con precisión matemática. | **APROBADO** |
-| **CP-05** | Agenda | Modificación del estado de cita desde recepción. | Actualización en tiempo real en la pantalla del consultorio. | Estado actualizado vía WebSockets en menos de 500 ms. | **APROBADO** |
+| **CP-05** | Agenda | Modificación del estado de cita desde recepción. | Actualización en tiempo real en la pantalla de la clínica. | Estado actualizado vía WebSockets en menos de 500 ms. | **APROBADO** |
 | **CP-06** | Récipes | Clic en 'Generar Récipe PDF' y 'Enviar a WhatsApp'. | Compilación de PDF de alta resolución y apertura de chat directo. | PDF generado con membrete nítido y enlace WhatsApp funcional. | **APROBADO** |
 | **CP-07** | Facturación | Registro de pago mixto en dólares en efectivo y Pago Móvil en Bs. | Cálculo exacto de saldo restante y actualización de balance de caja. | Asiento contable registrado sin discrepancias aritméticas. | **APROBADO** |
 
@@ -1279,7 +1279,7 @@ Para asegurar que el sistema cumple con los más altos estándares de calidad, c
 Para garantizar la adopción exitosa y el aprovechamiento integral de FemeSalud, se diseñó e impartió un **Plan de Adiestramiento de 12 Horas Académicas**, estructurado en cuatro (04) sesiones prácticas presenciales:
 
 * **Módulo 1: Seguridad, Perfiles y Bóveda de PIN**: Configuración del código PIN de 4 dígitos, cambio de clave y desbloqueo seguro de la estación médica.
-* **Módulo 2: Registro de Pacientes e Historia Gineco-Obstétrica**: Apertura de nuevos expedientes, registro de antecedentes, uso de la calculadora de FUM/FPP y archivo de consultas anteriores.
+* **Módulo 2: Registro de Pacientes e Historia Médica Integral**: Apertura de nuevos expedientes, registro de antecedentes, uso de la calculadora de FUM/FPP y archivo de consultas anteriores.
 * **Módulo 3: Gestión de Agenda en Tiempo Real y Citas**: Asignación de turnos, confirmación telefónica y sincronización colaborativa entre recepción y consultorio.
 * **Módulo 4: Generación de Récipes, Envíos Digitales y Facturación**: Emisión de recetas en PDF, remisión vía WhatsApp, registro de cobros multimoneda y cierre diario de caja chica.
 
@@ -1289,32 +1289,32 @@ Para garantizar la adopción exitosa y el aprovechamiento integral de FemeSalud,
 
 La memoria descriptiva relata de forma cronológica y metodológica el proceso de ingeniería aplicado por los estudiantes Kevin Quintero y Charlys Villarroel bajo la tutela del Prof. José Pérez:
 
-1. **Fase de Inserción y Levantamiento**: Durante el mes inicial se efectuaron visitas al consultorio en Valle de la Pascua, registrando los flujos manuales de la Dra. Carli Sole y documentando los formularios clínicos de ginecología.
+1. **Fase de Inserción y Levantamiento**: Durante el mes inicial se efectuaron visitas a la clínica en Valle de la Pascua, registrando los flujos manuales de la Dra. Carli Sole (y equipo médico) y documentando los formularios clínicos de ginecología.
 2. **Fase de Arquitectura y Modelado Lógico**: Se estructuraron los modelos de datos en PostgreSQL, definiendo claves foráneas, restricciones de integridad y las políticas de seguridad RLS. Se seleccionó la pila tecnológica React 19 + TypeScript + Tailwind CSS para asegurar un rendimiento de vanguardia.
 3. **Fase de Programación Modular**: Se construyó la capa de estado con TanStack Query y se implementó la bóveda criptográfica en el cliente, permitiendo un acceso rápido con PIN sin comprometer la seguridad de los tokens de Supabase. Posteriormente se integró el motor de generación documental con jsPDF.
-4. **Fase de Validación y Puesta en Producción**: Se realizaron pruebas de usabilidad y estrés con la especialista médica, afinando la disposición de los campos obstétricos según sus sugerencias directas. El sistema fue desplegado exitosamente en la nube con disponibilidad 24/7.
+4. **Fase de Validación y Puesta en Producción**: Se realizaron pruebas de usabilidad y estrés con la especialista médica, afinando la disposición de los campos clínico integrals según sus sugerencias directas. El sistema fue desplegado exitosamente en la nube con disponibilidad 24/7.
 
 ---
 
 ## Análisis de Resultados
 
-El análisis de resultados demuestra fehacientemente cómo el sistema web FemeSalud resolvió la problemática diagnosticada en la Fase I, transformando radicalmente la dinámica operativa del consultorio.
+El análisis de resultados demuestra fehacientemente cómo el sistema web MediZen resolvió la problemática diagnosticada en la Fase I, transformando radicalmente la dinámica operativa de la clínica.
 
 **Tabla 13**  
 *Matriz Comparativa de Tiempos Operativos Antes y Después del Sistema*
 
-| Indicador Operativo | Situación Inicial (Manual / Papel) | Situación Actual (Sistema Web FemeSalud) | Variación Porcentual (%) |
+| Indicador Operativo | Situación Inicial (Manual / Papel) | Situación Actual (Sistema Web MediZen) | Variación Porcentual (%) |
 | :--- | :---: | :---: | :---: |
 | **Tiempo de apertura / registro de nueva paciente** | 8,5 minutos | 2,1 minutos | **- 75,3% de reducción** |
 | **Tiempo de búsqueda de historia clínica anterior** | 6,2 minutos | 0,2 minutos (instantáneo) | **- 96,7% de reducción** |
-| **Tiempo de llenado y cálculo obstétrico en consulta** | 18,0 minutos | 5,5 minutos | **- 69,4% de reducción** |
+| **Tiempo de llenado y cálculo clínico integral en consulta** | 18,0 minutos | 5,5 minutos | **- 69,4% de reducción** |
 | **Tiempo de redacción y entrega de récipe médico** | 7,0 minutos | 1,2 minutos (PDF / WhatsApp) | **- 82,8% de reducción** |
 | **Incidencias de expedientes traspapelados o dañados** | 12 incidentes / mes | 0 incidentes / mes | **- 100,0% de eliminación** |
 | **Desfase en la sincronización de turnos en sala** | Frecuente (interrupciones) | Nulo (sincronización WebSockets) | **Optimización total** |
 
-*Nota.* Elaboración propia (2026), con base en mediciones cronometradas durante el período de evaluación en el consultorio FemeSalud.
+*Nota.* Elaboración propia (2026), con base en mediciones cronometradas durante el período de evaluación en el clínica FemeSalud.
 
-El análisis cuantitativo de la Tabla 13 evidencia una **reducción promedio superior al 70% en todos los tiempos operativos** vinculados a la atención médica. El acceso instantáneo al historial gineco-obstétrico permite a la Dra. Carli Sole dedicar mayor tiempo al examen físico y a la interacción humana con la paciente, elevando la calidad asistencial del servicio. Adicionalmente, la eliminación total del uso de carpetas físicas y talonarios representa un ahorro económico continuo para el consultorio y una sustancial reducción del impacto ambiental papelero en la ciudad de Valle de la Pascua.
+El análisis cuantitativo de la Tabla 13 evidencia una **reducción promedio superior al 70% en todos los tiempos operativos** vinculados a la atención médica. El acceso instantáneo al historial gineco-clínico integral permite a la Dra. Carli Sole (y equipo médico) dedicar mayor tiempo al examen físico y a la interacción humana con la paciente, elevando la calidad asistencial del servicio. Adicionalmente, la eliminación total del uso de carpetas físicas y talonarios representa un ahorro económico continuo para la clínica y una sustancial reducción del impacto ambiental papelero en la ciudad de Valle de la Pascua.
 
 
 
@@ -1327,7 +1327,7 @@ El análisis cuantitativo de la Tabla 13 evidencia una **reducción promedio sup
 
 **Enfoque: Cierre y proyección.**
 
-El presente acápite constituye el cierre académico, reflexivo y proyectivo del Proyecto Socio-Integrador, donde se sintetizan los hallazgos más significativos derivados de la ejecución técnica, la interacción con la comunidad médica del consultorio FemeSalud y la aplicación de los conocimientos del PNF en Informática.
+El presente acápite constituye el cierre académico, reflexivo y proyectivo del Proyecto Socio-Integrador, donde se sintetizan los hallazgos más significativos derivados de la ejecución técnica, la interacción con la comunidad médica del clínica FemeSalud y la aplicación de los conocimientos del PNF en Informática.
 
 ---
 
@@ -1336,16 +1336,16 @@ El presente acápite constituye el cierre académico, reflexivo y proyectivo del
 De acuerdo con las directrices normativas de la UPTLLJR, las conclusiones dan respuesta lógica, secuencial y verificable a cada uno de los cuatro (04) objetivos específicos planteados en la investigación:
 
 1. **En relación con el primer objetivo específico (*Diagnosticar la situación actual de los procesos de historias clínicas, citas y control operativo en FemeSalud*)**:  
-   Se constató de manera inequívoca que la gestión manual basada en expedientes físicos de cartón, agendas en papel y talonarios de récipes manuscritos generaba severos cuellos de botella en la atención diaria. El diagnóstico participativo reveló retrasos promedio de 18 minutos en la revisión de antecedentes ginecológicos, riesgos constantes de pérdida o deterioro físico de la información confidencial de las pacientes y desajustes en la coordinación de turnos entre la recepción y el consultorio de la Dra. Carli Sole, validando plenamente la necesidad perentoria de una solución informática a medida.
+   Se constató de manera inequívoca que la gestión manual basada en expedientes físicos de cartón, agendas en papel y talonarios de récipes manuscritos generaba severos cuellos de botella en la atención diaria. El diagnóstico participativo reveló retrasos promedio de 18 minutos en la revisión de antecedentes ginecológicos, riesgos constantes de pérdida o deterioro físico de la información confidencial de las pacientes y desajustes en la coordinación de turnos entre la recepción y la clínica de la Dra. Carli Sole (y equipo médico), validando plenamente la necesidad perentoria de una solución informática a medida.
 
 2. **En relación con el segundo objetivo específico (*Diseñar la arquitectura lógica, conceptual y prototipos de interfaz del sistema web*)**:  
-   Se diseñó una arquitectura de software robusta, escalable y modular, fundamentada en el paradigma de aplicaciones reactivas de una sola página (SPA). Se formalizó el modelado conceptual a través de diagramas UML (Casos de Uso, Actividades y Secuencia) y se estructuró un modelo relacional en PostgreSQL compuesto por ocho (08) entidades altamente normalizadas que capturan fielmente las variables biomédicas de la ginecología y obstetricia (fórmulas obstétricas, FUM, FPP y ecografías). Asimismo, el diseño ergonómico de interfaces con enfoque *Mobile-First* garantizó una experiencia de usuario fluida y adaptable a dispositivos táctiles.
+   Se diseñó una arquitectura de software robusta, escalable y modular, fundamentada en el paradigma de aplicaciones reactivas de una sola página (SPA). Se formalizó el modelado conceptual a través de diagramas UML (Casos de Uso, Actividades y Secuencia) y se estructuró un modelo relacional en PostgreSQL compuesto por ocho (08) entidades altamente normalizadas que capturan fielmente las variables biomédicas de la múltiples especialidades médicas (fórmulas obstétricas, FUM, FPP y ecografías). Asimismo, el diseño ergonómico de interfaces con enfoque *Mobile-First* garantizó una experiencia de usuario fluida y adaptable a dispositivos táctiles.
 
 3. **En relación con el tercer objetivo específico (*Desarrollar los módulos funcionales de la aplicación web utilizando React 19, TypeScript, Tailwind CSS y Supabase*)**:  
    Se materializó exitosamente la plataforma web **FemeSalud (Medizen)**, integrando un conjunto de tecnologías de última generación. Destaca la implementación pionera de una **bóveda de seguridad criptográfica local** en el navegador basada en los algoritmos estándar `PBKDF2` y `AES-GCM` de 256 bits, la cual permite a la especialista médica desbloquear su sesión de trabajo en menos de un segundo mediante un teclado numérico táctil de PIN de 4 dígitos sin comprometer las credenciales maestras. Se integró una agenda interactiva sincronizada en tiempo real mediante WebSockets y un motor dinámico de renderizado documental con `jsPDF` para la emisión instantánea de prescripciones médicas y su envío automatizado a WhatsApp.
 
 4. **En relación con el cuarto objetivo específico (*Evaluar la funcionalidad, seguridad, usabilidad y rendimiento del sistema web*)**:  
-   La aplicación de pruebas funcionales de caja negra y pruebas de estrés arrojó un **100% de casos de prueba aprobados**, evidenciando ausencia de errores críticos en los cálculos obstétricos, en la integridad transaccional y en los flujos de cobro multimoneda. El análisis comparativo de resultados demostró una **reducción del 69,4% en el tiempo de registro en consulta**, una **disminución del 96,7% en el acceso a antecedentes clínicos** y la **erradicación total de expedientes extraviados**, alcanzando un índice de satisfacción del 100% por parte de la especialista médica y del personal administrativo.
+   La aplicación de pruebas funcionales de caja negra y pruebas de estrés arrojó un **100% de casos de prueba aprobados**, evidenciando ausencia de errores críticos en los cálculos clínico integrals, en la integridad transaccional y en los flujos de cobro multimoneda. El análisis comparativo de resultados demostró una **reducción del 69,4% en el tiempo de registro en consulta**, una **disminución del 96,7% en el acceso a antecedentes clínicos** y la **erradicación total de expedientes extraviados**, alcanzando un índice de satisfacción del 100% por parte de la especialista médica y del personal administrativo.
 
 En conclusión general, el desarrollo e implantación de FemeSalud demuestra el alto valor formativo y transformador del Programa Nacional de Formación en Informática de la UPTLLJR, entregando una solución soberana, segura y de calidad internacional que moderniza el ejercicio médico privado en el municipio Leonardo Infante del estado Guárico.
 
@@ -1355,11 +1355,11 @@ En conclusión general, el desarrollo e implantación de FemeSalud demuestra el 
 
 Con el propósito de asegurar la sostenibilidad en el tiempo, la preservación de la seguridad informática y la escalabilidad del sistema web desarrollado, se formulan las siguientes recomendaciones estratégicas:
 
-### Para el Consultorio FemeSalud y la Dra. Carli Sole:
+### Para el Clínica FemeSalud y la Dra. Carli Sole (y equipo médico):
 1. **Políticas de Respaldo y Cuidado Operativo**: Aunque la base de datos en Supabase cuenta con replicación continua en la nube, se sugiere realizar exportaciones mensuales de los respaldos lógicos en formato SQL o CSV a una unidad física de almacenamiento externa cifrada.
 2. **Higiene Criptográfica y Seguridad de Accesos**: Cambiar de manera periódica (cada 60 o 90 días) el PIN de desbloqueo de 4 dígitos y la contraseña maestra de acceso al panel de administración de Supabase, evitando compartir el código de seguridad con terceros no autorizados.
 3. **Equipamiento de Apoyo en Consultorio**: Considerar la incorporación de un dispositivo móvil tipo tableta de al menos 10 pulgadas dotada de lápiz óptico (*stylus*) en el escritorio de consulta, permitiendo a la especialista registrar gráficos anatómicos y firmas digitales manuscritas directamente sobre la historia médica.
-4. **Alimentación Eléctrica Ininterrumpida**: Mantener una unidad de respaldo de energía (UPS) en el enrutador de internet y en los equipos de escritorio del consultorio para mitigar las fluctuaciones eléctricas locales en la ciudad de Valle de la Pascua.
+4. **Alimentación Eléctrica Ininterrumpida**: Mantener una unidad de respaldo de energía (UPS) en el enrutador de internet y en los equipos de escritorio de la clínica para mitigar las fluctuaciones eléctricas locales en la ciudad de Valle de la Pascua.
 
 ### Para la Universidad Politécnica Territorial de los Llanos "Juana Ramírez" (UPTLLJR):
 1. **Líneas de Investigación en Informática Médica**: Promover la consolidación de una línea de investigación específica dedicada al desarrollo de Sistemas de Información en Salud (HIS) y registros médicos electrónicos de código abierto, aprovechando el impacto directo que estos proyectos tienen sobre las comunidades e instituciones de la región de los llanos venezolanos.
@@ -1367,7 +1367,7 @@ Con el propósito de asegurar la sostenibilidad en el tiempo, la preservación d
 
 ### Para Futuras Investigaciones y Líneas de Continuidad:
 1. **Portal del Paciente y Notificaciones Push**: Diseñar e integrar un módulo o aplicación web progresiva orientada exclusivamente a las pacientes de FemeSalud, permitiéndoles consultar el calendario de sus próximas citas, descargar sus récipes médicos pasados y recibir recordatorios de toma de medicamentos vía notificaciones push o SMS.
-2. **Telemedicina y Consultas a Distancia**: Incorporar un módulo de videoconferencia segura punto a punto mediante protocolos WebRTC para la atención ginecológica preliminar o revisión de exámenes de laboratorio a pacientes radicadas en zonas rurales lejanas de Valle de la Pascua (El Socorro, Tucupido, Zaraza).
+2. **Telemedicina y Consultas a Distancia**: Incorporar un módulo de videoconferencia segura punto a punto mediante protocolos WebRTC para la atención médica multiespecialidad preliminar o revisión de exámenes de laboratorio a pacientes radicadas en zonas rurales lejanas de Valle de la Pascua (El Socorro, Tucupido, Zaraza).
 3. **Inteligencia Artificial y Análisis Predictivo**: Integrar modelos de aprendizaje automático supervisado (*Machine Learning*) para el análisis de curvas de crecimiento fetal y detección temprana de factores de riesgo asociados a la preeclampsia o diabetes gestacional, apoyando la toma de decisiones clínicas de la especialista.
 
 
@@ -1458,15 +1458,15 @@ World Wide Web Consortium (W3C). (2022). *Web Cryptography API: W3C Recommendati
 
 ## ANEXO A  
 **GUÍA DE ENTREVISTA SEMIESTRUCTURADA APLICADA AL PERSONAL MÉDICO**  
-*(Informante Clave: Dra. Carli Sole – Especialista en Ginecología y Obstetricia)*  
+*(Informante Clave: Dra. Carli Sole (y equipo médico) – Especialista en Múltiples Especialidades Médicas)*  
 
-**Objetivo**: Diagnosticar las fases operativas de la consulta médica gineco-obstétrica, los mecanismos de archivo manual y los requerimientos del sistema informático en la Clínica FemeSalud.
+**Objetivo**: Diagnosticar las fases operativas de la consulta médica médica integral, los mecanismos de archivo manual y los requerimientos del sistema informático en la Clínica FemeSalud.
 
 **Preguntas Guía**:
 1. ¿Cuál es el procedimiento secuencial que se lleva a cabo desde que una paciente solicita una cita hasta que ingresa a la consulta médica?
 2. ¿Cómo se organizan y almacenan actualmente los expedientes e historias clínicas físicas de las pacientes?
 3. ¿Cuáles son las dificultades más recurrentes que experimenta al momento de localizar antecedentes patológicos o ecográficos de consultas anteriores?
-4. ¿Qué parámetros médicos son indispensables registrar de forma sistemática durante un control prenatal y una consulta ginecológica general (FUM, FPP, antecedentes G-P-A-C)?
+4. ¿Qué parámetros médicos son indispensables registrar de forma sistemática durante un control prenatal y una consulta médica multiespecialidad general (FUM, FPP, antecedentes G-P-A-C)?
 5. ¿Qué tiempo promedio estima que invierte en la redacción manual de récipes, indicaciones farmacológicas y justificativos médicos?
 6. ¿Qué funciones y características de seguridad consideraría indispensables en una plataforma web para que se adapte con total confianza a su ritmo de trabajo diario?
 
@@ -1480,10 +1480,10 @@ World Wide Web Consortium (W3C). (2022). *Web Cryptography API: W3C Recommendati
 
 | N.º | Ítem / Indicador Evaluado | TD (1) | D (2) | N (3) | A (4) | TA (5) |
 | :---: | :--- | :---: | :---: | :---: | :---: | :---: |
-| 1 | La interfaz gráfica del sistema FemeSalud es clara, intuitiva y estéticamente agradable. | | | | | |
+| 1 | La interfaz gráfica del sistema MediZen es clara, intuitiva y estéticamente agradable. | | | | | |
 | 2 | El mecanismo de desbloqueo rápido con PIN de 4 dígitos facilita el acceso seguro sin retrasos. | | | | | |
 | 3 | La búsqueda de pacientes mediante el atajo `Ctrl + K` o por cédula es inmediata y precisa. | | | | | |
-| 4 | Los campos del expediente gineco-obstétrico permiten registrar todos los datos requeridos. | | | | | |
+| 4 | Los campos del expediente gineco-clínico integral permiten registrar todos los datos requeridos. | | | | | |
 | 5 | El cálculo automatizado de las semanas de gestación y la fecha probable de parto (FPP) es exacto. | | | | | |
 | 6 | La agenda sincronizada en tiempo real reduce las interrupciones entre recepción y consultorio. | | | | | |
 | 7 | El generador visual de récipes permite emitir prescripciones médicas en PDF con rapidez. | | | | | |
@@ -1528,9 +1528,9 @@ Ciudadanos:
 **Universidad Politécnica Territorial de los Llanos "Juana Ramírez" (UPTLLJR)**  
 Presente. —  
 
-Por medio de la presente, yo, **Dra. Carli Sole**, titular de la Cédula de Identidad N.º V-____________, en mi carácter de médico especialista y directora asistencial del consultorio médico **Clínica FemeSalud**, hago constar que he aceptado y avalado la ejecución del Proyecto Socio-Integrador titulado:
+Por medio de la presente, yo, **Dra. Carli Sole (y equipo médico)**, titular de la Cédula de Identidad N.º V-____________, en mi carácter de médico especialista y directora asistencial de la clínica médico **Clínica FemeSalud**, hago constar que he aceptado y avalado la ejecución del Proyecto Socio-Integrador titulado:
 
-> **"DESARROLLO DE UN SISTEMA WEB PARA LA GESTIÓN DE HISTORIAS CLÍNICAS GINECOLÓGICAS Y CONTROL OPERATIVO EN EL CONSULTORIO FEMESALUD, VALLE DE LA PASCUA ESTADO GUÁRICO"**
+> **"DESARROLLO DE UN SISTEMA WEB MEDIZEN PARA LA GESTIÓN DE HISTORIAS CLÍNICAS MULTIESPECIALIDAD Y CONTROL OPERATIVO EN LA CLÍNICA FEMESALUD, VALLE DE LA PASCUA ESTADO GUÁRICO"**
 
 Desarrollado por los estudiantes cursantes del Trayecto III del PNF en Informática:
 * **Kevin Quintero**, C.I. V-32.276.060
@@ -1541,8 +1541,8 @@ Dicho sistema web fue concebido, probado e implantado en nuestras instalaciones,
 Atentamente,
 
 ___________________________________________________  
-**Dra. Carli Sole**  
-Médico Especialista en Ginecología y Obstetricia  
+**Dra. Carli Sole (y equipo médico)**  
+Médico Especialista en Múltiples Especialidades Médicas  
 M.P.P.S.: ___________ &nbsp;|&nbsp; C.M.G.: ___________  
 Clínica FemeSalud — Valle de la Pascua
 
@@ -1550,7 +1550,7 @@ Clínica FemeSalud — Valle de la Pascua
 
 ## ANEXO E  
 **MANUAL RÁPIDO DE USUARIO DEL SISTEMA WEB FEMESALUD**  
-*(Guía Operativa para la Dra. Carli Sole y Asistente)*
+*(Guía Operativa para la Dra. Carli Sole (y equipo médico) y Asistente)*
 
 ### 1. Desbloqueo Seguro mediante PIN de 4 Dígitos
 1. Abra su navegador web e ingrese a la dirección URL de la suite FemeSalud.
@@ -1569,7 +1569,7 @@ Clínica FemeSalud — Valle de la Pascua
 3. Complete los campos obligatorios: Cédula de Identidad, Nombres, Apellidos y Teléfono celular.
 4. Presione **Guardar Ficha**. La paciente quedará registrada en la base de datos centralizada de Supabase.
 
-### 4. Registro de Consulta Gineco-Obstétrica
+### 4. Registro de Consulta Médica Integral
 1. Ingrese al expediente de la paciente y seleccione la pestaña **Consultas**.
 2. Presione **+ Nueva Consulta**.
 3. Seleccione el tipo de atención (*Control Prenatal* o *Ginecología*).

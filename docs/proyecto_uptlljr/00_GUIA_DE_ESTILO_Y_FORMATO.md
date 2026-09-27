@@ -59,7 +59,7 @@ Para organizar de manera secuencial y homogénea las fases, secciones y acápite
 #### Figuras:
 1. Aplica para cualquier elemento gráfico visual: fotos, mapas geográficos, capturas de pantalla, diagramas de flujo y diagramas UML.
 2. **Encabezado superior**: Etiqueta y número en negrita (ej. **Figura 1**).
-3. **Título de la figura**: En línea siguiente en letra cursiva (ej. *Diagrama de Casos de Uso del Sistema FemeSalud*).
+3. **Título de la figura**: En línea siguiente en letra cursiva (ej. *Diagrama de Casos de Uso del Sistema MediZen*).
 4. **Pie de figura**: Inicia con la palabra **Nota.** en cursiva, indicando la fuente técnica o autoría (ej. *Nota.* Adaptado de los módulos de la aplicación web FemeSalud, 2026).
 
 ---
@@ -70,4 +70,4 @@ Para organizar de manera secuencial y homogénea las fases, secciones y acápite
 * **Tiempo Verbal**:
   * Planteamiento del problema, justificación y marco teórico: tiempo presente.
   * Metodología ejecutada, pruebas técnicas y resultados: tiempo pasado (pretérito perfecto simple).
-* **Precisión y Nomenclatura Técnica**: En áreas de computación y medicina, emplear los términos estandarizados de la industria (EHR, SQL, TypeScript, RLS, WebSockets, antecedentes gineco-obstétricos, etc.).
+* **Precisión y Nomenclatura Técnica**: En áreas de computación y medicina, emplear los términos estandarizados de la industria (EHR, SQL, TypeScript, RLS, WebSockets, antecedentes médicos multiespecialidad, etc.).
