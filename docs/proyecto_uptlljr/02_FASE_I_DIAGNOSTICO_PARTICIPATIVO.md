@@ -82,7 +82,8 @@ Mediante mesas de trabajo participativo, se listaron los nudos críticos detecta
 
 *Nota.* Elaboración propia (2026). La escala total suma los 4 criterios de impacto analizados.
 
-#### Árbol de Problemas
+**Figura 2**  
+*Árbol de Problemas del Control Clínico en la Clínica FemeSalud*
 
 ```mermaid
 flowchart TD
@@ -117,6 +118,8 @@ flowchart TD
     Causas --> PC
     PC --> Efectos
 ```
+
+*Nota.* Elaboración propia (2026), producto del diagnóstico participativo con el personal médico de la clínica.
 
 ---
 
@@ -184,6 +187,8 @@ flowchart TD
     Medios --> ObjetivoCentral
     ObjetivoCentral --> Fines
 ```
+
+*Nota.* Elaboración propia (2026), estructurado a partir de la matriz de medios y fines del proyecto.
 
 ---
 

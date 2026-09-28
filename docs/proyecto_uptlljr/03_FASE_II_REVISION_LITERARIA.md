@@ -66,6 +66,9 @@ La *Web Cryptography API* es una interfaz estándar del W3C que permite ejecutar
 
 El desarrollo, despliegue y puesta en marcha del sistema web MediZen se fundamenta estrictamente en el ordenamiento jurídico de la República Bolivariana de Venezuela, organizado jerárquicamente bajo la estructura de la Pirámide de Kelsen.
 
+**Figura 4**  
+*Pirámide de Kelsen Aplicada al Marco Legal del Software Clínico MediZen*
+
 ```mermaid
 flowchart TD
     N1["NIVEL CONSTITUCIONAL<br>Constitución de la República Bolivariana de Venezuela (Arts. 83, 84, 102, 110)"]
@@ -77,6 +80,8 @@ flowchart TD
     N2 --> N3
     N3 --> N4
 ```
+
+*Nota.* Elaboración propia (2026), según la jerarquía normativa de la República Bolivariana de Venezuela.
 
 1. **Constitución de la República Bolivariana de Venezuela (Gaceta Oficial N.º 5.908 Extraordinario, 2009)**:
    * **Artículo 83**: Establece la salud como un derecho social fundamental y deber indeclinable del Estado, garantizando la calidad de vida de la población. El proyecto coadyuva a la prestación de un servicio ginecológico y de salud materna eficiente.

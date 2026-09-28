@@ -448,7 +448,8 @@ Mediante mesas de trabajo participativo, se listaron los nudos críticos detecta
 
 *Nota.* Elaboración propia (2026). La escala total suma los 4 criterios de impacto analizados.
 
-#### Árbol de Problemas
+**Figura 2**  
+*Árbol de Problemas del Control Clínico en la Clínica FemeSalud*
 
 ```mermaid
 flowchart TD
@@ -483,6 +484,8 @@ flowchart TD
     Causas --> PC
     PC --> Efectos
 ```
+
+*Nota.* Elaboración propia (2026), producto del diagnóstico participativo con el personal médico de la clínica.
 
 ---
 
@@ -550,6 +553,8 @@ flowchart TD
     Medios --> ObjetivoCentral
     ObjetivoCentral --> Fines
 ```
+
+*Nota.* Elaboración propia (2026), estructurado a partir de la matriz de medios y fines del proyecto.
 
 ---
 
@@ -689,6 +694,9 @@ La *Web Cryptography API* es una interfaz estándar del W3C que permite ejecutar
 
 El desarrollo, despliegue y puesta en marcha del sistema web MediZen se fundamenta estrictamente en el ordenamiento jurídico de la República Bolivariana de Venezuela, organizado jerárquicamente bajo la estructura de la Pirámide de Kelsen.
 
+**Figura 4**  
+*Pirámide de Kelsen Aplicada al Marco Legal del Software Clínico MediZen*
+
 ```mermaid
 flowchart TD
     N1["NIVEL CONSTITUCIONAL<br>Constitución de la República Bolivariana de Venezuela (Arts. 83, 84, 102, 110)"]
@@ -700,6 +708,8 @@ flowchart TD
     N2 --> N3
     N3 --> N4
 ```
+
+*Nota.* Elaboración propia (2026), según la jerarquía normativa de la República Bolivariana de Venezuela.
 
 1. **Constitución de la República Bolivariana de Venezuela (Gaceta Oficial N.º 5.908 Extraordinario, 2009)**:
    * **Artículo 83**: Establece la salud como un derecho social fundamental y deber indeclinable del Estado, garantizando la calidad de vida de la población. El proyecto coadyuva a la prestación de un servicio ginecológico y de salud materna eficiente.
@@ -952,7 +962,8 @@ El sistema fue concebido bajo estándares de ingeniería de software contemporá
 
 ### Diagramación según la Metodología Utilizada (UML)
 
-#### Diagrama de Casos de Uso del Sistema
+**Figura 5**  
+*Diagrama de Casos de Uso General del Sistema MediZen*
 
 ```mermaid
 flowchart LR
@@ -986,7 +997,10 @@ flowchart LR
     Admin --> CU7
 ```
 
-#### Diagrama de Actividades: Flujo Integral de Consulta Médica
+*Nota.* Elaboración propia (2026), modelado formal de casos de uso bajo especificación UML.
+
+**Figura 6**  
+*Diagrama de Actividades: Flujo Integral de Consulta Médica Multiespecialidad*
 
 ```mermaid
 flowchart TD
@@ -1017,7 +1031,10 @@ flowchart TD
     end
 ```
 
-#### Diagrama de Secuencia: Desbloqueo Seguro mediante Bóveda de PIN Cifrada
+*Nota.* Elaboración propia (2026), estructurado en tres fases asistenciales del acto médico.
+
+**Figura 7**  
+*Diagrama de Secuencia: Desbloqueo Seguro mediante Bóveda PIN Cifrada*
 
 ```mermaid
 sequenceDiagram
@@ -1044,11 +1061,14 @@ sequenceDiagram
     end
 ```
 
+*Nota.* Elaboración propia (2026), protocolo de derivación PBKDF2 y descifrado AES-GCM (256 bits).
+
 ---
 
 ### Diseño de la Base de Datos
 
-#### Diagrama Entidad-Relación (ERD)
+**Figura 8**  
+*Diagrama Entidad-Relación de la Base de Datos (PostgreSQL / Supabase)*
 
 ```mermaid
 erDiagram
@@ -1119,6 +1139,8 @@ erDiagram
     }
 ```
 
+*Nota.* Elaboración propia (2026), esquema relacional transaccional normalizado en Tercera Forma Normal (3FN).
+
 #### Diccionario de Datos
 
 **Tabla 9**  
@@ -1161,30 +1183,152 @@ erDiagram
 
 ---
 
-### Diseños de los Escenarios a Utilizar (Mockups y Prototipos de UI)
+### Diseño de los Escenarios a Utilizar (Mockups y Prototipos de UI)
 
-La interfaz de usuario de FemeSalud fue diseñada bajo principios de ergonomía visual y accesibilidad táctil (*Mobile-First*), adaptada tanto para monitores de escritorio como para tabletas y dispositivos móviles:
+Para asegurar una experiencia de usuario óptima, fluida y adaptada al dinamismo del ejercicio médico asistencial diario, se diseñaron los escenarios de interfaz de usuario bajo el paradigma *Mobile-First*, optimizados tanto para pantallas táctiles (tablets de consulta médica) como para computadoras de escritorio (área de recepción administrativa):
 
-1. **Pantalla de Desbloqueo Rápido por PIN de 4 Dígitos**:
-   * Teclado numérico táctil interactivo con botones de retroalimentación háptica.
-   * Selector rápido de cuentas (Dra. Carli Sole (y equipo médico) / Recepción).
-   * Al ingresar el PIN correcto, la aplicación descifra el almacenamiento local y accede a la suite en menos de un segundo sin requerir contraseñas largas en cada paciente.
-2. **Tablero de Control Operativo (Dashboard)**:
-   * Tarjetas métricas superiores con indicadores clave: Total de Pacientes Activas, Consultas Realizadas en el Mes, Citas Programadas para Hoy e Ingresos Diarios.
-   * Gráficos interactivos de distribución mensual de consultas por tipo (Ginecología vs. Control Prenatal).
-   * Atajo global `Ctrl + K` para búsqueda instantánea de cualquier paciente en el sistema.
-3. **Módulo de Historia Clínica Digital Especializada**:
-   * Panel lateral con listado de pacientes paginado y buscador en tiempo real con *debounce*.
-   * Pestañas especializadas: Datos Generales, Antecedentes Gineco-Obstétricos, Historial Cronológico de Consultas y Récipes Emitidos.
-   * Calculadora obstétrica en vivo integrada en el formulario.
-4. **Agenda Interactiva y Citas en Tiempo Real**:
-   * Calendario visual con vista por día, semana y mes.
-   * Código de colores por estado: Pendiente (azul), En Sala de Espera (ámbar), En Consulta (verde), Finalizada (gris) y Cancelada (rojo).
-   * Sincronización instantánea mediante WebSockets entre la computadora de la secretaria y la tableta de la Dra. Carli Sole (y equipo médico).
-5. **Diseñador Visual y Generador de Récipes en PDF**:
-   * Editor en vivo de récipe con personalización del encabezado, isotipo de FemeSalud y pie de página institucional.
-   * Renderizado en memoria en formato PDF nítido y vectorizado.
-   * Botón de exportación directa y enlace con la API de WhatsApp para envío inmediato al teléfono celular de la paciente.
+**Figura 9**  
+*Interfaz de Desbloqueo Rápido por PIN de 4 Dígitos en Móvil y Escritorio*
+
+<div class="ui-mockup pin-mockup">
+  <div class="mockup-window-bar">
+    <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+    <span class="window-title">MediZen • Acceso Seguro a la Estación Médica</span>
+  </div>
+  <div class="mockup-content pin-layout">
+    <div class="pin-avatar">🩺</div>
+    <div class="pin-user">Dra. Carli Sole (y equipo médico)</div>
+    <div class="pin-role">Clínica FemeSalud • Sesión Médica Cifrada</div>
+    <div class="pin-dots">
+      <span class="pdot filled">●</span><span class="pdot filled">●</span><span class="pdot filled">●</span><span class="pdot empty">○</span>
+    </div>
+    <div class="pin-numpad">
+      <div class="num-row"><span>1</span><span>2</span><span>3</span></div>
+      <div class="num-row"><span>4</span><span>5</span><span>6</span></div>
+      <div class="num-row"><span>7</span><span>8</span><span>9</span></div>
+      <div class="num-row"><span>🔒</span><span>0</span><span>⌫</span></div>
+    </div>
+    <div class="pin-footer">Bóveda Criptográfica Local: AES-GCM (256 bits) • PBKDF2</div>
+  </div>
+</div>
+
+*Nota.* Elaboración propia (2026). Prototipo de interfaz móvil/táctil para autenticación médica en menos de 1 segundo.
+
+**Figura 10**  
+*Tablero de Control Operativo y Estadísticas Clínicas en Tiempo Real (Dashboard)*
+
+<div class="ui-mockup dashboard-mockup">
+  <div class="mockup-window-bar">
+    <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+    <span class="window-title">MediZen • Tablero de Control Operativo - Clínica FemeSalud</span>
+  </div>
+  <div class="mockup-content">
+    <div class="dash-search-bar">
+      <span>🔍 Buscar paciente por cédula o nombre... (Ctrl + K)</span>
+      <span class="badge-online">● En Línea</span>
+    </div>
+    <div class="dash-cards">
+      <div class="dcard"><div class="dval">348</div><div class="dlbl">Pacientes Activas</div></div>
+      <div class="dcard"><div class="dval">42</div><div class="dlbl">Consultas este Mes</div></div>
+      <div class="dcard"><div class="dval">8</div><div class="dlbl">Citas para Hoy</div></div>
+      <div class="dcard highlight"><div class="dval">$380 USD</div><div class="dlbl">Ingresos del Día</div></div>
+    </div>
+    <div class="dash-sub">
+      <div class="dash-chart-box">
+        <div class="box-head">Distribución de Consultas Médicas Multiespecialidad</div>
+        <div class="mock-bars">
+          <div class="mbar"><div class="mfill" style="height: 65%;"></div><span>Cons. General</span></div>
+          <div class="mbar"><div class="mfill" style="height: 85%;"></div><span>Ginecología</span></div>
+          <div class="mbar"><div class="mfill" style="height: 75%;"></div><span>Control Prenatal</span></div>
+          <div class="mbar"><div class="mfill" style="height: 40%;"></div><span>Ecografías</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+*Nota.* Elaboración propia (2026). Vista principal del panel de administración con métricas consolidadas.
+
+**Figura 11**  
+*Módulo de Historia Clínica Digital Especializada en Múltiples Especialidades Médicas*
+
+<div class="ui-mockup clinical-mockup">
+  <div class="mockup-window-bar">
+    <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+    <span class="window-title">MediZen • Expediente Médico Digital - Paciente: Elena Gómez (V-18.452.190)</span>
+  </div>
+  <div class="mockup-content">
+    <div class="tab-strip">
+      <span class="tab active">📋 Consulta Actual</span>
+      <span class="tab">🧬 Antecedentes Médicos</span>
+      <span class="tab">📅 Histórico de Visitas (12)</span>
+      <span class="tab">💊 Récipes Emitidos</span>
+    </div>
+    <div class="form-preview">
+      <div class="form-row">
+        <div class="form-col"><strong>Motivo:</strong> Control prenatal rutinario / Dolor pélvico leve</div>
+        <div class="form-col"><strong>Signos:</strong> P/A: 110/70 mmHg • Peso: 62.4 kg • FCF: 144 lpm</div>
+      </div>
+      <div class="form-row calculator-box">
+        <div><strong>Calculadora Obstétrica:</strong> FUM: 14/08/2025 • FPP: 21/05/2026 • <strong>Edad Gestacional: 32 Semanas</strong></div>
+      </div>
+      <div class="form-row">
+        <div><strong>Diagnóstico:</strong> Embarazo intrauterino de 32 semanas por FUM. Evolución favorable.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+*Nota.* Elaboración propia (2026). Pantalla de llenado ágil de consulta con cálculo obstétrico automatizado.
+
+**Figura 12**  
+*Agenda Médica Interactiva con Sincronización WebSockets en Tiempo Real*
+
+<div class="ui-mockup calendar-mockup">
+  <div class="mockup-window-bar">
+    <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+    <span class="window-title">MediZen • Agenda de Turnos y Consultas - Hoy: 28 de Septiembre</span>
+  </div>
+  <div class="mockup-content">
+    <div class="cal-list">
+      <div class="cal-row done"><span>08:30 AM</span><span>Elena Gómez (V-18.452.190)</span><span class="tag-status tag-done">Finalizada</span></div>
+      <div class="cal-row in-progress"><span>09:15 AM</span><span>María Pérez (V-24.112.580)</span><span class="tag-status tag-prog">En Consulta</span></div>
+      <div class="cal-row waiting"><span>10:00 AM</span><span>Carmen Silva (V-15.890.312)</span><span class="tag-status tag-wait">En Sala de Espera</span></div>
+      <div class="cal-row pending"><span>10:45 AM</span><span>Patricia Rivas (V-26.781.904)</span><span class="tag-status tag-pend">Confirmada</span></div>
+    </div>
+  </div>
+</div>
+
+*Nota.* Elaboración propia (2026). Calendario de citas con código visual de estados sincronizado en tiempo real.
+
+**Figura 13**  
+*Diseñador Visual y Generador de Récipes Médicos Oficiales en PDF*
+
+<div class="ui-mockup recipe-mockup">
+  <div class="mockup-window-bar">
+    <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+    <span class="window-title">MediZen • Emisión Oficial de Récipes e Indicaciones Médicas (jsPDF)</span>
+  </div>
+  <div class="mockup-content recipe-paper">
+    <div class="recipe-head">
+      <div class="rec-title">🏥 CLÍNICA FEMESALUD • MEDIZEN</div>
+      <div class="rec-sub">Dra. Carli Sole (y equipo médico) • M.P.P.S. 84.120 • Col. Médicos 4.190</div>
+    </div>
+    <div class="recipe-body">
+      <div class="rx-symbol">℞</div>
+      <div class="rx-item">1. <strong>Cefalexina 500mg</strong> - Tomar 1 cápsula cada 8 horas por 7 días.</div>
+      <div class="rx-item">2. <strong>Acetaminofén 500mg</strong> - Tomar 1 tableta cada 6 horas en caso de dolor o fiebre.</div>
+      <div class="rx-item">3. <strong>Complejo Vitamínico Prenatal</strong> - 1 tableta diaria con el desayuno.</div>
+    </div>
+    <div class="recipe-actions">
+      <span class="btn-pdf">📄 Generar PDF</span>
+      <span class="btn-wapp">💬 Enviar vía WhatsApp</span>
+      <span class="btn-print">🖨️ Imprimir Físico</span>
+    </div>
+  </div>
+</div>
+
+*Nota.* Elaboración propia (2026). Generador documental vectorizado con exportación directa y remisión electrónica.
 
 ---
 
@@ -1192,6 +1336,9 @@ La interfaz de usuario de FemeSalud fue diseñada bajo principios de ergonomía 
 
 #### Arquitectura de Software
 La aplicación adopta una arquitectura desacoplada y orientada a servicios con las siguientes capas:
+
+**Figura 14**  
+*Diagrama de Arquitectura de Software en Capas de la Solución Web MediZen*
 
 ```mermaid
 flowchart TD
@@ -1218,6 +1365,8 @@ flowchart TD
     CapaPresentacion <--> CapaSeguridad
     CapaPresentacion <--> CapaBackend
 ```
+
+*Nota.* Elaboración propia (2026), arquitectura en tres capas desacopladas (Presentación, Seguridad y Backend).
 
 #### Implementación del Algoritmo Criptográfico de PIN Local
 Para ilustrar la rigurosidad técnica de la solución desarrollada, a continuación se expone la implementación del cifrado de credenciales en el cliente mediante la Web Crypto API (`PBKDF2` y `AES-GCM`):
