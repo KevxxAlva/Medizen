@@ -33,7 +33,7 @@ Este directorio contiene la documentación formal completa y rigurosa del Proyec
 * **Autores**:
   * Kevin Quintero, C.I. V-32.276.060
   * Charlys Villarroel, C.I. V-32.337.825
-* **Tutor Académico**: Prof. José Pérez
+* **Tutor Académico**: Prof. Jose Alfredo Sanchez
 * **Organización / Centro Asistencial**: Clínica FemeSalud / Dra. Carli Sole (y equipo médico) (Especialista en Múltiples Especialidades Médicas).
 * **Ubicación**: Casco Central de Valle de la Pascua, Municipio Autónomo Leonardo Infante, Estado Guárico.
 * **Fecha de Presentación**: Valle de la Pascua, Abril de 2026.

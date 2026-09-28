@@ -26,7 +26,7 @@ Kevin Quintero, C.I. V-32.276.060
 Charlys Villarroel, C.I. V-32.337.825  
 
 **Tutor Académico:**  
-Prof. José Pérez  
+Prof. Jose Alfredo Sanchez  
 
 <br><br><br>
 
@@ -40,6 +40,8 @@ Prof. José Pérez
 
 <!-- PÁGINA 2: PORTADA INTERNA -->
 <div align="center">
+
+  <img src="./img/logo_uptlljr.png" alt="Logo UPTLL Juana Ramírez" width="280" style="margin-bottom: 20px;" />
 
 **REPÚBLICA BOLIVARIANA DE VENEZUELA**  
 **MINISTERIO DEL PODER POPULAR PARA LA EDUCACIÓN UNIVERSITARIA**  
@@ -62,7 +64,7 @@ Kevin Quintero, C.I. V-32.276.060
 Charlys Villarroel, C.I. V-32.337.825  
 
 **Tutor Académico:**  
-Prof. José Pérez  
+Prof. Jose Alfredo Sanchez  
 
 **Asesora Comunitaria / Institucional:**  
 Dra. Carli Sole (y equipo médico)  
@@ -99,7 +101,7 @@ En fe de lo cual firman en la ciudad de Valle de la Pascua, a los ______ días d
 <br><br>
 
 __________________________________________  
-**Prof. José Pérez**  
+**Prof. Jose Alfredo Sanchez**  
 C.I.: __________________  
 *Tutor Académico*  
 
@@ -133,7 +135,7 @@ C.I.: __________________ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&
 
 A la **Universidad Politécnica Territorial de los Llanos "Juana Ramírez" (UPTLLJR)**, y en particular al Departamento del Programa Nacional de Formación en Informática, por abrirnos sus aulas y brindarnos una sólida formación tecnológica y comunitaria orientada a la transformación del entorno social.
 
-A nuestro Tutor Académico, el **Prof. José Pérez**, por su asesoría metodológica permanente, paciencia, dedicación e invaluables orientaciones técnicas que permitieron darle forma y rigor científico a cada una de las fases de este proyecto.
+A nuestro Tutor Académico, el **Prof. Jose Alfredo Sanchez**, por su asesoría metodológica permanente, paciencia, dedicación e invaluables orientaciones técnicas que permitieron darle forma y rigor científico a cada una de las fases de este proyecto.
 
 A la **Dra. Carli Sole (y equipo médico)** y al equipo de la **Clínica FemeSalud**, por abrirnos generosamente las puertas de su consultorio, depositar su plena confianza en nuestra propuesta tecnológica, brindar su tiempo y suministrar los requerimientos clínicos esenciales para la concepción y puesta en marcha del sistema.
 
@@ -315,7 +317,7 @@ ANEXOS .........................................................................
 <br>
 
 **Autores:** Kevin Quintero, Charlys Villarroel  
-**Tutor Académico:** Prof. José Pérez  
+**Tutor Académico:** Prof. Jose Alfredo Sanchez  
 **Año:** 2026  
 
 <br>
@@ -404,7 +406,7 @@ La clínica opera bajo el marco regulatorio del Ministerio del Poder Popular par
 2. **Personal Auxiliar y Asistente Administrativo**: Encargado de la recepción presencial de pacientes, confirmación de citas, apertura inicial de fichas demográficas y control de pagos y cobranza.
 3. **Comunidad de Pacientes Usuarias**: Receptores de los servicios clínicos, citas programadas, prescripciones médicas y seguimiento clínico continuo.
 4. **Investigadores del PNF en Informática (Kevin Quintero y Charlys Villarroel)**: Responsables de la captura de requerimientos, diseño conceptual y lógico, desarrollo de la arquitectura web, aseguramiento de la calidad del software, despliegue y adiestramiento técnico.
-5. **Tutor Académico (Prof. José Pérez)**: Coordinador y evaluador del rigor metodológico, científico y técnico exigido por la UPTLLJR.
+5. **Tutor Académico (Prof. Jose Alfredo Sanchez)**: Coordinador y evaluador del rigor metodológico, científico y técnico exigido por la UPTLLJR.
 
 ---
 
@@ -1293,7 +1295,7 @@ Para garantizar la adopción exitosa y el aprovechamiento integral de FemeSalud,
 
 ## Memoria Descriptiva
 
-La memoria descriptiva relata de forma cronológica y metodológica el proceso de ingeniería aplicado por los estudiantes Kevin Quintero y Charlys Villarroel bajo la tutela del Prof. José Pérez:
+La memoria descriptiva relata de forma cronológica y metodológica el proceso de ingeniería aplicado por los estudiantes Kevin Quintero y Charlys Villarroel bajo la tutela del Prof. Jose Alfredo Sanchez:
 
 1. **Fase de Inserción y Levantamiento**: Durante el mes inicial se efectuaron visitas a la clínica en Valle de la Pascua, registrando los flujos manuales de la Dra. Carli Sole (y equipo médico) y documentando los formularios clínicos de ginecología.
 2. **Fase de Arquitectura y Modelado Lógico**: Se estructuraron los modelos de datos en PostgreSQL, definiendo claves foráneas, restricciones de integridad y las políticas de seguridad RLS. Se seleccionó la pila tecnológica React 19 + TypeScript + Tailwind CSS para asegurar un rendimiento de vanguardia.

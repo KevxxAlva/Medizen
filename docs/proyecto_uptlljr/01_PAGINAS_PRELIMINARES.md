@@ -26,7 +26,7 @@ Kevin Quintero, C.I. V-32.276.060
 Charlys Villarroel, C.I. V-32.337.825  
 
 **Tutor Académico:**  
-Prof. José Pérez  
+Prof. Jose Alfredo Sanchez  
 
 <br><br><br>
 
@@ -40,6 +40,8 @@ Prof. José Pérez
 
 <!-- PÁGINA 2: PORTADA INTERNA -->
 <div align="center">
+
+  <img src="./img/logo_uptlljr.png" alt="Logo UPTLL Juana Ramírez" width="280" style="margin-bottom: 20px;" />
 
 **REPÚBLICA BOLIVARIANA DE VENEZUELA**  
 **MINISTERIO DEL PODER POPULAR PARA LA EDUCACIÓN UNIVERSITARIA**  
@@ -62,7 +64,7 @@ Kevin Quintero, C.I. V-32.276.060
 Charlys Villarroel, C.I. V-32.337.825  
 
 **Tutor Académico:**  
-Prof. José Pérez  
+Prof. Jose Alfredo Sanchez  
 
 **Asesora Comunitaria / Institucional:**  
 Dra. Carli Sole (y equipo médico)  
@@ -99,7 +101,7 @@ En fe de lo cual firman en la ciudad de Valle de la Pascua, a los ______ días d
 <br><br>
 
 __________________________________________  
-**Prof. José Pérez**  
+**Prof. Jose Alfredo Sanchez**  
 C.I.: __________________  
 *Tutor Académico*  
 
@@ -133,7 +135,7 @@ C.I.: __________________ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&
 
 A la **Universidad Politécnica Territorial de los Llanos "Juana Ramírez" (UPTLLJR)**, y en particular al Departamento del Programa Nacional de Formación en Informática, por abrirnos sus aulas y brindarnos una sólida formación tecnológica y comunitaria orientada a la transformación del entorno social.
 
-A nuestro Tutor Académico, el **Prof. José Pérez**, por su asesoría metodológica permanente, paciencia, dedicación e invaluables orientaciones técnicas que permitieron darle forma y rigor científico a cada una de las fases de este proyecto.
+A nuestro Tutor Académico, el **Prof. Jose Alfredo Sanchez**, por su asesoría metodológica permanente, paciencia, dedicación e invaluables orientaciones técnicas que permitieron darle forma y rigor científico a cada una de las fases de este proyecto.
 
 A la **Dra. Carli Sole (y equipo médico)** y al equipo de la **Clínica FemeSalud**, por abrirnos generosamente las puertas de su consultorio, depositar su plena confianza en nuestra propuesta tecnológica, brindar su tiempo y suministrar los requerimientos clínicos esenciales para la concepción y puesta en marcha del sistema.
 
@@ -315,7 +317,7 @@ ANEXOS .........................................................................
 <br>
 
 **Autores:** Kevin Quintero, Charlys Villarroel  
-**Tutor Académico:** Prof. José Pérez  
+**Tutor Académico:** Prof. Jose Alfredo Sanchez  
 **Año:** 2026  
 
 <br>

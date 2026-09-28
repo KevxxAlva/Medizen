@@ -422,7 +422,7 @@ Para garantizar la adopción exitosa y el aprovechamiento integral de FemeSalud,
 
 ## Memoria Descriptiva
 
-La memoria descriptiva relata de forma cronológica y metodológica el proceso de ingeniería aplicado por los estudiantes Kevin Quintero y Charlys Villarroel bajo la tutela del Prof. José Pérez:
+La memoria descriptiva relata de forma cronológica y metodológica el proceso de ingeniería aplicado por los estudiantes Kevin Quintero y Charlys Villarroel bajo la tutela del Prof. Jose Alfredo Sanchez:
 
 1. **Fase de Inserción y Levantamiento**: Durante el mes inicial se efectuaron visitas a la clínica en Valle de la Pascua, registrando los flujos manuales de la Dra. Carli Sole (y equipo médico) y documentando los formularios clínicos de ginecología.
 2. **Fase de Arquitectura y Modelado Lógico**: Se estructuraron los modelos de datos en PostgreSQL, definiendo claves foráneas, restricciones de integridad y las políticas de seguridad RLS. Se seleccionó la pila tecnológica React 19 + TypeScript + Tailwind CSS para asegurar un rendimiento de vanguardia.

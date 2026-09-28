@@ -44,7 +44,7 @@ La clínica opera bajo el marco regulatorio del Ministerio del Poder Popular par
 2. **Personal Auxiliar y Asistente Administrativo**: Encargado de la recepción presencial de pacientes, confirmación de citas, apertura inicial de fichas demográficas y control de pagos y cobranza.
 3. **Comunidad de Pacientes Usuarias**: Receptores de los servicios clínicos, citas programadas, prescripciones médicas y seguimiento clínico continuo.
 4. **Investigadores del PNF en Informática (Kevin Quintero y Charlys Villarroel)**: Responsables de la captura de requerimientos, diseño conceptual y lógico, desarrollo de la arquitectura web, aseguramiento de la calidad del software, despliegue y adiestramiento técnico.
-5. **Tutor Académico (Prof. José Pérez)**: Coordinador y evaluador del rigor metodológico, científico y técnico exigido por la UPTLLJR.
+5. **Tutor Académico (Prof. Jose Alfredo Sanchez)**: Coordinador y evaluador del rigor metodológico, científico y técnico exigido por la UPTLLJR.
 
 ---
 
