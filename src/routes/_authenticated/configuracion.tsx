@@ -16,6 +16,7 @@ import { RecipeDesigner } from "@/components/settings/RecipeDesigner";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { supabase } from "@/integrations/supabase/client";
 import { removeQuickAccessAccount, saveQuickAccessAccount } from "@/lib/auth/quickAccess";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/configuracion")({
   head: () => ({ meta: [{ title: "Configuración — Medizen" }] }),
@@ -77,8 +78,13 @@ function ConfiguracionPage() {
 
   const isProfileLoading = loadingProfile || updateProfile.isPending;
 
+  const [activeTab, setActiveTab] = useState("profile");
+
   return (
-    <div className="space-y-6 max-w-4xl mx-auto py-2 font-sans text-foreground">
+    <div className={cn(
+      "space-y-6 mx-auto py-2 font-sans text-foreground transition-all duration-300",
+      activeTab === "recipe" ? "max-w-7xl px-2 sm:px-4" : "max-w-4xl"
+    )}>
       <header className="flex flex-col gap-1">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ajustes Generales</p>
         <h1 className="text-2xl font-bold text-primary tracking-tight flex items-center gap-2">
@@ -86,7 +92,7 @@ function ConfiguracionPage() {
         </h1>
       </header>
 
-      <Tabs defaultValue="profile" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 bg-muted/50 p-1 rounded-2xl mb-6 max-w-2xl h-auto flex-wrap">
           <TabsTrigger value="profile" className="rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 py-2.5 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground">
             <UserIcon className="h-4 w-4" /> Mi Perfil
