@@ -220,6 +220,7 @@ FASE IV: EJECUCIÓN TÉCNICA (DESARROLLO DE LA PROPUESTA) ......................
     Diseño de la Base de Datos ................................................. 48
     Diseño de los Escenarios a Utilizar (Mockups y Prototipos de UI) ........... 52
     Desarrollo de la Aplicación ................................................ 55
+      Arquitectura de Seguridad y Privacidad de Datos (RLS, AES-GCM) ............ 57
     Pruebas de la Aplicación ................................................... 58
     Instalación y Despliegue de la Aplicación .................................. 60
     Adiestramiento y Capacitación .............................................. 61
@@ -1397,6 +1398,49 @@ export async function deriveKeyFromPin(pin: string, salt: Uint8Array): Promise<C
   );
 }
 ```
+
+---
+
+
+#### Arquitectura de Seguridad Informática, Privacidad de Datos y Trazabilidad
+
+Para dar cumplimiento estricto al secreto médico, la confidencialidad de la información y la protección contra accesos no autorizados, el sistema web MediZen incorpora un esquema integral de seguridad en cuatro capas estratégicas:
+
+1. **Control de Acceso Basado en Roles (RBAC) y Seguridad a Nivel de Fila (Row Level Security - RLS)**:
+   * La separación de privilegios se impone a nivel del motor relacional PostgreSQL mediante políticas activas de RLS (*Row Level Security*).
+   * **Perfil Médico (Especialistas)**: Autorización completa de lectura, inserción y modificación de historias clínicas, antecedentes, evoluciones, diagnósticos y emisión de récipes médicos.
+   * **Perfil Recepción / Asistencial**: Acceso estrictamente delimitado a la gestión de citas, registro de datos demográficos básicos (nombre, cédula, teléfono) y cobro en facturación. El motor de base de datos **bloquea a nivel de kernel SQL** cualquier intento de lectura o consulta sobre las tablas de historias médicas (`consultations` y `recipes`), garantizando que el personal de recepción nunca tenga acceso a diagnósticos confidenciales.
+
+   ```sql
+   -- Política de Seguridad RLS en PostgreSQL para la protección de Historias Clínicas
+   ALTER TABLE consultations ENABLE ROW LEVEL SECURITY;
+
+   CREATE POLICY "Acceso exclusivo a médicos para historias clínicas"
+   ON consultations
+   FOR ALL
+   USING (
+     auth.jwt() ->> 'role' = 'doctor' OR 
+     auth.uid() = doctor_id
+   );
+   ```
+
+2. **Criptografía en el Cliente y Protección de Sesión mediante Web Crypto API**:
+   * En lugar de almacenar credenciales o tokens de sesión en texto plano en el navegador (`localStorage`), MediZen implementa una bóveda criptográfica local.
+   * La clave simétrica de 256 bits se deriva en tiempo de ejecución a partir del PIN numérico de 4 dígitos utilizando el algoritmo **PBKDF2** (*Password-Based Key Derivation Function 2*) configurado con **100.000 iteraciones de hash SHA-256** y una sal criptográfica (*salt*) única de 16 bytes generada por `crypto.getRandomValues()`.
+   * El token de sesión de Supabase se cifra en memoria mediante **AES-GCM (Galois/Counter Mode)**, garantizando simultáneamente confidencialidad e integridad criptográfica autenticada. Si una estación de trabajo queda desatendida, la sesión se bloquea automáticamente tras 5 minutos de inactividad, haciendo imposible la extracción de credenciales sin el PIN.
+
+3. **Pistas de Auditoría y Trazabilidad Médico-Legal (Audit Trail)**:
+   * Cada acción de impacto clínico o financiero genera una estampa inmutable en la tabla de auditoría (`audit_logs`), registrando:
+     * Identificador universal del usuario operante (`user_id`).
+     * Tipo de operación efectuada (`INSERT`, `UPDATE`, `DELETE`).
+     * Módulo y registro afectado (ej. `consultations.id`).
+     * Estampa cronológica precisa con zona horaria (`TIMESTAMPTZ`).
+     * Huella de sesión e información del agente de usuario (*User-Agent*).
+   * Esta trazabilidad satisface los requerimientos legales del Código de Deontología Médica de Venezuela y la Ley de Infogobierno respecto a la preservación y no repudio del acto médico.
+
+4. **Resiliencia ante Contingencias Eléctricas y de Conectividad (Modo Semi-Offline)**:
+   * Tomando en consideración las fluctuaciones en el suministro eléctrico y telecomunicaciones en la región de los llanos guariqueños, MediZen integra una estrategia de sincronización asíncrona mediante **TanStack Query v5**.
+   * Durante la redacción de una consulta o registro de antecedentes, los datos se almacenan temporalmente en la memoria reactiva del cliente. Si ocurre una pérdida imprevista de conexión a Internet, la interfaz notifica al especialista sin interrumpir la escritura ni reiniciar el formulario. Al restablecerse el enlace, el sistema reintenta la sincronización mediante peticiones idempotentes, previniendo la duplicidad o pérdida de datos clínicos.
 
 ---
 

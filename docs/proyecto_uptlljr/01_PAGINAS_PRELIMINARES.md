@@ -220,6 +220,7 @@ FASE IV: EJECUCIÓN TÉCNICA (DESARROLLO DE LA PROPUESTA) ......................
     Diseño de la Base de Datos ................................................. 48
     Diseño de los Escenarios a Utilizar (Mockups y Prototipos de UI) ........... 52
     Desarrollo de la Aplicación ................................................ 55
+      Arquitectura de Seguridad y Privacidad de Datos (RLS, AES-GCM) ............ 57
     Pruebas de la Aplicación ................................................... 58
     Instalación y Despliegue de la Aplicación .................................. 60
     Adiestramiento y Capacitación .............................................. 61
