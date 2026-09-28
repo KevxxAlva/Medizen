@@ -53,7 +53,7 @@ La clínica opera bajo el marco regulatorio del Ministerio del Poder Popular par
 Para diagnosticar con rigor técnico y participativo la situación operativa y de gestión de datos en la clínica, se aplicó la técnica de la matriz de Fortalezas, Oportunidades, Debilidades y Amenazas (FODA) en sesiones de trabajo conjunto entre el equipo de desarrollo de la UPTLLJR y la Dra. Carli Sole (y equipo médico).
 
 **Tabla 1**  
-*Matriz FODA del Clínica FemeSalud*
+*Matriz FODA de la clínica FemeSalud*
 
 | Factores Internos | Fortalezas (F) | Debilidades (D) |
 | :--- | :--- | :--- |
@@ -95,7 +95,7 @@ flowchart TD
     end
 
     subgraph ProblemaCentral["PROBLEMA CENTRAL (TRONCO)"]
-        PC["INEFICIENTE GESTIÓN Y RESGUARDO DE HISTORIAS CLÍNICAS MÉDICAS MULTIESPECIALIDAD Y CONTROL OPERATIVO EN EL CLÍNICA FEMESALUD, VALLE DE LA PASCUA"]
+        PC["INEFICIENTE GESTIÓN Y RESGUARDO DE HISTORIAS CLÍNICAS MÉDICAS MULTIESPECIALIDAD Y CONTROL OPERATIVO en la clínica FemeSalud, VALLE DE LA PASCUA"]
     end
 
     subgraph Causas["CAUSAS DIRECTAS E INDIRECTAS (RAÍCES)"]
@@ -145,7 +145,7 @@ Para formular con precisión la problemática de investigación, se da respuesta
    La motivación principal radica en el compromiso social y la formación académica como estudiantes del Trayecto III del PNF en Informática de la UPTLLJR, aplicando los avances de la ingeniería web moderna (arquitecturas reactivas, bases de datos PostgreSQL en tiempo real y criptografía local) para dotar a un centro de salud de nuestra propia localidad con una herramienta de categoría profesional que optimice el ejercicio de la medicina.
 
 7. **¿Cuál es la interrogante central que el proyecto busca responder? (Hipótesis)**  
-   *¿De qué manera el desarrollo e implementación de un sistema web integral permitirá optimizar la gestión de historias clínicas médicas multiespecialidad y el control operativo en el clínica FemeSalud de la ciudad de Valle de la Pascua, estado Guárico?*
+   *¿De qué manera el desarrollo e implementación de un sistema web integral permitirá optimizar la gestión de historias clínicas médicas multiespecialidad y el control operativo en la clínica FemeSalud de la ciudad de Valle de la Pascua, estado Guárico?*
 
 ---
 
@@ -195,7 +195,7 @@ flowchart TD
 | Nivel de Objetivos | Resumen Narrativo | Indicadores Objetivamente Verificables | Medios de Verificación | Supuestos Críticos |
 | :--- | :--- | :--- | :--- | :--- |
 | **Fin** | Contribuir a la modernización tecnológica y calidad del servicio asistencial de salud médica multiespecialidad en Valle de la Pascua mediante soluciones informáticas seguras. | 1. Reducción del 50% o más en tiempos de espera general de las pacientes.<br>2. Cero pérdida o daño físico de expedientes médicos. | Encuestas de satisfacción a pacientes e informes semestrales de la clínica. | Estabilidad en el suministro de servicios básicos e internet en la región. |
-| **Propósito** | Optimizar la gestión de historias clínicas y el flujo administrativo-operativo del clínica FemeSalud mediante un sistema web automatizado. | 1. 100% de las consultas y evoluciones registradas de manera digital.<br>2. Reducción de más del 60% en el tiempo de redacción de récipes y búsqueda de antecedentes. | Registros en la base de datos PostgreSQL y auditoría del sistema web. | Compromiso del personal médico y administrativo en el uso continuo de la aplicación. |
+| **Propósito** | Optimizar la gestión de historias clínicas y el flujo administrativo-operativo de la clínica FemeSalud mediante un sistema web automatizado. | 1. 100% de las consultas y evoluciones registradas de manera digital.<br>2. Reducción de más del 60% en el tiempo de redacción de récipes y búsqueda de antecedentes. | Registros en la base de datos PostgreSQL y auditoría del sistema web. | Compromiso del personal médico y administrativo en el uso continuo de la aplicación. |
 | **Componentes (Resultados)** | 1. Módulo de Historia Clínica Digital (Múltiples Especialidades Médicas).<br>2. Módulo de Citas y Agenda en Tiempo Real.<br>3. Generador Visual de Récipes en PDF y envíos digitales.<br>4. Módulo de Facturación, Caja Chica e Inventario.<br>5. Bóveda Criptográfica Local de PIN para autenticación rápida. | 1. 5 módulos completamente funcionales e integrados.<br>2. Sistema de autenticación con cifrado PBKDF2/AES-GCM operativo en menos de 1 segundo.<br>3. Exportación de PDF clínicos con alta resolución visual. | Código fuente validado en repositorio Git, pruebas funcionales de caja negra y manuales técnicos. | Aceptación de los prototipos por parte de la especialista Dra. Carli Sole (y equipo médico). |
 | **Actividades** | 1.1 Diagnóstico de requerimientos mediante entrevistas clínicas.<br>2.1 Modelado de base de datos relacional y diagramas UML.<br>3.1 Codificación frontend en React 19/Tailwind y backend en Supabase.<br>4.1 Ejecución de pruebas unitarias y de integración.<br>5.1 Despliegue en la nube (Vercel) y capacitación del personal. | 1. Cronograma de actividades cumplido al 100%.<br>2. Matriz de pruebas de software con 100% de casos aprobados.<br>3. 100% del personal capacitado satisfactoriamente. | Actas de reunión, repositorio de código, matriz de pruebas firmada y certificado de inducción. | Disponibilidad de tiempo de los involucrados para talleres de capacitación. |
 
@@ -206,10 +206,10 @@ flowchart TD
 ## Objetivos del Proyecto
 
 ### Objetivo General
-Desarrollar un sistema web para la gestión de historias clínicas médicas multiespecialidad y control operativo en el clínica FemeSalud, Valle de la Pascua, estado Guárico.
+Desarrollar un sistema web para la gestión de historias clínicas médicas multiespecialidad y control operativo en la clínica FemeSalud, Valle de la Pascua, estado Guárico.
 
 ### Objetivos Específicos
-1. **Diagnosticar** la situación actual de los procesos de registro de historias clínicas, asignación de citas, prescripción médica y control financiero en el clínica FemeSalud.
+1. **Diagnosticar** la situación actual de los procesos de registro de historias clínicas, asignación de citas, prescripción médica y control financiero en la clínica FemeSalud.
 2. **Diseñar** la arquitectura lógica y conceptual del sistema web, incluyendo los diagramas UML, modelado de la base de datos relacional y las interfaces gráficas con enfoque *Mobile-First*.
 3. **Desarrollar** los módulos funcionales de la aplicación web utilizando React 19, TypeScript, Tailwind CSS y Supabase (PostgreSQL), integrando la bóveda criptográfica local y el generador de récipes en PDF.
 4. **Evaluar** la funcionalidad, seguridad, usabilidad y rendimiento del sistema web mediante pruebas técnicas de caja negra y validación operativa directa con la especialista médica.
@@ -218,14 +218,34 @@ Desarrollar un sistema web para la gestión de historias clínicas médicas mult
 
 ## Justificación de la Investigación
 
-La presente investigación se fundamenta técnica, social y académicamente en virtud de las siguientes dimensiones:
+La presente investigación se fundamenta técnica, social, económica y académicamente en virtud de las siguientes dimensiones esenciales:
 
-* **Aporte Económico**: El clínica FemeSalud experimenta una disminución sustancial y permanente en el gasto recurrente de resmas de papel, carpetas de archivo, impresiones de talonarios comerciales y tintas. Asimismo, el módulo financiero permite consolidar los ingresos diarios en bolívares y divisas, previniendo fugas de capital y optimizando el cobro de consultas y procedimientos ecográficos.
-* **Aporte Social**: El bienestar y dignidad de la mujer como núcleo familiar se ven directamente favorecidos. Al agilizarse la gestión de citas y acortarse los tiempos improductivos de espera en sala, las pacientes reciben una atención más oportuna y humana. Asimismo, se preserva el derecho a la intimidad y la confidencialidad de datos biológicos de alta sensibilidad.
-* **Aporte Práctico**: La solución ofrece una respuesta concreta a las necesidades operativas de la Dra. Carli Sole (y equipo médico). Al disponer de una búsqueda instantánea de antecedentes médicos, cálculo automatizado de semanas de gestación y fecha probable de parto (FPP), y un generador visual de prescripciones exportables a PDF para su envío instantáneo por WhatsApp, se erradican los cuellos de botella del ejercicio diario.
-* **Aporte Teórico**: El proyecto contribuye al acervo de la informática médica en Venezuela, aportando un modelo documentado de integración de arquitecturas reactivas en el cliente (*Single Page Applications* con React 19 y TanStack Router) con plataformas *Backend-as-a-Service* (Supabase/PostgreSQL) y algoritmos criptográficos nativos en el navegador (`SubtleCrypto`).
-* **Aporte Académico**: Constituye la materialización práctica de los conocimientos adquiridos a lo largo de tres años formativos en el PNF en Informática de la UPTLLJR, evidenciando el dominio de las fases del ciclo de vida del software, el diseño centrado en el usuario y la ingeniería de datos en contextos reales.
-* **Aporte Institucional**: Consolida la vinculación universidad-entorno productivo, demostrando la capacidad de la UPTLLJR para brindar asesoría tecnológica y soluciones de alto nivel a organizaciones de la región de los llanos guariqueños.
-* **Aporte Metodológico y Vinculación con Políticas de Estado**: La investigación se inscribe en la metodología de Investigación Acción Participativa (IAP) combinada con metodologías ágiles de desarrollo de software (Scrum), alineándose con:
-  * La **Línea de Investigación del PNF en Informática**: *Desarrollo de Soluciones Informáticas y Gestión de Datos*, orientada al fortalecimiento tecnológico de las instituciones locales.
-  * El **Plan de Desarrollo Económico y Social de la Nación (Plan de la Patria)**: En su **Objetivo Histórico I** (Consolidar la independencia nacional a través de la soberanía científica y tecnológica) y el **Objetivo Nacional 1.5** (Desarrollar capacidades científicas y tecnológicas vinculadas a las necesidades del pueblo venezolano, priorizando el sector de la salud pública y asistencial).
+* **Aporte Económico**: La Clínica FemeSalud experimenta una disminución sustancial y permanente en el gasto recurrente de resmas de papel, carpetas de archivo, impresiones de talonarios comerciales y tintas. Asimismo, el módulo financiero permite consolidar los ingresos diarios en bolívares y divisas, previniendo fugas de capital y optimizando el cobro de consultas y procedimientos médicos multiespecialidad.
+* **Aporte Social**: El bienestar y la dignidad de las pacientes y de la comunidad de Valle de la Pascua se ven directamente favorecidos. Al agilizarse la gestión de citas y acortarse los tiempos improductivos de espera en sala, las personas reciben una atención médica integral más oportuna, eficiente y humana. Asimismo, se preserva el derecho fundamental a la intimidad y la confidencialidad de los expedientes de salud.
+* **Aporte Práctico**: La solución ofrece una respuesta concreta a las necesidades operativas de la Dra. Carli Sole y el equipo médico multidisciplinario de la Clínica FemeSalud. Al disponer de una búsqueda instantánea de antecedentes médicos por cédula o nombre, cálculo automatizado de parámetros clínicos y un generador visual de prescripciones exportables a PDF con remisión directa vía WhatsApp, se erradican los cuellos de botella del ejercicio asistencial diario.
+* **Aporte Teórico**: El proyecto contribuye al acervo de la informática médica nacional, aportando un modelo documentado de integración de arquitecturas reactivas en el cliente (*Single Page Applications* con React 19 y TanStack Router) con plataformas *Backend-as-a-Service* (Supabase / PostgreSQL) y algoritmos criptográficos nativos en el navegador (`Web Crypto API`).
+* **Aporte Académico e Institucional**: Constituye la materialización práctica de las competencias profesionales adquiridas a lo largo de la trayectoria formativa en el Programa Nacional de Formación en Informática (PNFI) de la Universidad Politécnica Territorial de los Llanos "Juana Ramírez" (UPTLLJR), consolidando el vínculo indisoluble entre la academia y el sector socioproductivo de la región de los llanos guariqueños.
+
+---
+
+### Vinculación del Proyecto con las Políticas Públicas de Estado y los Planes de Desarrollo
+
+La fundamentación de esta investigación se articula estrictamente con las directrices estratégicas de la nación y las normativas rectoras de la educación universitaria venezolana:
+
+#### Vinculación con el Plan de Desarrollo Económico y Social de la Nación (Plan de la Patria)
+El proyecto responde de forma directa a los siguientes objetivos estratégicos del Plan de la Patria:
+1. **Gran Objetivo Histórico I:** Defender, expandir y consolidar el bien más preciado: la Independencia Nacional.
+   * *Objetivo Nacional 1.5:* Desarrollar las capacidades científicas y tecnológicas vinculadas a las necesidades del pueblo, impulsando la soberanía informática, el uso de estándares abiertos y la disminución de la dependencia tecnológica foránea en sectores estratégicos.
+2. **Gran Objetivo Histórico II:** Continuar construyendo el socialismo bolivariano del siglo XXI para asegurar la "mayor suma de felicidad posible, mayor suma de seguridad social y mayor suma de estabilidad política".
+   * *Objetivo Nacional 2.2:* Asegurar la garantía de los derechos a la salud integral de la población venezolana mediante la modernización y dotación tecnológica de los centros asistenciales.
+   * *Objetivo Estratégico 2.2.1:* Optimizar la eficiencia de los procesos de gestión clínica y administrativa en salud a través de herramientas de información confiables, accesibles y seguras.
+
+#### Vinculación con las Líneas de Investigación del PNFI (UPTLL "Juana Ramírez")
+El proyecto se enmarca orgánicamente en el documento rector del Programa Nacional de Formación en Informática bajo dos líneas prioritarias:
+* **Línea de Investigación 1: Desarrollo de Software Libre y Aplicaciones Web para la Gestión Social y Productiva.**  
+  MediZen constituye una solución tecnológica web construida bajo principios de código abierto y estándares web universales (React, TypeScript, PostgreSQL), orientada a resolver una problemática real de gestión asistencial en el ámbito local de Valle de la Pascua.
+* **Línea de Investigación 2: Seguridad Lógica, Criptografía y Gestión de Redes y Datos.**  
+  El proyecto implementa mecanismos avanzados de protección de información médica confidencial: derivación de claves con PBKDF2, cifrado simétrico AES-GCM (256 bits) para la sesión en el cliente y políticas de seguridad a nivel de fila (*Row Level Security* - RLS) en el motor de base de datos.
+
+#### Vinculación Territorial y Pertinencia Comunitaria
+Conforme al enfoque de la Misión Alma Mater y la territorialización universitaria, el proyecto impacta directamente en el Municipio Leonardo Infante (Valle de la Pascua, Estado Guárico), transfiriendo capacidades tecnológicas a la Clínica FemeSalud y sentando las bases para un modelo de digitalización de historias clínicas replicable en consultorios y centros de salud de la región llanera.

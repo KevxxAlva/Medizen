@@ -184,6 +184,8 @@ FASE I: DIAGNÓSTICO PARTICIPATIVO .............................................
     Objetivo General ........................................................... 15
     Objetivos Específicos ...................................................... 15
   Justificación de la Investigación ............................................ 16
+    Aportes de la Investigación (Económico, Social, Práctico, Teórico) ......... 16
+    Vinculación con el Plan de la Patria y Líneas del PNFI ..................... 17
 
 FASE II: REVISIÓN LITERARIA (EL SOPORTE CIENTÍFICO) ............................. 19
   Antecedentes de la Investigación ............................................. 19
@@ -223,6 +225,8 @@ FASE IV: EJECUCIÓN TÉCNICA (DESARROLLO DE LA PROPUESTA) ......................
     Adiestramiento y Capacitación .............................................. 61
   Memoria Descriptiva .......................................................... 62
   Análisis de Resultados ....................................................... 64
+    Matriz Comparativa de Tiempos Operativos (Antes vs. Después) ................ 64
+    Evaluación de Calidad de Software (ISO/IEC 25010 y Escala SUS) ............. 66
 
 CONCLUSIONES Y RECOMENDACIONES ................................................. 67
   Conclusiones ................................................................. 67
@@ -242,7 +246,7 @@ ANEXOS .........................................................................
 
 | Número | Título | Pág. |
 | :--- | :--- | :---: |
-| **Tabla 1** | *Matriz FODA del Clínica FemeSalud* | 7 |
+| **Tabla 1** | *Matriz FODA de la clínica FemeSalud* | 7 |
 | **Tabla 2** | *Tabla de Priorización y Jerarquización de Necesidades* | 8 |
 | **Tabla 3** | *Matriz de Marco Lógico (MML) del Proyecto* | 13 |
 | **Tabla 4** | *Matriz de Operacionalización de Variables* | 33 |
@@ -255,6 +259,7 @@ ANEXOS .........................................................................
 | **Tabla 11** | *Diccionario de Datos: Tabla appointments (Citas y Turnos)* | 51 |
 | **Tabla 12** | *Matriz de Casos de Prueba Funcional de Caja Negra* | 59 |
 | **Tabla 13** | *Matriz Comparativa de Tiempos Operativos Antes y Después* | 65 |
+| **Tabla 14** | *Evaluación de Calidad del Software bajo la Norma ISO/IEC 25010 y Métricas de Usabilidad* | 66 |
 
 <div style="page-break-after: always;"></div>
 
@@ -266,7 +271,7 @@ ANEXOS .........................................................................
 
 | Número | Título | Pág. |
 | :--- | :--- | :---: |
-| **Figura 1** | *Croquis de Ubicación Geográfica del Clínica FemeSalud* | 4 |
+| **Figura 1** | *Croquis de Ubicación Geográfica de la clínica FemeSalud* | 4 |
 | **Figura 2** | *Árbol de Problemas del Control Clínico en FemeSalud* | 9 |
 | **Figura 3** | *Árbol de Objetivos del Sistema Web MediZen* | 12 |
 | **Figura 4** | *Pirámide de Kelsen Aplicada al Marco Legal del Software Clínico* | 29 |
@@ -342,7 +347,7 @@ En la contemporaneidad, la integración de las tecnologías de la información y
 
 Dentro del ámbito de la medicina privada en la ciudad de Valle de la Pascua, estado Guárico, la clínica médico de la Clínica FemeSalud, encabezado por la especialista en Múltiples Especialidades Médicas Dra. Carli Sole (y equipo médico), brinda atención médica fundamental a un significativo número de pacientes de la entidad llanera. No obstante, las dinámicas operativas diarias vinculadas al agendamiento de turnos, el registro de evoluciones médicas multiespecialidad y prenatales, la redacción manual de prescripciones y la conciliación de honorarios médicos se ven afectadas por la dispersión de la información y la carencia de una plataforma tecnológica centralizada, flexible y adaptada a la velocidad exigida durante el acto médico.
 
-Frente a este escenario, surge la presente investigación cuyo propósito general es desarrollar un sistema web de vanguardia para la gestión de historias clínicas médicas multiespecialidad y el control operativo en el clínica FemeSalud. La solución tecnológica no solo automatiza el flujo documental de la clínica, sino que incorpora estándares contemporáneos de experiencia de usuario (*Mobile-First*), sincronización en tiempo real mediante WebSockets y un robusto mecanismo de autenticación rápida mediante bóveda local criptográfica cifrada con los estándares `PBKDF2` y `AES-GCM` de 256 bits, garantizando la inviolabilidad del secreto médico y facilitando la labor diaria del personal médico-asistencial.
+Frente a este escenario, surge la presente investigación cuyo propósito general es desarrollar un sistema web de vanguardia para la gestión de historias clínicas médicas multiespecialidad y el control operativo en la clínica FemeSalud. La solución tecnológica no solo automatiza el flujo documental de la clínica, sino que incorpora estándares contemporáneos de experiencia de usuario (*Mobile-First*), sincronización en tiempo real mediante WebSockets y un robusto mecanismo de autenticación rápida mediante bóveda local criptográfica cifrada con los estándares `PBKDF2` y `AES-GCM` de 256 bits, garantizando la inviolabilidad del secreto médico y facilitando la labor diaria del personal médico-asistencial.
 
 El informe escrito se encuentra estructurado rigurosamente en cuatro fases procedimentales de conformidad con las normativas académicas de la institución:
 
