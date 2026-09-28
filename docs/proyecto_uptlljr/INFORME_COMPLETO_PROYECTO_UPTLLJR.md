@@ -1,4 +1,6 @@
-# PÁGINAS PRELIMINARES DEL PROYECTO
+<div align="center">
+  <img src="./img/logo_uptlljr.png" alt="Logo UPTLL Juana Ramírez" width="280" style="margin-bottom: 20px;" />
+</div>
 
 ---
 
