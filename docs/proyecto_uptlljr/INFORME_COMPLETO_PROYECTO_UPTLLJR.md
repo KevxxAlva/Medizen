@@ -964,27 +964,31 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    Inicio([Inicio de Consulta]) --> Desbloqueo[Médica desbloquea sistema con PIN de 4 dígitos]
-    Desbloqueo --> BuscarPaciente[Búsqueda rápida de la paciente por C.I. o Nombre]
-    BuscarPaciente --> EvaluarHistorial[Revisión de antecedentes clínicos y controles previos]
-    EvaluarHistorial --> RegistrarSignos[Registro de constantes vitales y motivo de consulta]
-    RegistrarSignos --> TipoConsulta{¿Es consulta médica multiespecialidad u obstétrica?}
-    
-    TipoConsulta -->|Obstétrica| Obstetricia[Ingreso de FUM / Cálculo automático de semanas y FPP]
-    TipoConsulta -->|Médica Multiespecialidad| Ginecologia[Registro de citología, ecografía pélvica y examen físico]
-    
-    Obstetricia --> Diagnostico[Formulación de Diagnóstico Clínico]
-    Ginecologia --> Diagnostico
-    
-    Diagnostico --> RedactarRecipe[Ingreso de prescripciones médicas e indicaciones]
-    RedactarRecipe --> GenerarPDF[Generación automática de PDF con jsPDF]
-    GenerarPDF --> EnviarWhatsApp{¿Enviar por WhatsApp?}
-    EnviarWhatsApp -->|Sí| EnvioDigital[Apertura de API WhatsApp Web con PDF adjunto]
-    EnviarWhatsApp -->|No / Imprimir| Impresion[Impresión física del récipe]
-    
-    EnvioDigital --> RegistrarCobro[Asistente procesa cobro en módulo de facturación]
-    Impresion --> RegistrarCobro
-    RegistrarCobro --> Fin([Fin de la Atención])
+    subgraph Fase1["Fase 1: Admisión e Historial Clínico"]
+        Inicio([Inicio de Consulta]) --> Desbloqueo[Desbloqueo seguro por PIN de 4 dígitos]
+        Desbloqueo --> BuscarPaciente[Búsqueda rápida de paciente por C.I. o Nombre]
+        BuscarPaciente --> EvaluarHistorial[Revisión de antecedentes y controles previos]
+        EvaluarHistorial --> RegistrarSignos[Registro de constantes vitales y motivo de consulta]
+    end
+
+    subgraph Fase2["Fase 2: Evaluación Clínica Especializada"]
+        RegistrarSignos --> TipoConsulta{"¿Tipo de Consulta Médica?"}
+        TipoConsulta -->|Obstétrica| Obstetricia[Ingreso de FUM / Cálculo de semanas y FPP]
+        TipoConsulta -->|Multiespecialidad| Multiesp[Examen físico, estudios clínicos y paraclínicos]
+        Obstetricia --> Diagnostico[Formulación de Diagnóstico Clínico]
+        Multiesp --> Diagnostico
+    end
+
+    subgraph Fase3["Fase 3: Prescripción, Entrega y Facturación"]
+        Diagnostico --> RedactarRecipe[Ingreso de prescripciones médicas e indicaciones]
+        RedactarRecipe --> GenerarPDF["Generación automática de récipe en PDF con jsPDF"]
+        GenerarPDF --> EnviarWhatsApp{"¿Canal de Entrega?"}
+        EnviarWhatsApp -->|Digital| EnvioDigital[Apertura de WhatsApp Web con PDF adjunto]
+        EnviarWhatsApp -->|Físico| Impresion[Impresión física de récipe y orden médica]
+        EnvioDigital --> RegistrarCobro[Asistente procesa cobro en módulo de facturación]
+        Impresion --> RegistrarCobro
+        RegistrarCobro --> Fin([Fin de la Atención])
+    end
 ```
 
 #### Diagrama de Secuencia: Desbloqueo Seguro mediante Bóveda de PIN Cifrada
