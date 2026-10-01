@@ -184,7 +184,26 @@ export function PatientsPage() {
           </thead>
           <tbody className="text-sm">
             {isLoading ? (
-              <tr><td colSpan={7} className="p-12 text-center"><Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" /></td></tr>
+              <tr>
+                <td colSpan={7} className="p-4">
+                  <div className="space-y-3 py-2">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <div key={i} className="flex items-center justify-between gap-4 py-2 border-b border-border/30">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-2xl bg-primary/10 animate-pulse shrink-0" />
+                          <div className="space-y-1.5">
+                            <div className="h-4 w-36 bg-primary/10 rounded-md animate-pulse" />
+                            <div className="h-3 w-24 bg-primary/10 rounded-md animate-pulse" />
+                          </div>
+                        </div>
+                        <div className="h-4 w-24 bg-primary/10 rounded-md animate-pulse hidden sm:block" />
+                        <div className="h-6 w-20 bg-primary/10 rounded-full animate-pulse" />
+                        <div className="h-8 w-16 bg-primary/10 rounded-xl animate-pulse" />
+                      </div>
+                    ))}
+                  </div>
+                </td>
+              </tr>
             ) : patients.length === 0 ? (
               <tr><td colSpan={7} className="p-12 text-center text-muted-foreground font-medium">No se encontraron pacientes.</td></tr>
             ) : (

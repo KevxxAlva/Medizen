@@ -19,10 +19,13 @@ import { generateRecipePDF } from "@/lib/utils/recipePdf";
 import { sendRecipeViaWhatsApp } from "@/lib/utils/whatsapp";
 import { useClinicInfo } from "@/lib/api/clinic";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2, ShieldAlert, Printer, Wand2, MessageSquare, Sparkles } from "lucide-react";
+import { Loader2, Plus, Trash2, ShieldAlert, Printer, Wand2, MessageSquare, Sparkles, Mic } from "lucide-react";
 import { CLINICAL_TEMPLATES, PRESCRIPTION_TEMPLATES, getTemplatesForSpecialty, getPrescriptionsForSpecialty } from "@/lib/constants/clinicalTemplates";
 import { getSpecialtyConfig, AVAILABLE_SPECIALTIES, getSpecialtyBadgeStyle } from "@/lib/constants/specialtyForms";
 import { DynamicSpecialtyFields } from "@/components/consultation/DynamicSpecialtyFields";
+import { VoiceDictationButton } from "@/components/VoiceDictationButton";
+import { ObstetricCalculatorCard } from "@/components/consultation/ObstetricCalculatorCard";
+import { calculateBmiWithCategory } from "@/lib/utils/medicalCalculators";
 import { cn } from "@/lib/utils";
 
 const CONTACT_CHANNELS = ["WhatsApp", "Instagram", "Facebook", "Radio", "Recomendado", "Prensa", "Volante", "Otro"];
@@ -187,15 +190,12 @@ export function ConsultationForm({
     if (fieldId === "alarm_signs") setAlarmSigns(value);
   };
 
-  // IMC Calculation
-  const bmi = useMemo(() => {
-    const w = parseFloat(weightKg);
-    const h = parseFloat(heightCm) / 100;
-    if (w > 0 && h > 0) {
-      return (w / (h * h)).toFixed(1);
-    }
-    return "";
+  // IMC Calculation with WHO classification
+  const bmiEval = useMemo(() => {
+    return calculateBmiWithCategory(weightKg, heightCm);
   }, [weightKg, heightCm]);
+
+  const bmi = bmiEval?.bmiFormatted || "";
 
   const applyClinicalTemplate = (templateId: string) => {
     if (!templateId) return;
@@ -588,6 +588,20 @@ export function ConsultationForm({
               </div>
             </div>
 
+            {/* Clinical Allergy Risk Banner */}
+            {patient?.personal_history?.allergies && 
+              !patient.personal_history.allergies.toUpperCase().includes("NIEGA") &&
+              !patient.personal_history.allergies.toUpperCase().includes("NO REFIERE") && (
+              <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-rose-500/15 border border-rose-500/35 text-rose-700 dark:text-rose-300 text-xs font-bold animate-in fade-in">
+                <span className="relative flex h-2.5 w-2.5 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                </span>
+                <ShieldAlert className="h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400" />
+                <span>ALERTA CLÍNICA: Paciente con alergias registradas a: <strong className="underline">{patient.personal_history.allergies}</strong>. Verifique interacciones antes de prescribir.</span>
+              </div>
+            )}
+
             <Tabs defaultValue="anamnesis" className="flex-1 flex flex-col min-h-0">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4">
                 <TabsList className="flex items-center h-10 w-full lg:w-auto bg-muted/60 p-1 rounded-2xl gap-1 overflow-x-auto">
@@ -672,7 +686,13 @@ export function ConsultationForm({
                     </div>
 
                     <div className="grid gap-2">
-                      <Label htmlFor="c-subjective">Examen Subjetivo / Motivo del control</Label>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="c-subjective">Examen Subjetivo / Motivo del control</Label>
+                        <VoiceDictationButton
+                          size="sm"
+                          onTranscript={(spoken) => setSubjectiveExam((prev) => (prev ? prev + " " + spoken : spoken))}
+                        />
+                      </div>
                       <Textarea
                         id="c-subjective"
                         value={subjectiveExam}
@@ -712,12 +732,19 @@ export function ConsultationForm({
                           />
                         </div>
                         <div className="grid gap-1.5">
-                          <Label>IMC (Calculado)</Label>
+                          <div className="flex items-center justify-between">
+                            <Label>IMC (Calculado)</Label>
+                            {bmiEval && (
+                              <span className={cn("text-[9px] font-extrabold px-1.5 py-0.5 rounded-md border uppercase tracking-wider", bmiEval.bgClass, bmiEval.colorClass, bmiEval.borderClass)}>
+                                {bmiEval.category}
+                              </span>
+                            )}
+                          </div>
                           <Input
                             readOnly
-                            value={bmi}
+                            value={bmiEval ? `${bmiEval.bmiFormatted} kg/m²` : ""}
                             placeholder="Ingrese Peso y Talla"
-                            className="rounded-2xl bg-muted/50 font-bold"
+                            className={cn("rounded-2xl font-bold transition-all", bmiEval ? `${bmiEval.bgClass} ${bmiEval.colorClass}` : "bg-muted/50")}
                           />
                         </div>
                         <div className="grid gap-1.5">
@@ -766,6 +793,18 @@ export function ConsultationForm({
                         </div>
                       </div>
                     </div>
+
+                    {/* Integrated Intelligent Obstetric Calculator */}
+                    {(specialtyConfig.key === "gynecology" || selectedSpecialty.includes("Ginecología") || selectedSpecialty.includes("Obstetricia")) && (
+                      <ObstetricCalculatorCard
+                        initialFum={patient?.obstetric_data?.fum || ""}
+                        onApplyDates={({ eg, fpp, fum }) => {
+                          setGestationalAge(eg);
+                          handleSpecialtyAnswerChange("gestational_age", eg);
+                          toast.success(`Cálculo obstétrico aplicado: ${eg}`);
+                        }}
+                      />
+                    )}
 
                     <div className="bg-muted/30 p-4 rounded-2xl space-y-4">
                       <div className="flex items-center justify-between">
@@ -825,7 +864,13 @@ export function ConsultationForm({
                   {/* TAB 4: DIAGNOSIS & PLAN */}
                   <TabsContent value="plan" className="grid gap-4 mt-0">
                     <div className="grid gap-2">
-                      <Label htmlFor="c-diagnosis">Diagnóstico</Label>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="c-diagnosis">Diagnóstico</Label>
+                        <VoiceDictationButton
+                          size="sm"
+                          onTranscript={(spoken) => setDiagnosis((prev) => (prev ? prev + " " + spoken : spoken))}
+                        />
+                      </div>
                       <Textarea
                         id="c-diagnosis"
                         value={diagnosis}
@@ -838,7 +883,13 @@ export function ConsultationForm({
 
                     <div className="grid gap-2">
                       <div className="flex items-center justify-between">
-                        <Label htmlFor="c-indications">Indicaciones / Receta</Label>
+                        <div className="flex items-center gap-2">
+                          <Label htmlFor="c-indications">Indicaciones / Receta</Label>
+                          <VoiceDictationButton
+                            size="sm"
+                            onTranscript={(spoken) => setIndications((prev) => (prev ? prev + " " + spoken : spoken))}
+                          />
+                        </div>
                         <Select onValueChange={applyPrescriptionTemplate}>
                           <SelectTrigger className="w-[200px] h-7 text-xs rounded-xl bg-muted/50 border-0 font-medium">
                             <SelectValue placeholder="Recetas rápidas..." />
@@ -860,7 +911,13 @@ export function ConsultationForm({
                     </div>
 
                     <div className="grid gap-2">
-                      <Label htmlFor="c-exams">Exámenes Complementarios Solicitados</Label>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="c-exams">Exámenes Complementarios Solicitados</Label>
+                        <VoiceDictationButton
+                          size="sm"
+                          onTranscript={(spoken) => setComplementaryExams((prev) => (prev ? prev + " " + spoken : spoken))}
+                        />
+                      </div>
                       <Textarea
                         id="c-exams"
                         value={complementaryExams}
@@ -872,7 +929,13 @@ export function ConsultationForm({
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="grid gap-2">
-                        <Label htmlFor="c-plan">Plan y Seguimiento</Label>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="c-plan">Plan y Seguimiento</Label>
+                          <VoiceDictationButton
+                            size="sm"
+                            onTranscript={(spoken) => setPlan((prev) => (prev ? prev + " " + spoken : spoken))}
+                          />
+                        </div>
                         <Textarea
                           id="c-plan"
                           value={plan}

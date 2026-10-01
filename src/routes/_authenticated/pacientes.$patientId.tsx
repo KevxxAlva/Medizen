@@ -17,6 +17,8 @@ import { ClinicalNotesPanel } from "@/components/ClinicalNotesPanel"
 import { PatientConsultationsPanel } from "@/components/PatientConsultationsPanel"
 import { usePatient } from "@/lib/api/patients"
 import { useDoctors } from "@/lib/api/profiles"
+import { PatientClinicalBanner } from "@/components/PatientClinicalBanner"
+import { PatientProfileSkeleton } from "@/components/skeletons/PatientProfileSkeleton"
 import { cn } from "@/lib/utils"
 
 const getInitials = (name?: string) => {
@@ -40,9 +42,20 @@ import { generateFullHistoryPdf } from "@/lib/pdf/generateFullHistoryPdf"
 import { generateReposoPDF, generateAtencionPDF, generateJustificativoPDF } from "@/lib/utils/reportsPdf"
 import { AppSidebar } from "@/components/AppSidebar"
 import { usePatientConsultations } from "@/lib/api/consultations"
-import { generateRecipePdf } from "@/lib/pdf/generateRecipePdf"
+import { generateRecipePDF } from "@/lib/utils/recipePdf"
+
+import { fetchPatientById } from "@/lib/api/patients"
 
 export const Route = createFileRoute('/_authenticated/pacientes/$patientId')({
+  loader: ({ context: { queryClient }, params: { patientId } }) => {
+    // Prefetch the patient data so it's ready when the component mounts.
+    // By not awaiting, we don't block the route transition, allowing the skeleton to show
+    // if the network is slow, but usually it will be fast enough due to preload on intent.
+    queryClient.prefetchQuery({
+      queryKey: ["patient", patientId],
+      queryFn: () => fetchPatientById(patientId),
+    })
+  },
   component: PatientDetailRoute,
 })
 
@@ -91,7 +104,15 @@ function PatientRecipesTab({ patientId, patient, doctors }: any) {
               size="sm" 
               variant="outline" 
               className="rounded-xl flex-shrink-0"
-              onClick={() => generateRecipePdf(patient, c, doc)}
+              onClick={() => generateRecipePDF(
+                patient, 
+                c, 
+                doc?.full_name || "Médico Tratante",
+                doc?.specialty || "",
+                "",
+                doc?.mpps || "",
+                doc?.cmc || ""
+              )}
             >
               <FileDown className="h-4 w-4 mr-2" />
               Descargar PDF
@@ -205,8 +226,8 @@ function PatientDetailRoute() {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center min-h-[50vh] py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="py-6">
+        <PatientProfileSkeleton />
       </div>
     );
   }
@@ -269,66 +290,12 @@ function PatientDetailRoute() {
             </div>
           </div>
 
-          {/* Premium Patient Banner Card */}
-          <div className="relative overflow-hidden bg-card/60 backdrop-blur-xl border border-border/50 p-6 rounded-[2rem] shadow-sm mb-6 transition-all duration-300">
-            <div className="absolute top-0 right-0 -mt-12 -mr-12 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-            
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative z-10">
-              <div className="flex items-center gap-5">
-                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-gradient-to-br from-primary via-primary/80 to-primary/60 text-primary-foreground font-black text-2xl shadow-lg shadow-primary/20 border-2 border-white/20">
-                  {getInitials(viewing.full_name)}
-                </div>
-                
-                <div className="space-y-1.5">
-                  <div className="flex flex-wrap items-center gap-2.5">
-                    <h2 className="text-2xl font-bold text-foreground tracking-tight">{viewing.full_name}</h2>
-                    <span className={cn("inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold border shadow-xs", tagBg[viewing.status] || "bg-muted text-muted-foreground border-border/40")}>
-                      <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
-                      {statusLabel(viewing.status)}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground font-medium">
-                    <span className="flex items-center gap-1">
-                      <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                      C.I. <strong className="text-foreground font-semibold">{viewing.document_id || "Sin Cédula"}</strong>
-                    </span>
-                    {viewing.historia_number && (
-                      <span className="flex items-center gap-1 bg-muted/60 px-2.5 py-0.5 rounded-lg text-foreground font-bold border border-border/30">
-                        Nº Historia: #{viewing.historia_number}
-                      </span>
-                    )}
-                    {viewing.phone && (
-                      <span className="flex items-center gap-1 text-muted-foreground">
-                        <Phone className="h-3.5 w-3.5 text-primary/70" /> {viewing.phone}
-                      </span>
-                    )}
-                    {viewing.email && (
-                      <span className="flex items-center gap-1 text-muted-foreground">
-                        <Mail className="h-3.5 w-3.5 text-primary/70" /> {viewing.email}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Metrics Badge */}
-              <div className="flex items-center gap-3 self-stretch sm:self-auto justify-around sm:justify-end bg-background/50 border border-border/40 p-3 rounded-2xl">
-                <div className="text-center px-3 border-r border-border/40">
-                  <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider block">Edad</span>
-                  <span className="text-sm font-black text-foreground">
-                    {viewing.birth_date ? `${calculateAge(viewing.birth_date)} yrs` : "—"}
-                  </span>
-                </div>
-                <div className="text-center px-3">
-                  <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider block">Médico</span>
-                  <span className="text-xs font-bold text-primary truncate max-w-[120px] block">
-                    {doctorMap.get(viewing.assigned_doctor_id ?? "") || "Sin asignar"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Clinical Banner with Allergies & Risk Alerts */}
+          <PatientClinicalBanner
+            patient={viewing}
+            assignedDoctorName={doctorMap.get(viewing.assigned_doctor_id ?? "")}
+            className="mb-6"
+          />
 
           {/* Styled Navigation Tabs */}
           <Tabs defaultValue="general" className="flex-1 flex flex-col min-h-0">

@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { generateVerificationId, getVerificationUrl, generateQrCodeDataUrl } from "@/lib/utils/recipeVerification";
 
 export interface RecipePatient {
   full_name: string;
@@ -344,6 +345,43 @@ export const generateRecipePDF = async (
     doc.setPage(totalPages);
 
     const sigY = 700;
+    
+    // Official QR Verification Seal (Left Bottom)
+    try {
+      const verificationId = generateVerificationId("MED");
+      const verificationUrl = getVerificationUrl(verificationId);
+      const qrDataUrl = await generateQrCodeDataUrl(verificationUrl, verificationId);
+      if (qrDataUrl) {
+        const qrSize = 55;
+        const qrX = 70;
+        const qrY = sigY - 10;
+        doc.addImage(qrDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
+        doc.setFontSize(7);
+        doc.setFont(customFontFamily, "bold");
+        doc.setTextColor(30, 41, 59);
+        doc.text("VERIFICACIÓN DIGITAL", qrX + qrSize / 2, qrY + qrSize + 8, { align: "center" });
+        doc.setFontSize(6.5);
+        doc.setFont(customFontFamily, "normal");
+        doc.setTextColor(100, 116, 139);
+        doc.text(verificationId, qrX + qrSize / 2, qrY + qrSize + 16, { align: "center" });
+      }
+
+      // Save to database
+      const regText = `MPPS ${docMpps} CMC ${docCmc}`;
+      await (supabase as any).from("document_verifications").insert({
+        id: verificationId,
+        patient_name: patient.full_name,
+        patient_id: patient.document_id,
+        doctor_name: doctorName,
+        doctor_license: regText,
+        document_type: "Récipe e Indicaciones Médicas",
+        clinic_name: clinicName
+      });
+    } catch (qrErr) {
+      console.error("Error adding verification QR to PDF:", qrErr);
+    }
+
+    doc.setTextColor(0);
     doc.setDrawColor(120);
     doc.setLineWidth(0.5);
     doc.setLineDashPattern([2, 2], 0);

@@ -226,19 +226,21 @@ export function usePaginatedPatients(
   });
 }
 
+export const fetchPatientById = async (id: string): Promise<Patient> => {
+  if (!id) throw new Error("No patient ID provided");
+  const { data, error } = await supabase
+    .from("pacientes")
+    .select("*, historias_clinicas(*)")
+    .eq("id_paciente", parseInt(id))
+    .single();
+  if (error) throw error;
+  return mapPatient(data);
+};
+
 export function usePatient(id: string | undefined | null) {
   return useQuery({
     queryKey: ["patient", id],
-    queryFn: async (): Promise<Patient> => {
-      if (!id) throw new Error("No patient ID provided");
-      const { data, error } = await supabase
-        .from("pacientes")
-        .select("*, historias_clinicas(*)")
-        .eq("id_paciente", parseInt(id))
-        .single();
-      if (error) throw error;
-      return mapPatient(data);
-    },
+    queryFn: () => fetchPatientById(id as string),
     enabled: !!id,
   });
 }

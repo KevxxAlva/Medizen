@@ -7,11 +7,13 @@ import { BottomNavBar } from "@/components/BottomNavBar";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLocation } from "@tanstack/react-router";
-import { Menu } from "lucide-react";
+import { Menu, Lock } from "lucide-react";
 import { useClinicInfo } from "@/lib/api/clinic";
 import { useAuthSession } from "@/hooks/useAuth";
 import { useMyProfile } from "@/lib/api/profiles";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useInactivityLock } from "@/hooks/useInactivityLock";
+import { InactivityLockOverlay } from "@/components/InactivityLockOverlay";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
@@ -37,6 +39,9 @@ function AuthenticatedLayout() {
   const { user } = useAuthSession();
   const { data: profile } = useMyProfile(user?.id);
 
+  // Automatic & manual screen lock for clinical privacy
+  const { isLocked, lockScreen, unlockScreen, hasPinConfigured } = useInactivityLock();
+
   useRealtimeSync();
 
   useEffect(() => {
@@ -55,7 +60,7 @@ function AuthenticatedLayout() {
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="p-2 -ml-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+            className="p-2 -ml-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
             aria-label="Abrir menú"
           >
             <Menu className="h-5 w-5" />
@@ -69,6 +74,17 @@ function AuthenticatedLayout() {
         </div>
 
         <div className="flex items-center gap-1.5">
+          {/* Quick Lock Button for Doctor */}
+          {hasPinConfigured && (
+            <button
+              type="button"
+              onClick={lockScreen}
+              className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
+              title="Bloquear pantalla (Privacidad médica)"
+            >
+              <Lock className="h-4 w-4" />
+            </button>
+          )}
           <ThemeToggle />
           <Link
             to="/configuracion"
@@ -79,6 +95,21 @@ function AuthenticatedLayout() {
           </Link>
         </div>
       </header>
+
+      {/* Floating Desktop Quick Lock & Security Indicator (Hidden on Mobile) */}
+      {hasPinConfigured && (
+        <aside aria-label="Seguridad y accesos rápidos" className="hidden md:flex fixed top-4 right-6 z-30 items-center gap-2">
+          <button
+            type="button"
+            onClick={lockScreen}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-card/85 backdrop-blur-md border border-border/60 text-xs font-semibold text-muted-foreground hover:text-foreground hover:border-primary/40 shadow-xs transition-all cursor-pointer"
+            title="Bloquear sesión clínica inmediatamente"
+          >
+            <Lock className="h-3.5 w-3.5 text-primary" />
+            <span>Bloquear</span>
+          </button>
+        </aside>
+      )}
 
       <AppSidebar 
         isCollapsed={isCollapsed} 
@@ -104,6 +135,14 @@ function AuthenticatedLayout() {
 
       <CommandMenu />
       <BottomNavBar />
+
+      {/* Full-Screen Inactivity & Privacy Screen Lock */}
+      <InactivityLockOverlay
+        isLocked={isLocked}
+        onUnlock={unlockScreen}
+        doctorName={profile?.full_name || "Doctor(a)"}
+        clinicName={clinic?.name || "Medizen Suite"}
+      />
     </div>
   );
 }

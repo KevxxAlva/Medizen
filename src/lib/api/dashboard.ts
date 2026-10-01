@@ -141,11 +141,11 @@ export function useMonthlyPayments() {
       // Calculate by day for charts
       const dailyMap: Record<string, number> = {};
       const today = new Date();
-      const numDays = today.getDate(); // Up to today
+      const numDays = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate(); // Full month
       
       for (let i = 1; i <= numDays; i++) {
-        const d = new Date(today.getFullYear(), today.getMonth(), i);
-        dailyMap[d.toISOString().slice(0, 10)] = 0;
+        const year = today.getFullYear(); const month = String(today.getMonth() + 1).padStart(2, "0"); const day = String(i).padStart(2, "0");
+        dailyMap[`${year}-${month}-${day}`] = 0;
       }
       
       paidInvoices.forEach(inv => {

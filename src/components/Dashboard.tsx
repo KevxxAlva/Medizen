@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { AreaChart, Area, ResponsiveContainer, Tooltip, XAxis, PieChart, Pie, Cell, BarChart, Bar, CartesianGrid, YAxis } from "recharts";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
+import { DashboardSkeleton } from "@/components/skeletons/DashboardSkeleton";
 
 function MiniAreaChart({ data, colorVar, gradientId }: { data: number[]; colorVar: string; gradientId: string }) {
   const chartData = useMemo(() => data.map((val, i) => ({ index: i, value: val })), [data]);
@@ -126,7 +127,7 @@ export function Dashboard() {
   const { data: doctors = [] } = useDoctors();
   const { data: recentPatients = [] } = useRecentPatients(5);
   const { data: totalPatients = 0 } = usePatientsCountByDateRange();
-  const { data: stats } = useDashboardStats();
+  const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const { data: monthlyData = { total: 0, paymentsByDay: [] } } = useMonthlyPayments();
   const { data: clinic } = useClinicInfo();
   const { data: trends = [] } = useDashboardTrends();
@@ -339,6 +340,14 @@ export function Dashboard() {
 
   const displayName = profile?.full_name?.trim() || user?.email?.split("@")[0] || "Usuario";
   const roleDisplay = roles.includes("admin") ? "Administrador" : "Médico";
+
+  if (statsLoading && !stats) {
+    return (
+      <div className="min-h-full bg-muted/50 rounded-[2rem] p-4 md:p-8">
+        <DashboardSkeleton />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-full bg-muted/50 rounded-[2rem] p-4 md:p-8 font-sans text-foreground">

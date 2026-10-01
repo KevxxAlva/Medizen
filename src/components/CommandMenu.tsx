@@ -1,14 +1,16 @@
 import { useEffect, useState, useMemo, useDeferredValue } from "react";
 import { Command } from "cmdk";
-import { Search, User, FileText, Calendar, CalendarPlus, UserPlus, X } from "lucide-react";
+import { Search, User, FileText, Calendar, CalendarPlus, UserPlus, X, ShieldCheck } from "lucide-react";
 import { usePatients } from "@/lib/api/patients";
 import { useAppointments } from "@/lib/api/appointments";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { RecipeVerificationModal } from "@/components/RecipeVerificationModal";
 
 export function CommandMenu() {
   const [open, setOpen] = useState(false);
+  const [isVerificationOpen, setIsVerificationOpen] = useState(false);
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
 
@@ -102,15 +104,17 @@ export function CommandMenu() {
     filteredAppointments.length > 0 ||
     filteredInvoices.length > 0;
 
-  if (!open) return null;
+  if (!open && !isVerificationOpen) return null;
 
   return (
-    <div 
-      className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-start justify-center pt-[15vh] p-4"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) setOpen(false);
-      }}
-    >
+    <>
+      {open && (
+        <div 
+          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-start justify-center pt-[15vh] p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setOpen(false);
+          }}
+        >
       <Command 
         shouldFilter={false} // ¡Desactiva el algoritmo fuzzy de cmdk para eliminar el bloqueo de 408ms!
         className="w-full max-w-lg bg-card rounded-2xl shadow-2xl border border-border/50 overflow-hidden flex flex-col animate-in fade-in-0 zoom-in-95 duration-150"
@@ -166,6 +170,18 @@ export function CommandMenu() {
                   <UserPlus className="w-4 h-4" />
                 </div>
                 <span className="text-sm font-semibold flex-1">Nuevo Paciente</span>
+              </Command.Item>
+              <Command.Item
+                onSelect={() => {
+                  setOpen(false);
+                  setIsVerificationOpen(true);
+                }}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer aria-selected:bg-primary/10 aria-selected:text-primary text-foreground transition-colors mt-1"
+              >
+                <div className="h-8 w-8 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-500 shrink-0">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-semibold flex-1">Validar Récipe / Código QR Oficial</span>
               </Command.Item>
             </Command.Group>
           )}
@@ -262,5 +278,12 @@ export function CommandMenu() {
         </Command.List>
       </Command>
     </div>
+    )}
+
+    <RecipeVerificationModal
+      open={isVerificationOpen}
+      onOpenChange={setIsVerificationOpen}
+    />
+  </>
   );
 }
