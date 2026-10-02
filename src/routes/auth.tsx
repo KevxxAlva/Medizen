@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { MedizenLogo } from "@/components/MedizenLogo";
 import { toast } from "sonner";
 import {
   getQuickAccessAccounts,
@@ -439,7 +440,7 @@ function AuthPage() {
 
         {/* Top brand logo */}
         <div className="flex items-center gap-3">
-          <img src="/favicon.svg" alt="Logo" className="h-8 w-8 object-contain flex-shrink-0" />
+          <MedizenLogo className="h-8 w-8 flex-shrink-0 transition-all duration-300" />
           <span className="font-display font-bold text-xl tracking-tight text-foreground">
             Medi<span className="text-primary">zen</span>
           </span>

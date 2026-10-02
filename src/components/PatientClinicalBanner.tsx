@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { 
   ShieldAlert, ShieldCheck, HeartPulse, Baby, Copy, Check, 
-  Stethoscope, Calendar, Phone, Mail, FileText, AlertTriangle 
+  Stethoscope, Calendar, Phone, Mail, FileText, AlertTriangle, Shield 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

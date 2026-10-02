@@ -9,27 +9,24 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as VerificarRouteImport } from './routes/verificar'
-import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
-import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
-import { Route as AuthenticatedStocksRouteImport } from './routes/_authenticated/stocks'
-import { Route as AuthenticatedServiciosRouteImport } from './routes/_authenticated/servicios'
-import { Route as AuthenticatedReportesRouteImport } from './routes/_authenticated/reportes'
-import { Route as AuthenticatedMetodosPagoRouteImport } from './routes/_authenticated/metodos-pago'
-import { Route as AuthenticatedFacturacionRouteImport } from './routes/_authenticated/facturacion'
-import { Route as AuthenticatedDoctoresRouteImport } from './routes/_authenticated/doctores'
-import { Route as AuthenticatedCuentasRouteImport } from './routes/_authenticated/cuentas'
-import { Route as AuthenticatedConfiguracionRouteImport } from './routes/_authenticated/configuracion'
-import { Route as AuthenticatedComprasRouteImport } from './routes/_authenticated/compras'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
+import { Route as AuthenticatedConfiguracionRouteImport } from './routes/_authenticated/configuracion'
+import { Route as AuthenticatedCuentasRouteImport } from './routes/_authenticated/cuentas'
+import { Route as AuthenticatedDoctoresRouteImport } from './routes/_authenticated/doctores'
+import { Route as AuthenticatedFacturacionRouteImport } from './routes/_authenticated/facturacion'
+import { Route as AuthenticatedMetodosPagoRouteImport } from './routes/_authenticated/metodos-pago'
+import { Route as AuthenticatedReportesRouteImport } from './routes/_authenticated/reportes'
+import { Route as AuthenticatedServiciosRouteImport } from './routes/_authenticated/servicios'
+import { Route as AuthenticatedStocksRouteImport } from './routes/_authenticated/stocks'
+import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
 import { Route as AuthenticatedPacientesIndexRouteImport } from './routes/_authenticated/pacientes.index'
 import { Route as AuthenticatedPacientesPatientIdRouteImport } from './routes/_authenticated/pacientes.$patientId'
 
-const VerificarRoute = VerificarRouteImport.update({
-  id: '/verificar',
-  path: '/verificar',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -37,55 +34,14 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedSupportRoute = AuthenticatedSupportRouteImport.update({
-  id: '/support',
-  path: '/support',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedStocksRoute = AuthenticatedStocksRouteImport.update({
-  id: '/stocks',
-  path: '/stocks',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedServiciosRoute = AuthenticatedServiciosRouteImport.update({
-  id: '/servicios',
-  path: '/servicios',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedReportesRoute = AuthenticatedReportesRouteImport.update({
-  id: '/reportes',
-  path: '/reportes',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedMetodosPagoRoute =
-  AuthenticatedMetodosPagoRouteImport.update({
-    id: '/metodos-pago',
-    path: '/metodos-pago',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedFacturacionRoute =
-  AuthenticatedFacturacionRouteImport.update({
-    id: '/facturacion',
-    path: '/facturacion',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedDoctoresRoute = AuthenticatedDoctoresRouteImport.update({
-  id: '/doctores',
-  path: '/doctores',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedCuentasRoute = AuthenticatedCuentasRouteImport.update({
-  id: '/cuentas',
-  path: '/cuentas',
+const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
+  id: '/agenda',
+  path: '/agenda',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedConfiguracionRoute =
@@ -94,14 +50,46 @@ const AuthenticatedConfiguracionRoute =
     path: '/configuracion',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedComprasRoute = AuthenticatedComprasRouteImport.update({
-  id: '/compras',
-  path: '/compras',
+const AuthenticatedCuentasRoute = AuthenticatedCuentasRouteImport.update({
+  id: '/cuentas',
+  path: '/cuentas',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
-  id: '/agenda',
-  path: '/agenda',
+const AuthenticatedDoctoresRoute = AuthenticatedDoctoresRouteImport.update({
+  id: '/doctores',
+  path: '/doctores',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedFacturacionRoute =
+  AuthenticatedFacturacionRouteImport.update({
+    id: '/facturacion',
+    path: '/facturacion',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMetodosPagoRoute =
+  AuthenticatedMetodosPagoRouteImport.update({
+    id: '/metodos-pago',
+    path: '/metodos-pago',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedReportesRoute = AuthenticatedReportesRouteImport.update({
+  id: '/reportes',
+  path: '/reportes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedServiciosRoute = AuthenticatedServiciosRouteImport.update({
+  id: '/servicios',
+  path: '/servicios',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedStocksRoute = AuthenticatedStocksRouteImport.update({
+  id: '/stocks',
+  path: '/stocks',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSupportRoute = AuthenticatedSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPacientesIndexRoute =
@@ -120,9 +108,7 @@ const AuthenticatedPacientesPatientIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
-  '/verificar': typeof VerificarRoute
   '/agenda': typeof AuthenticatedAgendaRoute
-  '/compras': typeof AuthenticatedComprasRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
   '/cuentas': typeof AuthenticatedCuentasRoute
   '/doctores': typeof AuthenticatedDoctoresRoute
@@ -137,9 +123,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
-  '/verificar': typeof VerificarRoute
   '/agenda': typeof AuthenticatedAgendaRoute
-  '/compras': typeof AuthenticatedComprasRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
   '/cuentas': typeof AuthenticatedCuentasRoute
   '/doctores': typeof AuthenticatedDoctoresRoute
@@ -157,9 +141,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
-  '/verificar': typeof VerificarRoute
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
-  '/_authenticated/compras': typeof AuthenticatedComprasRoute
   '/_authenticated/configuracion': typeof AuthenticatedConfiguracionRoute
   '/_authenticated/cuentas': typeof AuthenticatedCuentasRoute
   '/_authenticated/doctores': typeof AuthenticatedDoctoresRoute
@@ -178,9 +160,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
-    | '/verificar'
     | '/agenda'
-    | '/compras'
     | '/configuracion'
     | '/cuentas'
     | '/doctores'
@@ -195,9 +175,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
-    | '/verificar'
     | '/agenda'
-    | '/compras'
     | '/configuracion'
     | '/cuentas'
     | '/doctores'
@@ -214,9 +192,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_authenticated'
     | '/auth'
-    | '/verificar'
     | '/_authenticated/agenda'
-    | '/_authenticated/compras'
     | '/_authenticated/configuracion'
     | '/_authenticated/cuentas'
     | '/_authenticated/doctores'
@@ -234,16 +210,15 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
-  VerificarRoute: typeof VerificarRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/verificar': {
-      id: '/verificar'
-      path: '/verificar'
-      fullPath: '/verificar'
-      preLoaderRoute: typeof VerificarRouteImport
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -253,13 +228,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated/': {
       id: '/_authenticated/'
       path: '/'
@@ -267,60 +235,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/support': {
-      id: '/_authenticated/support'
-      path: '/support'
-      fullPath: '/support'
-      preLoaderRoute: typeof AuthenticatedSupportRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/stocks': {
-      id: '/_authenticated/stocks'
-      path: '/stocks'
-      fullPath: '/stocks'
-      preLoaderRoute: typeof AuthenticatedStocksRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/servicios': {
-      id: '/_authenticated/servicios'
-      path: '/servicios'
-      fullPath: '/servicios'
-      preLoaderRoute: typeof AuthenticatedServiciosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/reportes': {
-      id: '/_authenticated/reportes'
-      path: '/reportes'
-      fullPath: '/reportes'
-      preLoaderRoute: typeof AuthenticatedReportesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/metodos-pago': {
-      id: '/_authenticated/metodos-pago'
-      path: '/metodos-pago'
-      fullPath: '/metodos-pago'
-      preLoaderRoute: typeof AuthenticatedMetodosPagoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/facturacion': {
-      id: '/_authenticated/facturacion'
-      path: '/facturacion'
-      fullPath: '/facturacion'
-      preLoaderRoute: typeof AuthenticatedFacturacionRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/doctores': {
-      id: '/_authenticated/doctores'
-      path: '/doctores'
-      fullPath: '/doctores'
-      preLoaderRoute: typeof AuthenticatedDoctoresRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/cuentas': {
-      id: '/_authenticated/cuentas'
-      path: '/cuentas'
-      fullPath: '/cuentas'
-      preLoaderRoute: typeof AuthenticatedCuentasRouteImport
+    '/_authenticated/agenda': {
+      id: '/_authenticated/agenda'
+      path: '/agenda'
+      fullPath: '/agenda'
+      preLoaderRoute: typeof AuthenticatedAgendaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/configuracion': {
@@ -330,18 +249,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConfiguracionRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/compras': {
-      id: '/_authenticated/compras'
-      path: '/compras'
-      fullPath: '/compras'
-      preLoaderRoute: typeof AuthenticatedComprasRouteImport
+    '/_authenticated/cuentas': {
+      id: '/_authenticated/cuentas'
+      path: '/cuentas'
+      fullPath: '/cuentas'
+      preLoaderRoute: typeof AuthenticatedCuentasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/agenda': {
-      id: '/_authenticated/agenda'
-      path: '/agenda'
-      fullPath: '/agenda'
-      preLoaderRoute: typeof AuthenticatedAgendaRouteImport
+    '/_authenticated/doctores': {
+      id: '/_authenticated/doctores'
+      path: '/doctores'
+      fullPath: '/doctores'
+      preLoaderRoute: typeof AuthenticatedDoctoresRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/facturacion': {
+      id: '/_authenticated/facturacion'
+      path: '/facturacion'
+      fullPath: '/facturacion'
+      preLoaderRoute: typeof AuthenticatedFacturacionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/metodos-pago': {
+      id: '/_authenticated/metodos-pago'
+      path: '/metodos-pago'
+      fullPath: '/metodos-pago'
+      preLoaderRoute: typeof AuthenticatedMetodosPagoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/reportes': {
+      id: '/_authenticated/reportes'
+      path: '/reportes'
+      fullPath: '/reportes'
+      preLoaderRoute: typeof AuthenticatedReportesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/servicios': {
+      id: '/_authenticated/servicios'
+      path: '/servicios'
+      fullPath: '/servicios'
+      preLoaderRoute: typeof AuthenticatedServiciosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/stocks': {
+      id: '/_authenticated/stocks'
+      path: '/stocks'
+      fullPath: '/stocks'
+      preLoaderRoute: typeof AuthenticatedStocksRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/support': {
+      id: '/_authenticated/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof AuthenticatedSupportRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/pacientes/': {
@@ -363,7 +324,6 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAgendaRoute: typeof AuthenticatedAgendaRoute
-  AuthenticatedComprasRoute: typeof AuthenticatedComprasRoute
   AuthenticatedConfiguracionRoute: typeof AuthenticatedConfiguracionRoute
   AuthenticatedCuentasRoute: typeof AuthenticatedCuentasRoute
   AuthenticatedDoctoresRoute: typeof AuthenticatedDoctoresRoute
@@ -380,7 +340,6 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAgendaRoute: AuthenticatedAgendaRoute,
-  AuthenticatedComprasRoute: AuthenticatedComprasRoute,
   AuthenticatedConfiguracionRoute: AuthenticatedConfiguracionRoute,
   AuthenticatedCuentasRoute: AuthenticatedCuentasRoute,
   AuthenticatedDoctoresRoute: AuthenticatedDoctoresRoute,
@@ -401,7 +360,6 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
-  VerificarRoute: VerificarRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

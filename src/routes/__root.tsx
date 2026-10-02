@@ -10,6 +10,7 @@ import { useEffect } from "react";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { applySavedThemeColor } from "@/components/ThemeCustomizer";
 import "../styles.css";
 
 function NotFoundComponent() {
@@ -30,7 +31,7 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: { error: any; reset: () => void }) {
   console.error("Root route error:", error);
   const router = useRouter();
   useEffect(() => {
@@ -103,6 +104,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    applySavedThemeColor();
+  }, []);
 
   return (
     <html lang="es" suppressHydrationWarning>

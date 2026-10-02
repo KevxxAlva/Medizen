@@ -12,6 +12,7 @@ import { useClinicInfo } from "@/lib/api/clinic";
 import { useAuthSession } from "@/hooks/useAuth";
 import { useMyProfile } from "@/lib/api/profiles";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { MedizenLogo } from "@/components/MedizenLogo";
 import { useInactivityLock } from "@/hooks/useInactivityLock";
 import { InactivityLockOverlay } from "@/components/InactivityLockOverlay";
 
@@ -66,7 +67,7 @@ function AuthenticatedLayout() {
             <Menu className="h-5 w-5" />
           </button>
           <div className="flex items-center gap-2.5">
-            <img src="/favicon.svg" alt="Logo" className="h-7 w-7 object-contain flex-shrink-0" />
+            <MedizenLogo className="h-7 w-7 flex-shrink-0 transition-all duration-300" />
             <span className="font-display font-bold text-base tracking-tight text-foreground truncate max-w-[170px]">
               {clinic?.name || "Medizen"}
             </span>

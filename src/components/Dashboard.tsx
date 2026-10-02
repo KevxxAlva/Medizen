@@ -24,6 +24,7 @@ import { AreaChart, Area, ResponsiveContainer, Tooltip, XAxis, PieChart, Pie, Ce
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 import { DashboardSkeleton } from "@/components/skeletons/DashboardSkeleton";
+import { AiClinicalInsightsCard } from "@/components/dashboard/AiClinicalInsightsCard";
 
 function MiniAreaChart({ data, colorVar, gradientId }: { data: number[]; colorVar: string; gradientId: string }) {
   const chartData = useMemo(() => data.map((val, i) => ({ index: i, value: val })), [data]);
@@ -778,6 +779,9 @@ export function Dashboard() {
               </div>
             </div>
           </div>
+
+          {/* AI CLINICAL INSIGHTS ROW */}
+          <AiClinicalInsightsCard />
         </div>
 
         {/* RIGHT COLUMN (Sidebar Profile & Calendar) */}

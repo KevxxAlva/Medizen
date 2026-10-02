@@ -24,6 +24,7 @@ import { CLINICAL_TEMPLATES, PRESCRIPTION_TEMPLATES, getTemplatesForSpecialty, g
 import { getSpecialtyConfig, AVAILABLE_SPECIALTIES, getSpecialtyBadgeStyle } from "@/lib/constants/specialtyForms";
 import { DynamicSpecialtyFields } from "@/components/consultation/DynamicSpecialtyFields";
 import { VoiceDictationButton } from "@/components/VoiceDictationButton";
+import { AiClinicalAssistant } from "@/components/consultation/AiClinicalAssistant";
 import { ObstetricCalculatorCard } from "@/components/consultation/ObstetricCalculatorCard";
 import { calculateBmiWithCategory } from "@/lib/utils/medicalCalculators";
 import { cn } from "@/lib/utils";
@@ -38,14 +39,14 @@ export function ConsultationForm({
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  appointment?: { id: string; patient_id: string; doctor_id?: string; patient_name?: string } | null;
+  appointment?: { id: string; patient_id: string; doctor_id?: string; patient_name?: string; price?: number | null; reason?: string | null } | null;
 }) {
   const { data: existingConsultation, isLoading: loadingExisting } = useConsultationByAppointment(appointment?.id);
 
-  const create = useCreateConsultation();
-  const update = useUpdateConsultation();
-  const updateApp = useUpdateAppointment();
-  const busy = create.isPending || update.isPending || updateApp.isPending;
+  const createConsultation = useCreateConsultation();
+  const updateConsultation = useUpdateConsultation();
+  const updateAppointment = useUpdateAppointment();
+  const busy = createConsultation.isPending || updateConsultation.isPending || updateAppointment.isPending;
 
   const isEdit = !!existingConsultation;
 
@@ -482,9 +483,13 @@ export function ConsultationForm({
           ...payload,
         });
         toast.success("Consulta actualizada con éxito");
-      } else {
         await createConsultation.mutateAsync(payload);
-        await updateAppointment.mutateAsync({ id: appointment.id, status: "completada" });
+        await updateAppointment.mutateAsync({
+          id: appointment.id,
+          status: "completada",
+          price: appointment.price ?? undefined,
+          reason: appointment.reason ?? undefined
+        });
         toast.success("Consulta registrada con éxito");
       }
 
@@ -688,10 +693,18 @@ export function ConsultationForm({
                     <div className="grid gap-2">
                       <div className="flex items-center justify-between">
                         <Label htmlFor="c-subjective">Examen Subjetivo / Motivo del control</Label>
-                        <VoiceDictationButton
-                          size="sm"
-                          onTranscript={(spoken) => setSubjectiveExam((prev) => (prev ? prev + " " + spoken : spoken))}
-                        />
+                        <div className="flex items-center gap-1.5">
+                          <AiClinicalAssistant
+                            patientName={patient?.full_name || appointment?.patient_name}
+                            notesInput={subjectiveExam}
+                            onApplyNotes={(formatted) => setSubjectiveExam(formatted)}
+                            onApplyPrescription={(prescription) => setIndications((prev) => prev ? prev + "\n" + prescription : prescription)}
+                          />
+                          <VoiceDictationButton
+                            size="sm"
+                            onTranscript={(spoken) => setSubjectiveExam((prev) => (prev ? prev + " " + spoken : spoken))}
+                          />
+                        </div>
                       </div>
                       <Textarea
                         id="c-subjective"

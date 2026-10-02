@@ -627,15 +627,16 @@ export function FacturacionPage() {
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
                         )}
-                        {a.status === "completada" && (
+                        {(a.status === "completada" || (a.cost && a.cost > 0)) && (
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
                             onClick={() => handleExportInvoice(a)}
-                            className="h-8 w-8 p-0 rounded-xl hover:bg-mauve/10 cursor-pointer flex items-center justify-center text-muted-foreground"
-                            aria-label="Descargar recibo"
+                            className="h-7 px-2.5 rounded-xl border-border/60 hover:bg-primary/10 hover:text-primary text-[11px] font-bold gap-1 cursor-pointer shadow-2xs"
+                            title="Descargar Recibo Oficial en PDF"
                           >
-                            <FileDown className="h-3.5 w-3.5" />
+                            <FileDown className="h-3 w-3 text-primary" />
+                            Recibo PDF
                           </Button>
                         )}
                       </div>

@@ -1,18 +1,36 @@
-import { Moon, Sun } from "lucide-react"
-import { useTheme } from "@/components/ThemeProvider"
+import { Moon, Sun } from "lucide-react";
+import { useTheme } from "@/components/ThemeProvider";
+import { useEffect, useState } from "react";
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme()
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = mounted 
+    ? (theme === "dark" || (theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches))
+    : false;
+
+  const toggleTheme = () => {
+    setTheme(isDark ? "light" : "dark");
+  };
 
   return (
     <button
-      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-      className="flex items-center justify-center h-10 w-10 bg-white dark:bg-card border border-border/40 rounded-full shadow-sm text-muted-foreground hover:text-foreground transition hover:bg-muted focus:outline-none"
-      title="Alternar Tema"
+      type="button"
+      onClick={toggleTheme}
+      className="relative flex items-center justify-center h-8 w-8 bg-card border border-border/60 rounded-xl shadow-2xs hover:bg-muted focus:outline-none cursor-pointer shrink-0 transition-colors"
+      title={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+      aria-label="Alternar Tema (Claro / Oscuro)"
     >
-      <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-      <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-      <span className="sr-only">Toggle theme</span>
+      {isDark ? (
+        <Moon className="h-3.5 w-3.5 text-primary transition-all" />
+      ) : (
+        <Sun className="h-3.5 w-3.5 text-amber-500 transition-all" />
+      )}
     </button>
-  )
+  );
 }

@@ -136,10 +136,37 @@ export function useCreateAppointment() {
         .single();
         
       if (error) throw error;
+
+      // Handle price / invoice creation from service price or input
+      let finalPrice = Number(input.price) || 0;
+      if (finalPrice <= 0 && input.reason) {
+        const { data: serv } = await supabase
+          .from("servicios")
+          .select("costo_base")
+          .ilike("nombre_servicio", input.reason.trim())
+          .maybeSingle();
+        if (serv?.costo_base) {
+          finalPrice = Number(serv.costo_base);
+        }
+      }
+
+      if (finalPrice > 0) {
+        await supabase.from("facturas").insert({
+          id_paciente: parseInt(input.patient_id),
+          total_general: finalPrice,
+          subtotal: finalPrice,
+          monto_paciente: finalPrice,
+          estado_pago: 'Pendiente',
+          fecha_emision: new Date().toISOString()
+        });
+      }
       
       return citaData;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["appointments"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["appointments"] });
+      qc.invalidateQueries({ queryKey: ["facturas"] });
+    },
   });
 }
 
@@ -149,8 +176,12 @@ export function useUpdateAppointment() {
     mutationFn: async ({ id, ...patch }: Partial<AppointmentInput> & { id: string }) => {
       const idCita = parseInt(id);
 
-      // Fetch existing cita to get patient_id if needed for Facturas
-      const { data: existingCita } = await supabase.from("citas").select("id_paciente").eq("id_cita", idCita).single();
+      // Fetch existing cita to get patient_id and motivo for Facturas
+      const { data: existingCita } = await supabase
+        .from("citas")
+        .select("id_paciente, motivo")
+        .eq("id_cita", idCita)
+        .single();
 
       // 1. Update Citas table
       const updateData: any = {};
@@ -169,7 +200,7 @@ export function useUpdateAppointment() {
       if (patch.price !== undefined || patch.payment_method !== undefined || patch.status !== undefined) {
         let facturaId;
         
-        // Since id_cita is gone from facturas, we'll try to find an invoice for this patient today
+        // Find existing invoice for this patient today
         const today = new Date().toISOString().split('T')[0];
         const { data: existFList } = await supabase
           .from("facturas")
@@ -181,7 +212,23 @@ export function useUpdateAppointment() {
           
         const existF = existFList?.[0] || null;
         
-        let targetPrice = patch.price !== undefined && patch.price !== null ? patch.price : (existF ? existF.total_general : 0);
+        let targetPrice = patch.price !== undefined && patch.price !== null ? Number(patch.price) : (existF ? Number(existF.total_general) : 0);
+
+        // If price is 0, auto-lookup the service base price using the appointment reason
+        if (targetPrice <= 0) {
+          const reasonToSearch = patch.reason || existingCita?.motivo;
+          if (reasonToSearch) {
+            const { data: serv } = await supabase
+              .from("servicios")
+              .select("costo_base")
+              .ilike("nombre_servicio", reasonToSearch.trim())
+              .maybeSingle();
+            if (serv?.costo_base) {
+              targetPrice = Number(serv.costo_base);
+            }
+          }
+        }
+
         let fEstado = patch.status === 'completada' ? (patch.payment_method ? 'Pagada' : 'Pendiente') : 'Pendiente';
         if (patch.status === 'cancelada') fEstado = 'Cancelada';
 
@@ -194,7 +241,7 @@ export function useUpdateAppointment() {
              estado_pago: fEstado 
           }).eq("id_factura", facturaId);
         } else {
-          // Only create if price > 0, or payment is attempted, or appointment is completed
+          // Create invoice if price > 0, or payment is attempted, or appointment is completed
           if (targetPrice > 0 || patch.payment_method || patch.status === 'completada') {
             const { data: newF, error: newFError } = await supabase.from("facturas").insert({
               id_paciente: existingCita?.id_paciente,
@@ -270,6 +317,7 @@ export function useUpdateAppointment() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["appointments"] });
+      qc.invalidateQueries({ queryKey: ["facturas"] });
       qc.invalidateQueries({ queryKey: ["financial_accounts"] });
     },
   });
