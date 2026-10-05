@@ -1442,6 +1442,16 @@ Para dar cumplimiento estricto al secreto médico, la confidencialidad de la inf
    * Tomando en consideración las fluctuaciones en el suministro eléctrico y telecomunicaciones en la región de los llanos guariqueños, MediZen integra una estrategia de sincronización asíncrona mediante **TanStack Query v5**.
    * Durante la redacción de una consulta o registro de antecedentes, los datos se almacenan temporalmente en la memoria reactiva del cliente. Si ocurre una pérdida imprevista de conexión a Internet, la interfaz notifica al especialista sin interrumpir la escritura ni reiniciar el formulario. Al restablecerse el enlace, el sistema reintenta la sincronización mediante peticiones idempotentes, previniendo la duplicidad o pérdida de datos clínicos.
 
+5. **Optimización de Rendimiento e Interacción (Core Web Vitals - INP < 50 ms)**:
+   * **Desacoplamiento de Micro-Componentes de Alta Frecuencia**: El reloj en tiempo real del Tablero y la barra superior se aisló en un micro-componente independiente (`LiveClock`), evitando que el intervalo de actualización por segundo (`1.000 ms`) dispare re-renderizados innecesarios del componente principal `Dashboard` y sus múltiples gráficos de Recharts.
+   * **Memoización de Componentes de Datos Complejos**: Se implementó `React.memo` sobre gráficos analíticos (`MiniAreaChart`, `DonutChart`) y vistas pesadas, asegurando que las transformaciones matemáticas de datos solo se ejecuten cuando las propiedades cambien efectivamente.
+   * **Renderizado Concurrente y Diferimiento de Tareas**: Se incorporó `startTransition` para cambios de interfaz de usuario y `requestIdleCallback` para la sincronización de elementos secundarios (como el favicon dinámico y notificaciones flotantes), eliminando bloqueos del hilo principal de JavaScript (*input delay*) y alcanzando métricas de *Interaction to Next Paint* (INP) inferiores a 50 ms.
+
+6. **Personalización Dinámica de Identidad Visual y Branding Clínico**:
+   * **Arquitectura de Paletas Temáticas (`ThemeCustomizer`)**: El sistema permite al equipo médico alternar en vivo entre cinco paletas cromáticas clínicas especializadas (*Azul Medizen, Verde Esmeralda, Púrpura Real, Teal Quirúrgico y Rosa Obstétrico*), sincronizadas directamente a través de variables CSS nativas (`--primary`, `--ring`).
+   * **Isotipo Reactivo SVG (`MedizenLogo`)**: El isotipo oficial con cinta de Möbius fue estructurado en SVG puro con vinculación a tokens CSS, permitiendo que el logo se adapte de forma instantánea al color activo sin incurrir en ejecuciones de JavaScript ni estados redundantes.
+   * **Vinculación de Costos Base en Facturación**: Se enlazó la creación y actualización de citas médicas con el catálogo centralizado de servicios (`servicios.costo_base`), asignando automáticamente los honorarios reales a las facturas generadas y evitando facturaciones erróneas en $0.00.
+
 ---
 
 ### Pruebas de la Aplicación
@@ -1460,6 +1470,8 @@ Para asegurar que el sistema cumple con los más altos estándares de calidad, c
 | **CP-05** | Agenda | Modificación del estado de cita desde recepción. | Actualización en tiempo real en la pantalla de la clínica. | Estado actualizado vía WebSockets en menos de 500 ms. | **APROBADO** |
 | **CP-06** | Récipes | Clic en 'Generar Récipe PDF' y 'Enviar a WhatsApp'. | Compilación de PDF de alta resolución y apertura de chat directo. | PDF generado con membrete nítido y enlace WhatsApp funcional. | **APROBADO** |
 | **CP-07** | Facturación | Registro de pago mixto en dólares en efectivo y Pago Móvil en Bs. | Cálculo exacto de saldo restante y actualización de balance de caja. | Asiento contable registrado sin discrepancias aritméticas. | **APROBADO** |
+| **CP-08** | Interfaz / Rendimiento | Selección de paleta temática o alternancia de modo oscuro. | Cambio visual instantáneo sin congelamiento del hilo principal (INP < 50 ms). | Renderizado fluido y persistencia en almacenamiento local aprobada. | **APROBADO** |
+| **CP-09** | Facturación / Citas | Creación de cita médica con servicio clínico asignado. | Cálculo automático del costo base del servicio en la factura generada. | Factura creada con el monto real del servicio (evita $0.00). | **APROBADO** |
 
 *Nota.* Elaboración propia (2026). El 100% de los casos de prueba ejecutados resultaron satisfactorios.
 

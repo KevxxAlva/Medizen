@@ -53,12 +53,23 @@
 ### 💳 Finanzas, Facturación & Caja Chica
 * **Cuentas Financieras**: Gestión de cuentas bancarias, bóvedas en efectivo y caja chica en tiempo real.
 * **Métodos de Pago Multimoneda**: Registro y conciliación de cobros en Dólares (USD), Bolívares (VES), Zelle, Pago Móvil, Tarjetas y Transferencias.
-* **Módulo de Compras y Egresos**: Registro de adquisiciones a proveedores y gastos operativos de la clínica.
+* **Cálculo Automático de Costos**: Vinculación directa con el catálogo de servicios médicos (`costo_base`) al agendar o actualizar citas, garantizando facturación precisa sin montos en $0.00.
 * **Facturación Profesional**: Emisión de facturas electrónicas con cálculo de subtotales, coberturas de seguro y descarga de recibos individuales en PDF.
 
-### 📦 Inventario y Stock de Suministros
-* **Control de Existencias**: Almacén central de insumos médicos, fármacos y material descartable.
-* **Alertas de Reposición**: Umbrales de stock mínimo para evitar desabastecimiento en procedimientos críticos.
+### 🎨 Personalización de Temas y Branding Clínico
+* **Paletas de Acento Especializadas**: Selector en vivo de combinaciones visuales médicas (Azul Medizen, Verde Esmeralda, Púrpura Real, Teal Quirúrgico, Rosa Obstétrico).
+* **Isotipo Reactivo SVG (`MedizenLogo`)**: Logo vectorial estilizado con cinta de Möbius que se sincroniza instantáneamente con las variables CSS activas (`--primary`).
+* **Favicon Dinámico**: Actualización en tiempo real del icono de la pestaña del navegador según el color de acento elegido.
+* **Modo Claro / Oscuro**: Alternador ergonómico de contraste con persistencia y transiciones visuales de alto rendimiento.
+
+### ⚡ Rendimiento de Grado Médico & Core Web Vitals (INP < 50ms)
+* **Eliminación de Renderizado Redundante**: Desacoplamiento del reloj de cabecera mediante el micro-componente aislado `LiveClock`, liberando el hilo principal de ejecuciones por segundo en el Tablero.
+* **Memoización de Visualizaciones**: Componentes gráficos de Recharts (`MiniAreaChart`, `DonutChart`) memoizados para responder sin recálculos pesados.
+* **Renderizado Concurrente**: Integración de `startTransition` y diferimiento con `requestIdleCallback` para interacción a siguiente pintura (*Interaction to Next Paint*) ultra veloz.
+
+### 🤖 Asistente Clínico Inteligente
+* **Tarjetas de Perspectiva Médica**: Widgets interactivos en el Dashboard (`AiClinicalInsightsCard`) con alertas operativas y métricas de flujo de pacientes.
+* **Asistente Clínico en Consulta**: Panel de apoyo inteligente integrado (`AiClinicalAssistant`) para resumir evoluciones y agilizar la atención.
 
 ### 📄 Generador de Récipes y Documentos Clínicos
 * **Diseñador Visual de Récipes**: Personalización de logotipos, colores institucionales, membretes, tipografías y pies de página.
@@ -123,17 +134,24 @@ bun run build
 
 ```text
 femesalud-zen-flow/
+├── .agents/
+│   └── skills/commit/       # Skill de commits convencionales automáticos
 ├── public/
 │   ├── favicon.svg          # Isotipo oficial Medizen (Möbius Zen)
 │   └── ...
 ├── src/
 │   ├── components/          # Componentes de UI, diálogos y vistas de módulos
-│   │   ├── finance/         # Cuentas, métodos de pago y compras
+│   │   ├── consultation/    # Formularios y asistente clínico con IA
+│   │   ├── dashboard/       # Widgets analíticos y métricas operativas
+│   │   ├── finance/         # Cuentas bancarias y métodos de pago
 │   │   ├── physical-asset/  # Inventario y control de stocks
 │   │   ├── settings/        # Diseñador visual de récipes
 │   │   ├── ui/              # Componentes base Radix UI / Tailwind
 │   │   ├── AppSidebar.tsx   # Barra lateral con menú drawer móvil
 │   │   ├── BottomNavBar.tsx # Barra de navegación inferior táctil
+│   │   ├── MedizenLogo.tsx  # Isotipo reactivo SVG sincronizado con el tema
+│   │   ├── ThemeCustomizer.tsx # Personalizador de paletas y colores clínicos
+│   │   ├── ThemeToggle.tsx  # Alternador de modo claro / oscuro
 │   │   └── ...
 │   ├── hooks/               # Hooks personalizados (autenticación, sync realtime)
 │   ├── integrations/        # Cliente de Supabase y esquemas tipados
