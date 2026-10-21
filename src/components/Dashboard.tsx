@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, memo } from "react";
 import { Link } from "@tanstack/react-router";
 import { 
   Search, Bell, Settings, MoreHorizontal, MapPin, Edit2, ChevronDown, ChevronLeft, ChevronRight, Users, CalendarClock, Plus, Check, Clock
@@ -26,7 +26,7 @@ import "driver.js/dist/driver.css";
 import { DashboardSkeleton } from "@/components/skeletons/DashboardSkeleton";
 import { AiClinicalInsightsCard } from "@/components/dashboard/AiClinicalInsightsCard";
 
-function MiniAreaChart({ data, colorVar, gradientId }: { data: number[]; colorVar: string; gradientId: string }) {
+const MiniAreaChart = memo(function MiniAreaChart({ data, colorVar, gradientId }: { data: number[]; colorVar: string; gradientId: string }) {
   const chartData = useMemo(() => data.map((val, i) => ({ index: i, value: val })), [data]);
   return (
     <ResponsiveContainer width="100%" height="100%">
@@ -47,9 +47,9 @@ function MiniAreaChart({ data, colorVar, gradientId }: { data: number[]; colorVa
       </AreaChart>
     </ResponsiveContainer>
   );
-}
+});
 
-function DonutChart({ percentage }: { percentage: number }) {
+const DonutChart = memo(function DonutChart({ percentage }: { percentage: number }) {
   const data = useMemo(() => [
     { name: "Ocupado", value: percentage },
     { name: "Libre", value: 100 - percentage }
@@ -93,11 +93,10 @@ function DonutChart({ percentage }: { percentage: number }) {
       </div>
     </div>
   );
-}
+});
 
-export function Dashboard() {
-  const { user } = useAuthSession();
-  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+const LiveClockBadge = memo(function LiveClockBadge() {
+  const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -106,22 +105,71 @@ export function Dashboard() {
     return () => clearInterval(timer);
   }, []);
 
-  const formattedTime = useMemo(() => {
-    return currentTime.toLocaleTimeString("es-VE", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: true,
-    });
-  }, [currentTime]);
+  const formattedTime = currentTime.toLocaleTimeString("es-VE", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
 
-  const formattedDate = useMemo(() => {
-    return currentTime.toLocaleDateString("es-VE", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-    });
-  }, [currentTime]);
+  const formattedDate = currentTime.toLocaleDateString("es-VE", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+
+  return (
+    <div
+      className="flex items-center gap-2.5 bg-card rounded-full px-3.5 py-2 shadow-sm border border-border/40 text-foreground transition-all hover:border-primary/30 select-none"
+      title={currentTime.toLocaleDateString("es-VE", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+    >
+      <div className="relative flex items-center justify-center shrink-0">
+        <Clock className="h-4 w-4 text-primary" />
+        <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+        </span>
+      </div>
+      <div className="flex items-center gap-1.5 font-mono">
+        <span className="hidden lg:inline text-[11px] font-medium text-muted-foreground uppercase tracking-tight">
+          {formattedDate} •
+        </span>
+        <span className="text-xs font-bold tabular-nums text-foreground tracking-wider uppercase">
+          {formattedTime}
+        </span>
+      </div>
+    </div>
+  );
+});
+
+const HeroDateTimeBadge = memo(function HeroDateTimeBadge() {
+  const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formattedTime = currentTime.toLocaleTimeString("es-VE", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+
+  return (
+    <div className="flex items-center gap-2 bg-black/10 w-max px-3 py-1.5 rounded-full backdrop-blur-md mb-4 border border-white/10 shadow-sm">
+      <span className="text-xs font-medium">
+        📅 {currentTime.toLocaleDateString("es-ES", { month: "short", day: "numeric", year: "numeric" })} {formattedTime}
+      </span>
+    </div>
+  );
+});
+
+export function Dashboard() {
+  const { user } = useAuthSession();
 
   const { data: roles = [] } = useRoles();
   const { data: profile } = useMyProfile(user?.id);
@@ -148,6 +196,8 @@ export function Dashboard() {
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [newGoalTitle, setNewGoalTitle] = useState("");
   const [newGoalTarget, setNewGoalTarget] = useState(1);
+  const [eventsRange, setEventsRange] = useState<"today" | "week">("today");
+  const [goalsRange, setGoalsRange] = useState<"today" | "week">("today");
 
   const handleAddGoal = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -371,27 +421,8 @@ export function Dashboard() {
           </kbd>
         </button>
         <div className="flex items-center gap-3">
-          {/* Reloj en Tiempo Real */}
-          <div 
-            className="flex items-center gap-2.5 bg-card rounded-full px-3.5 py-2 shadow-sm border border-border/40 text-foreground transition-all hover:border-primary/30 select-none"
-            title={currentTime.toLocaleDateString("es-VE", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-          >
-            <div className="relative flex items-center justify-center shrink-0">
-              <Clock className="h-4 w-4 text-primary" />
-              <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 font-mono">
-              <span className="hidden lg:inline text-[11px] font-medium text-muted-foreground uppercase tracking-tight">
-                {formattedDate} •
-              </span>
-              <span className="text-xs font-bold tabular-nums text-foreground tracking-wider uppercase">
-                {formattedTime}
-              </span>
-            </div>
-          </div>
+          {/* Reloj en Tiempo Real aislado para evitar re-renders del Dashboard */}
+          <LiveClockBadge />
 
           <Popover>
             <PopoverTrigger asChild>
@@ -446,11 +477,9 @@ export function Dashboard() {
           {/* HERO BANNER */}
           <div className="relative bg-gradient-to-br from-primary to-primary/80 rounded-3xl p-8 overflow-hidden text-primary-foreground shadow-xl shadow-primary/20 flex justify-between items-center h-48 border border-white/10">
             <div className="relative z-10">
-              <div className="flex items-center gap-2 bg-black/10 w-max px-3 py-1.5 rounded-full backdrop-blur-md mb-4 border border-white/10 shadow-sm">
-                <span className="text-xs font-medium">📅 {currentTime.toLocaleDateString("es-ES", { month: "short", day: "numeric", year: "numeric" })} {formattedTime}</span>
-              </div>
+              <HeroDateTimeBadge />
               <h1 className="font-display text-4xl font-bold mb-1 tracking-tight">¡Buen día, {displayName}!</h1>
-              <p className="text-primary-foreground/90 font-medium">¡Que tengas un excelente {currentTime.toLocaleDateString("es-ES", { weekday: "long" })}!</p>
+              <p className="text-primary-foreground/90 font-medium">¡Que tengas un excelente {today.toLocaleDateString("es-ES", { weekday: "long" })}!</p>
             </div>
             
             {/* Abstract Doctor Illustration using CSS/Icons */}
@@ -507,10 +536,10 @@ export function Dashboard() {
               </div>
             </div>
 
-            {/* Online Work */}
+            {/* Completed Consultations (Last 7 Days) */}
             <div className="glass-card rounded-[2rem] p-5 shadow-lg shadow-black/5 flex flex-col hover:-translate-y-1 transition-transform duration-300">
               <div className="flex justify-between items-start mb-2">
-                <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Citas Online</h3>
+                <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Consultas Atendidas</h3>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="text-muted-foreground hover:text-foreground focus:outline-none transition-colors"><MoreHorizontal className="h-4 w-4" /></button>
@@ -527,11 +556,11 @@ export function Dashboard() {
               </div>
               <div className="flex items-end gap-3 mb-1">
                 <span className="font-display text-4xl font-bold text-foreground tracking-tight">{stats?.onlineWork.total || 0}</span>
-                <span className="text-xs font-medium text-muted-foreground mb-1">consultas online</span>
+                <span className="text-xs font-medium text-muted-foreground mb-1">últimos 7 días</span>
               </div>
               <div>
                 <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded", (stats?.onlineWork.change || 0) >= 0 ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-destructive/10 text-destructive")}>
-                  {(stats?.onlineWork.change || 0) >= 0 ? "+" : ""}{stats?.onlineWork.change || 0}% respecto a ayer
+                  {(stats?.onlineWork.change || 0) >= 0 ? "+" : ""}{stats?.onlineWork.change || 0}% hoy respecto a ayer
                 </span>
               </div>
               <div className="mt-auto pt-4 h-16 w-full -mb-2">
@@ -593,25 +622,47 @@ export function Dashboard() {
             <div className="glass-card rounded-[2rem] p-6 shadow-lg shadow-black/5 flex flex-col">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Mis Eventos Programados</h3>
-                <button className="flex items-center gap-1 text-primary font-bold text-xs bg-primary/10 px-3 py-1.5 rounded-lg hover:bg-primary/20 transition">
-                  Hoy <ChevronDown className="h-3 w-3" />
+                <button
+                  type="button"
+                  onClick={() => setEventsRange((prev) => (prev === "today" ? "week" : "today"))}
+                  className="flex items-center gap-1 text-primary font-bold text-xs bg-primary/10 px-3 py-1.5 rounded-lg hover:bg-primary/20 transition cursor-pointer"
+                >
+                  {eventsRange === "today" ? "Hoy" : "7 Días"} <ChevronDown className="h-3 w-3" />
                 </button>
               </div>
               
               <div className="flex items-center gap-6 mt-2">
-                <DonutChart percentage={stats?.scheduledEvents.donutPercentage || 0} />
+                <DonutChart
+                  percentage={
+                    eventsRange === "today"
+                      ? stats?.scheduledEvents.donutPercentage || 0
+                      : stats?.scheduledEvents.week?.donutPercentage || 0
+                  }
+                />
                 
                 <div className="flex flex-col gap-4 flex-1">
                   <div>
-                    <div className="text-xl font-bold text-foreground font-display">{stats?.scheduledEvents.consultations || 0}</div>
+                    <div className="text-xl font-bold text-foreground font-display">
+                      {eventsRange === "today"
+                        ? stats?.scheduledEvents.consultations || 0
+                        : stats?.scheduledEvents.week?.consultations || 0}
+                    </div>
                     <div className="text-[10px] font-bold text-muted-foreground uppercase">Consultas</div>
                   </div>
                   <div>
-                    <div className="text-xl font-bold text-foreground font-display">{stats?.scheduledEvents.labs || 0}</div>
+                    <div className="text-xl font-bold text-foreground font-display">
+                      {eventsRange === "today"
+                        ? stats?.scheduledEvents.labs || 0
+                        : stats?.scheduledEvents.week?.labs || 0}
+                    </div>
                     <div className="text-[10px] font-bold text-muted-foreground uppercase">Análisis de Lab.</div>
                   </div>
                   <div>
-                    <div className="text-xl font-bold text-foreground font-display">{stats?.scheduledEvents.invoices || 0}</div>
+                    <div className="text-xl font-bold text-foreground font-display">
+                      {eventsRange === "today"
+                        ? stats?.scheduledEvents.invoices || 0
+                        : stats?.scheduledEvents.week?.invoices || 0}
+                    </div>
                     <div className="text-[10px] font-bold text-muted-foreground uppercase">Facturas</div>
                   </div>
                 </div>
@@ -621,9 +672,15 @@ export function Dashboard() {
             {/* Plans Done */}
             <div className="glass-card rounded-[2rem] p-6 shadow-lg shadow-black/5 flex flex-col">
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Mis Metas de Hoy</h3>
-                <button className="flex items-center gap-1 text-primary font-bold text-xs bg-primary/10 px-3 py-1.5 rounded-lg hover:bg-primary/20 transition">
-                  Hoy <ChevronDown className="h-3 w-3" />
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  {goalsRange === "today" ? "Mis Metas de Hoy" : "Mis Metas (7 Días)"}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setGoalsRange((prev) => (prev === "today" ? "week" : "today"))}
+                  className="flex items-center gap-1 text-primary font-bold text-xs bg-primary/10 px-3 py-1.5 rounded-lg hover:bg-primary/20 transition cursor-pointer"
+                >
+                  {goalsRange === "today" ? "Hoy" : "7 Días"} <ChevronDown className="h-3 w-3" />
                 </button>
               </div>
 
@@ -632,30 +689,69 @@ export function Dashboard() {
                 <div>
                   <div className="flex justify-between text-xs font-bold mb-2">
                     <span className="text-foreground">Consultas</span>
-                    <span className="text-foreground">{stats?.plansDone.consultations || 0}%</span>
+                    <span className="text-foreground">
+                      {goalsRange === "today"
+                        ? stats?.plansDone.consultations || 0
+                        : stats?.plansDone.week?.consultations || 0}%
+                    </span>
                   </div>
                   <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${stats?.plansDone.consultations || 0}%` }}></div>
+                    <div
+                      className="h-full bg-primary rounded-full transition-all duration-500"
+                      style={{
+                        width: `${
+                          goalsRange === "today"
+                            ? stats?.plansDone.consultations || 0
+                            : stats?.plansDone.week?.consultations || 0
+                        }%`,
+                      }}
+                    ></div>
                   </div>
                 </div>
                 {/* Progress 2 */}
                 <div>
                   <div className="flex justify-between text-xs font-bold mb-2">
                     <span className="text-foreground">Análisis</span>
-                    <span className="text-foreground">{stats?.plansDone.labs || 0}%</span>
+                    <span className="text-foreground">
+                      {goalsRange === "today"
+                        ? stats?.plansDone.labs || 0
+                        : stats?.plansDone.week?.labs || 0}%
+                    </span>
                   </div>
                   <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-secondary rounded-full transition-all duration-500" style={{ width: `${stats?.plansDone.labs || 0}%` }}></div>
+                    <div
+                      className="h-full bg-secondary rounded-full transition-all duration-500"
+                      style={{
+                        width: `${
+                          goalsRange === "today"
+                            ? stats?.plansDone.labs || 0
+                            : stats?.plansDone.week?.labs || 0
+                        }%`,
+                      }}
+                    ></div>
                   </div>
                 </div>
                 {/* Progress 3 */}
                 <div>
                   <div className="flex justify-between text-xs font-bold mb-2">
                     <span className="text-foreground">Facturas Pagadas</span>
-                    <span className="text-foreground">{stats?.plansDone.invoices || 0}%</span>
+                    <span className="text-foreground">
+                      {goalsRange === "today"
+                        ? stats?.plansDone.invoices || 0
+                        : stats?.plansDone.week?.invoices || 0}%
+                    </span>
                   </div>
                   <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-foreground/50 rounded-full transition-all duration-500" style={{ width: `${stats?.plansDone.invoices || 0}%` }}></div>
+                    <div
+                      className="h-full bg-foreground/50 rounded-full transition-all duration-500"
+                      style={{
+                        width: `${
+                          goalsRange === "today"
+                            ? stats?.plansDone.invoices || 0
+                            : stats?.plansDone.week?.invoices || 0
+                        }%`,
+                      }}
+                    ></div>
                   </div>
                 </div>
 
@@ -798,7 +894,9 @@ export function Dashboard() {
             
             <div className="px-6 pb-6 relative">
               <div className="h-20 w-20 bg-card border-4 border-card rounded-2xl mx-auto -mt-10 mb-3 overflow-hidden flex items-center justify-center relative z-10 shadow-md">
-                 <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${displayName}`} alt="Avatar" className="h-full w-full object-cover bg-primary/5" />
+                <div className="h-full w-full bg-primary/10 text-primary font-display font-bold text-2xl flex items-center justify-center">
+                  {displayName.split(" ").filter(Boolean).map(n => n[0]).slice(0, 2).join("").toUpperCase() || "DR"}
+                </div>
               </div>
               
               <div className="text-center mb-6">

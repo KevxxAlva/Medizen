@@ -58,6 +58,10 @@ export function PatientForm({
   // New Clinical States
   const [historia_number, setHistoriaNumber] = useState("");
   const [first_visit_date, setFirstVisitDate] = useState("");
+  const [gender, setGender] = useState("Femenino");
+  const [blood_type, setBloodType] = useState("");
+  const [emergency_contact, setEmergencyContact] = useState("");
+  const [insurance_provider, setInsuranceProvider] = useState("");
   const [marital_status, setMaritalStatus] = useState("");
   const [birthplace, setBirthplace] = useState("");
   const [education_level, setEducationLevel] = useState("");
@@ -79,6 +83,8 @@ export function PatientForm({
   const [persBase, setPersBase] = useState("");
   const [persSurgical, setPersSurgical] = useState("");
   const [persAllergies, setPersAllergies] = useState("");
+  const [persMedications, setPersMedications] = useState("");
+  const [persTransfusions, setPersTransfusions] = useState("");
 
   // Gynecological Data States
   const [gynMenarche, setGynMenarche] = useState("");
@@ -104,6 +110,29 @@ export function PatientForm({
   const [obsFpp, setObsFpp] = useState("");
   const [obsNumConsultations, setObsNumConsultations] = useState("");
   const [obsVaccines, setObsVaccines] = useState("");
+
+  const handleFumChange = (val: string) => {
+    setObsFum(val);
+    // If valid ISO date YYYY-MM-DD, auto-calculate EG and FPP (Naegele's rule: +280 days)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+      const fumDate = new Date(val + "T00:00:00");
+      if (!isNaN(fumDate.getTime())) {
+        const fppDate = new Date(fumDate);
+        fppDate.setDate(fppDate.getDate() + 280);
+        setObsFpp(fppDate.toISOString().slice(0, 10));
+
+        const diffMs = Date.now() - fumDate.getTime();
+        if (diffMs >= 0) {
+          const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+          const weeks = Math.floor(totalDays / 7);
+          const days = totalDays % 7;
+          if (weeks <= 44) {
+            setObsEg(`${weeks} sem + ${days} d`);
+          }
+        }
+      }
+    }
+  };
 
   const getDocParts = (docId: string | null) => {
     const val = docId ?? "";
@@ -142,6 +171,10 @@ export function PatientForm({
       // Clinical fields
       setHistoriaNumber(patient?.historia_number ?? "");
       setFirstVisitDate(patient?.first_visit_date ?? new Date().toISOString().split("T")[0]);
+      setGender(patient?.gender ?? "Femenino");
+      setBloodType(patient?.blood_type ?? "");
+      setEmergencyContact(patient?.emergency_contact ?? "");
+      setInsuranceProvider(patient?.insurance_provider ?? "");
       setMaritalStatus(patient?.marital_status ?? "");
       setBirthplace(patient?.birthplace ?? "");
       setEducationLevel(patient?.education_level ?? "");
@@ -163,6 +196,8 @@ export function PatientForm({
       setPersBase(patient?.personal_history?.base_pathology ?? "");
       setPersSurgical(patient?.personal_history?.surgical ?? "");
       setPersAllergies(patient?.personal_history?.allergies ?? "");
+      setPersMedications(patient?.personal_history?.current_medications ?? "");
+      setPersTransfusions(patient?.personal_history?.transfusions ?? "");
 
       // Gynecological
       setGynMenarche(patient?.gynecological_data?.menarche !== undefined && patient?.gynecological_data?.menarche !== null ? String(patient.gynecological_data.menarche) : "");
@@ -214,6 +249,10 @@ export function PatientForm({
         email: email.trim() || null,
         phone: phoneNumber.trim() ? `${phonePrefix} ${phoneNumber.trim()}` : null,
         birth_date: birth_date || null,
+        gender: gender.trim() || null,
+        blood_type: blood_type.trim() || null,
+        emergency_contact: emergency_contact.trim() || null,
+        insurance_provider: insurance_provider.trim() || null,
         status,
         assigned_doctor_id: doctorId,
         address: address.trim() || null,
@@ -244,6 +283,8 @@ export function PatientForm({
           base_pathology: persBase || null,
           surgical: persSurgical || null,
           allergies: persAllergies || null,
+          current_medications: persMedications || null,
+          transfusions: persTransfusions || null,
         },
         gynecological_data: {
           menarche: gynMenarche !== "" ? gynMenarche : null,
@@ -313,19 +354,19 @@ export function PatientForm({
 
         <form onSubmit={submit} className="flex-1 flex flex-col min-h-0">
           <Tabs defaultValue="id" className="flex-1 flex flex-col min-h-0">
-            <TabsList className="grid w-full grid-cols-5 bg-muted/60 p-1 rounded-2xl mb-4">
-              <TabsTrigger value="id" className="rounded-xl font-medium">Identificación</TabsTrigger>
-              <TabsTrigger value="family" className="rounded-xl font-medium">Ant. Familiares</TabsTrigger>
-              <TabsTrigger value="personal" className="rounded-xl font-medium">Ant. Personales</TabsTrigger>
-              <TabsTrigger value="gyn" className="rounded-xl font-medium">Ginecológicos</TabsTrigger>
-              <TabsTrigger value="obs" className="rounded-xl font-medium">Obstétricos</TabsTrigger>
+            <TabsList className="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full bg-muted/60 p-1.5 rounded-2xl mb-4">
+              <TabsTrigger value="id" className="rounded-xl font-medium text-xs px-3 py-1.5 shrink-0 sm:shrink sm:flex-1 whitespace-nowrap">Identificación</TabsTrigger>
+              <TabsTrigger value="family" className="rounded-xl font-medium text-xs px-3 py-1.5 shrink-0 sm:shrink sm:flex-1 whitespace-nowrap">Ant. Familiares</TabsTrigger>
+              <TabsTrigger value="personal" className="rounded-xl font-medium text-xs px-3 py-1.5 shrink-0 sm:shrink sm:flex-1 whitespace-nowrap">Ant. Personales</TabsTrigger>
+              <TabsTrigger value="gyn" className="rounded-xl font-medium text-xs px-3 py-1.5 shrink-0 sm:shrink sm:flex-1 whitespace-nowrap">Ginecológicos</TabsTrigger>
+              <TabsTrigger value="obs" className="rounded-xl font-medium text-xs px-3 py-1.5 shrink-0 sm:shrink sm:flex-1 whitespace-nowrap">Obstétricos</TabsTrigger>
             </TabsList>
 
             <ScrollArea className="flex-1 pr-2">
               <div className="py-1">
                 {/* TAB 1: IDENTIFICATION */}
                 <TabsContent value="id" className="grid gap-4 mt-0">
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="historia">Nº Historia</Label>
                       <Input
@@ -336,13 +377,13 @@ export function PatientForm({
                         className="rounded-xl"
                       />
                     </div>
-                    <div className="grid gap-2 col-span-2">
+                    <div className="grid gap-2 sm:col-span-2">
                       <Label htmlFor="name">Nombre completo</Label>
                       <Input id="name" value={full_name} onChange={(e) => setName(e.target.value)} required className="rounded-xl" />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="grid gap-2">
                       <Label>Tipo ID</Label>
                       <Select value={idPrefix} onValueChange={setIdPrefix}>
@@ -373,7 +414,7 @@ export function PatientForm({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="phone">Teléfono</Label>
                       <div className="flex h-10 w-full items-center rounded-xl border border-input bg-background shadow-sm focus-within:ring-1 focus-within:ring-ring focus-within:border-ring transition-colors">
@@ -410,7 +451,7 @@ export function PatientForm({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="birthplace">Lugar de Nacimiento</Label>
                       <Input id="birthplace" value={birthplace} onChange={(e) => setBirthplace(e.target.value)} className="rounded-xl" />
@@ -425,7 +466,7 @@ export function PatientForm({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="ethnicity">Etnia</Label>
                       <Input id="ethnicity" value={ethnicity} onChange={(e) => setEthnicity(e.target.value)} placeholder="Ej. Blanca, Negra, Mestiza..." className="rounded-xl" />
@@ -445,11 +486,65 @@ export function PatientForm({
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="grid gap-2">
+                      <Label>Sexo / Género</Label>
+                      <Select value={gender || "Femenino"} onValueChange={setGender}>
+                        <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                        <SelectContent className="rounded-2xl">
+                          <SelectItem value="Femenino">Femenino</SelectItem>
+                          <SelectItem value="Masculino">Masculino</SelectItem>
+                          <SelectItem value="Otro">Otro</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>Grupo Sanguíneo y Rh</Label>
+                      <Select value={blood_type || "none"} onValueChange={(v) => setBloodType(v === "none" ? "" : v)}>
+                        <SelectTrigger className="rounded-xl"><SelectValue placeholder="Seleccionar..." /></SelectTrigger>
+                        <SelectContent className="rounded-2xl">
+                          <SelectItem value="none">Sin especificar</SelectItem>
+                          <SelectItem value="O+">O Rh+</SelectItem>
+                          <SelectItem value="O-">O Rh-</SelectItem>
+                          <SelectItem value="A+">A Rh+</SelectItem>
+                          <SelectItem value="A-">A Rh-</SelectItem>
+                          <SelectItem value="B+">B Rh+</SelectItem>
+                          <SelectItem value="B-">B Rh-</SelectItem>
+                          <SelectItem value="AB+">AB Rh+</SelectItem>
+                          <SelectItem value="AB-">AB Rh-</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="insurance">Seguro Médico / Póliza</Label>
+                      <Input
+                        id="insurance"
+                        value={insurance_provider}
+                        onChange={(e) => setInsuranceProvider(e.target.value)}
+                        placeholder="Ej. Particular o Aseguradora"
+                        className="rounded-xl"
+                      />
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="emergency_contact">Contacto de Emergencia (Nombre, Parentesco y Teléfono)</Label>
+                      <Input
+                        id="emergency_contact"
+                        value={emergency_contact}
+                        onChange={(e) => setEmergencyContact(e.target.value)}
+                        placeholder="Ej. María Pérez (Madre) - +58 414 1234567"
+                        className="rounded-xl"
+                      />
+                    </div>
                     <div className="grid gap-2">
                       <Label htmlFor="address">Dirección de Habitación</Label>
                       <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Dirección completa" className="rounded-xl" />
                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {isAdmin ? (
                       <div className="grid gap-2">
                         <Label>Médico asignado</Label>
@@ -460,12 +555,11 @@ export function PatientForm({
                           </SelectContent>
                         </Select>
                       </div>
-                    ) : (
-                      <div className="grid gap-2">
-                        <Label htmlFor="notes_stub">Notas Internas</Label>
-                        <Input id="notes_stub" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Observaciones generales" className="rounded-xl" />
-                      </div>
-                    )}
+                    ) : null}
+                    <div className="grid gap-2">
+                      <Label htmlFor="notes_stub">Notas Administrativas / Internas</Label>
+                      <Input id="notes_stub" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Observaciones generales" className="rounded-xl" />
+                    </div>
                   </div>
 
                   <div className="border-t pt-3 mt-2 grid gap-4">
@@ -507,7 +601,7 @@ export function PatientForm({
 
                 {/* TAB 3: PERSONAL HISTORY */}
                 <TabsContent value="personal" className="grid gap-4 mt-0">
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="grid gap-2">
                       <Label>Alcohol</Label>
                       <Select value={persAlcohol} onValueChange={setPersAlcohol}>
@@ -543,25 +637,33 @@ export function PatientForm({
                     </div>
                   </div>
 
-                  <div className="grid gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="grid gap-2">
-                      <Label htmlFor="base">Patología Base</Label>
-                      <Textarea id="base" value={persBase} onChange={(e) => setPersBase(e.target.value)} placeholder="Ej. Asma, Diabetes, Hipertensión..." className="rounded-xl min-h-[80px]" />
+                      <Label htmlFor="base">Patología de Base / Crónicas</Label>
+                      <Textarea id="base" value={persBase} onChange={(e) => setPersBase(e.target.value)} placeholder="Ej. Asma, Diabetes, Hipertensión..." className="rounded-xl min-h-[70px]" />
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="surgical">Quirúrgicos</Label>
-                      <Textarea id="surgical" value={persSurgical} onChange={(e) => setPersSurgical(e.target.value)} placeholder="Intervenciones previas..." className="rounded-xl min-h-[80px]" />
+                      <Label htmlFor="allergies">Alérgicos (Medicamentos / Alimentos)</Label>
+                      <Textarea id="allergies" value={persAllergies} onChange={(e) => setPersAllergies(e.target.value)} placeholder="Alergias conocidas (Ej. Penicilina, AINEs)..." className="rounded-xl min-h-[70px]" />
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="allergies">Alérgicos</Label>
-                      <Textarea id="allergies" value={persAllergies} onChange={(e) => setPersAllergies(e.target.value)} placeholder="Alergias conocidas..." className="rounded-xl min-h-[80px]" />
+                      <Label htmlFor="medications">Medicación Habitual Activa</Label>
+                      <Textarea id="medications" value={persMedications} onChange={(e) => setPersMedications(e.target.value)} placeholder="Fármacos y dosis de uso diario (Ej. Losartán 50mg OD)..." className="rounded-xl min-h-[70px]" />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="surgical">Quirúrgicos / Hospitalizaciones</Label>
+                      <Textarea id="surgical" value={persSurgical} onChange={(e) => setPersSurgical(e.target.value)} placeholder="Intervenciones previas y año..." className="rounded-xl min-h-[70px]" />
+                    </div>
+                    <div className="grid gap-2 md:col-span-2">
+                      <Label htmlFor="transfusions">Antecedentes Transfusionales e Inmunizaciones</Label>
+                      <Input id="transfusions" value={persTransfusions} onChange={(e) => setPersTransfusions(e.target.value)} placeholder="Ej. Niega transfusiones / Esquema de vacunación completo..." className="rounded-xl" />
                     </div>
                   </div>
                 </TabsContent>
 
                 {/* TAB 4: GYNECOLOGICAL DATA */}
                 <TabsContent value="gyn" className="grid gap-4 mt-0">
-                  <div className="grid grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="menarche">Menarquía (Edad)</Label>
                       <Input id="menarche" value={gynMenarche} onChange={(e) => setGynMenarche(e.target.value)} placeholder="Años" type="text" className="rounded-xl" />
@@ -576,7 +678,7 @@ export function PatientForm({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="grid gap-2">
                       <Label>Dismenorrea</Label>
                       <Select value={gynDismenorrea} onValueChange={setGynDismenorrea}>
@@ -612,7 +714,7 @@ export function PatientForm({
 
                 {/* TAB 5: OBSTETRICAL DATA */}
                 <TabsContent value="obs" className="grid gap-4 mt-0">
-                  <div className="grid grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="obs_g">Gestas (G)</Label>
                       <Input id="obs_g" value={obsG} onChange={(e) => setObsG(e.target.value)} placeholder="G" type="text" className="rounded-xl" />
@@ -631,7 +733,7 @@ export function PatientForm({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="obs_pig">PIG (Intervalo Gen.)</Label>
                       <Input id="obs_pig" value={obsPig} onChange={(e) => setObsPig(e.target.value)} placeholder="Años o meses" className="rounded-xl" />
@@ -646,22 +748,22 @@ export function PatientForm({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="grid gap-2">
-                      <Label htmlFor="obs_fum">FUM</Label>
-                      <Input id="obs_fum" value={obsFum} onChange={(e) => setObsFum(e.target.value)} placeholder="Ej. 12/03/2026" className="rounded-xl" />
+                      <Label htmlFor="obs_fum">FUM (Fecha Última Menstruación)</Label>
+                      <Input id="obs_fum" type="date" value={obsFum} onChange={(e) => handleFumChange(e.target.value)} className="rounded-xl" />
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="obs_eg">EG (Edad Gestacional)</Label>
-                      <Input id="obs_eg" value={obsEg} onChange={(e) => setObsEg(e.target.value)} placeholder="Semanas + días" className="rounded-xl" />
+                      <Input id="obs_eg" value={obsEg} onChange={(e) => setObsEg(e.target.value)} placeholder="Semanas + días (auto)" className="rounded-xl" />
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="obs_fpp">FPP</Label>
-                      <Input id="obs_fpp" value={obsFpp} onChange={(e) => setObsFpp(e.target.value)} placeholder="FPP" className="rounded-xl" />
+                      <Label htmlFor="obs_fpp">FPP (Regla de Naegele)</Label>
+                      <Input id="obs_fpp" value={obsFpp} onChange={(e) => setObsFpp(e.target.value)} placeholder="FPP (auto)" className="rounded-xl" />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="obs_consults">Nº Consultas Previas</Label>
                       <Input id="obs_consults" value={obsNumConsultations} onChange={(e) => setObsNumConsultations(e.target.value)} placeholder="Nº" type="text" className="rounded-xl" />

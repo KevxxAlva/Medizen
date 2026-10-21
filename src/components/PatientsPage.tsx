@@ -22,35 +22,13 @@ import { useAuthSession } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { differenceInYears } from "date-fns";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-
-const loadLogoBase64 = (url: string): Promise<string> => {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.drawImage(img, 0, 0);
-        resolve(canvas.toDataURL("image/png"));
-      } else {
-        resolve("");
-      }
-    };
-    img.onerror = () => resolve("");
-    img.src = url;
-  });
-};
 
 const STATUSES = ["Todos", "nuevo", "activo", "en_tratamiento", "alta"];
 const statusLabel = (s: string) => ({ Todos: "Todos", nuevo: "Nuevo", activo: "Activo", en_tratamiento: "En tratamiento", alta: "Alta" } as Record<string, string>)[s] ?? s;
@@ -116,7 +94,7 @@ export function PatientsPage() {
       {/* TOP HEADER */}
       <header className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <button className="text-muted-foreground hover:text-foreground"><ChevronLeft className="h-5 w-5" /></button>
+          <button type="button" onClick={() => window.history.back()} className="text-muted-foreground hover:text-foreground" title="Volver"><ChevronLeft className="h-5 w-5" /></button>
           <h1 className="text-xl font-bold text-foreground">Pacientes</h1>
         </div>
         <div className="flex-1 max-w-xl mx-auto w-full sm:w-auto">
@@ -134,7 +112,9 @@ export function PatientsPage() {
         <div className="flex items-center gap-4 hidden md:flex">
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2 ml-2">
-              <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${myProfile?.full_name}`} className="h-8 w-8 rounded-full bg-primary/10" />
+              <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+                {initials(myProfile?.full_name || "U")}
+              </div>
               <div className="hidden lg:block">
                 <p className="text-xs font-bold text-foreground">{myProfile?.full_name}</p>
                 <p className="text-[10px] text-muted-foreground">{myProfile?.roles?.[0] === "admin" ? "Super admin" : "Doctor"}</p>
@@ -148,9 +128,18 @@ export function PatientsPage() {
       {/* SECONDARY TOOLBAR / TABS */}
       <div className="flex flex-wrap items-center justify-between border-b border-border/40 pb-0 mb-6">
         <div className="flex gap-4 sm:gap-6 overflow-x-auto">
-          <button onClick={() => setStatus("Todos")} className={cn("pb-3 text-sm font-bold border-b-2 transition-colors", status === "Todos" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground")}>Todos</button>
-          <button onClick={() => setStatus("activo")} className={cn("pb-3 text-sm font-bold border-b-2 transition-colors", status === "activo" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground")}>Activos</button>
-          <button onClick={() => setStatus("alta")} className={cn("pb-3 text-sm font-bold border-b-2 transition-colors", status === "alta" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground")}>De Alta</button>
+          {STATUSES.map((s) => (
+            <button
+              key={s}
+              onClick={() => setStatus(s)}
+              className={cn(
+                "pb-3 text-sm font-bold border-b-2 transition-colors whitespace-nowrap",
+                status === s ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {s === "activo" ? "Activos" : s === "nuevo" ? "Nuevos" : s === "alta" ? "De Alta" : statusLabel(s)}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -159,9 +148,69 @@ export function PatientsPage() {
           <Users className="h-4 w-4" /> {totalCount} pacientes
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-bold text-foreground border border-border/40 rounded-xl hover:bg-muted">
-            <Filter className="h-3.5 w-3.5" /> Filtros
-          </button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className={cn(
+                  "flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-bold text-foreground border border-border/40 rounded-xl hover:bg-muted transition-colors",
+                  (status !== "Todos" || doctorFilter !== "Todos") && "bg-primary/10 border-primary text-primary"
+                )}
+              >
+                <Filter className="h-3.5 w-3.5" />
+                {status !== "Todos" || doctorFilter !== "Todos" ? "Filtrado" : "Filtros"}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 rounded-2xl glass-card border-0 shadow-2xl p-4" align="end">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <h4 className="font-bold text-xs uppercase tracking-wider text-muted-foreground">Estado del Paciente</h4>
+                  <Select value={status} onValueChange={setStatus}>
+                    <SelectTrigger className="w-full rounded-xl h-9 bg-transparent border-input text-xs font-semibold">
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      {STATUSES.map((s) => (
+                        <SelectItem key={s} value={s} className="text-xs">
+                          {s === "activo" ? "Activos" : s === "nuevo" ? "Nuevos" : s === "alta" ? "De Alta" : statusLabel(s)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="font-bold text-xs uppercase tracking-wider text-muted-foreground">Médico Asignado</h4>
+                  <Select value={doctorFilter} onValueChange={setDoctorFilter}>
+                    <SelectTrigger className="w-full rounded-xl h-9 bg-transparent border-input text-xs font-semibold">
+                      <SelectValue placeholder="Todos los médicos" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      <SelectItem value="Todos" className="text-xs">Todos los médicos</SelectItem>
+                      {doctors.map((d) => (
+                        <SelectItem key={d.id} value={d.id} className="text-xs">
+                          {d.full_name || d.email}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {(status !== "Todos" || doctorFilter !== "Todos") && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setStatus("Todos");
+                      setDoctorFilter("Todos");
+                    }}
+                    className="w-full rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground"
+                  >
+                    Limpiar filtros
+                  </Button>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
           <button onClick={() => { setEditing(null); setFormOpen(true); }} className="flex items-center gap-2 bg-primary text-primary-foreground px-4 sm:px-5 py-2.5 rounded-xl text-xs font-bold shadow-md hover:bg-[#3451d6] transition">
             <Plus className="h-3.5 w-3.5" /> Añadir Paciente
           </button>
@@ -170,7 +219,7 @@ export function PatientsPage() {
 
       {/* TABLE */}
       <div className="flex-1 overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full text-left border-collapse min-w-[720px]">
           <thead>
             <tr className="bg-muted text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
               <th className="p-4 w-12 rounded-tl-xl"><input type="checkbox" className="rounded border-gray-300" /></th>

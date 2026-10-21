@@ -12,35 +12,35 @@ export function MedizenLogo({ className = "h-8 w-8", color }: MedizenLogoProps) 
   const gradId = `medizenLogoGrad_${safeId}`;
   const filterId = `medizenRibbonDepth_${safeId}`;
 
-  const [activeHex, setActiveHex] = useState<string>(() => {
-    if (color) return color;
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("medizen-accent-color");
-      const found = COLOR_THEMES.find((t) => t.id === saved);
-      if (found) return found.primary;
-    }
-    return "#4361EE";
-  });
+  // Initialize to null so SSR and initial hydration both render "var(--primary)" without mismatch
+  const [activeHex, setActiveHex] = useState<string | null>(color || null);
 
   useEffect(() => {
     if (color) {
       setActiveHex(color);
       return;
     }
+
+    const syncFromStorage = () => {
+      const saved = localStorage.getItem("medizen-accent-color");
+      const found = COLOR_THEMES.find((t) => t.id === saved);
+      setActiveHex(found ? found.primary : "#4361EE");
+    };
+
+    syncFromStorage();
+
     const handleThemeChange = (e: any) => {
       if (e.detail?.primary) {
         setActiveHex(e.detail.primary);
       } else {
-        const saved = localStorage.getItem("medizen-accent-color");
-        const found = COLOR_THEMES.find((t) => t.id === saved);
-        if (found) setActiveHex(found.primary);
+        syncFromStorage();
       }
     };
     window.addEventListener("medizen-theme-changed", handleThemeChange);
     return () => window.removeEventListener("medizen-theme-changed", handleThemeChange);
   }, [color]);
 
-  const primary = color || activeHex;
+  const primary = color || activeHex || "var(--primary)";
 
   return (
     <svg

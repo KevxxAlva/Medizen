@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuthSession } from "./useAuth";
+import { hasUserPinConfigured, verifyUserPin } from "@/lib/auth/quickAccess";
 
 const INACTIVITY_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 const LOCK_STORAGE_KEY = "medizen_screen_locked";
@@ -7,20 +8,23 @@ const LOCK_STORAGE_KEY = "medizen_screen_locked";
 export function useInactivityLock(timeoutMs: number = INACTIVITY_TIMEOUT_MS) {
   const { user } = useAuthSession();
   
-  const [isLocked, setIsLocked] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return sessionStorage.getItem(LOCK_STORAGE_KEY) === "true";
+  const [isLocked, setIsLocked] = useState<boolean>(false);
+  const [mounted, setMounted] = useState<boolean>(false);
+
+  useEffect(() => {
+    setMounted(true);
+    if (typeof window !== "undefined" && sessionStorage.getItem(LOCK_STORAGE_KEY) === "true") {
+      setIsLocked(true);
     }
-    return false;
-  });
+  }, []);
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Check if user has a PIN configured
   const hasPinConfigured = useCallback(() => {
-    if (!user?.id || typeof window === "undefined") return false;
-    return !!localStorage.getItem(`femesalud_pin_${user.id}`);
-  }, [user?.id]);
+    if (!mounted) return false;
+    return hasUserPinConfigured(user?.id);
+  }, [user?.id, mounted]);
 
   const lockScreen = useCallback(() => {
     // Only lock if the user has a PIN configured
@@ -32,12 +36,11 @@ export function useInactivityLock(timeoutMs: number = INACTIVITY_TIMEOUT_MS) {
     }
   }, [hasPinConfigured]);
 
-  const unlockScreen = useCallback((enteredPin: string): boolean => {
+  const unlockScreen = useCallback(async (enteredPin: string): Promise<boolean> => {
     if (typeof window === "undefined" || !user?.id) return false;
 
-    const storedPin = localStorage.getItem(`femesalud_pin_${user.id}`);
-
-    if (storedPin && enteredPin === storedPin) {
+    const ok = await verifyUserPin(user.id, enteredPin);
+    if (ok) {
       setIsLocked(false);
       sessionStorage.removeItem(LOCK_STORAGE_KEY);
       return true;

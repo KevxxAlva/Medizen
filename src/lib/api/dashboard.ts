@@ -21,26 +21,25 @@ export function useDashboardStats() {
       const yesterdayStr = dates[5];
       const sevenDaysAgo = dates[0];
 
-      // Fetch Appointments (citas) for the last 7 days
-      const { data: citasData } = await supabase
-        .from("citas")
-        .select("fecha_hora, estado")
-        .gte("fecha_hora", `${sevenDaysAgo}T00:00:00.000Z`);
+      // Ejecutar las 3 consultas del Dashboard en paralelo (Promise.all) y acotadas a los últimos 7 días
+      const [{ data: citasData }, { data: labsData }, { data: invoicesData }] = await Promise.all([
+        supabase
+          .from("citas")
+          .select("fecha_hora, estado")
+          .gte("fecha_hora", `${sevenDaysAgo}T00:00:00.000Z`),
+        supabase
+          .from("examenes_laboratorio")
+          .select("fecha_resultado")
+          .gte("fecha_resultado", `${sevenDaysAgo}T00:00:00.000Z`),
+        supabase
+          .from("facturas")
+          .select("fecha_emision, estado_pago")
+          .gte("fecha_emision", `${sevenDaysAgo}T00:00:00.000Z`),
+      ]);
 
-      // Fetch Labs (examenes_laboratorio) for the last 7 days
-      // examenes_laboratorio doesn't have a reliable date field in the schema snippet besides fecha_resultado,
-      // but let's assume fecha_resultado is what we use, or we just fetch all and filter if it's missing.
-      const { data: labsData } = await supabase
-        .from("examenes_laboratorio")
-        .select("fecha_resultado");
-
-      // Fetch Invoices (facturas) for the last 7 days
-      const { data: invoicesData } = await supabase
-        .from("facturas")
-        .select("fecha_emision, estado_pago")
-        .gte("fecha_emision", `${sevenDaysAgo}T00:00:00.000Z`);
-
-      const citas = citasData || [];
+      const citas = (citasData || []).filter(
+        (c) => !["cancelada", "cancelado", "cancelled"].includes((c.estado || "").toLowerCase())
+      );
       const labs = labsData || [];
       const invoices = invoicesData || [];
 
@@ -52,6 +51,8 @@ export function useDashboardStats() {
       };
 
       const citasByDay = countByDay(citas, "fecha_hora");
+      const completedCitas = citas.filter((c) => (c.estado || "").toLowerCase() === "completada");
+      const completedByDay = countByDay(completedCitas, "fecha_hora");
       const labsByDay = countByDay(labs, "fecha_resultado");
       const invoicesByDay = countByDay(invoices, "fecha_emision");
 
@@ -60,39 +61,63 @@ export function useDashboardStats() {
         return Math.round(((today - yesterday) / yesterday) * 100);
       };
 
-      // OFFLINE WORK (All Appointments)
+      // OFFLINE WORK (Active Appointments)
       const offlineToday = citasByDay[6];
       const offlineYesterday = citasByDay[5];
       const offlineChange = getChange(offlineToday, offlineYesterday);
 
-      // ONLINE WORK (Simulated as 15% of offline work for visual purposes until schema is updated)
-      const onlineByDay = citasByDay.map(c => Math.ceil(c * 0.15));
-      const onlineToday = onlineByDay[6];
-      const onlineYesterday = onlineByDay[5];
-      const onlineChange = getChange(onlineToday, onlineYesterday);
+      // COMPLETED CONSULTATIONS (Real completed appointments in last 7 days, replacing simulated 15%)
+      const completedWeekTotal = completedByDay.reduce((acc, v) => acc + v, 0);
+      const completedToday = completedByDay[6];
+      const completedYesterday = completedByDay[5];
+      const completedChange = getChange(completedToday, completedYesterday);
 
       // LAB WORK
       const labToday = labsByDay[6];
       const labYesterday = labsByDay[5];
       const labChange = getChange(labToday, labYesterday);
 
-      // SCHEDULED EVENTS (Today's counts)
-      const totalScheduled = offlineToday + labToday + invoicesByDay[6];
+      // Real agenda occupation based on 10 daily clinical hours (08:00 - 18:00)
+      const DAILY_SLOT_CAPACITY = 10;
+      const todayOccupationPct = Math.min(100, Math.round((offlineToday / DAILY_SLOT_CAPACITY) * 100));
+
+      const weekConsultations = citasByDay.reduce((a, b) => a + b, 0);
+      const weekLabs = labsByDay.reduce((a, b) => a + b, 0);
+      const weekInvoices = invoicesByDay.reduce((a, b) => a + b, 0);
+      const weekOccupationPct = Math.min(
+        100,
+        Math.round((weekConsultations / (DAILY_SLOT_CAPACITY * 7)) * 100)
+      );
+
+      // SCHEDULED EVENTS (Today & 7-Day counts)
       const scheduledEvents = {
         consultations: offlineToday,
         labs: labToday,
         invoices: invoicesByDay[6],
-        donutPercentage: totalScheduled > 0 ? 100 : 0 // Simply showing 100% of today's work if there is any
+        donutPercentage: todayOccupationPct,
+        week: {
+          consultations: weekConsultations,
+          labs: weekLabs,
+          invoices: weekInvoices,
+          donutPercentage: weekOccupationPct,
+        },
       };
 
-      // PLANS DONE (Completed vs Scheduled for today)
-      const citasTodayCompleted = citas.filter(c => c.fecha_hora.startsWith(todayStr) && c.estado === "completada").length;
-      const invoicesTodayPaid = invoices.filter(i => i.fecha_emision?.startsWith(todayStr) && (i.estado_pago === "pagado" || i.estado_pago === "Paid")).length;
+      // PLANS DONE (Completed vs Scheduled for today & week)
+      const isPaidStatus = (st?: string | null) => ["pagado", "pagada", "paid"].includes((st || "").toLowerCase());
+      const citasTodayCompleted = completedToday;
+      const invoicesTodayPaid = invoices.filter(i => i.fecha_emision?.startsWith(todayStr) && isPaidStatus(i.estado_pago)).length;
+      const invoicesWeekPaid = invoices.filter(i => isPaidStatus(i.estado_pago)).length;
       
       const plansDone = {
         consultations: offlineToday > 0 ? Math.round((citasTodayCompleted / offlineToday) * 100) : 0,
-        labs: labToday > 0 ? 100 : 0, // Mocked to 100% since labs don't have 'status' yet
+        labs: labToday > 0 ? 100 : 0,
         invoices: invoicesByDay[6] > 0 ? Math.round((invoicesTodayPaid / invoicesByDay[6]) * 100) : 0,
+        week: {
+          consultations: weekConsultations > 0 ? Math.round((completedWeekTotal / weekConsultations) * 100) : 0,
+          labs: weekLabs > 0 ? 100 : 0,
+          invoices: weekInvoices > 0 ? Math.round((invoicesWeekPaid / weekInvoices) * 100) : 0,
+        },
       };
 
       return {
@@ -102,9 +127,9 @@ export function useDashboardStats() {
           sparkline: citasByDay,
         },
         onlineWork: {
-          total: onlineToday,
-          change: onlineChange,
-          sparkline: onlineByDay,
+          total: completedWeekTotal,
+          change: completedChange,
+          sparkline: completedByDay,
         },
         labWork: {
           total: labToday,
@@ -133,7 +158,7 @@ export function useMonthlyPayments() {
         
       if (error) throw error;
       
-      const paidInvoices = (data || []).filter(i => i.estado_pago === "pagado" || i.estado_pago === "Paid" || i.estado_pago === "paid");
+      const paidInvoices = (data || []).filter(i => ["pagado", "pagada", "paid"].includes((i.estado_pago || "").toLowerCase()));
       
       // Calculate total
       const total = paidInvoices.reduce((sum, f) => sum + (Number(f.total_general) || 0), 0);
@@ -247,7 +272,7 @@ export function useDashboardTrends() {
         monthlyData[monthYear] = 0;
       }
 
-      const paidInvoices = invoices?.filter(i => i.estado_pago === "pagado" || i.estado_pago === "Paid") || [];
+      const paidInvoices = invoices?.filter(i => ["pagado", "pagada", "paid"].includes((i.estado_pago || "").toLowerCase())) || [];
 
       paidInvoices.forEach(inv => {
         if (!inv.fecha_emision) return;
@@ -273,21 +298,12 @@ export function useTopTreatments() {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      const { data: facturas } = await supabase
-        .from("facturas")
-        .select("id_factura")
-        .gte("fecha_emision", thirtyDaysAgo.toISOString());
-
-      if (!facturas || facturas.length === 0) return [];
-
-      const facturaIds = facturas.map(f => f.id_factura);
-
       const { data: detalles } = await supabase
         .from("detalles_factura")
-        .select("id_servicio, cantidad, servicios(nombre_servicio)")
-        .in("id_factura", facturaIds);
+        .select("id_servicio, cantidad, servicios(nombre_servicio), facturas!inner(fecha_emision)")
+        .gte("facturas.fecha_emision", thirtyDaysAgo.toISOString());
 
-      if (!detalles) return [];
+      if (!detalles || detalles.length === 0) return [];
 
       const counts: Record<string, { name: string, count: number }> = {};
       detalles.forEach(d => {

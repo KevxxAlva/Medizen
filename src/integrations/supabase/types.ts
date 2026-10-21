@@ -597,6 +597,7 @@ export type Database = {
             referencedColumns: ["id_medico"]
           },
         ]
+      }
       inventory_stocks: {
         Row: {
           category: string
@@ -1020,7 +1021,6 @@ export type Database = {
       [_ in never]: never
     }
   }
-}
 }
 
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">

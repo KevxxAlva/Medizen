@@ -1,4 +1,3 @@
-import jsPDF from "jspdf";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -81,6 +80,8 @@ export const generateRecipePDF = async (
       toast.warning("La consulta no tiene indicaciones o receta registrada.");
       return;
     }
+
+    const { jsPDF } = await import("jspdf");
 
     // A4 Format (unit: pt, format: a4)
     // Page dimensions in pt: 595.28 x 841.89

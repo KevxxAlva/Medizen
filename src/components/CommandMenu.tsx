@@ -1,8 +1,6 @@
 import { useEffect, useState, useMemo, useDeferredValue } from "react";
 import { Command } from "cmdk";
 import { Search, User, FileText, Calendar, CalendarPlus, UserPlus, X, ShieldCheck } from "lucide-react";
-import { usePatients } from "@/lib/api/patients";
-import { useAppointments } from "@/lib/api/appointments";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,8 +12,41 @@ export function CommandMenu() {
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
 
-  const { data: patients = [] } = usePatients();
-  const { data: appointments = [] } = useAppointments();
+  const { data: patients = [] } = useQuery({
+    queryKey: ["global-search-patients"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("pacientes")
+        .select("id_paciente, nombre, apellido, documento_identidad")
+        .order("creado_en", { ascending: false })
+        .limit(200);
+      return (data ?? []).map((p: any) => ({
+        id: String(p.id_paciente),
+        full_name: `${p.nombre || ""} ${p.apellido || ""}`.trim(),
+        document_id: p.documento_identidad || "",
+      }));
+    },
+    enabled: open,
+  });
+
+  const { data: appointments = [] } = useQuery({
+    queryKey: ["global-search-appointments"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("citas")
+        .select("id_cita, fecha_hora, motivo, pacientes(nombre, apellido)")
+        .order("fecha_hora", { ascending: false })
+        .limit(50);
+      return (data ?? []).map((a: any) => ({
+        id: String(a.id_cita),
+        scheduled_at: a.fecha_hora,
+        reason: a.motivo || "",
+        patient_name: a.pacientes ? `${a.pacientes.nombre || ""} ${a.pacientes.apellido || ""}`.trim() : "—",
+      }));
+    },
+    enabled: open,
+  });
+
   const { data: invoices = [] } = useQuery({
     queryKey: ["global-search-invoices"],
     queryFn: async () => {

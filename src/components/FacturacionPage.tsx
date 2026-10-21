@@ -553,8 +553,8 @@ export function FacturacionPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="overflow-hidden rounded-3xl glass-card shadow-sm border border-border/40">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto rounded-3xl glass-card shadow-sm border border-border/40">
+            <table className="w-full text-sm min-w-[700px]">
               <thead className="bg-muted/40 text-left">
                 <tr className="text-xs uppercase tracking-wider text-muted-foreground">
                   <th className="px-5 py-3.5">Paciente</th>

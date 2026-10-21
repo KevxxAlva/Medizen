@@ -83,19 +83,37 @@ export function useAppointments(filters?: AppointmentFilters) {
       
       const results = data ?? [];
       const patientIds = [...new Set(results.map((a: any) => a.id_paciente).filter(Boolean))];
-      let facturas: any[] = [];
-      
+      const invoiceByPatientAndDate = new Map<string, any>();
+
       if (patientIds.length > 0) {
-        const { data: fData } = await supabase
+        let fQuery = supabase
           .from("facturas")
-          .select("id_factura, id_paciente, total_general, estado_pago, fecha_emision")
-          .in("id_paciente", patientIds);
-        facturas = fData || [];
+          .select("id_factura, id_paciente, total_general, estado_pago, fecha_emision, pagos(metodo_pago, referencia)")
+          .in("id_paciente", patientIds)
+          .order("id_factura", { ascending: false });
+
+        if (filters?.from) {
+          fQuery = fQuery.gte("fecha_emision", filters.from);
+        }
+        if (filters?.to) {
+          fQuery = fQuery.lte("fecha_emision", filters.to + "T23:59:59.999Z");
+        }
+
+        const { data: fData } = await fQuery;
+        for (const fac of fData || []) {
+          const dStr = (fac.fecha_emision || "").split("T")[0];
+          const key = `${fac.id_paciente}_${dStr}`;
+          if (!invoiceByPatientAndDate.has(key)) {
+            invoiceByPatientAndDate.set(key, fac);
+          }
+        }
       }
-      
+
       return results.map((a: any) => {
-        const citaDate = a.fecha_hora.split('T')[0];
-        const f = facturas.find(fac => fac.id_paciente === a.id_paciente && (fac.fecha_emision || "").startsWith(citaDate));
+        const citaDate = (a.fecha_hora || "").split('T')[0];
+        const f = invoiceByPatientAndDate.get(`${a.id_paciente}_${citaDate}`);
+        const pago = Array.isArray(f?.pagos) ? f.pagos[0] : f?.pagos;
+        const isPaid = ["pagada", "pagado", "paid"].includes((f?.estado_pago || "").toLowerCase());
         
         return {
           id: a.id_cita.toString(),
@@ -107,8 +125,8 @@ export function useAppointments(filters?: AppointmentFilters) {
           reason: a.motivo,
           notes: null,
           price: f ? f.total_general : null,
-          payment_method: f?.estado_pago === 'Pagada' ? 'Pagado' : null,
-          payment_reference: null,
+          payment_method: pago?.metodo_pago || (isPaid ? 'Pagado' : null),
+          payment_reference: pago?.referencia || null,
           created_at: a.fecha_hora,
           updated_at: a.fecha_hora,
           patient_name: a.pacientes ? `${a.pacientes.nombre} ${a.pacientes.apellido}` : "—",
@@ -139,26 +157,44 @@ export function useCreateAppointment() {
 
       // Handle price / invoice creation from service price or input
       let finalPrice = Number(input.price) || 0;
-      if (finalPrice <= 0 && input.reason) {
+      let matchedServiceId: number | null = null;
+      if (input.reason) {
         const { data: serv } = await supabase
           .from("servicios")
-          .select("costo_base")
+          .select("id_servicio, costo_base")
           .ilike("nombre_servicio", input.reason.trim())
           .maybeSingle();
-        if (serv?.costo_base) {
-          finalPrice = Number(serv.costo_base);
+        if (serv) {
+          matchedServiceId = serv.id_servicio;
+          if (finalPrice <= 0 && serv.costo_base) {
+            finalPrice = Number(serv.costo_base);
+          }
         }
       }
 
       if (finalPrice > 0) {
-        await supabase.from("facturas").insert({
-          id_paciente: parseInt(input.patient_id),
-          total_general: finalPrice,
-          subtotal: finalPrice,
-          monto_paciente: finalPrice,
-          estado_pago: 'Pendiente',
-          fecha_emision: new Date().toISOString()
-        });
+        const { data: newF } = await supabase
+          .from("facturas")
+          .insert({
+            id_paciente: parseInt(input.patient_id),
+            total_general: finalPrice,
+            subtotal: finalPrice,
+            monto_paciente: finalPrice,
+            estado_pago: 'Pendiente',
+            fecha_emision: input.scheduled_at || new Date().toISOString()
+          })
+          .select("id_factura")
+          .single();
+
+        if (newF?.id_factura && matchedServiceId) {
+          await supabase.from("detalles_factura").insert({
+            id_factura: newF.id_factura,
+            id_servicio: matchedServiceId,
+            cantidad: 1,
+            precio_unitario: finalPrice,
+            subtotal: finalPrice,
+          });
+        }
       }
       
       return citaData;
@@ -166,6 +202,7 @@ export function useCreateAppointment() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["appointments"] });
       qc.invalidateQueries({ queryKey: ["facturas"] });
+      qc.invalidateQueries({ queryKey: ["dashboard_top_treatments"] });
     },
   });
 }
@@ -176,10 +213,10 @@ export function useUpdateAppointment() {
     mutationFn: async ({ id, ...patch }: Partial<AppointmentInput> & { id: string }) => {
       const idCita = parseInt(id);
 
-      // Fetch existing cita to get patient_id and motivo for Facturas
+      // Fetch existing cita to get patient_id, motivo, and fecha_hora for Facturas
       const { data: existingCita } = await supabase
         .from("citas")
-        .select("id_paciente, motivo")
+        .select("id_paciente, motivo, fecha_hora")
         .eq("id_cita", idCita)
         .single();
 
@@ -197,68 +234,107 @@ export function useUpdateAppointment() {
       }
 
       // 2. Handle Facturas and Pagos
-      if (patch.price !== undefined || patch.payment_method !== undefined || patch.status !== undefined) {
-        let facturaId;
-        
-        // Find existing invoice for this patient today
+      if (patch.price !== undefined || patch.payment_method !== undefined || patch.status !== undefined || patch.scheduled_at !== undefined) {
+        let facturaId: number | undefined;
+        const targetPatientId = patch.patient_id ? parseInt(patch.patient_id) : (existingCita?.id_paciente || 0);
+        const oldCitaDate = (existingCita?.fecha_hora || "").split('T')[0];
+        const newCitaDate = (patch.scheduled_at || existingCita?.fecha_hora || new Date().toISOString()).split('T')[0];
         const today = new Date().toISOString().split('T')[0];
-        const { data: existFList } = await supabase
+
+        const { data: patientInvoices } = await supabase
           .from("facturas")
-          .select("id_factura, total_general")
-          .eq("id_paciente", existingCita?.id_paciente || 0)
-          .gte("fecha_emision", today)
-          .order("id_factura", { ascending: false })
-          .limit(1);
-          
-        const existF = existFList?.[0] || null;
+          .select("id_factura, total_general, estado_pago, fecha_emision")
+          .eq("id_paciente", targetPatientId)
+          .order("id_factura", { ascending: false });
+
+        const invoicesList = patientInvoices || [];
+        const existF =
+          invoicesList.find(f => oldCitaDate && (f.fecha_emision || "").startsWith(oldCitaDate)) ||
+          invoicesList.find(f => newCitaDate && (f.fecha_emision || "").startsWith(newCitaDate)) ||
+          invoicesList.find(f => (f.fecha_emision || "").startsWith(today)) ||
+          null;
         
         let targetPrice = patch.price !== undefined && patch.price !== null ? Number(patch.price) : (existF ? Number(existF.total_general) : 0);
 
-        // If price is 0, auto-lookup the service base price using the appointment reason
-        if (targetPrice <= 0) {
-          const reasonToSearch = patch.reason || existingCita?.motivo;
-          if (reasonToSearch) {
-            const { data: serv } = await supabase
-              .from("servicios")
-              .select("costo_base")
-              .ilike("nombre_servicio", reasonToSearch.trim())
-              .maybeSingle();
-            if (serv?.costo_base) {
+        // Lookup service for price fallback and detalles_factura
+        let matchedServiceId: number | null = null;
+        const reasonToSearch = patch.reason || existingCita?.motivo;
+        if (reasonToSearch) {
+          const { data: serv } = await supabase
+            .from("servicios")
+            .select("id_servicio, costo_base")
+            .ilike("nombre_servicio", reasonToSearch.trim())
+            .maybeSingle();
+          if (serv) {
+            matchedServiceId = serv.id_servicio;
+            if (targetPrice <= 0 && serv.costo_base) {
               targetPrice = Number(serv.costo_base);
             }
           }
         }
 
-        let fEstado = patch.status === 'completada' ? (patch.payment_method ? 'Pagada' : 'Pendiente') : 'Pendiente';
-        if (patch.status === 'cancelada') fEstado = 'Cancelada';
+        const statusLower = (patch.status || "").toLowerCase();
+        const existingPaid = ["pagada", "pagado", "paid"].includes((existF?.estado_pago || "").toLowerCase());
+        let fEstado = (patch.payment_method || existingPaid) ? 'Pagada' : 'Pendiente';
+        if (statusLower === 'cancelada') fEstado = 'Cancelada';
 
         if (existF) {
           facturaId = existF.id_factura;
-          await supabase.from("facturas").update({ 
-             total_general: targetPrice, 
-             subtotal: targetPrice,
-             monto_paciente: targetPrice,
-             estado_pago: fEstado 
-          }).eq("id_factura", facturaId);
+          const facturaUpdate: any = {
+            total_general: targetPrice,
+            subtotal: targetPrice,
+            monto_paciente: targetPrice,
+            estado_pago: fEstado,
+          };
+          if (patch.scheduled_at) {
+            facturaUpdate.fecha_emision = patch.scheduled_at;
+          }
+          await supabase.from("facturas").update(facturaUpdate).eq("id_factura", facturaId);
         } else {
           // Create invoice if price > 0, or payment is attempted, or appointment is completed
-          if (targetPrice > 0 || patch.payment_method || patch.status === 'completada') {
+          if (targetPrice > 0 || patch.payment_method || statusLower === 'completada') {
             const { data: newF, error: newFError } = await supabase.from("facturas").insert({
-              id_paciente: existingCita?.id_paciente,
+              id_paciente: targetPatientId,
               total_general: targetPrice,
               subtotal: targetPrice,
               monto_paciente: targetPrice,
               estado_pago: fEstado,
-              fecha_emision: new Date().toISOString()
+              fecha_emision: patch.scheduled_at || existingCita?.fecha_hora || new Date().toISOString()
             }).select("id_factura").single();
             if (newFError) throw newFError;
             facturaId = newF?.id_factura;
           }
         }
 
+        if (facturaId && matchedServiceId && targetPrice > 0) {
+          const { data: existDet } = await supabase
+            .from("detalles_factura")
+            .select("id_detalle")
+            .eq("id_factura", facturaId)
+            .maybeSingle();
+          if (existDet) {
+            await supabase
+              .from("detalles_factura")
+              .update({ id_servicio: matchedServiceId, precio_unitario: targetPrice, subtotal: targetPrice })
+              .eq("id_detalle", existDet.id_detalle);
+          } else {
+            await supabase.from("detalles_factura").insert({
+              id_factura: facturaId,
+              id_servicio: matchedServiceId,
+              cantidad: 1,
+              precio_unitario: targetPrice,
+              subtotal: targetPrice,
+            });
+          }
+        }
+
         // 3. Handle Pagos
         if (facturaId && patch.payment_method) {
-           const { data: existP } = await supabase.from("pagos").select("id_pago, monto, metodo_pago").eq("id_factura", facturaId).maybeSingle();
+           const { data: existP } = await supabase
+             .from("pagos")
+             .select("id_pago, monto_pagado, metodo_pago")
+             .eq("id_factura", facturaId)
+             .maybeSingle();
            
            // Fetch the payment method to get its account_id
            const { data: pm } = await supabase.from("payment_methods").select("account_id").eq("name", patch.payment_method).maybeSingle();
@@ -267,7 +343,7 @@ export function useUpdateAppointment() {
            if (existP) {
               // Revert old account balance if it was a different method or different amount
               let oldAccountId = null;
-              if (existP.metodo_pago !== patch.payment_method) {
+              if (existP.metodo_pago !== patch.payment_method && existP.metodo_pago) {
                  const { data: oldPm } = await supabase.from("payment_methods").select("account_id").eq("name", existP.metodo_pago).maybeSingle();
                  oldAccountId = oldPm?.account_id;
               } else {
@@ -277,7 +353,7 @@ export function useUpdateAppointment() {
               if (oldAccountId) {
                  const { data: oldAcc } = await supabase.from("financial_accounts").select("balance").eq("id", oldAccountId).maybeSingle();
                  if (oldAcc) {
-                    await supabase.from("financial_accounts").update({ balance: oldAcc.balance - (existP.monto || 0) }).eq("id", oldAccountId);
+                    await supabase.from("financial_accounts").update({ balance: (oldAcc.balance || 0) - (existP.monto_pagado || 0) }).eq("id", oldAccountId);
                  }
               }
 
@@ -285,21 +361,21 @@ export function useUpdateAppointment() {
               if (newAccountId) {
                  const { data: newAcc } = await supabase.from("financial_accounts").select("balance").eq("id", newAccountId).maybeSingle();
                  if (newAcc) {
-                    await supabase.from("financial_accounts").update({ balance: newAcc.balance + targetPrice }).eq("id", newAccountId);
+                    await supabase.from("financial_accounts").update({ balance: (newAcc.balance || 0) + targetPrice }).eq("id", newAccountId);
                  }
               }
 
               await supabase.from("pagos").update({ 
                 metodo_pago: patch.payment_method, 
                 referencia: patch.payment_reference || null,
-                monto: targetPrice
+                monto_pagado: targetPrice
               }).eq("id_pago", existP.id_pago);
            } else {
               // Add to new account balance
               if (newAccountId) {
                  const { data: newAcc } = await supabase.from("financial_accounts").select("balance").eq("id", newAccountId).maybeSingle();
                  if (newAcc) {
-                    await supabase.from("financial_accounts").update({ balance: newAcc.balance + targetPrice }).eq("id", newAccountId);
+                    await supabase.from("financial_accounts").update({ balance: (newAcc.balance || 0) + targetPrice }).eq("id", newAccountId);
                  }
               }
 
@@ -307,7 +383,7 @@ export function useUpdateAppointment() {
                 id_factura: facturaId,
                 metodo_pago: patch.payment_method,
                 referencia: patch.payment_reference || null,
-                monto: targetPrice
+                monto_pagado: targetPrice
               });
            }
         }

@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { Search, Plus, X, Pencil, Trash2, ChevronLeft, ChevronRight, Filter, ReceiptText, Loader2, CreditCard, Download } from "lucide-react";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import { cn } from "@/lib/utils";
 import { generateSalesReport } from "@/lib/utils/generateSalesReport";
 import { generateIndividualInvoice } from "@/lib/utils/generateIndividualInvoice";
@@ -38,6 +36,12 @@ export function SalesPage() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [paymentReference, setPaymentReference] = useState("");
+
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
+  const [editTotal, setEditTotal] = useState("");
+  const [editStatus, setEditStatus] = useState("pendiente");
+  const [editDate, setEditDate] = useState("");
 
   const { data: methods = [] } = usePaymentMethods();
 
@@ -137,6 +141,78 @@ export function SalesPage() {
     }
   });
 
+  const updateInvoiceMutation = useMutation({
+    mutationFn: async ({
+      id,
+      total_general,
+      estado_pago,
+      fecha_emision,
+    }: {
+      id: number;
+      total_general: number;
+      estado_pago: string;
+      fecha_emision: string;
+    }) => {
+      const { error } = await supabase
+        .from("facturas")
+        .update({
+          subtotal: total_general,
+          monto_paciente: total_general,
+          total_general,
+          estado_pago,
+          fecha_emision,
+        })
+        .eq("id_factura", id);
+      if (error) throw error;
+      await logAuditAction("UPDATE", "INVOICE", id.toString(), {
+        total_general,
+        estado_pago,
+        fecha_emision,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["facturas"] });
+      queryClient.invalidateQueries({ queryKey: ["monthly_payments"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard_stats"] });
+      toast.success("Factura actualizada exitosamente");
+      setEditOpen(false);
+    },
+    onError: (err: any) => {
+      toast.error(`Error al actualizar factura: ${err.message}`);
+    },
+  });
+
+  const handleEditClick = (invoice: Invoice) => {
+    setEditingInvoice(invoice);
+    setEditTotal(String(invoice.total_general ?? 0));
+    const st = (invoice.estado_pago || "").toLowerCase();
+    setEditStatus(
+      ["pagado", "pagada", "paid"].includes(st)
+        ? "pagado"
+        : ["cancelado", "cancelada", "cancelled"].includes(st)
+        ? "cancelado"
+        : "pendiente"
+    );
+    setEditDate(invoice.fecha_emision ? invoice.fecha_emision.slice(0, 10) : new Date().toISOString().slice(0, 10));
+    setEditOpen(true);
+  };
+
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingInvoice) return;
+    const parsedTotal = parseFloat(editTotal);
+    if (isNaN(parsedTotal) || parsedTotal < 0) {
+      toast.error("Ingrese un monto válido");
+      return;
+    }
+    updateInvoiceMutation.mutate({
+      id: editingInvoice.id_factura,
+      total_general: parsedTotal,
+      estado_pago: editStatus,
+      fecha_emision: editDate ? new Date(`${editDate}T12:00:00`).toISOString() : editingInvoice.fecha_emision,
+    });
+  };
+
   const handleConfirmClick = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
     setPaymentMethod("");
@@ -169,10 +245,10 @@ export function SalesPage() {
       if (yearMonth !== filterMonth) return false;
     }
     if (filterStatus !== "all") {
-      const estado = f.estado_pago.toLowerCase();
-      if (filterStatus === "pagado" && !(estado === "pagado" || estado === "paid")) return false;
-      if (filterStatus === "pendiente" && !(estado === "pendiente" || estado === "pending")) return false;
-      if (filterStatus === "cancelado" && !(estado === "cancelado" || estado === "cancelled")) return false;
+      const estado = (f.estado_pago || "").toLowerCase();
+      if (filterStatus === "pagado" && !["pagado", "pagada", "paid"].includes(estado)) return false;
+      if (filterStatus === "pendiente" && !["pendiente", "pending"].includes(estado)) return false;
+      if (filterStatus === "cancelado" && !["cancelado", "cancelada", "cancelled"].includes(estado)) return false;
     }
     return true;
   });
@@ -184,7 +260,7 @@ export function SalesPage() {
     <div className="bg-card rounded-[2rem] p-6 shadow-sm min-h-[calc(100vh-8rem)] font-sans flex flex-col">
       <header className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <button className="text-muted-foreground hover:text-foreground"><ChevronLeft className="h-5 w-5" /></button>
+          <button type="button" onClick={() => window.history.back()} className="text-muted-foreground hover:text-foreground" title="Volver"><ChevronLeft className="h-5 w-5" /></button>
           <h1 className="text-xl font-bold text-foreground">Facturación</h1>
         </div>
         <div className="flex-1 max-w-xl mx-auto">
@@ -265,7 +341,7 @@ export function SalesPage() {
       </div>
 
       <div className="flex-1 overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full text-left border-collapse min-w-[700px]">
           <thead>
             <tr className="bg-muted text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
               <th className="p-4 w-12 rounded-tl-xl"><input type="checkbox" className="rounded border-gray-300" /></th>
@@ -295,18 +371,25 @@ export function SalesPage() {
                     </span>
                   </td>
                   <td className="p-4">
-                    <span className={cn(
-                      "text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wide capitalize",
-                      f.estado_pago === "pagado" || f.estado_pago === "Paid" ? "bg-green-50 text-green-600 border border-green-100" : 
-                      f.estado_pago === "pendiente" || f.estado_pago === "Pending" ? "bg-yellow-50 text-yellow-600 border border-yellow-100" :
-                      "bg-destructive/10 text-destructive border border-red-100"
-                    )}>
-                      {f.estado_pago === "Paid" ? "pagado" : f.estado_pago === "Pending" ? "pendiente" : f.estado_pago}
-                    </span>
+                    {(() => {
+                      const st = (f.estado_pago || "").toLowerCase();
+                      const isPaid = ["pagado", "pagada", "paid"].includes(st);
+                      const isPending = ["pendiente", "pending"].includes(st);
+                      return (
+                        <span className={cn(
+                          "text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wide capitalize",
+                          isPaid ? "bg-green-50 text-green-600 border border-green-100" : 
+                          isPending ? "bg-yellow-50 text-yellow-600 border border-yellow-100" :
+                          "bg-destructive/10 text-destructive border border-red-100"
+                        )}>
+                          {isPaid ? "pagado" : isPending ? "pendiente" : f.estado_pago}
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-3 text-muted-foreground">
-                      {(f.estado_pago === "pagado" || f.estado_pago === "Paid") && (
+                      {["pagado", "pagada", "paid"].includes((f.estado_pago || "").toLowerCase()) && (
                         <button 
                           onClick={() => {
                             toast.loading("Generando recibo...", { id: "receipt" });
@@ -320,7 +403,7 @@ export function SalesPage() {
                           <Download className="h-4 w-4" />
                         </button>
                       )}
-                      {(f.estado_pago === "pendiente" || f.estado_pago === "Pending" || f.estado_pago === "Pendiente") && (
+                      {["pendiente", "pending"].includes((f.estado_pago || "").toLowerCase()) && (
                         <button 
                           onClick={() => handleConfirmClick(f)}
                           className="flex items-center gap-1 text-xs font-bold text-mauve border border-mauve px-2 py-1 rounded-xl hover:bg-mauve/10 transition-colors cursor-pointer"
@@ -330,7 +413,14 @@ export function SalesPage() {
                           Confirmar
                         </button>
                       )}
-                      <button className="hover:text-foreground cursor-pointer"><Pencil className="h-4 w-4" /></button>
+                      <button
+                        type="button"
+                        onClick={() => handleEditClick(f)}
+                        className="hover:text-foreground cursor-pointer"
+                        title="Editar Factura"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
                       <button 
                         className="hover:text-destructive cursor-pointer"
                         onClick={() => {
@@ -349,6 +439,64 @@ export function SalesPage() {
           </tbody>
         </table>
       </div>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="sm:max-w-[425px] rounded-[2rem] p-6 border-0 shadow-2xl glass-card">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Editar Factura</DialogTitle>
+            <DialogDescription>
+              Modifica los datos de la factura INV-{editingInvoice?.id_factura?.toString().padStart(4, "0")} ({editingInvoice?.paciente_nombre}).
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSaveEdit} className="space-y-4 py-2">
+            <div className="grid gap-2">
+              <Label htmlFor="edit-invoice-date">Fecha de Emisión</Label>
+              <Input
+                id="edit-invoice-date"
+                type="date"
+                value={editDate}
+                onChange={(e) => setEditDate(e.target.value)}
+                className="rounded-xl bg-background/50"
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-invoice-total">Monto Total ($)</Label>
+              <Input
+                id="edit-invoice-total"
+                type="number"
+                step="0.01"
+                min="0"
+                value={editTotal}
+                onChange={(e) => setEditTotal(e.target.value)}
+                className="rounded-xl bg-background/50"
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-invoice-status">Estado de Pago</Label>
+              <Select value={editStatus} onValueChange={setEditStatus}>
+                <SelectTrigger id="edit-invoice-status" className="rounded-xl bg-background/50">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  <SelectItem value="pendiente">Pendiente</SelectItem>
+                  <SelectItem value="pagado">Pagado</SelectItem>
+                  <SelectItem value="cancelado">Cancelado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <DialogFooter className="pt-2">
+              <Button type="button" variant="outline" onClick={() => setEditOpen(false)} className="rounded-xl hover:bg-muted" disabled={updateInvoiceMutation.isPending}>
+                Cancelar
+              </Button>
+              <Button type="submit" className="rounded-xl bg-primary text-primary-foreground" disabled={updateInvoiceMutation.isPending}>
+                {updateInvoiceMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Guardar Cambios"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="sm:max-w-[425px] rounded-[2rem] p-6 border-0 shadow-2xl glass-card">

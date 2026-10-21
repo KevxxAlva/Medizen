@@ -78,7 +78,7 @@ const SAMPLE_PRESCRIPTIONS = {
 };
 
 export function RecipeDesigner() {
-  const { data: clinic, isLoading } = useClinicInfo();
+  const { data: clinic, isLoading } = useClinicInfo({ includeLogo: true });
   const updateClinic = useUpdateClinicInfo();
 
   // Logged-in doctor profile for realistic preview

@@ -3,7 +3,6 @@ import { usePatientConsultations, type Consultation } from "@/lib/api/consultati
 import { usePatient } from "@/lib/api/patients";
 import { useDoctors } from "@/lib/api/profiles";
 import { useClinicInfo } from "@/lib/api/clinic";
-import { generateRecipePDF } from "@/lib/utils/recipePdf";
 import { sendRecipeViaWhatsApp } from "@/lib/utils/whatsapp";
 import { Button } from "@/components/ui/button";
 import { Loader2, Stethoscope, ChevronDown, ChevronUp, FileText, Pill, Thermometer, Droplet, Activity, Scaling, TestTube, Crosshair, Package, Printer, MessageSquare } from "lucide-react";
@@ -25,6 +24,7 @@ export function PatientConsultationsPanel({ patientId }: { patientId: string }) 
     const doctorObj = doctors.find((d) => d.id === c.doctor_id);
     const doctorName = doctorObj?.full_name || doctorObj?.email || "Médico Tratante";
 
+    const { generateRecipePDF } = await import("@/lib/utils/recipePdf");
     await generateRecipePDF(
       {
         full_name: patient.full_name,
@@ -55,7 +55,8 @@ export function PatientConsultationsPanel({ patientId }: { patientId: string }) 
       const doctorObj = doctors.find((d) => d.id === c.doctor_id);
       const doctorName = doctorObj?.full_name || doctorObj?.email || "Médico Tratante";
 
-      // 1. Generar el PDF como Blob
+      // 1. Generar el PDF como Blob (carga diferida de jsPDF)
+      const { generateRecipePDF } = await import("@/lib/utils/recipePdf");
       const pdfBlob = await generateRecipePDF(
         {
           full_name: patient.full_name,

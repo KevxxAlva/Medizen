@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Search, Plus, X, Pencil, Trash2, ChevronLeft, Filter, Headphones, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -16,13 +17,21 @@ export function CustomerSupportPage() {
   const deleteTicket = useDeleteTicket();
 
   const [q, setQ] = useState("");
+  const [filterPriority, setFilterPriority] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<SupportTicket | null>(null);
 
   const filtered = tickets.filter((ticket) => {
-    if (!q) return true;
-    const term = q.toLowerCase();
-    return ticket.patient_name.toLowerCase().includes(term) || ticket.subject.toLowerCase().includes(term);
+    if (q) {
+      const term = q.toLowerCase();
+      if (!(ticket.patient_name.toLowerCase().includes(term) || ticket.subject.toLowerCase().includes(term))) {
+        return false;
+      }
+    }
+    if (filterPriority !== "all" && ticket.priority !== filterPriority) return false;
+    if (filterStatus !== "all" && ticket.status !== filterStatus) return false;
+    return true;
   });
 
   const handleDelete = async (id: string) => {
@@ -74,7 +83,7 @@ export function CustomerSupportPage() {
     <div className="bg-card rounded-[2rem] p-6 shadow-sm min-h-[calc(100vh-8rem)] font-sans flex flex-col">
       <header className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <button className="text-muted-foreground hover:text-foreground"><ChevronLeft className="h-5 w-5" /></button>
+          <button type="button" onClick={() => window.history.back()} className="text-muted-foreground hover:text-foreground" title="Volver"><ChevronLeft className="h-5 w-5" /></button>
           <h1 className="text-xl font-bold text-foreground">Soporte Técnico (Ayuda del Sistema)</h1>
         </div>
         <div className="flex-1 max-w-xl mx-auto">
@@ -97,9 +106,64 @@ export function CustomerSupportPage() {
           <Headphones className="h-4 w-4" /> {filtered.length} tickets
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-foreground border border-border/40 rounded-xl hover:bg-muted">
-            <Filter className="h-3.5 w-3.5" /> Filtros
-          </button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 text-xs font-bold text-foreground border border-border/40 rounded-xl hover:bg-muted transition-colors",
+                  (filterPriority !== "all" || filterStatus !== "all") && "bg-primary/10 border-primary text-primary"
+                )}
+              >
+                <Filter className="h-3.5 w-3.5" />
+                {filterPriority !== "all" || filterStatus !== "all" ? "Filtrado" : "Filtros"}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-60 rounded-2xl glass-card border-0 shadow-2xl p-4" align="end">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <h4 className="font-bold text-xs uppercase tracking-wider text-muted-foreground">Prioridad</h4>
+                  <select
+                    value={filterPriority}
+                    onChange={(e) => setFilterPriority(e.target.value)}
+                    className="w-full h-9 px-3 rounded-xl bg-background border border-input text-xs font-semibold outline-none"
+                  >
+                    <option value="all">Todas las prioridades</option>
+                    <option value="High">Alta</option>
+                    <option value="Medium">Media</option>
+                    <option value="Low">Baja</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="font-bold text-xs uppercase tracking-wider text-muted-foreground">Estado</h4>
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="w-full h-9 px-3 rounded-xl bg-background border border-input text-xs font-semibold outline-none"
+                  >
+                    <option value="all">Todos los estados</option>
+                    <option value="Open">Abierto</option>
+                    <option value="In Progress">En Progreso</option>
+                    <option value="Resolved">Resuelto</option>
+                  </select>
+                </div>
+                {(filterPriority !== "all" || filterStatus !== "all") && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setFilterPriority("all");
+                      setFilterStatus("all");
+                    }}
+                    className="w-full rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground"
+                  >
+                    Limpiar filtros
+                  </Button>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
           <button onClick={() => { setEditing(null); setFormOpen(true); }} className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm hover:bg-[#3451d6] transition">
             <Plus className="h-3.5 w-3.5" /> Nuevo Ticket
           </button>

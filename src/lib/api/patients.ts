@@ -10,6 +10,10 @@ export interface Patient {
   email: string | null;
   phone: string | null;
   birth_date: string | null;
+  gender: string | null;
+  blood_type: string | null;
+  emergency_contact: string | null;
+  insurance_provider: string | null;
   address: string | null;
   status: string;
   assigned_doctor_id: string | null;
@@ -37,6 +41,8 @@ export interface Patient {
     base_pathology: string | null;
     surgical: string | null;
     allergies: string | null;
+    current_medications?: string | null;
+    transfusions?: string | null;
   } | null;
   gynecological_data: {
     menarche: number | string | null;
@@ -80,15 +86,19 @@ const mapPatient = (p: any): Patient => {
     email: p.email,
     phone: p.telefono,
     birth_date: p.fecha_nacimiento,
+    gender: p.genero || extras.gender || null,
+    blood_type: hc.tipo_sangre || extras.blood_type || null,
+    emergency_contact: p.contacto_emergencia || extras.emergency_contact || null,
+    insurance_provider: extras.insurance_provider || null,
     address: p.direccion,
     status: extras.status || "activo",
     assigned_doctor_id: extras.assigned_doctor_id || null,
     notes: extras.notes || null,
     created_at: p.creado_en || new Date().toISOString(),
-    updated_at: p.creado_en || new Date().toISOString(),
+    updated_at: hc.actualizado_en || p.creado_en || new Date().toISOString(),
     document_id: p.documento_identidad,
-    historia_number: hc.id_historia?.toString() || extras.historia_number || null,
-    first_visit_date: extras.first_visit_date || null,
+    historia_number: extras.historia_number || hc.id_historia?.toString() || p.id_paciente?.toString() || null,
+    first_visit_date: extras.first_visit_date || (p.creado_en ? String(p.creado_en).slice(0, 10) : null),
     marital_status: extras.marital_status || null,
     birthplace: extras.birthplace || null,
     education_level: extras.education_level || null,
@@ -107,6 +117,8 @@ const mapPatient = (p: any): Patient => {
       base_pathology: hc.enfermedades_cronicas || extras.personal_history?.base_pathology || null,
       surgical: extras.personal_history?.surgical || null,
       allergies: hc.alergias || extras.personal_history?.allergies || null,
+      current_medications: extras.personal_history?.current_medications || null,
+      transfusions: extras.personal_history?.transfusions || null,
     },
     gynecological_data: extras.gynecological_data || null,
     obstetric_data: extras.obstetric_data || null,
@@ -115,13 +127,16 @@ const mapPatient = (p: any): Patient => {
   };
 };
 
+const PATIENT_LIST_SELECT =
+  "id_paciente, nombre, apellido, email, telefono, fecha_nacimiento, genero, contacto_emergencia, direccion, creado_en, documento_identidad, historias_clinicas(id_historia, tipo_sangre, actualizado_en, datos_extras, alergias, enfermedades_cronicas, antecedentes_familiares)";
+
 export function usePatients() {
   return useQuery({
     queryKey: ["patients"],
     queryFn: async (): Promise<Patient[]> => {
       const { data, error } = await supabase
         .from("pacientes")
-        .select("id_paciente, nombre, apellido, email, telefono, fecha_nacimiento, creado_en, documento_identidad, historias_clinicas(id_historia)")
+        .select(PATIENT_LIST_SELECT)
         .order("creado_en", { ascending: false });
       if (error) throw error;
       return (data ?? []).map(mapPatient);
@@ -184,7 +199,7 @@ export function useRecentPatients(limit: number = 5) {
     queryFn: async (): Promise<Patient[]> => {
       const { data, error } = await supabase
         .from("pacientes")
-        .select("id_paciente, nombre, apellido, email, telefono, fecha_nacimiento, creado_en, documento_identidad, historias_clinicas(id_historia)")
+        .select(PATIENT_LIST_SELECT)
         .order("creado_en", { ascending: false })
         .limit(limit);
       if (error) throw error;
@@ -197,7 +212,7 @@ export function usePaginatedPatients(
   page: number = 1,
   pageSize: number = 10,
   search?: string,
-  status?: PatientStatus
+  status?: PatientStatus | string
 ) {
   return useQuery({
     queryKey: ["patients_paginated", page, pageSize, search, status],
@@ -207,9 +222,8 @@ export function usePaginatedPatients(
 
       let query = supabase
         .from("pacientes")
-        .select("id_paciente, nombre, apellido, email, telefono, fecha_nacimiento, creado_en, documento_identidad, historias_clinicas(id_historia)", { count: "exact" })
-        .order("creado_en", { ascending: false })
-        .range(from, to);
+        .select(PATIENT_LIST_SELECT, { count: "exact" })
+        .order("creado_en", { ascending: false });
 
       if (search) {
         query = query.or(
@@ -217,23 +231,36 @@ export function usePaginatedPatients(
         );
       }
 
-      // We don't have status in DB yet, ignore status filter
+      if (!status) {
+        query = query.range(from, to);
+        const { data, error, count } = await query;
+        if (error) throw error;
+        return { data: (data ?? []).map(mapPatient), count: count ?? 0 };
+      }
 
-      const { data, error, count } = await query;
+      const { data, error } = await query;
       if (error) throw error;
-      return { data: (data ?? []).map(mapPatient), count: count ?? 0 };
+      const mapped = (data ?? []).map(mapPatient).filter((p) => p.status === status);
+      return {
+        data: mapped.slice(from, to + 1),
+        count: mapped.length,
+      };
     },
   });
 }
 
-export const fetchPatientById = async (id: string): Promise<Patient> => {
+export const fetchPatientById = async (id: string): Promise<Patient | null> => {
   if (!id) throw new Error("No patient ID provided");
+  if (typeof window !== "undefined") {
+    await supabase.auth.getSession();
+  }
   const { data, error } = await supabase
     .from("pacientes")
     .select("*, historias_clinicas(*)")
     .eq("id_paciente", parseInt(id))
-    .single();
+    .maybeSingle();
   if (error) throw error;
+  if (!data) return null;
   return mapPatient(data);
 };
 
@@ -258,6 +285,8 @@ export function useCreatePatient() {
       const cleanPhone = input.phone?.trim() || null;
       const cleanBirth = input.birth_date?.trim() || null;
       const cleanAddress = input.address?.trim() || null;
+      const cleanGender = input.gender?.trim() || null;
+      const cleanEmergency = input.emergency_contact?.trim() || null;
 
       const { error: patientError, data: patientData } = await supabase
         .from("pacientes")
@@ -268,6 +297,8 @@ export function useCreatePatient() {
           telefono: cleanPhone,
           documento_identidad: cleanDocId,
           fecha_nacimiento: cleanBirth,
+          genero: cleanGender,
+          contacto_emergencia: cleanEmergency,
           direccion: cleanAddress
         })
         .select()
@@ -280,6 +311,7 @@ export function useCreatePatient() {
       const {
         status, assigned_doctor_id, notes, historia_number, first_visit_date, 
         marital_status, birthplace, education_level, occupation, ethnicity,
+        gender, blood_type, emergency_contact, insurance_provider,
         family_history, personal_history, gynecological_data, obstetric_data,
         consultation_reason, current_illness
       } = input;
@@ -287,6 +319,7 @@ export function useCreatePatient() {
       const datos_extras = {
         status, assigned_doctor_id, notes, historia_number, first_visit_date, 
         marital_status, birthplace, education_level, occupation, ethnicity,
+        gender, blood_type, emergency_contact, insurance_provider,
         family_history, personal_history, gynecological_data, obstetric_data,
         consultation_reason, current_illness
       };
@@ -295,6 +328,7 @@ export function useCreatePatient() {
         .from("historias_clinicas")
         .insert({
           id_paciente: patientData.id_paciente,
+          tipo_sangre: input.blood_type?.trim() || null,
           alergias: input.personal_history?.allergies || null,
           enfermedades_cronicas: input.personal_history?.base_pathology || null,
           antecedentes_familiares: input.family_history?.children || null,
@@ -332,6 +366,8 @@ export function useUpdatePatient() {
       if (patch.phone !== undefined) updateData.telefono = patch.phone?.trim() || null;
       if (patch.document_id !== undefined) updateData.documento_identidad = patch.document_id?.trim() || null;
       if (patch.birth_date !== undefined) updateData.fecha_nacimiento = patch.birth_date?.trim() || null;
+      if (patch.gender !== undefined) updateData.genero = patch.gender?.trim() || null;
+      if (patch.emergency_contact !== undefined) updateData.contacto_emergencia = patch.emergency_contact?.trim() || null;
       if (patch.address !== undefined) updateData.direccion = patch.address?.trim() || null;
 
       const { error: patientError, data: patientData } = await supabase
@@ -348,6 +384,7 @@ export function useUpdatePatient() {
       const {
         status, assigned_doctor_id, notes, historia_number, first_visit_date, 
         marital_status, birthplace, education_level, occupation, ethnicity,
+        gender, blood_type, emergency_contact, insurance_provider,
         family_history, personal_history, gynecological_data, obstetric_data,
         consultation_reason, current_illness
       } = patch;
@@ -363,6 +400,10 @@ export function useUpdatePatient() {
       if (education_level !== undefined) extrasToMerge.education_level = education_level;
       if (occupation !== undefined) extrasToMerge.occupation = occupation;
       if (ethnicity !== undefined) extrasToMerge.ethnicity = ethnicity;
+      if (gender !== undefined) extrasToMerge.gender = gender;
+      if (blood_type !== undefined) extrasToMerge.blood_type = blood_type;
+      if (emergency_contact !== undefined) extrasToMerge.emergency_contact = emergency_contact;
+      if (insurance_provider !== undefined) extrasToMerge.insurance_provider = insurance_provider;
       if (family_history !== undefined) extrasToMerge.family_history = family_history;
       if (personal_history !== undefined) extrasToMerge.personal_history = personal_history;
       if (gynecological_data !== undefined) extrasToMerge.gynecological_data = gynecological_data;
@@ -379,6 +420,7 @@ export function useUpdatePatient() {
         .upsert({
           ...(currentHc?.id_historia ? { id_historia: currentHc.id_historia } : {}),
           id_paciente: parseInt(id),
+          tipo_sangre: patch.blood_type !== undefined ? patch.blood_type : currentHc?.tipo_sangre,
           alergias: patch.personal_history?.allergies !== undefined ? patch.personal_history?.allergies : currentHc?.alergias,
           enfermedades_cronicas: patch.personal_history?.base_pathology !== undefined ? patch.personal_history?.base_pathology : currentHc?.enfermedades_cronicas,
           antecedentes_familiares: patch.family_history?.children !== undefined ? patch.family_history?.children : currentHc?.antecedentes_familiares,

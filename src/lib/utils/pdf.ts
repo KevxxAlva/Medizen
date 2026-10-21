@@ -1,10 +1,12 @@
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
 import { toast } from "sonner";
 import { getClinicPdfConfig, drawPdfHeader, drawPdfWatermark, drawPdfFooter } from "./pdfConfig";
 
 export const generateFichaPDF = async (patient: any, doctorMap: Map<string, string>, clinic?: any, patientNotes: any[] = []) => {
   try {
+    const [{ jsPDF }, { default: autoTable }] = await Promise.all([
+      import("jspdf"),
+      import("jspdf-autotable"),
+    ]);
     const doc = new jsPDF({ unit: "pt", format: "a4" });
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();

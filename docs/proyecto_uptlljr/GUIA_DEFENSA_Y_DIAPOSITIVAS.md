@@ -119,41 +119,41 @@ Se recomienda un diseño limpio (fondo blanco o azul institucional oscuro), tipo
 
 ---
 
-### Lámina 11: Seguridad Criptográfica y Bóveda de PIN Local
+### Lámina 11: Seguridad Criptográfica, Anti-Fuerza Bruta y Bloqueo por Inactividad
 * **Gráfico:** Mostrar la **Figura 7** (Diagrama de Secuencia de Seguridad).
-* **Innovación en el Cliente:**
-  * **Problema resuelto:** No se guardan contraseñas en texto plano ni en `localStorage`.
-  * **Algoritmo PBKDF2:** Deriva una clave simétrica de 256 bits a partir del PIN con 100.000 iteraciones SHA-256 y sal criptográfica única.
-  * **Cifrado AES-GCM:** Cifra el token de sesión de Supabase en memoria. Auto-bloqueo tras 5 minutos de inactividad.
+* **Innovación en el Cliente (`src/utils/crypto.ts` y `useInactivityLock.ts`):**
+  * **Problema resuelto:** No se exponen credenciales en texto plano y se protege la estación ante ausencias momentáneas del médico.
+  * **Algoritmos PBKDF2 + SHA-256 con Sal:** Deriva una clave simétrica de 256 bits con 100.000 iteraciones y verifica el PIN mediante hash SHA-256 con sal aleatoria de 16 bytes.
+  * **Protección Anti-Fuerza Bruta e Inactividad:** Bloqueo temporal de 60 segundos tras 5 intentos fallidos de PIN y activación automática de `InactivityLockOverlay` tras 5 minutos sin actividad, conservando la sesión SSR/CSR al refrescar la página.
 
 ---
 
-### Lámina 12: Modelo de Datos Relacional y Privacidad RLS
-* **Gráfico:** Mostrar la **Figura 8** (Diagrama Entidad-Relación - ERD).
-* **Entidades Clave:** `PATIENTS`, `CONSULTATIONS`, `APPOINTMENTS`, `RECIPES`, `INVOICES`.
-* **Seguridad a Nivel de Fila (Row Level Security - RLS):**
-  * Políticas en el kernel de PostgreSQL: La recepcionista solo tiene permiso para `APPOINTMENTS` y datos demográficos; el acceso a `CONSULTATIONS` está restringido estrictamente al rol `doctor`.
+### Lámina 12: Modelo de Datos Híbrido (Relacional + JSONB) y Privacidad RLS
+* **Gráfico:** Mostrar la **Figura 8** (Diagrama Entidad-Relación - ERD en español).
+* **Entidades Clave en PostgreSQL:** `pacientes`, `historias_clinicas`, `consultas`, `citas`, `facturas`, `pagos`, `archivos_pacientes`, `inventario`, `movimientos_inventario` y `auditoria_logs`.
+* **Seguridad a Nivel de Fila (Row Level Security - RLS) y RBAC:**
+  * Separación estricta de roles (`admin`, `doctor`, `recepcionista` / `asistente`): el módulo de activos físicos (`inventario`) y la edición clínica profunda están protegidos según el rol autenticado, registrando cada operación en `auditoria_logs`.
 
 ---
 
 ### Lámina 13: Demostración Visual de la Suite MediZen
 * **Mosaico Gráfico:** Mostrar las maquetas de UI (Figuras 9, 10, 11, 12 y 13).
 * **Puntos Fuertes a Señalar:**
-  * Diseño táctil *Mobile-First* operable desde tablets de consultorio o PC de escritorio.
-  * Buscador global rápido con `Ctrl + K`.
-  * Récipes médicos vectorizados de alta resolución listos para imprimir o enviar al instante.
-  * **Personalización Dinámica de Branding Clínico (`ThemeCustomizer`):** Selección en vivo de 5 paletas de color médico e isotipo vectorial reactivo SVG con cinta de Möbius.
-  * **Automatización Financiera:** Cálculo y asignación instantánea del costo base de servicios al registrar turnos de pacientes.
+  * **Expediente Clínico en 8 Pestañas con Banner de Alertas (`PatientClinicalBanner`):** Código correlativo `HC-XXXXX`, grupo sanguíneo, alergias, seguro médico, contacto de emergencia, medicación habitual, transfusiones, `Timeline` y carga de estudios en `archivos_pacientes`.
+  * **Calculadora Obstétrica en Vivo (Regla de Naegele):** Cálculo instantáneo de edad gestacional (`sem + días`) y FPP al ingresar o editar la FUM.
+  * **Exportación PDF Bajo Demanda (*Code-Splitting*):** Generación de Historia Clínica Completa y Récipes en PDF (`jsPDF`) con envío directo a WhatsApp.
+  * **Personalización Dinámica sin Desfase de Hidratación (`ThemeCustomizer` y `MedizenLogo`):** Cinco paletas clínicas sincronizadas con `--primary` desde la carga inicial SSR.
+  * **Finanzas Bimonetarias (BCV) y Kárdex de Inventario:** Facturación en USD/VES vinculada a `servicios.costo_base` y control de insumos médicos.
 
 ---
 
 ### Lámina 14: Pruebas y Evaluación de Calidad (ISO/IEC 25010)
 * **Tabla 14:** Mostrar la matriz de calidad de software bajo estándar ISO 25010.
 * **Resultados Obtenidos:**
-  * *Adecuación Funcional:* 100% de requerimientos clínicos operativos cubiertos.
-  * *Rendimiento:* Consultas a base de datos en menos de 300 ms; sincronización en <1 s.
-  * *Optimización Core Web Vitals:* Tiempo de respuesta a la interacción (*Interaction to Next Paint* - INP) < 50 ms mediante aislamiento de micro-componentes de renderizado (`LiveClock`) y renderizado concurrente.
-  * *Seguridad:* 0 vulnerabilidades en pruebas de inyección y escalada de privilegios.
+  * *Adecuación Funcional:* 100% de requerimientos clínicos, financieros y de inventario cubiertos (10 casos de prueba CP-01 a CP-10 aprobados).
+  * *Rendimiento e Hidratación SSR/CSR:* Consultas en < 300 ms, esqueletos de carga (`PatientProfileSkeleton`) sin saltos visuales (CLS = 0) y carga diferida de generadores PDF.
+  * *Optimización Core Web Vitals:* Tiempo de respuesta a la interacción (*Interaction to Next Paint* - INP) < 50 ms mediante aislamiento de micro-componentes (`LiveClock`).
+  * *Seguridad:* 0 vulnerabilidades en pruebas de fuerza bruta, inyección y control de acceso por roles.
 * **Métrica de Usabilidad Estandarizada (SUS):**
   * **Puntaje: 88,5 / 100 (Grado A - Nivel Sobresaliente)** otorgado por el personal de la clínica.
 
@@ -174,7 +174,7 @@ Se recomienda un diseño limpio (fondo blanco o azul institucional oscuro), tipo
 * **Conclusiones:**
   1. Se cumplieron al 100% los cuatro objetivos específicos del ciclo de desarrollo.
   2. MediZen transformó la dinámica asistencial de FemeSalud, elevando la calidad de vida de las pacientes y la productividad de la especialista.
-  3. Se demostró la viabilidad de implementar arquitecturas modernas (React 19 + Supabase + Web Crypto) en el contexto socioproductivo regional.
+  3. Se demostró la viabilidad de implementar arquitecturas modernas (React 19 + TanStack Start + Supabase + Web Crypto) en el contexto socioproductivo regional.
 * **Recomendaciones:**
   1. Extender el módulo a telemedicina y portal de autoservicio de citas para pacientes.
   2. Replicar el modelo tecnológico en otros centros ambulatorios y consultorios de los Llanos Centrales.
@@ -194,11 +194,11 @@ Para evitar contratiempos o bloqueos nerviosos, sigan este guión cronometrado p
 
 | Minuto | Acción en Pantalla | Qué decir al Jurado |
 | :---: | :--- | :--- |
-| **0:00 - 0:45** | Abrir la aplicación en pantalla de bloqueo. Ingresar el PIN de 4 dígitos. | *"Iniciamos con la bóveda criptográfica. La Dra. Carli Sole no requiere contraseñas complejas en cada atención; introduce su PIN de 4 dígitos, la Web Crypto API deriva la clave PBKDF2 en memoria y desbloquea la estación médica en menos de un segundo."* |
-| **0:45 - 1:45** | En el Dashboard, presionar `Ctrl + K` o usar la barra superior. Escribir una cédula (ej. `V-18.452.190`). | *"El buscador universal reactivo filtra en menos de 300 ms. Al hacer clic, accedemos al expediente completo: datos personales, antecedentes médicos y el historial cronológico de todas sus visitas previas."* |
-| **1:45 - 3:00** | Clic en *"Nueva Consulta"*. Seleccionar especialidad, ingresar signos vitales y probar la calculadora obstétrica. | *"Durante la consulta médica, el sistema adapta los campos según la especialidad. Si es obstétrica, ingresamos la FUM y el algoritmo calcula en tiempo real las semanas de gestación y la fecha probable de parto de forma automática."* |
-| **3:00 - 4:00** | Redactar diagnóstico breve, agregar un medicamento en el récipe y hacer clic en *"Generar Récipe PDF"*. | *"Finalizada la evaluación, el sistema compila en memoria un récipe médico vectorizado de alta resolución con jsPDF. Con un solo clic se envía por WhatsApp Web a la paciente o se imprime en el consultorio."* |
-| **4:00 - 5:00** | Ir a la Agenda de Citas y mostrar el estado del turno cambiado a *"Finalizada"*. | *"En la recepción, la asistente visualiza la cita actualizada en tiempo real mediante WebSockets, procesa la facturación en bolívares o divisas y cierra el ciclo de atención sin que nadie haya tenido que levantarse de su puesto."* |
+| **0:00 - 0:45** | Mostrar el bloqueo por inactividad (`InactivityLockOverlay`) e ingresar el PIN de 4 dígitos. | *"Iniciamos con la bóveda criptográfica y el bloqueo por inactividad. La Dra. Carli Sole protege su estación con un PIN de 4 dígitos validado con SHA-256 con sal y PBKDF2 de 100.000 iteraciones, con bloqueo anti-fuerza bruta al quinto intento fallido."* |
+| **0:45 - 1:45** | En el Dashboard, presionar `Ctrl + K`, buscar una paciente y mostrar el `PatientClinicalBanner` y las 8 pestañas. | *"El buscador universal abre el expediente `HC-XXXXX` en menos de 300 ms. En el banner superior vemos alertas críticas (tipo de sangre, alergias, seguro, contacto de emergencia) y debajo las 8 pestañas clínicas, incluyendo medicación habitual, transfusiones, Timeline y estudios adjuntos."* |
+| **1:45 - 3:00** | Ir a la pestaña *Obstétrico* o *Editar Expediente*, cambiar la FUM y mostrar el cálculo automático de EG y FPP. | *"Al ingresar la Fecha de Última Menstruación (FUM), el algoritmo aplica en vivo la Regla de Naegele y calcula instantáneamente las semanas y días de edad gestacional y la Fecha Probable de Parto sin usar calculadoras manuales."* |
+| **3:00 - 4:00** | Hacer clic en *"Exportar Documentos"* -> *"Historia Clínica (PDF)"* y luego generar un *"Récipe PDF"* / WhatsApp. | *"Mediante carga diferida de jsPDF, compilamos en memoria tanto la Historia Clínica Completa como el récipe médico vectorizado con membrete oficial, listo para imprimir o enviar por WhatsApp a la paciente."* |
+| **4:00 - 5:00** | Mostrar la Agenda en tiempo real, la tasa BCV en Finanzas y el Kárdex de Inventario. | *"Finalmente, la agenda sincroniza estados por WebSockets, el módulo financiero concilia pagos en dólares y bolívares a tasa BCV, y el módulo de Activos Físicos controla el kárdex de insumos médicos de la clínica."* |
 
 ---
 
@@ -206,17 +206,17 @@ Para evitar contratiempos o bloqueos nerviosos, sigan este guión cronometrado p
 
 Prepárense para estas 7 preguntas frecuentes de los docentes de informática de la UPTLLJR:
 
-#### P1: ¿Por qué decidieron usar un PIN de 4 dígitos en lugar de una contraseña tradicional?
-> **Respuesta:** *"En el ejercicio médico asistencial, la especialista atiende decenas de pacientes al día y no es viable ingresar contraseñas de 16 caracteres en cada consulta. Para conciliar ergonomía médica con máxima seguridad, implementamos una bóveda local: el usuario se autentica inicialmente con sus credenciales maestras y luego el PIN numérico sirve como semilla para derivar una clave simétrica AES-GCM de 256 bits mediante PBKDF2 con 100.000 iteraciones y sal aleatoria. La contraseña nunca queda en texto plano en el navegador y la sesión se bloquea automáticamente por inactividad."*
+#### P1: ¿Por qué decidieron usar un PIN de 4 dígitos y cómo evitan ataques de fuerza bruta?
+> **Respuesta:** *"En el ejercicio médico asistencial, la especialista atiende decenas de pacientes al día y necesita bloquear y desbloquear su pantalla con rapidez cuando se levanta a realizar un examen físico. Implementamos un esquema de doble capa: la sesión autenticada de Supabase se resguarda con un recubrimiento de bloqueo por inactividad (`InactivityLockOverlay`), donde el PIN se verifica contra un hash SHA-256 con sal aleatoria de 16 bytes y deriva claves AES-GCM de 256 bits mediante PBKDF2 con 100.000 iteraciones. Además, cuenta con limitación de tasa (rate-limiting): al quinto intento fallido consecutivo, la interfaz bloquea cualquier intento durante 60 segundos."*
 
-#### P2: ¿Qué sucede si se interrumpe el servicio eléctrico o la conexión a Internet en Valle de la Pascua?
-> **Respuesta:** *"Consideramos la realidad de nuestra región desde el diseño arquitectónico. Gracias a TanStack Query v5, la aplicación cuenta con un modo semi-offline: la consulta en curso se mantiene retenida en la memoria reactiva del cliente. Si la conexión parpadea, la médica sigue redactando sin pérdida de información; una vez restaurado el enlace, el sistema reintenta la sincronización con peticiones HTTP idempotentes, evitando duplicidades."*
+#### P2: ¿Qué sucede si se interrumpe el servicio eléctrico o la conexión a Internet, o si el usuario refresca la página?
+> **Respuesta:** *"Consideramos la realidad de nuestra región desde el diseño arquitectónico. Gracias a TanStack Query v5, el Service Worker (`sw.js`) con estrategia Network-First y la sincronización de sesión/rol en caché local, el sistema soporta micro-cortes sin perder el borrador clínico y permite refrescar el navegador (`F5`) manteniendo la sesión activa, el rol del usuario y el tema visual personalizado sin redirigir erróneamente a la pantalla de login."*
 
-#### P3: ¿Cómo garantizan que el personal de recepción no tenga acceso a los diagnósticos confidenciales de las pacientes?
-> **Respuesta:** *"No nos limitamos a ocultar botones en el frontend; la restricción está blindada en el motor de base de datos relacional PostgreSQL mediante Row Level Security (RLS). Existe una política estricta que valida el token JWT del usuario operante: si el rol es 'reception', el motor bloquea a nivel de kernel cualquier sentencia SELECT sobre las tablas de consultas y récipes. La asistente solo puede interactuar con citas y datos demográficos básicos."*
+#### P3: ¿Cómo garantizan que el personal de recepción no tenga acceso a módulos administrativos o historias confidenciales?
+> **Respuesta:** *"Aplicamos control de acceso basado en roles (RBAC) tanto en la interfaz (ocultando módulos restringidos como Activos Físicos/Inventario para roles no administradores y cacheando el rol verificado) como en el motor PostgreSQL mediante políticas Row Level Security (RLS) y registro inmutable en la tabla `auditoria_logs`."*
 
-#### P4: ¿Por qué seleccionaron React 19 y TypeScript en lugar de tecnologías tradicionales como PHP o plantillas monolíticas?
-> **Respuesta:** *"Porque una clínica requiere sincronización en tiempo real e interactividad inmediata sin recargar la página completa. React 19 como Single Page Application (SPA) combinado con TypeScript garantiza un tipado estricto que reduce en más del 80% los errores en tiempo de ejecución. Además, su arquitectura basada en componentes reutilizables asegura una alta mantenibilidad y portabilidad Mobile-First a largo plazo."*
+#### P4: ¿Por qué utilizaron un modelo híbrido relacional con columnas `JSONB` en PostgreSQL (`historias_clinicas` y `consultas`)?
+> **Respuesta:** *"Porque la información demográfica, el agendamiento (`citas`) y la facturación (`facturas`, `pagos`) requieren integridad referencial ACID estricta en Tercera Forma Normal, mientras que los datos clínicos especializados (`datos_extras`, `signos_vitales`, `datos_especialidad`) evolucionan según la especialidad médica. El tipo `JSONB` nativo de PostgreSQL 15 nos permite almacenar antecedentes gineco-obstétricos, medicación habitual, transfusiones y notas clínicas con flexibilidad documental sin sacrificar velocidad ni transacciones SQL."*
 
 #### P5: ¿De qué manera este proyecto se articula con las Líneas de Investigación del PNFI y el Plan de la Patria?
 > **Respuesta:** *"Se inscribe en la Línea 1 del PNFI (Desarrollo de Software Libre y Soluciones Web) y la Línea 2 (Seguridad Lógica y Gestión de Datos), empleando estándares abiertos universales. Frente al Plan de la Patria, tributa al Gran Objetivo Histórico I, Objetivo Nacional 1.5, construyendo soberanía tecnológica y reduciendo la dependencia de paquetes comerciales foráneos privativos en un sector crítico como la salud."*

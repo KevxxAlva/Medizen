@@ -6,10 +6,14 @@ export type AuditLog = {
   id: string;
   action_type: string;
   entity_type: string;
-  entity_id: string;
-  user_id: string;
+  entity_id: string | null;
+  user_id: string | null;
   details: any;
-  created_at: string;
+  created_at: string | null;
+  perfiles?: {
+    full_name: string | null;
+    email: string | null;
+  } | null;
 };
 
 // API to log an action manually
@@ -50,18 +54,38 @@ export async function logAuditAction(
 export function useAuditLogs(limit = 100) {
   return useQuery({
     queryKey: ["audit_logs", limit],
-    queryFn: async () => {
+    queryFn: async (): Promise<AuditLog[]> => {
       const { data, error } = await supabase
         .from("audit_logs")
-        .select(`
-          *,
-          perfiles:user_id (full_name, email)
-        `)
+        .select("*")
         .order("created_at", { ascending: false })
         .limit(limit);
 
       if (error) throw error;
-      return data;
+      const logs = data ?? [];
+
+      const userIds = [...new Set(logs.map((l) => l.user_id).filter(Boolean))] as string[];
+      const userMap = new Map<string, { full_name: string | null; email: string | null }>();
+
+      if (userIds.length > 0) {
+        const { data: users } = await supabase
+          .from("usuarios")
+          .select("auth_id, nombre_usuario, medicos(nombre, apellido, email)")
+          .in("auth_id", userIds);
+
+        (users ?? []).forEach((u: any) => {
+          if (!u.auth_id) return;
+          const doc = Array.isArray(u.medicos) ? u.medicos[0] : u.medicos;
+          const fullName = doc ? `${doc.nombre} ${doc.apellido}`.trim() : u.nombre_usuario;
+          const email = doc?.email || u.nombre_usuario || null;
+          userMap.set(u.auth_id, { full_name: fullName, email });
+        });
+      }
+
+      return logs.map((l) => ({
+        ...l,
+        perfiles: l.user_id ? userMap.get(l.user_id) || null : null,
+      }));
     },
   });
 }

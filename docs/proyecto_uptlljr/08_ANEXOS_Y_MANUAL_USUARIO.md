@@ -95,40 +95,40 @@ Clínica FemeSalud — Valle de la Pascua
 ---
 
 ## ANEXO E  
-**MANUAL RÁPIDO DE USUARIO DEL SISTEMA WEB FEMESALUD**  
-*(Guía Operativa para la Dra. Carli Sole (y equipo médico) y Asistente)*
+**MANUAL RÁPIDO DE USUARIO DEL SISTEMA WEB FEMESALUD (MEDIZEN)**  
+*(Guía Operativa para la Dra. Carli Sole, Equipo Médico y Personal Administrativo)*
 
-### 1. Desbloqueo Seguro mediante PIN de 4 Dígitos
-1. Abra su navegador web e ingrese a la dirección URL de la suite FemeSalud.
-2. Seleccione su perfil médico o administrativo en pantalla.
-3. Ingrese su **código PIN de 4 dígitos** utilizando el teclado numérico en pantalla o el teclado físico de su computador.
-4. El sistema descifrará su sesión de forma instantánea y abrirá el **Tablero Principal**.
-*(Nota: Si introduce un PIN erróneo, la aplicación emitirá una alerta visual y bloqueará el acceso).*
+### 1. Acceso Seguro, PIN de 4 Dígitos y Bloqueo por Inactividad
+1. Ingrese a la plataforma web MediZen e inicie sesión con sus credenciales institucionales.
+2. Cuando la estación médica permanezca inactiva durante 5 minutos (o al bloquear manualmente la pantalla), se activará el recubrimiento de seguridad (**Bloqueo por Inactividad**).
+3. Ingrese su **código PIN de 4 dígitos** para desbloquear instantáneamente la pantalla sin perder los datos que estaba redactando.
+*(Nota de Seguridad: Tras 5 intentos fallidos consecutivos de PIN, el sistema aplicará un bloqueo preventivo de 60 segundos contra fuerza bruta).*
 
 ### 2. Atajo Universal de Búsqueda Rápida (`Ctrl + K`)
-* En cualquier pantalla donde se encuentre, presione simultáneamente la combinación de teclas **`Ctrl + K`** (o pulse sobre la barra de búsqueda en la parte superior).
-* Escriba el número de cédula o los apellidos de la paciente para acceder de inmediato a su ficha sin pasar por menús intermedios.
+* En cualquier pantalla del sistema, presione simultáneamente **`Ctrl + K`** (o pulse sobre el buscador superior).
+* Escriba el número de cédula, código de historia (`HC-XXXXX`) o nombre de la paciente para abrir su expediente en milisegundos.
 
-### 3. Registro de Nueva Paciente
-1. Diríjase a la barra lateral izquierda (o menú inferior en teléfono/tablet) y seleccione **Pacientes**.
-2. Presione el botón **+ Nueva Paciente**.
-3. Complete los campos obligatorios: Cédula de Identidad, Nombres, Apellidos y Teléfono celular.
-4. Presione **Guardar Ficha**. La paciente quedará registrada en la base de datos centralizada de Supabase.
+### 3. Apertura y Edición del Expediente Clínico Integral
+1. En el menú lateral izquierdo, seleccione **Pacientes** y pulse **+ Nuevo Paciente** (o dentro de un perfil existente, pulse **Editar Expediente**).
+2. Complete los datos de identificación y seguridad clínica:
+   * **Identificación**: Documento de identidad, nombres, apellidos, fecha de nacimiento, género, teléfono, correo y dirección.
+   * **Emergencia y Cobertura**: Contacto de emergencia (nombre y teléfono) y proveedor de seguro médico o póliza.
+   * **Alertas y Antecedentes Críticos**: Grupo sanguíneo y factor Rh, alergias a medicamentos, enfermedades crónicas, medicación habitual y antecedentes de transfusiones sanguíneas.
+3. Estos datos críticos se mostrarán permanentemente en el **Banner Clínico Superior** del expediente.
 
-### 4. Registro de Consulta Médica Integral
-1. Ingrese al expediente de la paciente y seleccione la pestaña **Consultas**.
-2. Presione **+ Nueva Consulta**.
-3. Seleccione el tipo de atención (*Control Prenatal* o *Ginecología*).
-4. Si es consulta obstétrica, introduzca la **Fecha de Última Menstruación (FUM)**; el sistema calculará en tiempo real las **semanas de gestación** y la **Fecha Probable de Parto (FPP)**.
-5. Ingrese los hallazgos del examen físico, ecografía y diagnóstico médico.
-6. Guarde la evolución clínica.
+### 4. Navegación por las 8 Pestañas del Perfil y Calculadora Obstétrica en Vivo
+Dentro del expediente de la paciente dispone de ocho (08) vistas organizadas:
+* **Identificación / Antecedentes / Ginecológico**: Datos filiatorios, antecedentes personales/familiares, hábitos psicobiológicos y ciclo menstrual.
+* **Obstétrico**: Fórmula G-P-A-C-E y **Calculadora Obstétrica por Regla de Naegele**. Al seleccionar o editar la **Fecha de Última Menstruación (FUM)**, el sistema calcula automáticamente en tiempo real la **Edad Gestacional (`X sem + Y días`)** y la **Fecha Probable de Parto (FPP)**.
+* **Consultas y Timeline**: Registro de evoluciones médicas con signos vitales (PA, FC, FR, Peso, Talla, IMC, Temperatura, $\text{SpO}_2$) y línea de tiempo cronológica de atenciones.
+* **Notas y Estudios**: Repositorio para redactar notas rápidas y adjuntar archivos diagnósticos (ecografías, citologías, laboratorios en PDF o imagen).
+* **Recetas**: Historial de prescripciones emitidas.
 
-### 5. Generación y Envío de Récipes Médicos
-1. En la parte inferior de la consulta médica, agregue los medicamentos prescritos, concentración, presentación y posología.
-2. Haga clic en **Ver Récipe / Exportar PDF**.
-3. Se generará un documento en alta definición con el membrete oficial de FemeSalud y sus credenciales médicas.
-4. Para enviarlo a la paciente sin imprimir papel, haga clic en el botón verde **Enviar por WhatsApp**. Se abrirá la conversación con el teléfono de la paciente listo para remitir la prescripción.
+### 5. Exportación de Documentos PDF y Envío por WhatsApp
+1. En la cabecera del expediente de la paciente, haga clic en el menú desplegable **Exportar Documentos** para descargar el **Reporte de Historia Clínica Completa (PDF)** o la última consulta.
+2. Dentro de una consulta o en la pestaña **Recetas**, pulse **Generar Récipe PDF** o **Enviar por WhatsApp** para remitir la prescripción oficial membretada directamente al teléfono de la paciente.
 
-### 6. Agenda de Citas y Turnos en Tiempo Real
-* En el módulo **Agenda**, visualice las citas por día, semana o mes.
-* Para cambiar de estado a una paciente (por ejemplo, de "En Espera" a "En Consulta"), haga clic sobre el turno correspondiente. El cambio se reflejará al instante en la pantalla de la recepción.
+### 6. Agenda en Tiempo Real, Finanzas Bimonetarias (BCV) e Inventario
+* **Agenda**: Gestione turnos por día, semana o mes; al asignar un servicio clínico se vincula automáticamente su honorario base y los cambios de estado se sincronizan en vivo entre recepción y consultorio.
+* **Finanzas y Tasa BCV**: Registre cobros en dólares (USD) o bolívares (VES) con conversión automática según la tasa oficial del BCV sincronizada en la barra superior.
+* **Activos Físicos (Inventario)**: *(Exclusivo para Administradores)* Controle las existencias de insumos médicos, alertas de stock mínimo y el kárdex de entradas y salidas clínicas.

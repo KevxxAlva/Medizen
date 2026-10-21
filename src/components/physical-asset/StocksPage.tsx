@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Search, Plus, X, Pencil, Trash2, ChevronLeft, ChevronRight, Filter, Box, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -14,6 +15,8 @@ export function StocksPage() {
   const updateItem = useUpdateStock();
   const deleteItem = useDeleteStock();
   const [q, setQ] = useState("");
+  const [filterCategory, setFilterCategory] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<StockItem | null>(null);
 
@@ -21,9 +24,15 @@ export function StocksPage() {
   const itemsPerPage = 8;
 
   const filtered = items.filter((item) => {
-    if (!q) return true;
-    const term = q.toLowerCase();
-    return item.name.toLowerCase().includes(term) || item.category.toLowerCase().includes(term);
+    if (q) {
+      const term = q.toLowerCase();
+      if (!(item.name.toLowerCase().includes(term) || item.category.toLowerCase().includes(term))) {
+        return false;
+      }
+    }
+    if (filterCategory !== "all" && item.category !== filterCategory) return false;
+    if (filterStatus !== "all" && item.status !== filterStatus) return false;
+    return true;
   });
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
@@ -80,7 +89,7 @@ export function StocksPage() {
     <div className="bg-card rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-6 shadow-sm min-h-[calc(100vh-8rem)] font-sans flex flex-col">
       <header className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <button className="text-muted-foreground hover:text-foreground"><ChevronLeft className="h-5 w-5" /></button>
+          <button type="button" onClick={() => window.history.back()} className="text-muted-foreground hover:text-foreground" title="Volver"><ChevronLeft className="h-5 w-5" /></button>
           <h1 className="text-xl font-bold text-foreground">Inventario de Existencias</h1>
         </div>
         <div className="flex-1 max-w-xl mx-auto w-full sm:w-auto">
@@ -103,9 +112,72 @@ export function StocksPage() {
           <Box className="h-4 w-4" /> {filtered.length} artículos
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-bold text-foreground border border-border/40 rounded-xl hover:bg-muted">
-            <Filter className="h-3.5 w-3.5" /> Filtros
-          </button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className={cn(
+                  "flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-bold text-foreground border border-border/40 rounded-xl hover:bg-muted transition-colors",
+                  (filterCategory !== "all" || filterStatus !== "all") && "bg-primary/10 border-primary text-primary"
+                )}
+              >
+                <Filter className="h-3.5 w-3.5" />
+                {filterCategory !== "all" || filterStatus !== "all" ? "Filtrado" : "Filtros"}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-60 rounded-2xl glass-card border-0 shadow-2xl p-4" align="end">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <h4 className="font-bold text-xs uppercase tracking-wider text-muted-foreground">Categoría</h4>
+                  <select
+                    value={filterCategory}
+                    onChange={(e) => {
+                      setFilterCategory(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="w-full h-9 px-3 rounded-xl bg-background border border-input text-xs font-semibold outline-none"
+                  >
+                    <option value="all">Todas las categorías</option>
+                    <option value="Medical Supplies">Insumos Médicos</option>
+                    <option value="Consumables">Consumibles</option>
+                    <option value="Equipment">Equipos</option>
+                    <option value="Office">Oficina</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="font-bold text-xs uppercase tracking-wider text-muted-foreground">Estado de Stock</h4>
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => {
+                      setFilterStatus(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="w-full h-9 px-3 rounded-xl bg-background border border-input text-xs font-semibold outline-none"
+                  >
+                    <option value="all">Todos los estados</option>
+                    <option value="In Stock">En Stock</option>
+                    <option value="Low Stock">Stock Bajo</option>
+                    <option value="Out of Stock">Agotado</option>
+                  </select>
+                </div>
+                {(filterCategory !== "all" || filterStatus !== "all") && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setFilterCategory("all");
+                      setFilterStatus("all");
+                      setCurrentPage(1);
+                    }}
+                    className="w-full rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground"
+                  >
+                    Limpiar filtros
+                  </Button>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
           <button onClick={() => { setEditing(null); setFormOpen(true); }} className="flex items-center gap-2 bg-primary text-primary-foreground px-4 sm:px-5 py-2.5 rounded-xl text-xs font-bold shadow-md hover:bg-[#3451d6] transition">
             <Plus className="h-3.5 w-3.5" /> Añadir Artículo
           </button>
@@ -113,7 +185,7 @@ export function StocksPage() {
       </div>
 
       <div className="flex-1 overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full text-left border-collapse min-w-[650px]">
           <thead>
             <tr className="bg-muted text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
               <th className="p-4 w-12 rounded-tl-xl"><input type="checkbox" className="rounded border-gray-300" /></th>

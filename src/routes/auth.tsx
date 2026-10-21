@@ -17,6 +17,8 @@ import {
   saveQuickAccessAccount,
   unlockQuickAccessAccount,
   removeQuickAccessAccount,
+  saveUserPinHash,
+  removeUserPinHash,
   QuickAccessProfile
 } from "@/lib/auth/quickAccess";
 
@@ -96,10 +98,11 @@ function AuthPage() {
         let userFullName = user.user_metadata?.full_name || email.split("@")[0];
         let userRole = "Usuario";
 
-        // Check if PIN was previously saved in localStorage
-        const localPin = localStorage.getItem(`femesalud_pin_${user.id}`);
-        if (!userPin && localPin) {
-          userPin = localPin;
+        // Migrate and remove any legacy plaintext PIN in localStorage
+        const legacyLocalPin = localStorage.getItem(`femesalud_pin_${user.id}`);
+        if (legacyLocalPin) {
+          if (!userPin) userPin = legacyLocalPin;
+          localStorage.removeItem(`femesalud_pin_${user.id}`);
         }
 
         // Fetch user from public.usuarios
@@ -140,7 +143,7 @@ function AuthPage() {
         }
 
         if (userPin && String(userPin).length === 4) {
-          localStorage.setItem(`femesalud_pin_${user.id}`, String(userPin));
+          await saveUserPinHash(user.id, String(userPin));
           await saveQuickAccessAccount({
             userId: user.id,
             email: user.email || email,
@@ -198,6 +201,7 @@ function AuthPage() {
   const handleForgetAccount = (userId: string) => {
     if (!confirm("¿Deseas olvidar esta cuenta en este equipo? Tendrás que ingresar con correo y contraseña la próxima vez.")) return;
     removeQuickAccessAccount(userId);
+    removeUserPinHash(userId);
     const remaining = getQuickAccessAccounts();
     setQuickAccounts(remaining);
     if (remaining.length > 0) {

@@ -554,13 +554,13 @@ export function ConsultationForm({
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="flex-1 overflow-hidden p-6 flex flex-col min-h-0 bg-background/50 relative">
+          <form onSubmit={handleSubmit} className="flex-1 overflow-hidden p-3 sm:p-6 flex flex-col min-h-0 bg-background/50 relative">
             {/* Top Bar: Doctor & Specialty Selector */}
             <div className="flex flex-wrap items-center justify-between gap-3 p-3 mb-3 rounded-2xl bg-muted/40 border border-border/50">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                 <span className="text-xs font-bold text-muted-foreground">Médico:</span>
                 <Select value={selectedDoctorId || currentDoctor?.id || ""} onValueChange={handleDoctorChange}>
-                  <SelectTrigger className="h-8 text-xs rounded-xl bg-background border-border/50 font-bold min-w-[200px]">
+                  <SelectTrigger className="h-8 text-xs rounded-xl bg-background border-border/50 font-bold w-full sm:w-auto sm:min-w-[200px]">
                     <SelectValue placeholder="Seleccione médico..." />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl max-h-[300px]">
@@ -573,10 +573,10 @@ export function ConsultationForm({
                 </Select>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                 <span className="text-xs font-bold text-muted-foreground">Especialidad:</span>
                 <Select value={selectedSpecialty} onValueChange={(val) => setSelectedSpecialty(val)}>
-                  <SelectTrigger className="h-8 text-xs rounded-xl bg-background border-primary/40 font-bold text-primary min-w-[220px]">
+                  <SelectTrigger className="h-8 text-xs rounded-xl bg-background border-primary/40 font-bold text-primary w-full sm:w-auto sm:min-w-[220px]">
                     <SelectValue placeholder="Seleccione especialidad..." />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl max-h-[300px]">
@@ -696,6 +696,31 @@ export function ConsultationForm({
                         <div className="flex items-center gap-1.5">
                           <AiClinicalAssistant
                             patientName={patient?.full_name || appointment?.patient_name}
+                            allergies={patient?.personal_history?.allergies}
+                            chronicConditions={patient?.personal_history?.chronic_conditions}
+                            specialty={selectedSpecialty}
+                            visitType={visitType}
+                            vitals={{
+                              heightCm,
+                              weightKg,
+                              bmi,
+                              bloodPressure,
+                              heartRate,
+                              respiratoryRate,
+                              temperature,
+                            }}
+                            physicalExam={{
+                              skin,
+                              headNeck,
+                              breasts,
+                              abdomen,
+                              gynecological,
+                              extremities,
+                              neurological,
+                            }}
+                            diagnosis={diagnosis}
+                            plan={plan}
+                            indications={indications}
                             notesInput={subjectiveExam}
                             onApplyNotes={(formatted) => setSubjectiveExam(formatted)}
                             onApplyPrescription={(prescription) => setIndications((prev) => prev ? prev + "\n" + prescription : prescription)}

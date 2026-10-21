@@ -51,3 +51,6 @@ setAdmin.js
 # Nested projects & scratch folders
 careflow-suite/
 *.bak
+renders/
+videos/
+generate_narration.cjs

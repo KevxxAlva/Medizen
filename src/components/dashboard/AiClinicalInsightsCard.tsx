@@ -1,43 +1,148 @@
-import { useState } from "react";
-import { Sparkles, TrendingUp, AlertTriangle, CheckCircle2, ChevronRight, Activity, ShieldCheck, RefreshCw } from "lucide-react";
+import { useMemo } from "react";
+import { Sparkles, TrendingUp, AlertTriangle, CheckCircle2, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useStocks } from "@/lib/api/inventory";
 
 export function AiClinicalInsightsCard() {
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [insights, setInsights] = useState([
-    {
+  const { data: stocks = [], refetch: refetchStocks, isFetching: fetchingStocks } = useStocks();
+
+  const { data: metrics, refetch: refetchMetrics, isFetching: fetchingMetrics } = useQuery({
+    queryKey: ["ai_clinical_insights"],
+    queryFn: async () => {
+      const now = new Date();
+      const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+
+      const [{ data: citasData }, { data: facturasData }] = await Promise.all([
+        supabase
+          .from("citas")
+          .select("fecha_hora, estado, motivo")
+          .gte("fecha_hora", startOfLastMonth),
+        supabase
+          .from("facturas")
+          .select("fecha_emision, estado_pago")
+          .gte("fecha_emision", startOfThisMonth),
+      ]);
+
+      const allCitas = citasData || [];
+      const thisMonthCitas = allCitas.filter(
+        (c) => c.fecha_hora && c.fecha_hora >= startOfThisMonth && (c.estado || "").toLowerCase() !== "cancelada"
+      );
+      const lastMonthCitas = allCitas.filter(
+        (c) =>
+          c.fecha_hora &&
+          c.fecha_hora >= startOfLastMonth &&
+          c.fecha_hora < startOfThisMonth &&
+          (c.estado || "").toLowerCase() !== "cancelada"
+      );
+
+      const thisCount = thisMonthCitas.length;
+      const lastCount = lastMonthCitas.length;
+      const deltaPct =
+        lastCount > 0 ? Math.round(((thisCount - lastCount) / lastCount) * 100) : thisCount > 0 ? 100 : 0;
+
+      // Find top reason this month
+      const reasonCounts: Record<string, number> = {};
+      for (const c of thisMonthCitas) {
+        const reason = (c.motivo || "Control General").trim();
+        reasonCounts[reason] = (reasonCounts[reason] || 0) + 1;
+      }
+      const topReason =
+        Object.entries(reasonCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "Control Gineco-Obstétrico";
+
+      const completedThisMonth = thisMonthCitas.filter(
+        (c) => (c.estado || "").toLowerCase() === "completada"
+      ).length;
+      const completionRate = thisCount > 0 ? Math.round((completedThisMonth / thisCount) * 100) : 0;
+
+      const monthInvoices = facturasData || [];
+      const paidInvoices = monthInvoices.filter((f) =>
+        ["pagado", "pagada", "paid"].includes((f.estado_pago || "").toLowerCase())
+      ).length;
+
+      return {
+        thisCount,
+        lastCount,
+        deltaPct,
+        topReason,
+        completedThisMonth,
+        completionRate,
+        totalInvoices: monthInvoices.length,
+        paidInvoices,
+      };
+    },
+  });
+
+  const isRefreshing = fetchingStocks || fetchingMetrics;
+
+  const insights = useMemo(() => {
+    const thisCount = metrics?.thisCount ?? 0;
+    const deltaPct = metrics?.deltaPct ?? 0;
+    const topReason = metrics?.topReason ?? "Control General";
+
+    const trendInsight = {
       id: 1,
       type: "trend",
-      title: "Alta Demanda Gineco-Obstétrica",
-      description: "Aumento del 22% en consultas de control prenatal este mes. Se sugiere pre-reservar ecógrafo para turno vespertino.",
-      level: "info",
-      badge: "+22% Demanda",
-    },
-    {
-      id: 2,
-      type: "inventory",
-      title: "Optimización de Inventario",
-      description: "Consumo acelerado de guantes estériles y espéculos descartables. Nivel óptimo sugerido: reordenar en 5 días.",
-      level: "warning",
-      badge: "Sugerencia Stock",
-    },
-    {
+      title: "Flujo de Consultas del Mes",
+      description:
+        thisCount > 0
+          ? `${thisCount} cita(s) activas registradas este mes (${deltaPct >= 0 ? `+${deltaPct}%` : `${deltaPct}%`} vs. mes anterior). Motivo principal: "${topReason}".`
+          : "Aún no se registran citas activas en el mes en curso. Programa nuevas citas desde la Agenda.",
+      level: "info" as const,
+      badge: thisCount > 0 ? `${deltaPct >= 0 ? "+" : ""}${deltaPct}% Flujo` : "0 Citas",
+    };
+
+    const lowOrOutStocks = stocks.filter(
+      (s) => s.status === "Out of Stock" || s.status === "Low Stock" || s.quantity <= 20
+    );
+    const inventoryInsight =
+      lowOrOutStocks.length > 0
+        ? {
+            id: 2,
+            type: "inventory",
+            title: "Alerta de Inventario Clínico",
+            description: `Se detectaron ${lowOrOutStocks.length} insumo(s) con existencias bajas o agotadas: ${lowOrOutStocks
+              .slice(0, 3)
+              .map((s) => `${s.name} (${s.quantity})`)
+              .join(", ")}.`,
+            level: "warning" as const,
+            badge: `${lowOrOutStocks.length} por Reponer`,
+          }
+        : {
+            id: 2,
+            type: "inventory",
+            title: "Inventario en Nivel Óptimo",
+            description:
+              stocks.length > 0
+                ? `Los ${stocks.length} artículos registrados en inventario cuentan con stock suficiente para la operación.`
+                : "No hay alertas de stock activas en el inventario actual.",
+            level: "success" as const,
+            badge: "Stock Óptimo",
+          };
+
+    const completionRate = metrics?.completionRate ?? 0;
+    const completedThisMonth = metrics?.completedThisMonth ?? 0;
+    const adherenceInsight = {
       id: 3,
       type: "adherence",
-      title: "Adherencia al Tratamiento",
-      description: "94% de pacientes con récipes descargados han acudido o confirmado seguimiento clínico satisfactorio.",
-      level: "success",
-      badge: "94% Éxito",
-    },
-  ]);
+      title: "Cumplimiento de Consultas",
+      description:
+        thisCount > 0
+          ? `${completedThisMonth} de ${thisCount} citas programadas este mes han sido completadas (${completionRate}% de efectividad en atención).`
+          : "Sin citas programadas este mes para calcular tasa de asistencia y seguimiento.",
+      level: completionRate >= 70 || thisCount === 0 ? ("success" as const) : ("warning" as const),
+      badge: `${completionRate}% Atendidas`,
+    };
 
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-    setTimeout(() => {
-      setIsRefreshing(false);
-      toast.success("Insights clínicos actualizados por IA");
-    }, 700);
+    return [trendInsight, inventoryInsight, adherenceInsight];
+  }, [metrics, stocks]);
+
+  const handleRefresh = async () => {
+    await Promise.all([refetchMetrics(), refetchStocks()]);
+    toast.success("Indicadores clínicos sincronizados con la base de datos");
   };
 
   return (
@@ -53,12 +158,12 @@ export function AiClinicalInsightsCard() {
           </div>
           <div>
             <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5">
-              Insights Clínicos IA
+              Indicadores Clínicos Inteligentes
               <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-primary/15 text-primary">
-                Smart Pulse
+                Datos en Vivo
               </span>
             </h3>
-            <p className="text-[10px] text-muted-foreground">Análisis predictivo de flujo y patrones médicos</p>
+            <p className="text-[10px] text-muted-foreground">Análisis automático basado en citas e inventario real</p>
           </div>
         </div>
         <button
@@ -109,3 +214,4 @@ export function AiClinicalInsightsCard() {
     </div>
   );
 }
+

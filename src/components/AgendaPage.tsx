@@ -7,6 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AppointmentForm } from "@/components/AppointmentForm";
 import { ConsultationForm } from "@/components/ConsultationForm";
+import { generateAppointmentsReport } from "@/lib/utils/generateAppointmentsReport";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -76,6 +77,7 @@ export function AgendaPage() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [calendarView, setCalendarView] = useState("Semanal");
   const [statusFilter, setStatusFilter] = useState("todas");
+  const [showAllSidebarApps, setShowAllSidebarApps] = useState(false);
 
   // Queries
   const { data: appointments = [], isLoading } = useAppointments({
@@ -85,6 +87,25 @@ export function AgendaPage() {
   const { data: doctors = [] } = useDoctors();
   const update = useUpdateAppointment();
   const del = useDeleteAppointment();
+
+  const handleDownloadAgenda = async () => {
+    try {
+      toast.loading("Generando reporte de citas...", { id: "agenda_pdf" });
+      const formatted = appointments
+        .filter((a) => (statusFilter === "todas" ? a.status !== "cancelada" : a.status === statusFilter))
+        .map((a) => ({
+          id_cita: Number(a.id) || a.id,
+          fecha_hora: a.scheduled_at,
+          estado: a.status,
+          motivo: a.reason || "Consulta",
+          paciente_nombre: a.patient_name || "Paciente",
+        }));
+      await generateAppointmentsReport(formatted);
+      toast.success("Reporte de agenda descargado", { id: "agenda_pdf" });
+    } catch (err: any) {
+      toast.error(err?.message || "Error al exportar citas", { id: "agenda_pdf" });
+    }
+  };
 
   const doctorMap = useMemo(() => new Map(doctors.map((d) => [d.id, d.full_name || d.email])), [doctors]);
   
@@ -148,7 +169,7 @@ export function AgendaPage() {
     const result = [];
     let currentGroup: any[] = [];
     for (const ev of processed) {
-      currentGroup = currentGroup.filter(g => g.topHours + g.durationHours > ev.topHours);
+      currentGroup = currentGroup.filter(g => g.dayIndex === ev.dayIndex && g.topHours + g.durationHours > ev.topHours);
       ev.overlapIndex = currentGroup.length;
       currentGroup.push(ev);
       result.push(ev);
@@ -204,7 +225,11 @@ export function AgendaPage() {
                 <DropdownMenuItem onClick={() => setStatusFilter("cancelada")} className="text-xs font-bold cursor-pointer text-destructive hover:text-destructive focus:text-destructive">Ver Canceladas</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <button className="flex items-center gap-2 text-xs font-bold text-foreground border border-border/40 rounded-xl px-4 py-2 hover:bg-muted">
+            <button
+              type="button"
+              onClick={handleDownloadAgenda}
+              className="flex items-center gap-2 text-xs font-bold text-foreground border border-border/40 rounded-xl px-4 py-2 hover:bg-muted cursor-pointer"
+            >
               <Download className="h-4 w-4 text-muted-foreground" /> Descargar Datos
             </button>
           </div>
@@ -301,22 +326,52 @@ export function AgendaPage() {
             <div className="flex-1 flex flex-col">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="font-bold text-sm tracking-wide text-foreground">Lista de Citas Médicas</h2>
-                <button className="text-muted-foreground border border-border/40 p-1 rounded-lg"><MoreHorizontal className="h-4 w-4" /></button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button type="button" className="text-muted-foreground border border-border/40 p-1 rounded-lg hover:bg-muted">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44 rounded-xl">
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setDefaultFormDate(formatToYMD(currentDate));
+                        setEditingApp(null);
+                        setFormOpen(true);
+                      }}
+                      className="text-xs font-bold cursor-pointer"
+                    >
+                      Nueva Cita
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleDownloadAgenda} className="text-xs font-bold cursor-pointer">
+                      Exportar PDF
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
 
               <div className="space-y-4 flex-1 overflow-y-auto max-h-[400px] pr-2">
                 {gridEvents.length === 0 ? (
                   <div className="text-center text-xs text-muted-foreground mt-10">No hay citas en este rango de fechas.</div>
                 ) : (
-                  gridEvents.slice(0, 10).map((app) => {
+                  (showAllSidebarApps ? gridEvents : gridEvents.slice(0, 10)).map((app) => {
                     const safeIso = app.scheduled_at.replace(" ", "T");
                     const d = new Date(safeIso);
                     const end = new Date(d.getTime() + (app.duration_minutes || 60) * 60000);
                     const pad = (n: number) => String(n).padStart(2, '0');
+                    const patientInitials = (app.patient_name || "P")
+                      .split(" ")
+                      .filter(Boolean)
+                      .map((n: string) => n[0])
+                      .slice(0, 2)
+                      .join("")
+                      .toUpperCase();
                     return (
                       <div key={app.id} onClick={() => { setEditingApp(app); setFormOpen(true); }} className="flex items-center justify-between group cursor-pointer p-2 hover:bg-muted/50 rounded-xl transition">
                         <div className="flex items-center gap-3">
-                          <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${app.patient_name}`} alt={app.patient_name} className="h-10 w-10 rounded-full bg-primary/10 border-2 border-white shadow-sm" />
+                          <div className="h-10 w-10 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center border-2 border-card shadow-sm shrink-0">
+                            {patientInitials}
+                          </div>
                           <div className="overflow-hidden max-w-[120px]">
                             <p className="text-xs font-bold text-foreground group-hover:text-primary transition truncate">{app.patient_name}</p>
                             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider truncate">{app.reason || "Cita"}</p>
@@ -332,8 +387,12 @@ export function AgendaPage() {
                 )}
               </div>
 
-              <button className="mt-4 w-full bg-primary text-primary-foreground text-xs font-bold py-3 rounded-2xl hover:bg-[#3451d6] transition shadow-md shadow-primary/20">
-                Ver Todo
+              <button
+                type="button"
+                onClick={() => setShowAllSidebarApps((prev) => !prev)}
+                className="mt-4 w-full bg-primary text-primary-foreground text-xs font-bold py-3 rounded-2xl hover:bg-[#3451d6] transition shadow-md shadow-primary/20 cursor-pointer"
+              >
+                {showAllSidebarApps ? "Mostrar Menos" : `Ver Todo (${gridEvents.length})`}
               </button>
             </div>
           </aside>
@@ -390,20 +449,35 @@ export function AgendaPage() {
                 </div>
               </div>
               <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground">
-                <button className="hover:text-foreground">Ninguno</button>
-                <button className="hover:text-foreground">Prioridad</button>
-                <button className="hover:text-foreground">Límite</button>
-                <div className="h-4 w-px bg-gray-200 mx-1"></div>
-                <button className="hover:text-foreground"><Video className="h-4 w-4" /></button>
-                <button className="hover:text-foreground"><Network className="h-4 w-4" /></button>
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter("todas")}
+                  className={cn("hover:text-foreground transition-colors", statusFilter === "todas" && "text-primary")}
+                >
+                  Todas
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter("pendiente")}
+                  className={cn("hover:text-foreground transition-colors", statusFilter === "pendiente" && "text-primary")}
+                >
+                  En Espera
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter("completada")}
+                  className={cn("hover:text-foreground transition-colors", statusFilter === "completada" && "text-primary")}
+                >
+                  Completadas
+                </button>
               </div>
             </div>
 
             {/* Timetable Body Container */}
-            <div className="flex-1 overflow-y-auto relative bg-card">
+            <div className="flex-1 overflow-y-auto overflow-x-auto relative bg-card">
               
               {calendarView === "Mensual" ? (
-                <div className="flex flex-col min-h-full bg-card relative">
+                <div className="flex flex-col min-h-full bg-card relative min-w-[640px] sm:min-w-full">
                   {/* Monthly Header */}
                   <div className="sticky top-0 z-20 grid grid-cols-7 border-b border-border/40 bg-card">
                     {WEEKDAYS_SHORT.map((dayName, i) => (
@@ -463,7 +537,7 @@ export function AgendaPage() {
               ) : (
                 <>
                   {/* Days Header */}
-              <div className="sticky top-0 z-20 flex bg-card border-b border-border/40">
+              <div className={cn("sticky top-0 z-20 flex bg-card border-b border-border/40", calendarView !== "Diaria" ? "min-w-[640px] sm:min-w-full" : "min-w-full")}>
                 <div className="w-16 shrink-0 border-r border-border/40 bg-card flex items-center justify-center">
                   <span className="text-[10px] font-bold text-muted-foreground">GMT-4</span>
                 </div>
@@ -477,7 +551,7 @@ export function AgendaPage() {
               </div>
 
               {/* Grid Lines & Events Container */}
-              <div className="flex relative">
+              <div className={cn("flex relative", calendarView !== "Diaria" ? "min-w-[640px] sm:min-w-full" : "min-w-full")}>
                 {/* Y-Axis Hours */}
                 <div className="w-16 shrink-0 border-r border-border/40 bg-card relative z-10">
                   {HOURS.map((h, i) => (

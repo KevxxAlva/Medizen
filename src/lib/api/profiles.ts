@@ -63,7 +63,7 @@ export function useDoctors() {
     queryFn: async (): Promise<Profile[]> => {
       const { data, error } = await supabase
         .from("medicos")
-        .select("id_medico, nombre, apellido, email, numero_licencia, especialidades(nombre), usuarios(auth_id, nombre_usuario)");
+        .select("id_medico, nombre, apellido, email, numero_licencia, universidad, cmc, especialidades(nombre), usuarios(auth_id, nombre_usuario)");
         
       if (error) throw error;
       
@@ -104,12 +104,40 @@ export function useToggleRole() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ userId, role, enable }: { userId: string; role: "admin" | "doctor"; enable: boolean }) => {
-      // For this MVP adaptation, we won't fully implement role toggling since our schema expects predefined role IDs
-      // A more robust implementation would lookup the id_rol in the Roles table.
-      console.warn("Role toggling is mocked in the adapter.");
+      const targetRoleName = enable ? role : role === "admin" ? "doctor" : "recepcionista";
+
+      // Find or create role in public.roles
+      let roleId: number | null = null;
+      const { data: existingRole } = await supabase
+        .from("roles")
+        .select("id_rol")
+        .ilike("nombre_rol", targetRoleName)
+        .maybeSingle();
+
+      if (existingRole?.id_rol) {
+        roleId = existingRole.id_rol;
+      } else {
+        const { data: newRole, error: roleErr } = await supabase
+          .from("roles")
+          .insert({ nombre_rol: targetRoleName })
+          .select("id_rol")
+          .single();
+        if (roleErr) throw roleErr;
+        roleId = newRole.id_rol;
+      }
+
+      // Match usuario by auth_id or numeric id_usuario
+      const isNumericId = /^\d+$/.test(userId);
+      const query = supabase.from("usuarios").update({ id_rol: roleId });
+      const { error } = isNumericId
+        ? await query.eq("id_usuario", parseInt(userId, 10))
+        : await query.eq("auth_id", userId);
+
+      if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["profiles_with_roles"] });
+      qc.invalidateQueries({ queryKey: ["user_roles"] });
       qc.invalidateQueries({ queryKey: ["doctors"] });
     },
   });

@@ -16,14 +16,13 @@ import { cn } from "@/lib/utils";
 import { useAllProfilesWithRoles, useToggleRole, type ProfileWithRoles } from "@/lib/api/profiles";
 import { adminCreateUser, adminDeleteUser } from "@/lib/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuthSession } from "@/hooks/useAuth";
+import { useAuthSession, requireAdminAccess } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/doctores")({
-  head: () => ({ meta: [{ title: "Doctores — Medizen" }] }),
+  head: () => ({ meta: [{ title: "Personal — Medizen" }] }),
   beforeLoad: async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw redirect({ to: "/auth" });
+    await requireAdminAccess();
   },
   component: DoctoresAdmin,
 });
@@ -145,7 +144,7 @@ function DoctoresAdmin() {
 
       {/* TABLE */}
       <div className="flex-1 overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full text-left border-collapse min-w-[650px]">
           <thead>
             <tr className="bg-muted text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
               <th className="p-4 w-12 rounded-tl-xl"><input type="checkbox" className="rounded border-gray-300" /></th>

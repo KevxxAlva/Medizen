@@ -111,7 +111,7 @@ export function PaymentMethodsPage() {
       </div>
 
       <div className="flex-1 overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full text-left border-collapse min-w-[600px]">
           <thead>
             <tr className="bg-muted text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
               <th className="p-4 w-12 rounded-tl-xl"><input type="checkbox" className="rounded border-gray-300" /></th>

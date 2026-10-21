@@ -9,15 +9,22 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useLocation } from "@tanstack/react-router";
 import { Menu, Lock } from "lucide-react";
 import { useClinicInfo } from "@/lib/api/clinic";
-import { useAuthSession } from "@/hooks/useAuth";
+import { useAuthSession, useRoles } from "@/hooks/useAuth";
 import { useMyProfile } from "@/lib/api/profiles";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { ThemeCustomizer } from "@/components/ThemeCustomizer";
 import { MedizenLogo } from "@/components/MedizenLogo";
 import { useInactivityLock } from "@/hooks/useInactivityLock";
 import { InactivityLockOverlay } from "@/components/InactivityLockOverlay";
 
+const ADMIN_ONLY_PATHS = ["/doctores", "/cuentas", "/metodos-pago", "/stocks"];
+
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
+    // Session is persisted in browser localStorage; skip redirect during SSR
+    if (typeof window === "undefined") {
+      return { user: null };
+    }
     try {
       const { data } = await supabase.auth.getSession();
       if (!data.session?.user) {
@@ -37,13 +44,29 @@ function AuthenticatedLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { data: clinic } = useClinicInfo();
-  const { user } = useAuthSession();
+  const { user, loading: authLoading } = useAuthSession();
+  const { data: roles, isLoading: rolesLoading } = useRoles();
   const { data: profile } = useMyProfile(user?.id);
 
   // Automatic & manual screen lock for clinical privacy
   const { isLocked, lockScreen, unlockScreen, hasPinConfigured } = useInactivityLock();
 
   useRealtimeSync();
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.navigate({ to: "/auth", replace: true });
+    }
+  }, [authLoading, user, router]);
+
+  useEffect(() => {
+    if (!authLoading && user && !rolesLoading && roles) {
+      const isAdminPath = ADMIN_ONLY_PATHS.some((p) => location.pathname.startsWith(p));
+      if (isAdminPath && !roles.includes("admin")) {
+        router.navigate({ to: "/", replace: true });
+      }
+    }
+  }, [authLoading, user, rolesLoading, roles, location.pathname, router]);
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
@@ -86,6 +109,7 @@ function AuthenticatedLayout() {
               <Lock className="h-4 w-4" />
             </button>
           )}
+          <ThemeCustomizer />
           <ThemeToggle />
           <Link
             to="/configuracion"
@@ -120,18 +144,12 @@ function AuthenticatedLayout() {
       />
 
       <main className={`px-3 sm:px-4 md:px-6 pt-3 sm:pt-4 md:pt-6 pb-6 h-full flex-1 transition-all duration-300 ${isCollapsed ? "md:ml-[80px]" : "md:ml-[260px]"}`}>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={location.pathname}
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
-            className="max-w-7xl mx-auto w-full"
-          >
-            <Outlet />
-          </motion.div>
-        </AnimatePresence>
+        <div
+          key={location.pathname}
+          className="max-w-7xl mx-auto w-full animate-in fade-in duration-150"
+        >
+          <Outlet />
+        </div>
       </main>
 
       <CommandMenu />

@@ -4,19 +4,87 @@ import { supabase } from "@/integrations/supabase/client";
 
 // Mapping between DB tables and their corresponding React Query keys.
 const TABLE_TO_QUERY_KEYS: Record<string, string[][]> = {
-  pacientes: [["patients"], ["patients_count"], ["patients_paginated"], ["patients_recent"]],
-  citas: [["appointments"]],
-  consultas: [["consultations"], ["consultation"]],
-  historias_clinicas: [["clinical_notes"]],
-  servicios: [["services"]],
-  facturas: [["monthly_payments"], ["dashboard_stats"]],
-  pagos: [["monthly_payments"], ["dashboard_stats"]],
+  pacientes: [
+    ["patients"],
+    ["patient"],
+    ["patients_count"],
+    ["patients_paginated"],
+    ["patients_recent"],
+    ["dashboard_stats"],
+  ],
+  citas: [
+    ["appointments"],
+    ["dashboard_stats"],
+    ["ai_clinical_insights"],
+  ],
+  consultas: [
+    ["consultations"],
+    ["consultation"],
+    ["patient_consultations"],
+    ["ai_clinical_insights"],
+  ],
+  historias_clinicas: [
+    ["clinical-notes"],
+    ["clinical_notes"],
+    ["patients"],
+    ["patient"],
+    ["patients_paginated"],
+    ["patients_recent"],
+  ],
+  servicios: [
+    ["services"],
+    ["dashboard_top_treatments"],
+  ],
+  facturas: [
+    ["facturas"],
+    ["monthly_payments"],
+    ["dashboard_stats"],
+    ["dashboard_trends"],
+    ["dashboard_top_treatments"],
+    ["ai_clinical_insights"],
+  ],
+  detalles_factura: [
+    ["facturas"],
+    ["dashboard_top_treatments"],
+  ],
+  pagos: [
+    ["facturas"],
+    ["monthly_payments"],
+    ["dashboard_stats"],
+    ["financial_accounts"],
+    ["accounts"],
+  ],
   clinic_info: [["clinic_info"]],
-  financial_purchases: [["financial_accounts"], ["dashboard_stats"]],
-  inventory_stocks: [["inventory_stocks"]],
-  financial_accounts: [["financial_accounts"]],
-  medicos: [["doctors"]],
-  usuarios: [["users"]]
+  financial_purchases: [
+    ["financial_purchases"],
+    ["financial_accounts"],
+    ["accounts"],
+    ["dashboard_stats"],
+  ],
+  inventory_stocks: [
+    ["inventory_stocks"],
+    ["stocks"],
+    ["ai_clinical_insights"],
+  ],
+  financial_accounts: [
+    ["financial_accounts"],
+    ["accounts"],
+  ],
+  payment_methods: [["payment_methods"]],
+  support_tickets: [["support_tickets"], ["tickets"]],
+  daily_goals: [["daily_goals"]],
+  medicos: [
+    ["doctors"],
+    ["profiles_with_roles"],
+    ["my_profile"],
+  ],
+  usuarios: [
+    ["users"],
+    ["doctors"],
+    ["profiles_with_roles"],
+    ["my_profile"],
+    ["roles"],
+  ],
 };
 
 export function useRealtimeSync() {

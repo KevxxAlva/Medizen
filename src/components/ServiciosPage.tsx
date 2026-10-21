@@ -171,7 +171,7 @@ export function ServiciosPage() {
 
       {/* TABLE */}
       <div className="flex-1 overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full text-left border-collapse min-w-[650px]">
           <thead>
             <tr className="bg-muted text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
               <th className="p-4 rounded-tl-xl">Nombre del Servicio</th>

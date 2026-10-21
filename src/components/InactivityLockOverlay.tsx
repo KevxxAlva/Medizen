@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 interface InactivityLockOverlayProps {
   isLocked: boolean;
-  onUnlock: (pin: string) => boolean;
+  onUnlock: (pin: string) => Promise<boolean> | boolean;
   doctorName?: string;
   clinicName?: string;
 }
@@ -62,7 +62,7 @@ export function InactivityLockOverlay({
 
     if (newPin.length === 4) {
       // Auto-submit on 4th digit
-      submitPin(newPin);
+      void submitPin(newPin);
     }
   };
 
@@ -71,11 +71,11 @@ export function InactivityLockOverlay({
     setErrorMsg("");
   };
 
-  const submitPin = (pinToSubmit: string) => {
-    const success = onUnlock(pinToSubmit);
+  const submitPin = async (pinToSubmit: string) => {
+    const success = await onUnlock(pinToSubmit);
     if (!success) {
       setShake(true);
-      setErrorMsg("PIN incorrecto. Intente nuevamente.");
+      setErrorMsg("PIN incorrecto o bloqueado temporalmente. Intente nuevamente.");
       toast.error("PIN incorrecto.");
       setTimeout(() => {
         setShake(false);

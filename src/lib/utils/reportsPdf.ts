@@ -1,4 +1,3 @@
-import { jsPDF } from "jspdf";
 import { toast } from "sonner";
 import { getClinicPdfConfig, drawPdfHeader, drawPdfWatermark, drawPdfFooter } from "./pdfConfig";
 
@@ -9,6 +8,7 @@ export const generateReposoPDF = async ({
   doctorName: string; doctorUniversity: string; doctorMpps: string; doctorCmc: string;
 }) => {
   try {
+    const { jsPDF } = await import("jspdf");
     const doc = new jsPDF({ unit: "pt", format: "a4" });
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -124,6 +124,7 @@ export const generateAtencionPDF = async ({
   doctorName: string; doctorUniversity: string; doctorMpps: string; doctorCmc: string;
 }) => {
   try {
+    const { jsPDF } = await import("jspdf");
     const doc = new jsPDF({ unit: "pt", format: "a4" });
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -238,6 +239,7 @@ export const generateJustificativoPDF = async ({
   doctorName: string; doctorUniversity: string; doctorMpps: string; doctorCmc: string;
 }) => {
   try {
+    const { jsPDF } = await import("jspdf");
     const doc = new jsPDF({ unit: "pt", format: "a4" });
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();

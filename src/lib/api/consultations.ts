@@ -331,25 +331,34 @@ export function useCreateConsultation() {
           cantidad: item.quantity
         }));
         // We catch errors silently here just in case schema is out of sync for consumables
-        const { error: consError } = await supabase
+        const { error: consError } = await (supabase as any)
           .from("insumos_consulta")
           .insert(newConsumables);
         if (consError) {
            console.warn("Error inserting consumables:", consError);
         }
 
-        // Deduct from inventory
-        for (const item of consumables) {
-          const { data: stockItem } = await supabase
+        // Deduct from inventory in batch (single SELECT + parallel UPDATEs)
+        const itemNames = [...new Set(consumables.map((i) => i.item_name).filter(Boolean))];
+        if (itemNames.length > 0) {
+          const { data: stockItems } = await supabase
             .from("inventory_stocks")
-            .select("id, quantity")
-            .eq("name", item.item_name)
-            .maybeSingle();
-          if (stockItem) {
-            await supabase
-              .from("inventory_stocks")
-              .update({ quantity: Math.max(0, stockItem.quantity - item.quantity) })
-              .eq("id", stockItem.id);
+            .select("id, name, quantity")
+            .in("name", itemNames);
+          if (stockItems && stockItems.length > 0) {
+            const stockByName = new Map(stockItems.map((s) => [s.name, s]));
+            await Promise.all(
+              consumables.map((item) => {
+                const stockItem = stockByName.get(item.item_name);
+                if (!stockItem) return Promise.resolve();
+                const nextQty = Math.max(0, (stockItem.quantity || 0) - item.quantity);
+                stockItem.quantity = nextQty;
+                return supabase
+                  .from("inventory_stocks")
+                  .update({ quantity: nextQty })
+                  .eq("id", stockItem.id);
+              })
+            );
           }
         }
       }
@@ -442,32 +451,38 @@ export function useUpdateConsultation() {
       // 3. Update consumables if provided
       if (consumables) {
         // Fetch old consumables to restore inventory
-        const { data: oldConsumables } = await supabase
+        const { data: oldConsumables } = await (supabase as any)
           .from("insumos_consulta")
           .select("*")
           .eq("id_consulta", parseInt(id));
-          
-        if (oldConsumables) {
-          for (const old of oldConsumables) {
-            const { data: stockItem } = await supabase
-              .from("inventory_stocks")
-              .select("id, quantity")
-              .eq("name", old.nombre_insumo)
-              .maybeSingle();
-            if (stockItem) {
-              await supabase
-                .from("inventory_stocks")
-                .update({ quantity: stockItem.quantity + old.cantidad })
-                .eq("id", stockItem.id);
-            }
+
+        const allNames = [
+          ...new Set([
+            ...((oldConsumables as any[]) || []).map((o: any) => o.nombre_insumo),
+            ...consumables.map((c) => c.item_name),
+          ].filter(Boolean)),
+        ];
+
+        const stockByName = new Map<string, { id: string; name: string; quantity: number }>();
+        if (allNames.length > 0) {
+          const { data: stockItems } = await supabase
+            .from("inventory_stocks")
+            .select("id, name, quantity")
+            .in("name", allNames);
+          for (const s of stockItems || []) {
+            stockByName.set(s.name, { id: s.id, name: s.name, quantity: s.quantity ?? 0 });
           }
         }
 
-        // Try deleting by id_consulta first, then id_historia just in case
-        await (supabase as any).from("insumos_consulta").delete().eq("id_consulta", parseInt(id));
-        if (oldHc.id_historia) {
-           await (supabase as any).from("insumos_consulta").delete().eq("id_historia", oldHc.id_historia);
+        if (oldConsumables) {
+          for (const old of (oldConsumables as any[])) {
+            const st = stockByName.get(old.nombre_insumo);
+            if (st) st.quantity = (st.quantity || 0) + (old.cantidad || 0);
+          }
         }
+
+        // Delete only consumables belonging to this specific consultation
+        await (supabase as any).from("insumos_consulta").delete().eq("id_consulta", parseInt(id));
 
         if (consumables.length > 0) {
           const newConsumables = consumables.map((item) => ({
@@ -480,21 +495,19 @@ export function useUpdateConsultation() {
           if (insError) {
              console.warn("Error inserting consumables on update:", insError);
           }
-          
-          // Deduct new consumables from inventory
+
           for (const item of consumables) {
-            const { data: stockItem } = await supabase
-              .from("inventory_stocks")
-              .select("id, quantity")
-              .eq("name", item.item_name)
-              .maybeSingle();
-            if (stockItem) {
-              await supabase
-                .from("inventory_stocks")
-                .update({ quantity: Math.max(0, (stockItem.quantity || 0) - item.quantity) })
-                .eq("id", stockItem.id);
-            }
+            const st = stockByName.get(item.item_name);
+            if (st) st.quantity = Math.max(0, (st.quantity || 0) - item.quantity);
           }
+        }
+
+        if (stockByName.size > 0) {
+          await Promise.all(
+            Array.from(stockByName.values()).map((st) =>
+              supabase.from("inventory_stocks").update({ quantity: st.quantity }).eq("id", st.id)
+            )
+          );
         }
       }
 

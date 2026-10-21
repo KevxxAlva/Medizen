@@ -255,9 +255,9 @@ ANEXOS .........................................................................
 | **Tabla 6** | *Validez de Contenido del Instrumento por Juicio de Expertos* | 38 |
 | **Tabla 7** | *Plan de Acción Operativo del Proyecto Socio-Integrador* | 40 |
 | **Tabla 8** | *Especificación de Requerimientos Funcionales y No Funcionales* | 43 |
-| **Tabla 9** | *Diccionario de Datos: Tabla patients (Pacientes)* | 49 |
-| **Tabla 10** | *Diccionario de Datos: Tabla consultations (Consultas Médicas)* | 50 |
-| **Tabla 11** | *Diccionario de Datos: Tabla appointments (Citas y Turnos)* | 51 |
+| **Tabla 9** | *Diccionario de Datos: Tablas pacientes e historias_clinicas (Expediente Clínico)* | 49 |
+| **Tabla 10** | *Diccionario de Datos: Tabla consultas (Consultas y Evoluciones Médicas)* | 50 |
+| **Tabla 11** | *Diccionario de Datos: Tablas citas, facturas e inventario (Control Operativo)* | 51 |
 | **Tabla 12** | *Matriz de Casos de Prueba Funcional de Caja Negra* | 59 |
 | **Tabla 13** | *Matriz Comparativa de Tiempos Operativos Antes y Después* | 65 |
 | **Tabla 14** | *Evaluación de Calidad del Software bajo la Norma ISO/IEC 25010 y Métricas de Usabilidad* | 66 |
@@ -272,19 +272,19 @@ ANEXOS .........................................................................
 
 | Número | Título | Pág. |
 | :--- | :--- | :---: |
-| **Figura 1** | *Croquis de Ubicación Geográfica de la clínica FemeSalud* | 4 |
+| **Figura 1** | *Croquis de Ubicación Geográfica de la Clínica FemeSalud* | 4 |
 | **Figura 2** | *Árbol de Problemas del Control Clínico en FemeSalud* | 9 |
 | **Figura 3** | *Árbol de Objetivos del Sistema Web MediZen* | 12 |
 | **Figura 4** | *Pirámide de Kelsen Aplicada al Marco Legal del Software Clínico* | 29 |
 | **Figura 5** | *Diagrama de Casos de Uso General del Sistema MediZen* | 46 |
-| **Figura 6** | *Diagrama de Actividades: Flujo Integral de Consulta Médica Integral* | 47 |
+| **Figura 6** | *Diagrama de Actividades: Flujo Integral de Consulta Médica Multiespecialidad* | 47 |
 | **Figura 7** | *Diagrama de Secuencia: Desbloqueo Seguro mediante Bóveda PIN Cifrada* | 48 |
 | **Figura 8** | *Diagrama Entidad-Relación de la Base de Datos (PostgreSQL / Supabase)* | 52 |
-| **Figura 9** | *Interfaz de Desbloqueo Rápido por PIN de 4 Dígitos en Móvil y Escritorio* | 53 |
+| **Figura 9** | *Interfaz de Desbloqueo Rápido por PIN de 4 Dígitos y Bloqueo por Inactividad* | 53 |
 | **Figura 10** | *Tablero de Control Operativo y Estadísticas Clínicas en Tiempo Real* | 54 |
-| **Figura 11** | *Módulo de Historia Clínica Digital Especializada en Múltiples Especialidades Médicas* | 54 |
+| **Figura 11** | *Módulo de Expediente Clínico Digital Integral Multiespecialidad* | 54 |
 | **Figura 12** | *Agenda Médica Interactiva con Sincronización WebSockets en Tiempo Real* | 55 |
-| **Figura 13** | *Diseñador Visual y Generador de Récipes Médicos Oficiales en PDF* | 55 |
+| **Figura 13** | *Diseñador Visual y Generador de Documentos Médicos Oficiales en PDF* | 55 |
 | **Figura 14** | *Diagrama de Arquitectura de Software en Capas de la Solución Web* | 56 |
 
 <div style="page-break-after: always;"></div>
@@ -297,7 +297,7 @@ ANEXOS .........................................................................
 
 | Número | Título | Pág. |
 | :--- | :--- | :---: |
-| **Anexo A** | *Guía de Entrevista Aplicada a la Especialista Médica (Dra. Carli Sole (y equipo médico))* | 76 |
+| **Anexo A** | *Guía de Entrevista Aplicada a la Especialista Médica (Dra. Carli Sole y equipo médico)* | 76 |
 | **Anexo B** | *Cuestionario de Usabilidad y Evaluación Tecnológica (Escala Likert)* | 78 |
 | **Anexo C** | *Instrumento de Validación por Juicio de Expertos de la UPTLLJR* | 80 |
 | **Anexo D** | *Carta de Aceptación y Aval Comunitario de la Clínica FemeSalud* | 82 |
@@ -332,9 +332,9 @@ ANEXOS .........................................................................
 
 </div>
 
-El presente proyecto socio-integrador tuvo como propósito fundamental desarrollar un sistema web para la gestión integral de historias clínicas médicas multiespecialidad y el control operativo en la clínica privado Clínica FemeSalud, bajo la dirección de la Dra. Carli Sole (y equipo médico) en Valle de la Pascua, estado Guárico. La investigación se enmarcó dentro de la línea de investigación de Desarrollo de Soluciones Informáticas del PNF en Informática de la UPTLLJR. Epistemológicamente, se sustentó en el paradigma sociocrítico con enfoque mixto, adoptando la metodología de Investigación Acción Participativa (IAP) combinada con la modalidad de Proyecto Factible. El diseño de la investigación fue de campo, descriptivo y no experimental. La población y muestra se constituyó bajo un criterio no probabilístico intencional conformada por el personal médico y administrativo de la clínica ($n=3$). Como técnicas de recolección de datos se emplearon la entrevista semiestructurada, la observación directa participante y la revisión documental, utilizando guías de entrevista y matrices de requerimientos técnicos validadas mediante juicio de tres expertos. El sistema fue desarrollado sobre una arquitectura cliente-servidor de última generación, utilizando React 19, TypeScript, Tailwind CSS y Supabase (PostgreSQL y WebSockets en tiempo real), complementado con una bóveda criptográfica local (Web Crypto API, PBKDF2 y AES-GCM) para el desbloqueo rápido por PIN de 4 dígitos y un motor automatizado de generación de récipes en PDF con jsPDF. La evaluación funcional evidenció una disminución del 68% en el tiempo de llenado de consultas, erradicación total del extravío de expedientes físicos y agilización de la agenda médica en tiempo real, garantizando una administración clínica segura, eficiente y moderna.
+El presente proyecto socio-integrador tuvo como propósito fundamental desarrollar un sistema web progresivo (PWA) para la gestión integral de historias clínicas multiespecialidad y el control operativo en el centro asistencial privado Clínica FemeSalud, bajo la dirección de la Dra. Carli Sole (y equipo médico) en Valle de la Pascua, estado Guárico. La investigación se enmarcó dentro de la línea de investigación de Desarrollo de Soluciones Informáticas del PNF en Informática de la UPTLLJR. Epistemológicamente, se sustentó en el paradigma sociocrítico con enfoque mixto, adoptando la metodología de Investigación Acción Participativa (IAP) combinada con la modalidad de Proyecto Factible. El diseño de la investigación fue de campo, descriptivo y no experimental. La población y muestra se constituyó bajo un criterio no probabilístico intencional conformada por el personal médico y administrativo de la clínica, así como una muestra representativa de pacientes ($n=32$). Como técnicas de recolección de datos se emplearon la entrevista semiestructurada, la observación directa participante y la revisión documental, utilizando instrumentos validados mediante juicio de tres expertos ($\alpha = 0,89$). El sistema fue desarrollado sobre una arquitectura reactiva utilizando React 19, TypeScript, TanStack Start/Router, TanStack Query v5, Tailwind CSS v4 y Supabase (PostgreSQL 15, políticas RLS, Storage y WebSockets en tiempo real), complementado con una bóveda criptográfica local (Web Crypto API, PBKDF2 con 100.000 iteraciones SHA-256, AES-GCM de 256 bits, protección contra fuerza bruta y bloqueo por inactividad), expediente clínico normado (numeración correlativa `HC`, grupo sanguíneo, alergias, medicación activa, transfusiones, calculadora obstétrica automática por regla de Naegele, estudios adjuntos y línea de tiempo evolutiva), control de inventario con kárdex, facturación bimoneda USD/VES con tasa BCV dinámica y exportación documental en PDF bajo demanda. La evaluación funcional evidenció una reducción superior al 70% en los tiempos operativos, erradicación total del extravío de expedientes físicos y un puntaje de usabilidad SUS de 88,5/100 (Grado A).
 
-*Palabras clave:* historias clínicas electrónicas, múltiples especialidades médicas, sistema web, criptografía local, supabase, react 19.
+*Palabras clave:* historias clínicas electrónicas, múltiples especialidades médicas, aplicación web progresiva, criptografía local, supabase, react 19.
 
 <div style="page-break-after: always;"></div>
 
@@ -346,9 +346,9 @@ El presente proyecto socio-integrador tuvo como propósito fundamental desarroll
 
 En la contemporaneidad, la integración de las tecnologías de la información y la comunicación (TIC) ha redefinido radicalmente la gestión operativa y asistencial de los servicios de salud a escala global. Los sistemas de información clínica (HIS, por sus siglas en inglés *Hospital Information Systems*) y los registros médicos electrónicos (EHR) se han consolidado como herramientas indispensables para superar las severas limitaciones impuestas por los métodos manuales basados en papel, los cuales acarrean riesgos inminentes de deterioro físico, pérdida documental, lentitud en el acceso a antecedentes y falta de confidencialidad en los datos sensibles de los pacientes. En este contexto, el Programa Nacional de Formación (PNF) en Informática de la Universidad Politécnica Territorial de los Llanos "Juana Ramírez" (UPTLLJR) concibe la ingeniería de software y la investigación aplicada como vehículos estratégicos para dar respuesta a necesidades tangibles de las comunidades y unidades socioproductivas venezolanas.
 
-Dentro del ámbito de la medicina privada en la ciudad de Valle de la Pascua, estado Guárico, la clínica médico de la Clínica FemeSalud, encabezado por la especialista en Múltiples Especialidades Médicas Dra. Carli Sole (y equipo médico), brinda atención médica fundamental a un significativo número de pacientes de la entidad llanera. No obstante, las dinámicas operativas diarias vinculadas al agendamiento de turnos, el registro de evoluciones médicas multiespecialidad y prenatales, la redacción manual de prescripciones y la conciliación de honorarios médicos se ven afectadas por la dispersión de la información y la carencia de una plataforma tecnológica centralizada, flexible y adaptada a la velocidad exigida durante el acto médico.
+Dentro del ámbito de la medicina privada en la ciudad de Valle de la Pascua, estado Guárico, la Clínica FemeSalud, encabezada por la especialista Dra. Carli Sole (y equipo médico), brinda atención médica integral a un significativo número de pacientes de la entidad llanera. No obstante, las dinámicas operativas diarias vinculadas al agendamiento de turnos, el registro de evoluciones médicas multiespecialidad y prenatales, la redacción manual de prescripciones y la conciliación de honorarios médicos se ven afectadas por la dispersión de la información y la carencia de una plataforma tecnológica centralizada, flexible y adaptada a la velocidad exigida durante el acto médico.
 
-Frente a este escenario, surge la presente investigación cuyo propósito general es desarrollar un sistema web de vanguardia para la gestión de historias clínicas médicas multiespecialidad y el control operativo en la clínica FemeSalud. La solución tecnológica no solo automatiza el flujo documental de la clínica, sino que incorpora estándares contemporáneos de experiencia de usuario (*Mobile-First*), sincronización en tiempo real mediante WebSockets y un robusto mecanismo de autenticación rápida mediante bóveda local criptográfica cifrada con los estándares `PBKDF2` y `AES-GCM` de 256 bits, garantizando la inviolabilidad del secreto médico y facilitando la labor diaria del personal médico-asistencial.
+Frente a este escenario, surge la presente investigación cuyo propósito general es desarrollar un sistema web de vanguardia para la gestión de historias clínicas médicas multiespecialidad y el control operativo en la Clínica FemeSalud. La solución tecnológica no solo automatiza el flujo documental, clínico, financiero y de inventario de la clínica, sino que incorpora estándares contemporáneos de experiencia de usuario (*Mobile-First* y PWA), sincronización en tiempo real mediante WebSockets, trazabilidad médico-legal en bitácoras de auditoría (`auditoria_logs`) y un robusto mecanismo de autenticación rápida mediante bóveda local criptográfica cifrada con los estándares `PBKDF2` y `AES-GCM` de 256 bits, garantizando la inviolabilidad del secreto médico y facilitando la labor diaria del personal médico-asistencial.
 
 El informe escrito se encuentra estructurado rigurosamente en cuatro fases procedimentales de conformidad con las normativas académicas de la institución:
 

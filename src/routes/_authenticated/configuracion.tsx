@@ -2,8 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { 
   Settings, User as UserIcon, Building, Save, Loader2, Shield, Search, ClipboardList, 
-  FileText, Lock, KeyRound, ShieldCheck, CheckCircle2, AlertCircle, Eye, EyeOff, Trash2, Check 
+  FileText, Lock, KeyRound, ShieldCheck, CheckCircle2, AlertCircle, Eye, EyeOff, Trash2, Check, Palette 
 } from "lucide-react";
+import { COLOR_THEMES, type ColorTheme, updateFaviconColor } from "@/components/ThemeCustomizer";
 import { useAuthSession, useIsAdmin, useRoles } from "@/hooks/useAuth";
 import { useMyProfile, useUpdateProfile } from "@/lib/api/profiles";
 import { useAuditLogs } from "@/lib/api/audit";
@@ -15,7 +16,14 @@ import { toast } from "sonner";
 import { RecipeDesigner } from "@/components/settings/RecipeDesigner";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { supabase } from "@/integrations/supabase/client";
-import { removeQuickAccessAccount, saveQuickAccessAccount } from "@/lib/auth/quickAccess";
+import {
+  removeQuickAccessAccount,
+  saveQuickAccessAccount,
+  saveUserPinHash,
+  removeUserPinHash,
+  hasUserPinConfigured,
+  verifyUserPin,
+} from "@/lib/auth/quickAccess";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/configuracion")({
@@ -79,6 +87,25 @@ function ConfiguracionPage() {
   const isProfileLoading = loadingProfile || updateProfile.isPending;
 
   const [activeTab, setActiveTab] = useState("profile");
+
+  const [selectedThemeId, setSelectedThemeId] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("medizen-accent-color") || "blue";
+    }
+    return "blue";
+  });
+
+  const handleSelectAccentTheme = (theme: ColorTheme) => {
+    setSelectedThemeId(theme.id);
+    localStorage.setItem("medizen-accent-color", theme.id);
+    document.documentElement.style.setProperty("--primary", theme.primary);
+    document.documentElement.style.setProperty("--sidebar-primary", theme.primary);
+    document.documentElement.style.setProperty("--ring", theme.ring);
+    document.documentElement.style.setProperty("--sidebar-ring", theme.ring);
+    updateFaviconColor(theme.primary);
+    window.dispatchEvent(new CustomEvent("medizen-theme-changed", { detail: theme }));
+    toast.success(`Color de acento cambiado a ${theme.name}`);
+  };
 
   return (
     <div className={cn(
@@ -238,6 +265,51 @@ function ConfiguracionPage() {
               </div>
             </form>
           </div>
+
+          {/* Apariencia y Colores del Sistema */}
+          <div className="bg-card border border-border/40 rounded-[2rem] p-6 sm:p-8 shadow-sm">
+            <div className="flex items-center gap-2.5 pb-4 border-b border-border/40 mb-6">
+              <div className="h-9 w-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                <Palette className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-base text-foreground">Color de Acento del Sistema</h3>
+                <p className="text-xs text-muted-foreground">Personaliza el color de botones, gráficos, logotipos e iconos de la plataforma.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {COLOR_THEMES.map((theme) => {
+                const isSelected = selectedThemeId === theme.id;
+                return (
+                  <button
+                    key={theme.id}
+                    type="button"
+                    onClick={() => handleSelectAccentTheme(theme)}
+                    className={cn(
+                      "flex items-center justify-between p-3.5 rounded-2xl border transition-all text-left cursor-pointer",
+                      isSelected
+                        ? "border-primary bg-primary/10 shadow-sm"
+                        : "border-border/60 hover:border-primary/40 hover:bg-muted/40 bg-card"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span
+                        className="h-5 w-5 rounded-full border border-black/10 shrink-0 shadow-sm"
+                        style={{ backgroundColor: theme.primary }}
+                      />
+                      <span className="text-xs font-bold text-foreground">{theme.name}</span>
+                    </div>
+                    {isSelected && (
+                      <span className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                        <Check className="h-3.5 w-3.5" />
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </TabsContent>
 
         {/* TAB 2: SEGURIDAD */}
@@ -252,10 +324,12 @@ function ConfiguracionPage() {
           </TabsContent>
         )}
       
-      {/* TAB 4: RECIPES */}
-      <TabsContent value="recipe" className="outline-none space-y-4">
-        <RecipeDesigner />
-      </TabsContent>
+        {/* TAB 4: RECIPES */}
+        {isAdmin && (
+          <TabsContent value="recipe" className="outline-none space-y-4">
+            <RecipeDesigner />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
@@ -326,7 +400,7 @@ function SecuritySection() {
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [showPin, setShowPin] = useState(false);
-  const [savedPin, setSavedPin] = useState<string | null>(null);
+  const [savedPin, setSavedPin] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -334,40 +408,39 @@ function SecuritySection() {
   const [testPin, setTestPin] = useState("");
   const [testResult, setTestResult] = useState<"success" | "error" | null>(null);
 
-  // Load existing PIN
+  // Load existing PIN status and ensure local hash is synced without plaintext storage
   useEffect(() => {
     const fetchExistingPin = async () => {
-      // 1. Check user_metadata
-      const metaPin = user?.user_metadata?.security_pin;
-      if (metaPin) {
-        setSavedPin(String(metaPin));
+      if (!user?.id) return;
+
+      // 1. Check local hash first
+      if (hasUserPinConfigured(user.id)) {
+        setSavedPin(true);
         return;
       }
 
-      // 2. Check localStorage
-      if (user?.id) {
-        const localPin = localStorage.getItem(`femesalud_pin_${user.id}`);
-        if (localPin) {
-          setSavedPin(localPin);
-          return;
-        }
+      // 2. Check user_metadata
+      const metaPin = user?.user_metadata?.security_pin;
+      if (metaPin && String(metaPin).length === 4) {
+        await saveUserPinHash(user.id, String(metaPin));
+        setSavedPin(true);
+        return;
       }
 
       // 3. Check usuarios table
-      if (user?.id) {
-        const { data } = await supabase
-          .from("usuarios")
-          .select("pin_seguridad")
-          .eq("auth_id", user.id)
-          .maybeSingle();
+      const { data } = await supabase
+        .from("usuarios")
+        .select("pin_seguridad")
+        .eq("auth_id", user.id)
+        .maybeSingle();
 
-        if (data?.pin_seguridad) {
-          setSavedPin(data.pin_seguridad);
-        }
+      if (data?.pin_seguridad && String(data.pin_seguridad).length === 4) {
+        await saveUserPinHash(user.id, String(data.pin_seguridad));
+        setSavedPin(true);
       }
     };
 
-    fetchExistingPin();
+    void fetchExistingPin();
   }, [user]);
 
   const handleSavePin = async (e: React.FormEvent) => {
@@ -388,14 +461,14 @@ function SecuritySection() {
         data: { security_pin: pin },
       });
 
-      // 2. Update public.usuarios table
+      // 2. Update public.usuarios table and store salted SHA-256 hash locally
       if (user?.id) {
         await supabase
           .from("usuarios")
           .update({ pin_seguridad: pin })
           .eq("auth_id", user.id);
 
-        localStorage.setItem(`femesalud_pin_${user.id}`, pin);
+        await saveUserPinHash(user.id, pin);
 
         // Update device quick access vault
         try {
@@ -410,7 +483,7 @@ function SecuritySection() {
         }
       }
 
-      setSavedPin(pin);
+      setSavedPin(true);
       setPin("");
       setConfirmPin("");
       setIsEditing(false);
@@ -439,11 +512,11 @@ function SecuritySection() {
           .update({ pin_seguridad: null })
           .eq("auth_id", user.id);
 
-        localStorage.removeItem(`femesalud_pin_${user.id}`);
+        removeUserPinHash(user.id);
         removeQuickAccessAccount(user.id);
       }
 
-      setSavedPin(null);
+      setSavedPin(false);
       setPin("");
       setConfirmPin("");
       setIsEditing(false);
@@ -457,11 +530,12 @@ function SecuritySection() {
     }
   };
 
-  const handleTestPinChange = (val: string) => {
+  const handleTestPinChange = async (val: string) => {
     const cleanVal = val.replace(/\D/g, "");
     setTestPin(cleanVal);
-    if (cleanVal.length === 4) {
-      if (cleanVal === savedPin) {
+    if (cleanVal.length === 4 && user?.id) {
+      const isValid = await verifyUserPin(user.id, cleanVal);
+      if (isValid) {
         setTestResult("success");
         toast.success("¡Clave correcta! ✅");
       } else {

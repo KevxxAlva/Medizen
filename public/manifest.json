@@ -1,0 +1,60 @@
+{
+  "name": "Medizen — Suite Clínica Inteligente",
+  "short_name": "Medizen",
+  "description": "Plataforma de alta resolución para la gestión médica integral, administración clínica y flujo de trabajo sin fricción.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "any",
+  "background_color": "#090d16",
+  "theme_color": "#4361ee",
+  "categories": ["medical", "health", "productivity", "business"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "500x500",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Agenda Médica",
+      "url": "/agenda",
+      "description": "Ver agenda de citas y consultas"
+    },
+    {
+      "name": "Pacientes",
+      "url": "/pacientes",
+      "description": "Gestión y expedientes de pacientes"
+    },
+    {
+      "name": "Ventas y Facturación",
+      "url": "/facturacion",
+      "description": "Módulo financiero y recibos"
+    }
+  ]
+}

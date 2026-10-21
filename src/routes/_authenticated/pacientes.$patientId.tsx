@@ -3,7 +3,7 @@ import { useState } from "react"
 import { 
   ArrowLeft, FileDown, FileText, Printer, Loader2, User, Calendar, Phone, Mail, 
   MapPin, Briefcase, GraduationCap, HeartPulse, Baby, Stethoscope, Clock, 
-  StickyNote, Activity, AlertCircle, Sparkles, FileSpreadsheet, ShieldCheck, Heart, Pill
+  StickyNote, Activity, AlertCircle, Sparkles, FileSpreadsheet, ShieldCheck, Heart, Pill, Pencil
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -15,8 +15,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { PatientTimeline } from "@/components/PatientTimeline"
 import { ClinicalNotesPanel } from "@/components/ClinicalNotesPanel"
 import { PatientConsultationsPanel } from "@/components/PatientConsultationsPanel"
+import { PatientForm } from "@/components/PatientForm"
 import { usePatient } from "@/lib/api/patients"
-import { useDoctors } from "@/lib/api/profiles"
+import { useDoctors, useMyProfile } from "@/lib/api/profiles"
+import { useAuthSession } from "@/hooks/useAuth"
 import { PatientClinicalBanner } from "@/components/PatientClinicalBanner"
 import { PatientProfileSkeleton } from "@/components/skeletons/PatientProfileSkeleton"
 import { cn } from "@/lib/utils"
@@ -37,24 +39,17 @@ const calculateAge = (dob: string | Date | undefined | null) => {
   }
   return age;
 };
-import { generateFichaPDF } from "@/lib/utils/pdf"
-import { generateFullHistoryPdf } from "@/lib/pdf/generateFullHistoryPdf"
-import { generateReposoPDF, generateAtencionPDF, generateJustificativoPDF } from "@/lib/utils/reportsPdf"
-import { AppSidebar } from "@/components/AppSidebar"
 import { usePatientConsultations } from "@/lib/api/consultations"
-import { generateRecipePDF } from "@/lib/utils/recipePdf"
-
 import { fetchPatientById } from "@/lib/api/patients"
 
 export const Route = createFileRoute('/_authenticated/pacientes/$patientId')({
   loader: ({ context: { queryClient }, params: { patientId } }) => {
-    // Prefetch the patient data so it's ready when the component mounts.
-    // By not awaiting, we don't block the route transition, allowing the skeleton to show
-    // if the network is slow, but usually it will be fast enough due to preload on intent.
-    queryClient.prefetchQuery({
-      queryKey: ["patient", patientId],
-      queryFn: () => fetchPatientById(patientId),
-    })
+    if (typeof window !== "undefined") {
+      queryClient.prefetchQuery({
+        queryKey: ["patient", patientId],
+        queryFn: () => fetchPatientById(patientId),
+      })
+    }
   },
   component: PatientDetailRoute,
 })
@@ -89,7 +84,7 @@ function PatientRecipesTab({ patientId, patient, doctors }: any) {
   return (
     <div className="space-y-4">
       {recipes.map((c: any) => {
-        const doc = doctors?.find((d: any) => d.id === c.doctor_id);
+        const doc = doctors?.find((d: any) => d.id === c.doctor_id) || doctors?.find((d: any) => d.id === patient?.assigned_doctor_id);
         return (
           <div key={c.id} className="p-4 border border-border/50 rounded-2xl bg-muted/10 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             <div>
@@ -104,15 +99,18 @@ function PatientRecipesTab({ patientId, patient, doctors }: any) {
               size="sm" 
               variant="outline" 
               className="rounded-xl flex-shrink-0"
-              onClick={() => generateRecipePDF(
-                patient, 
-                c, 
-                doc?.full_name || "Médico Tratante",
-                doc?.specialty || "",
-                "",
-                doc?.mpps || "",
-                doc?.cmc || ""
-              )}
+              onClick={async () => {
+                const { generateRecipePDF } = await import("@/lib/utils/recipePdf");
+                await generateRecipePDF(
+                  patient, 
+                  c, 
+                  doc?.full_name || "Médico Tratante",
+                  doc?.specialty || "",
+                  doc?.university || "",
+                  doc?.mpps || "",
+                  doc?.cmc || ""
+                );
+              }}
             >
               <FileDown className="h-4 w-4 mr-2" />
               Descargar PDF
@@ -128,9 +126,12 @@ function PatientDetailRoute() {
   const { patientId } = Route.useParams()
   const { data: viewing, isLoading } = usePatient(patientId)
   const { data: doctors } = useDoctors()
+  const { user: me } = useAuthSession()
+  const { data: myProfile } = useMyProfile(me?.id)
   
   const doctorMap = new Map(doctors?.map(d => [d.id, d.full_name]) || []);
 
+  const [editOpen, setEditOpen] = useState(false);
   const [openReposo, setOpenReposo] = useState(false);
   const [openAtencion, setOpenAtencion] = useState(false);
   const [openJustificativo, setOpenJustificativo] = useState(false);
@@ -146,17 +147,28 @@ function PatientDetailRoute() {
   const [justificativoDate, setJustificativoDate] = useState("");
   const [justificativoReason, setJustificativoReason] = useState("");
 
+  const [doctorName, setDoctorName] = useState("");
   const [doctorUni, setDoctorUni] = useState("");
   const [doctorMpps, setDoctorMpps] = useState("");
   const [doctorCmc, setDoctorCmc] = useState("");
 
-  const handleExportFicha = (p: any) => generateFullHistoryPdf(p.id);
+  const prefillDoctorFields = (p: any) => {
+    const assignedDoc = doctors?.find(d => d.id === p?.assigned_doctor_id);
+    const activeDoc = assignedDoc || myProfile || doctors?.[0];
+    setDoctorName(activeDoc?.full_name || "Médico Tratante");
+    setDoctorUni(activeDoc?.university || "");
+    setDoctorMpps(activeDoc?.mpps || "");
+    setDoctorCmc(activeDoc?.cmc || "");
+  };
+
+  const handleExportFicha = async (p: any) => {
+    const { generateFullHistoryPdf } = await import("@/lib/pdf/generateFullHistoryPdf");
+    await generateFullHistoryPdf(p.id);
+  };
 
   const handleOpenReposoDialog = (p: any) => {
     setReposoStart(new Date().toISOString().slice(0, 10));
-    setDoctorUni("UC-CHET");
-    setDoctorMpps("");
-    setDoctorCmc("");
+    prefillDoctorFields(p);
     setReposoReason(p.diagnosis || p.current_illness || "");
     setOpenReposo(true);
   };
@@ -164,30 +176,27 @@ function PatientDetailRoute() {
   const handleOpenAtencionDialog = (p: any) => {
     setAtencionDate(new Date().toISOString().slice(0, 10));
     setAtencionTime(new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }));
-    setDoctorUni("UC-CHET");
-    setDoctorMpps("");
-    setDoctorCmc("");
+    prefillDoctorFields(p);
     setAtencionReason(`Consulta ${p.consultation_reason ? `- ${p.consultation_reason}` : ""}`);
     setOpenAtencion(true);
   };
 
   const handleOpenJustificativoDialog = (p: any) => {
     setJustificativoDate(new Date().toISOString().slice(0, 10));
-    setDoctorUni("UC-CHET");
-    setDoctorMpps("");
-    setDoctorCmc("");
+    prefillDoctorFields(p);
     setJustificativoReason(p.diagnosis || p.current_illness || p.consultation_reason || "Evaluación médica de rutina");
     setOpenJustificativo(true);
   };
 
-  const handleExportReposo = (p: any) => {
-    generateReposoPDF({
+  const handleExportReposo = async (p: any) => {
+    const { generateReposoPDF } = await import("@/lib/utils/reportsPdf");
+    await generateReposoPDF({
       patientName: p.full_name,
       patientId: p.document_id || "",
       days: parseInt(reposoDays) || 3,
       startDate: reposoStart,
       reason: reposoReason,
-      doctorName: "Dra. Carli Sole Aquino",
+      doctorName: doctorName || "Médico Tratante",
       doctorUniversity: doctorUni,
       doctorMpps,
       doctorCmc,
@@ -195,14 +204,15 @@ function PatientDetailRoute() {
     setOpenReposo(false);
   };
 
-  const handleExportAtencion = (p: any) => {
-    generateAtencionPDF({
+  const handleExportAtencion = async (p: any) => {
+    const { generateAtencionPDF } = await import("@/lib/utils/reportsPdf");
+    await generateAtencionPDF({
       patientName: p.full_name,
       patientId: p.document_id || "",
       date: atencionDate,
       time: atencionTime,
       reason: atencionReason,
-      doctorName: "Dra. Carli Sole Aquino",
+      doctorName: doctorName || "Médico Tratante",
       doctorUniversity: doctorUni,
       doctorMpps,
       doctorCmc,
@@ -210,13 +220,14 @@ function PatientDetailRoute() {
     setOpenAtencion(false);
   };
 
-  const handleExportJustificativo = (p: any) => {
-    generateJustificativoPDF({
+  const handleExportJustificativo = async (p: any) => {
+    const { generateJustificativoPDF } = await import("@/lib/utils/reportsPdf");
+    await generateJustificativoPDF({
       patientName: p.full_name,
       patientId: p.document_id || "",
       date: justificativoDate,
       justificationText: justificativoReason,
-      doctorName: "Dra. Carli Sole Aquino",
+      doctorName: doctorName || "Médico Tratante",
       doctorUniversity: doctorUni,
       doctorMpps,
       doctorCmc,
@@ -226,7 +237,7 @@ function PatientDetailRoute() {
 
   if (isLoading) {
     return (
-      <div className="py-6">
+      <div className="space-y-6">
         <PatientProfileSkeleton />
       </div>
     );
@@ -234,14 +245,32 @@ function PatientDetailRoute() {
 
   if (!viewing) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20">
-        <p className="text-muted-foreground font-medium">Paciente no encontrado.</p>
-        <Link to="/pacientes">
-          <Button variant="outline" className="rounded-xl">Volver a pacientes</Button>
-        </Link>
+      <div className="p-6 sm:p-10 max-w-2xl mx-auto w-full my-10 bg-card rounded-[2.5rem] border border-border/50 shadow-sm flex flex-col items-center justify-center text-center gap-4">
+        <div className="h-14 w-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+          <AlertCircle className="h-7 w-7" />
+        </div>
+        <div className="space-y-1.5">
+          <h2 className="text-lg font-extrabold text-foreground">
+            Expediente #{patientId} no encontrado
+          </h2>
+          <p className="text-xs text-muted-foreground max-w-md">
+            El paciente solicitado no existe en el registro clínico o el identificador en la URL no corresponde a un expediente activo.
+          </p>
+        </div>
+        <div className="flex items-center gap-3 pt-2">
+          <Link to="/pacientes">
+            <Button className="rounded-xl gap-2 font-bold text-xs">
+              <ArrowLeft className="h-4 w-4" /> Volver al directorio de pacientes
+            </Button>
+          </Link>
+        </div>
       </div>
     );
   }
+
+  const formattedHistoria = viewing.historia_number
+    ? `HC-${String(viewing.historia_number).padStart(5, "0")}`
+    : `HC-${String(viewing.id).padStart(5, "0")}`;
 
   return (
     <div className="space-y-6">
@@ -266,6 +295,13 @@ function PatientDetailRoute() {
             </div>
             
             <div className="ml-auto flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setEditOpen(true)}
+                className="rounded-2xl flex items-center gap-2 h-10 px-4 font-bold text-xs border-border/60 hover:bg-muted/80 transition-all duration-200 cursor-pointer"
+              >
+                <Pencil className="h-3.5 w-3.5 text-primary" /> Editar Expediente
+              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button className="rounded-2xl flex items-center gap-2 h-10 px-4 font-bold text-xs bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary/90 transition-all duration-200 cursor-pointer">
@@ -319,7 +355,7 @@ function PatientDetailRoute() {
                 <Clock className="h-3.5 w-3.5" /> Timeline
               </TabsTrigger>
               <TabsTrigger value="notas" className="rounded-xl font-bold text-xs py-2.5 px-3.5 flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">
-                <StickyNote className="h-3.5 w-3.5" /> Notas Clínicas
+                <StickyNote className="h-3.5 w-3.5" /> Notas y Estudios
               </TabsTrigger>
               <TabsTrigger value="recetas" className="rounded-xl font-bold text-xs py-2.5 px-3.5 flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">
                 <Pill className="h-3.5 w-3.5" /> Recetas
@@ -353,13 +389,25 @@ function PatientDetailRoute() {
                           </span>
                         </div>
                       </div>
-                      <div>
-                        <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Fecha de Nacimiento</span>
-                        <span className="font-bold text-foreground">{viewing.birth_date || "—"}</span>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Sexo / Género</span>
+                          <span className="font-bold text-foreground">{viewing.gender || "No especificado"}</span>
+                        </div>
+                        <div>
+                          <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Grupo Sanguíneo</span>
+                          <span className="font-bold text-rose-600 dark:text-rose-400">{viewing.blood_type || "No especificado"}</span>
+                        </div>
                       </div>
-                      <div>
-                        <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Lugar de Nacimiento</span>
-                        <span className="font-bold text-foreground">{viewing.birthplace || "—"}</span>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Fecha de Nacimiento</span>
+                          <span className="font-bold text-foreground">{viewing.birth_date || "—"}</span>
+                        </div>
+                        <div>
+                          <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Lugar de Nacimiento</span>
+                          <span className="font-bold text-foreground">{viewing.birthplace || "—"}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -378,6 +426,10 @@ function PatientDetailRoute() {
                       <div>
                         <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Correo Electrónico</span>
                         <span className="font-bold text-foreground truncate block">{viewing.email || "—"}</span>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Contacto de Emergencia</span>
+                        <span className="font-bold text-foreground">{viewing.emergency_contact || "No registrado"}</span>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
@@ -409,13 +461,23 @@ function PatientDetailRoute() {
                       <h3 className="text-xs font-bold uppercase tracking-wider text-primary">Registro Clínico</h3>
                     </div>
                     <div className="space-y-3.5 text-xs">
-                      <div>
-                        <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Fecha Primera Cita</span>
-                        <span className="font-bold text-foreground">{viewing.first_visit_date || "—"}</span>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">N.º de Historia</span>
+                          <span className="font-bold font-mono text-foreground">{formattedHistoria}</span>
+                        </div>
+                        <div>
+                          <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Fecha Primera Cita</span>
+                          <span className="font-bold text-foreground">{viewing.first_visit_date || "—"}</span>
+                        </div>
                       </div>
                       <div>
                         <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Médico Asignado</span>
                         <span className="font-bold text-primary">{doctorMap.get(viewing.assigned_doctor_id ?? "") || "Sin asignar"}</span>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Seguro / Cobertura</span>
+                        <span className="font-bold text-foreground">{viewing.insurance_provider || "Particular"}</span>
                       </div>
                       <div>
                         <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Dirección de Domicilio</span>
@@ -475,7 +537,7 @@ function PatientDetailRoute() {
                 </div>
 
                 <div className="space-y-3">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-mauve">Antecedentes Personales Patológicos y Hábitos</h3>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-mauve">Antecedentes Personales Patológicos, Medicación y Hábitos</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm bg-muted/20 border border-border/40 p-5 rounded-3xl">
                     <div>
                       <span className="text-xs text-muted-foreground block mb-1">Tabaco</span>
@@ -494,12 +556,20 @@ function PatientDetailRoute() {
                       <span className="font-semibold text-foreground">{viewing.personal_history?.base_pathology || "Niega"}</span>
                     </div>
                     <div className="col-span-2">
-                      <span className="text-xs text-muted-foreground block mb-1">Quirúrgicos / Operaciones</span>
+                      <span className="text-xs text-muted-foreground block mb-1">Quirúrgicos / Hospitalizaciones</span>
                       <span className="font-semibold text-foreground">{viewing.personal_history?.surgical || "Niega"}</span>
                     </div>
                     <div className="col-span-2">
-                      <span className="text-xs text-muted-foreground block mb-1">Alérgicos</span>
+                      <span className="text-xs text-muted-foreground block mb-1">Alérgicos (Medicamentos / Alimentos)</span>
                       <span className="font-semibold text-destructive">{viewing.personal_history?.allergies || "Niega"}</span>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-xs text-muted-foreground block mb-1">Medicación Habitual Activa</span>
+                      <span className="font-semibold text-foreground">{viewing.personal_history?.current_medications || "Niega"}</span>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-xs text-muted-foreground block mb-1">Transfusiones e Inmunizaciones</span>
+                      <span className="font-semibold text-foreground">{viewing.personal_history?.transfusions || "Niega"}</span>
                     </div>
                   </div>
                 </div>
@@ -676,6 +746,16 @@ function PatientDetailRoute() {
             <div className="border-t border-border/60 pt-3 mt-1 space-y-2.5">
               <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Datos de Firma del Médico</p>
               <div className="grid gap-1">
+                <Label htmlFor="rp-doc-name">Nombre del Médico</Label>
+                <Input
+                  id="rp-doc-name"
+                  placeholder="Ej. Dra. Nombre Apellido"
+                  value={doctorName}
+                  onChange={(e) => setDoctorName(e.target.value)}
+                  className="rounded-xl text-xs h-9"
+                />
+              </div>
+              <div className="grid gap-1">
                 <Label htmlFor="rp-doc-uni">Universidad / Título Adicional</Label>
                 <Input
                   id="rp-doc-uni"
@@ -759,6 +839,16 @@ function PatientDetailRoute() {
             <div className="border-t border-border/60 pt-3 mt-1 space-y-2.5">
               <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Datos de Firma del Médico</p>
               <div className="grid gap-1">
+                <Label htmlFor="at-doc-name">Nombre del Médico</Label>
+                <Input
+                  id="at-doc-name"
+                  placeholder="Ej. Dra. Nombre Apellido"
+                  value={doctorName}
+                  onChange={(e) => setDoctorName(e.target.value)}
+                  className="rounded-xl text-xs h-9"
+                />
+              </div>
+              <div className="grid gap-1">
                 <Label htmlFor="at-doc-uni">Universidad / Título Adicional</Label>
                 <Input
                   id="at-doc-uni"
@@ -832,6 +922,16 @@ function PatientDetailRoute() {
             <div className="border-t border-border/60 pt-3 mt-1 space-y-2.5">
               <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Datos de Firma del Médico</p>
               <div className="grid gap-1">
+                <Label htmlFor="jus-doc-name">Nombre del Médico</Label>
+                <Input
+                  id="jus-doc-name"
+                  placeholder="Ej. Dra. Nombre Apellido"
+                  value={doctorName}
+                  onChange={(e) => setDoctorName(e.target.value)}
+                  className="rounded-xl text-xs h-9"
+                />
+              </div>
+              <div className="grid gap-1">
                 <Label htmlFor="jus-doc-uni">Universidad / Título Adicional</Label>
                 <Input
                   id="jus-doc-uni"
@@ -873,6 +973,8 @@ function PatientDetailRoute() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <PatientForm open={editOpen} onOpenChange={setEditOpen} patient={viewing} />
       </div>
     </div>
   )

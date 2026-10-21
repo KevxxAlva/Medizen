@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { 
   ShieldAlert, ShieldCheck, HeartPulse, Baby, Copy, Check, 
-  Stethoscope, Calendar, Phone, Mail, FileText, AlertTriangle, Shield 
+  Stethoscope, Calendar, Phone, Mail, FileText, AlertTriangle, Shield, Droplet, Pill
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -64,6 +64,14 @@ export function PatientClinicalBanner({
     !basePathology.toUpperCase().includes("NINGUNA") &&
     basePathology !== "—";
 
+  // Active daily medications
+  const currentMedications = patient.personal_history?.current_medications?.trim() || "";
+  const hasMedications =
+    currentMedications.length > 0 &&
+    !currentMedications.toUpperCase().includes("NIEGA") &&
+    !currentMedications.toUpperCase().includes("NINGUNA") &&
+    currentMedications !== "—";
+
   // Obstetric active condition
   const obstetricData = patient.obstetric_data;
   const isObstetricActive = !!(obstetricData?.fum || obstetricData?.eg || obstetricData?.fpp);
@@ -83,6 +91,10 @@ export function PatientClinicalBanner({
     nuevo: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
     alta: "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20",
   };
+
+  const formattedHc = patient.historia_number
+    ? `HC-${String(patient.historia_number).padStart(5, "0")}`
+    : `HC-${String(patient.id).padStart(5, "0")}`;
 
   return (
     <div
@@ -133,6 +145,10 @@ export function PatientClinicalBanner({
             </div>
 
             <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1 rounded-md bg-muted/80 px-2 py-0.5 font-mono text-[11px] font-bold text-foreground border border-border/40">
+                {formattedHc}
+              </span>
+
               {patient.document_id && (
                 <button
                   type="button"
@@ -154,15 +170,22 @@ export function PatientClinicalBanner({
                 {calculateAge(patient.birth_date)}
               </span>
 
-              {patient.historia_number && (
-                <span className="inline-flex items-center gap-1 rounded-md bg-muted/80 px-2 py-0.5 font-mono text-[11px] font-semibold text-foreground border border-border/40">
-                  HC #{patient.historia_number}
+              {patient.gender && (
+                <span className="font-medium text-foreground/80">
+                  · {patient.gender}
+                </span>
+              )}
+
+              {patient.blood_type && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/10 px-2 py-0.5 text-[11px] font-bold text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                  <Droplet className="h-3 w-3 fill-current" />
+                  {patient.blood_type}
                 </span>
               )}
 
               {assignedDoctorName && (
                 <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium text-primary">
-                  Dr(a). {assignedDoctorName}
+                  · Dr(a). {assignedDoctorName}
                 </span>
               )}
             </div>
@@ -181,7 +204,7 @@ export function PatientClinicalBanner({
               <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-rose-600 dark:text-rose-400" />
               <div className="flex flex-col">
                 <span className="text-[10px] uppercase tracking-wider text-rose-500 font-extrabold leading-none">
-                  Alergia Severa
+                  Alergia Conocida
                 </span>
                 <span className="truncate max-w-[200px] leading-tight mt-0.5 font-semibold">
                   {allergies}
@@ -197,9 +220,17 @@ export function PatientClinicalBanner({
 
           {/* Base Pathology Badge */}
           {hasBasePathology && (
-            <div className="inline-flex items-center gap-1.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/25 px-2.5 py-1 text-xs font-semibold text-indigo-700 dark:text-indigo-300">
+            <div className="inline-flex items-center gap-1.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/25 px-2.5 py-1 text-xs font-semibold text-indigo-700 dark:text-indigo-300" title={`Patología de base: ${basePathology}`}>
               <HeartPulse className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
               <span className="text-[11px] truncate max-w-[170px]">{basePathology}</span>
+            </div>
+          )}
+
+          {/* Active Daily Medication Badge */}
+          {hasMedications && (
+            <div className="inline-flex items-center gap-1.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300" title={`Medicación habitual: ${currentMedications}`}>
+              <Pill className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+              <span className="text-[11px] truncate max-w-[160px]">{currentMedications}</span>
             </div>
           )}
 

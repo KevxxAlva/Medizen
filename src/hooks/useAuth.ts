@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { redirect } from "@tanstack/react-router";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -11,32 +12,99 @@ export interface AuthState {
   loading: boolean;
 }
 
+export async function requireAdminAccess() {
+  if (typeof window === "undefined") {
+    return { user: null };
+  }
+  const { data: sessionData } = await supabase.auth.getSession();
+  const user = sessionData.session?.user;
+  if (!user) {
+    throw redirect({ to: "/auth" });
+  }
+
+  const { data } = await supabase
+    .from("usuarios")
+    .select("roles(nombre_rol)")
+    .eq("auth_id", user.id)
+    .maybeSingle();
+
+  const roleObj = data?.roles;
+  const roleName = Array.isArray(roleObj) ? roleObj[0]?.nombre_rol : (roleObj as any)?.nombre_rol;
+  if ((roleName || "").toLowerCase() !== "admin") {
+    throw redirect({ to: "/" });
+  }
+
+  return { user };
+}
+
+let sharedAuthState: AuthState = { session: null, user: null, loading: true };
+let authInitialized = false;
+const authListeners = new Set<(state: AuthState) => void>();
+
+function ensureAuthSubscription() {
+  if (authInitialized || typeof window === "undefined") return;
+  authInitialized = true;
+
+  supabase.auth.getSession().then(({ data }) => {
+    sharedAuthState = {
+      session: data.session,
+      user: data.session?.user ?? null,
+      loading: false,
+    };
+    authListeners.forEach((fn) => fn(sharedAuthState));
+  });
+
+  supabase.auth.onAuthStateChange((_e, session) => {
+    sharedAuthState = {
+      session,
+      user: session?.user ?? null,
+      loading: false,
+    };
+    authListeners.forEach((fn) => fn(sharedAuthState));
+  });
+}
+
 export function useAuthSession(): AuthState {
-  const [state, setState] = useState<AuthState>({ session: null, user: null, loading: true });
+  const [state, setState] = useState<AuthState>(() => sharedAuthState);
 
   useEffect(() => {
-    let mounted = true;
-    supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
-      setState({ session: data.session, user: data.session?.user ?? null, loading: false });
-    });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      setState({ session, user: session?.user ?? null, loading: false });
-    });
+    ensureAuthSubscription();
+    if (state !== sharedAuthState) {
+      setState(sharedAuthState);
+    }
+    authListeners.add(setState);
     return () => {
-      mounted = false;
-      sub.subscription.unsubscribe();
+      authListeners.delete(setState);
     };
   }, []);
 
   return state;
 }
 
+const CACHED_ROLES_KEY = "medizen_cached_roles";
+
 export function useRoles() {
   const { user } = useAuthSession();
+  const [cachedRoles, setCachedRoles] = useState<AppRole[] | undefined>(undefined);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem(CACHED_ROLES_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) setCachedRoles(parsed as AppRole[]);
+        }
+      } catch {
+        // ignore storage errors
+      }
+    }
+  }, []);
+
   return useQuery({
     queryKey: ["user_roles", user?.id],
     enabled: !!user,
+    placeholderData: cachedRoles,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("usuarios")
@@ -45,10 +113,16 @@ export function useRoles() {
         .maybeSingle();
       if (error) throw error;
       if (!data || !data.roles) return [];
-      // TypeScript could infer data.roles as an array if it's a one-to-many, but in this case it's a one-to-one or many-to-one (id_rol). 
-      // Ensure we handle it whether it's an array or an object
       const roleName = Array.isArray(data.roles) ? data.roles[0]?.nombre_rol : (data.roles as any).nombre_rol;
-      return roleName ? [roleName.toLowerCase() as AppRole] : [];
+      const roles: AppRole[] = roleName ? [roleName.toLowerCase() as AppRole] : [];
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem(CACHED_ROLES_KEY, JSON.stringify(roles));
+        } catch {
+          // ignore
+        }
+      }
+      return roles;
     },
   });
 }

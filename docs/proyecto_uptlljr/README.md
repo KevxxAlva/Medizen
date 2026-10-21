@@ -15,11 +15,12 @@ Este directorio contiene la documentación formal completa y rigurosa del Proyec
 | [**`02_FASE_I_DIAGNOSTICO_PARTICIPATIVO.md`**](02_FASE_I_DIAGNOSTICO_PARTICIPATIVO.md) | 8 dimensiones del contexto de FemeSalud, FODA, Matriz de Priorización, Árbol de Problemas y Objetivos, Marco Lógico y Justificación. | Sección IV - Fase I (PNF Informática). |
 | [**`03_FASE_II_REVISION_LITERARIA.md`**](03_FASE_II_REVISION_LITERARIA.md) | 6 Antecedentes (3 int. + 3 nac.), bases teóricas computacionales y médicas, Pirámide de Kelsen y Operacionalización de Variables. | Sección IV - Fase II & Anexo B/C. |
 | [**`04_FASE_III_MARCO_METODOLOGICO.md`**](04_FASE_III_MARCO_METODOLOGICO.md) | Paradigma sociocrítico, enfoque mixto, IAP y Proyecto Factible, población censal, juicio de 3 expertos, Alfa de Cronbach y Plan de Acción. | Sección IV - Fase III. |
-| [**`05_FASE_IV_EJECUCION_TECNICA.md`**](05_FASE_IV_EJECUCION_TECNICA.md) | Requerimientos, diagramas UML, modelo ERD y diccionarios PostgreSQL, prototipos UI, bóveda PBKDF2/AES-GCM, pruebas y resultados. | Sección IV - Fase IV (Ingeniería de Software). |
+| [**`05_FASE_IV_EJECUCION_TECNICA.md`**](05_FASE_IV_EJECUCION_TECNICA.md) | Requerimientos, diagramas UML, modelo ERD y diccionarios PostgreSQL (`pacientes`, `historias_clinicas`, `consultas`, `citas`), prototipos UI (8 pestañas, Naegele en vivo), bóveda PBKDF2/AES-GCM, anti-fuerza bruta, inactividad, hidratación SSR/CSR, pruebas y resultados. | Sección IV - Fase IV (Ingeniería de Software). |
 | [**`06_CONCLUSIONES_Y_RECOMENDACIONES.md`**](06_CONCLUSIONES_Y_RECOMENDACIONES.md) | Respuestas secuenciales a cada objetivo específico y recomendaciones de sostenibilidad para la clínica y la universidad. | Sección V: Conclusiones y Recomendaciones. |
 | [**`07_REFERENCIAS_BIBLIOGRAFICAS.md`**](07_REFERENCIAS_BIBLIOGRAFICAS.md) | Bibliografía completa en estricto orden alfabético con sangría francesa (1.00 cm) y formato autor-fecha. | Sección VI: Referencias (APA 7). |
-| [**`08_ANEXOS_Y_MANUAL_USUARIO.md`**](08_ANEXOS_Y_MANUAL_USUARIO.md) | Instrumentos aplicados, matriz de validación por expertos, modelo de carta de aval y Manual Rápido de Usuario de FemeSalud. | Sección VII: Anexos. |
-| [**`INFORME_COMPLETO_PROYECTO_UPTLLJR.md`**](INFORME_COMPLETO_PROYECTO_UPTLLJR.md) | **Documento consolidado unificado** con todas las fases en un solo archivo, listo para importar a Microsoft Word. | Documento Maestro de Entrega. |
+| [**`08_ANEXOS_Y_MANUAL_USUARIO.md`**](08_ANEXOS_Y_MANUAL_USUARIO.md) | Instrumentos aplicados, matriz de validación por expertos, modelo de carta de aval y Manual Rápido de Usuario de FemeSalud (MediZen). | Sección VII: Anexos. |
+| [**`GUIA_DEFENSA_Y_DIAPOSITIVAS.md`**](GUIA_DEFENSA_Y_DIAPOSITIVAS.md) | Estructura de las 17 diapositivas, guión cronometrado de demostración en vivo y banco de preguntas técnicas del jurado. | Guía de Defensa Oral. |
+| [**`INFORME_COMPLETO_PROYECTO_UPTLLJR.md`**](INFORME_COMPLETO_PROYECTO_UPTLLJR.md) | **Documento consolidado unificado** con todas las fases en un solo archivo, listo para exportar o importar a Microsoft Word. | Documento Maestro de Entrega. |
 
 ---
 

@@ -36,12 +36,12 @@ const navigation: ModuleDef[] = [
   { title: "Cuentas", url: "/cuentas", icon: Wallet, adminOnly: true },
   { title: "Ventas", url: "/facturacion", icon: ReceiptText },
   { title: "Métodos de Pago", url: "/metodos-pago", icon: CreditCard, adminOnly: true },
-  { category: "ACTIVOS FÍSICOS" },
+  { category: "ACTIVOS FÍSICOS", adminOnly: true },
   { title: "Inventario", url: "/stocks", icon: Box, adminOnly: true },
   { category: "OTROS" },
   { title: "Reportes", url: "/reportes", icon: RotateCw },
   { title: "Atención al Cliente", url: "/support", icon: Headphones },
-  { title: "Configuración", url: "/configuracion", icon: Settings, adminOnly: true },
+  { title: "Configuración", url: "/configuracion", icon: Settings },
 ];
 
 function SidebarBody({ onNavigate, isCollapsed }: { onNavigate?: () => void, isCollapsed?: boolean }) {

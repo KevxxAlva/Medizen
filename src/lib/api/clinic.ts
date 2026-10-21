@@ -17,21 +17,53 @@ export interface ClinicInfo {
   updated_at: string;
 }
 
-export function useClinicInfo() {
+const LIGHTWEIGHT_CLINIC_COLUMNS =
+  "id, name, address_line1, address_line2, phone, rif, recipe_primary_color, recipe_header_text, recipe_footer_text, recipe_font_family, recipe_clinic_type, updated_at";
+
+const CACHED_CLINIC_KEY = "medizen_cached_clinic_info";
+
+function readCachedClinicInfo(): ClinicInfo | undefined {
+  if (typeof window === "undefined") return undefined;
+  try {
+    const raw = localStorage.getItem(CACHED_CLINIC_KEY);
+    return raw ? (JSON.parse(raw) as ClinicInfo) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function writeCachedClinicInfo(info: ClinicInfo | null) {
+  if (typeof window === "undefined" || !info) return;
+  try {
+    const { recipe_logo_url: _omitLogo, ...lightweight } = info;
+    localStorage.setItem(CACHED_CLINIC_KEY, JSON.stringify(lightweight));
+  } catch {
+    // ignore storage quota errors
+  }
+}
+
+export function useClinicInfo(options?: { includeLogo?: boolean }) {
+  const includeLogo = options?.includeLogo ?? false;
   return useQuery({
-    queryKey: ["clinic_info"],
+    queryKey: includeLogo ? ["clinic_info", "with_logo"] : ["clinic_info"],
+    staleTime: 1000 * 60 * 30, // 30 minutos
+    placeholderData: () => (!includeLogo ? readCachedClinicInfo() : undefined),
     queryFn: async (): Promise<ClinicInfo | null> => {
       try {
         const { data, error } = await supabase
           .from("clinic_info")
-          .select("*")
+          .select(includeLogo ? "*" : LIGHTWEIGHT_CLINIC_COLUMNS)
           .eq("id", 1)
           .maybeSingle();
         if (error) {
           console.warn("clinic_info query warning:", error);
           return null;
         }
-        return data;
+        const result = (data as unknown as ClinicInfo) ?? null;
+        if (result) {
+          writeCachedClinicInfo(result);
+        }
+        return result;
       } catch {
         return null;
       }
