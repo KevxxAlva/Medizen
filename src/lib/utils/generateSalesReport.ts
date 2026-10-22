@@ -24,7 +24,12 @@ export const generateSalesReport = async (facturas: InvoiceForReport[], filterMo
   doc.setFont(config.customFontFamily, "bold");
   doc.setFontSize(14);
   doc.setTextColor(0);
-  doc.text("REPORTE DE PAGOS", pageWidth / 2, 170, { align: "center" });
+  doc.text(
+    filterMonth ? "REPORTE MENSUAL DE INGRESOS Y FACTURACIÓN" : "REPORTE GENERAL DE INGRESOS Y FACTURACIÓN", 
+    pageWidth / 2, 
+    170, 
+    { align: "center" }
+  );
 
   if (filterMonth) {
     const [yyyy, mm] = filterMonth.split("-");
@@ -33,21 +38,24 @@ export const generateSalesReport = async (facturas: InvoiceForReport[], filterMo
     doc.text(`Mes: ${monthName.toUpperCase()}`, pageWidth / 2, 185, { align: "center" });
   } else {
     doc.setFontSize(10);
-    doc.text(`Generado el: ${new Date().toLocaleDateString()}`, pageWidth / 2, 185, { align: "center" });
+    doc.text(`Reporte Histórico — Generado el: ${new Date().toLocaleDateString()}`, pageWidth / 2, 185, { align: "center" });
   }
 
   const tableData = facturas.map(f => {
     let estado = "Desconocido";
-    if (f.estado_pago.toLowerCase() === "pagado" || f.estado_pago.toLowerCase() === "paid") estado = "Pagado";
-    else if (f.estado_pago.toLowerCase() === "pendiente" || f.estado_pago.toLowerCase() === "pending") estado = "Pendiente";
-    else if (f.estado_pago.toLowerCase() === "cancelado" || f.estado_pago.toLowerCase() === "cancelled") estado = "Cancelado";
-    else estado = f.estado_pago;
+    const st = (f.estado_pago || "").toLowerCase();
+    if (st === "pagado" || st === "paid") estado = "Pagado";
+    else if (st === "pendiente" || st === "pending") estado = "Pendiente";
+    else if (st === "cancelado" || st === "cancelled") estado = "Cancelado";
+    else estado = f.estado_pago || "Desconocido";
+
+    const amount = Number(f.total_general) || 0;
 
     return [
-      `INV-${f.id_factura.toString().padStart(4, '0')}`,
-      f.paciente_nombre || '',
+      `INV-${(f.id_factura || 0).toString().padStart(4, '0')}`,
+      f.paciente_nombre || 'N/A',
       f.fecha_emision ? new Date(f.fecha_emision).toLocaleDateString() : '',
-      `$${f.total_general.toFixed(2)}`,
+      `$${amount.toFixed(2)}`,
       estado
     ];
   });
@@ -55,21 +63,21 @@ export const generateSalesReport = async (facturas: InvoiceForReport[], filterMo
   autoTable(doc, {
     startY: 205,
     head: [['ID Factura', 'Paciente', 'Fecha', 'Monto Total', 'Estado']],
-    body: tableData,
+    body: tableData.length > 0 ? tableData : [['—', 'Sin movimientos registrados en este período', '—', '$0.00', '—']],
     theme: 'striped',
     styles: { font: config.customFontFamily, fontSize: 10, cellPadding: 5 },
     headStyles: { fillColor: [139, 92, 175], textColor: 255, font: config.customFontFamily },
     margin: { left: 40, right: 40 },
     didParseCell: function (data) {
       if (data.section === 'body' && data.column.index === 4) {
-        const estado = data.cell.raw as string;
-        if (estado.toLowerCase() === 'pagado') {
+        const estado = (data.cell.raw as string || "").toLowerCase();
+        if (estado === 'pagado') {
           data.cell.styles.textColor = [22, 163, 74];
           data.cell.styles.fontStyle = 'bold';
-        } else if (estado.toLowerCase() === 'pendiente') {
+        } else if (estado === 'pendiente') {
           data.cell.styles.textColor = [202, 138, 4];
           data.cell.styles.fontStyle = 'bold';
-        } else if (estado.toLowerCase() === 'cancelado') {
+        } else if (estado === 'cancelado') {
           data.cell.styles.textColor = [220, 38, 38];
           data.cell.styles.fontStyle = 'bold';
         }
@@ -78,12 +86,18 @@ export const generateSalesReport = async (facturas: InvoiceForReport[], filterMo
   });
 
   const totalCobrado = facturas
-    .filter(f => f.estado_pago.toLowerCase() === 'pagado' || f.estado_pago.toLowerCase() === 'paid')
-    .reduce((sum, f) => sum + f.total_general, 0);
+    .filter(f => {
+      const st = (f.estado_pago || "").toLowerCase();
+      return st === 'pagado' || st === 'paid';
+    })
+    .reduce((sum, f) => sum + (Number(f.total_general) || 0), 0);
 
   const totalPendiente = facturas
-    .filter(f => f.estado_pago.toLowerCase() === 'pendiente' || f.estado_pago.toLowerCase() === 'pending')
-    .reduce((sum, f) => sum + f.total_general, 0);
+    .filter(f => {
+      const st = (f.estado_pago || "").toLowerCase();
+      return st === 'pendiente' || st === 'pending';
+    })
+    .reduce((sum, f) => sum + (Number(f.total_general) || 0), 0);
 
   const finalY = (doc as any).lastAutoTable.finalY || 205;
   doc.setFontSize(11);

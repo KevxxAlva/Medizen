@@ -88,9 +88,12 @@ export function AgendaPage() {
   const update = useUpdateAppointment();
   const del = useDeleteAppointment();
 
+  const doctorMap = useMemo(() => new Map(doctors.map((d) => [d.id, d.full_name || d.email])), [doctors]);
+
   const handleDownloadAgenda = async () => {
     try {
       toast.loading("Generando reporte de citas...", { id: "agenda_pdf" });
+      const currentMonthStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}`;
       const formatted = appointments
         .filter((a) => (statusFilter === "todas" ? a.status !== "cancelada" : a.status === statusFilter))
         .map((a) => ({
@@ -99,15 +102,14 @@ export function AgendaPage() {
           estado: a.status,
           motivo: a.reason || "Consulta",
           paciente_nombre: a.patient_name || "Paciente",
+          medico_nombre: a.doctor_id ? doctorMap.get(a.doctor_id) || "Médico" : "—",
         }));
-      await generateAppointmentsReport(formatted);
+      await generateAppointmentsReport(formatted, currentMonthStr);
       toast.success("Reporte de agenda descargado", { id: "agenda_pdf" });
     } catch (err: any) {
       toast.error(err?.message || "Error al exportar citas", { id: "agenda_pdf" });
     }
   };
-
-  const doctorMap = useMemo(() => new Map(doctors.map((d) => [d.id, d.full_name || d.email])), [doctors]);
   
   const weekDays = useMemo(() => getWeekDays(currentDate), [currentDate]);
   const monthDays = useMemo(() => getCalendarMonthDays(currentDate), [currentDate]);

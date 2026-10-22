@@ -214,31 +214,63 @@ export function Dashboard() {
 
   const { data: appointments = [] } = useAppointments({ from: startOfLastMonthStr });
 
-  const handleDownloadReport = async () => {
+  const getCurrentMonthRange = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const startOfMonth = new Date(year, month, 1, 0, 0, 0, 0).toISOString();
+    const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999).toISOString();
+    const filterMonth = `${year}-${String(month + 1).padStart(2, "0")}`;
+    return { startOfMonth, endOfMonth, filterMonth };
+  };
+
+  const handleDownloadMonthlySalesReport = async () => {
     try {
-      toast.loading("Generando reporte...", { id: "report" });
+      toast.loading("Generando reporte del mes...", { id: "report_sales" });
+      const { startOfMonth, endOfMonth, filterMonth } = getCurrentMonthRange();
       const { data, error } = await supabase
         .from("facturas")
-        .select(`id_factura, id_paciente, fecha_emision, subtotal, monto_paciente, total_general, estado_pago, pacientes (nombre, apellido)`);
+        .select(`id_factura, id_paciente, fecha_emision, subtotal, monto_paciente, total_general, estado_pago, pacientes (nombre, apellido)`)
+        .gte("fecha_emision", startOfMonth)
+        .lte("fecha_emision", endOfMonth)
+        .order("fecha_emision", { ascending: false });
+
       if (error) throw error;
-      const formatted = data.map(d => ({
+      const formatted = (data || []).map(d => ({
+        ...d,
+        paciente_nombre: d.pacientes ? `${d.pacientes.nombre} ${d.pacientes.apellido}` : ''
+      }));
+      await generateSalesReport(formatted, filterMonth);
+      toast.success("Reporte del mes generado", { id: "report_sales" });
+    } catch (e) {
+      toast.error("Error al generar reporte", { id: "report_sales" });
+    }
+  };
+
+  const handleDownloadGeneralSalesReport = async () => {
+    try {
+      toast.loading("Generando reporte general...", { id: "report_sales" });
+      const { data, error } = await supabase
+        .from("facturas")
+        .select(`id_factura, id_paciente, fecha_emision, subtotal, monto_paciente, total_general, estado_pago, pacientes (nombre, apellido)`)
+        .order("fecha_emision", { ascending: false });
+
+      if (error) throw error;
+      const formatted = (data || []).map(d => ({
         ...d,
         paciente_nombre: d.pacientes ? `${d.pacientes.nombre} ${d.pacientes.apellido}` : ''
       }));
       await generateSalesReport(formatted, "");
-      toast.success("Reporte generado", { id: "report" });
+      toast.success("Reporte histórico generado", { id: "report_sales" });
     } catch (e) {
-      toast.error("Error al generar reporte", { id: "report" });
+      toast.error("Error al generar reporte", { id: "report_sales" });
     }
   };
 
   const handleDownloadPatientsReport = async () => {
     try {
-      toast.loading("Generando reporte...", { id: "report_patients" });
-      
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+      toast.loading("Generando reporte del mes...", { id: "report_patients" });
+      const { startOfMonth, endOfMonth, filterMonth } = getCurrentMonthRange();
 
       const { data, error } = await supabase
         .from("pacientes")
@@ -249,8 +281,24 @@ export function Dashboard() {
 
       if (error) throw error;
       
-      await generatePatientsReport(data || []);
-      toast.success("Reporte generado", { id: "report_patients" });
+      await generatePatientsReport(data || [], filterMonth);
+      toast.success("Reporte del mes generado", { id: "report_patients" });
+    } catch (e) {
+      toast.error("Error al generar reporte", { id: "report_patients" });
+    }
+  };
+
+  const handleDownloadAllPatientsReport = async () => {
+    try {
+      toast.loading("Generando reporte histórico...", { id: "report_patients" });
+      const { data, error } = await supabase
+        .from("pacientes")
+        .select(`id_paciente, nombre, apellido, documento_identidad, telefono, creado_en`)
+        .order("creado_en", { ascending: false });
+
+      if (error) throw error;
+      await generatePatientsReport(data || [], "");
+      toast.success("Reporte histórico generado", { id: "report_patients" });
     } catch (e) {
       toast.error("Error al generar reporte", { id: "report_patients" });
     }
@@ -258,28 +306,49 @@ export function Dashboard() {
 
   const handleDownloadAppointmentsReport = async () => {
     try {
-      toast.loading("Generando reporte...", { id: "report_apps" });
-      
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+      toast.loading("Generando reporte del mes...", { id: "report_apps" });
+      const { startOfMonth, endOfMonth, filterMonth } = getCurrentMonthRange();
 
       const { data, error } = await supabase
         .from("citas")
-        .select(`id_cita, fecha_hora, estado, motivo, pacientes (nombre, apellido)`)
+        .select(`id_cita, fecha_hora, estado, motivo, pacientes (nombre, apellido), medicos (nombre, apellido)`)
         .gte("fecha_hora", startOfMonth)
         .lte("fecha_hora", endOfMonth)
         .order("fecha_hora", { ascending: false });
 
       if (error) throw error;
       
-      const formatted = data.map(d => ({
+      const formatted = (data || []).map(d => ({
         ...d,
-        paciente_nombre: d.pacientes ? `${d.pacientes.nombre} ${d.pacientes.apellido}` : ''
+        paciente_nombre: d.pacientes ? `${d.pacientes.nombre} ${d.pacientes.apellido}` : '',
+        medico_nombre: d.medicos ? `Dr(a). ${d.medicos.nombre} ${d.medicos.apellido}` : ''
       }));
       
-      await generateAppointmentsReport(formatted);
-      toast.success("Reporte generado", { id: "report_apps" });
+      await generateAppointmentsReport(formatted, filterMonth);
+      toast.success("Reporte del mes generado", { id: "report_apps" });
+    } catch (e) {
+      toast.error("Error al generar reporte", { id: "report_apps" });
+    }
+  };
+
+  const handleDownloadAllAppointmentsReport = async () => {
+    try {
+      toast.loading("Generando reporte histórico...", { id: "report_apps" });
+      const { data, error } = await supabase
+        .from("citas")
+        .select(`id_cita, fecha_hora, estado, motivo, pacientes (nombre, apellido), medicos (nombre, apellido)`)
+        .order("fecha_hora", { ascending: false });
+
+      if (error) throw error;
+      
+      const formatted = (data || []).map(d => ({
+        ...d,
+        paciente_nombre: d.pacientes ? `${d.pacientes.nombre} ${d.pacientes.apellido}` : '',
+        medico_nombre: d.medicos ? `Dr(a). ${d.medicos.nombre} ${d.medicos.apellido}` : ''
+      }));
+      
+      await generateAppointmentsReport(formatted, "");
+      toast.success("Reporte histórico generado", { id: "report_apps" });
     } catch (e) {
       toast.error("Error al generar reporte", { id: "report_apps" });
     }
@@ -514,7 +583,7 @@ export function Dashboard() {
                   <DropdownMenuTrigger asChild>
                     <button className="text-muted-foreground hover:text-foreground focus:outline-none transition-colors"><MoreHorizontal className="h-4 w-4" /></button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-52 rounded-xl">
+                  <DropdownMenuContent align="end" className="w-56 rounded-xl">
                     <DropdownMenuItem asChild className="text-xs font-bold cursor-pointer">
                       <Link to="/pacientes">Ver Todos</Link>
                     </DropdownMenuItem>
@@ -524,12 +593,15 @@ export function Dashboard() {
                     <DropdownMenuItem onClick={handleDownloadPatientsReport} className="text-xs font-bold cursor-pointer text-primary focus:text-primary">
                       Descargar Reporte del Mes
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleDownloadAllPatientsReport} className="text-xs font-medium cursor-pointer text-muted-foreground hover:text-foreground">
+                      Descargar Reporte Histórico
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              <div className="flex items-end gap-3 mb-1">
-                <span className="font-display text-4xl font-bold text-foreground tracking-tight">{totalPatients}</span>
-                <span className="text-xs font-medium text-muted-foreground mb-1">en el sistema</span>
+              <div className="flex flex-wrap items-baseline gap-x-2 mb-1">
+                <span className="font-display text-4xl font-bold text-foreground tracking-tight">{totalPatients.toLocaleString("es-ES")}</span>
+                <span className="text-xs font-medium text-muted-foreground whitespace-nowrap mb-1">en el sistema</span>
               </div>
               <div className="mt-auto pt-4 h-16 w-full -mb-2">
                 <MiniAreaChart data={stats?.offlineWork.sparkline || [0, 0, 0, 0, 0, 0, 0]} colorVar="var(--color-primary)" gradientId="colorOffline" />
@@ -544,19 +616,22 @@ export function Dashboard() {
                   <DropdownMenuTrigger asChild>
                     <button className="text-muted-foreground hover:text-foreground focus:outline-none transition-colors"><MoreHorizontal className="h-4 w-4" /></button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-52 rounded-xl">
+                  <DropdownMenuContent align="end" className="w-56 rounded-xl">
                     <DropdownMenuItem asChild className="text-xs font-bold cursor-pointer">
                       <Link to="/agenda">Ir a la Agenda</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleDownloadAppointmentsReport} className="text-xs font-bold cursor-pointer text-primary focus:text-primary">
                       Descargar Reporte del Mes
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleDownloadAllAppointmentsReport} className="text-xs font-medium cursor-pointer text-muted-foreground hover:text-foreground">
+                      Descargar Reporte Histórico
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              <div className="flex items-end gap-3 mb-1">
-                <span className="font-display text-4xl font-bold text-foreground tracking-tight">{stats?.onlineWork.total || 0}</span>
-                <span className="text-xs font-medium text-muted-foreground mb-1">últimos 7 días</span>
+              <div className="flex flex-wrap items-baseline gap-x-2 mb-1">
+                <span className="font-display text-4xl font-bold text-foreground tracking-tight">{(stats?.onlineWork.total || 0).toLocaleString("es-ES")}</span>
+                <span className="text-xs font-medium text-muted-foreground whitespace-nowrap mb-1">últimos 7 días</span>
               </div>
               <div>
                 <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded", (stats?.onlineWork.change || 0) >= 0 ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-destructive/10 text-destructive")}>
@@ -576,19 +651,24 @@ export function Dashboard() {
                   <DropdownMenuTrigger asChild>
                     <button className="text-muted-foreground hover:text-foreground focus:outline-none transition-colors"><MoreHorizontal className="h-4 w-4" /></button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-52 rounded-xl">
+                  <DropdownMenuContent align="end" className="w-56 rounded-xl">
                     <DropdownMenuItem asChild className="text-xs font-bold cursor-pointer">
                       <Link to="/facturacion">Ver Facturación</Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleDownloadReport} className="text-xs font-bold cursor-pointer text-primary focus:text-primary">
-                      Descargar Reporte General
+                    <DropdownMenuItem onClick={handleDownloadMonthlySalesReport} className="text-xs font-bold cursor-pointer text-primary focus:text-primary">
+                      Descargar Reporte del Mes
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleDownloadGeneralSalesReport} className="text-xs font-medium cursor-pointer text-muted-foreground hover:text-foreground">
+                      Descargar Reporte Histórico
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              <div className="flex items-end gap-3 mb-1">
-                <span className="font-display text-4xl font-bold text-foreground tracking-tight">${monthlyData.total.toFixed(2)}</span>
-                <span className="text-xs font-medium text-muted-foreground mb-1">este mes</span>
+              <div className="flex flex-wrap items-baseline gap-x-2 mb-1">
+                <span className={cn("font-display font-bold text-foreground tracking-tight", monthlyData.total >= 100000 ? "text-2xl sm:text-3xl" : monthlyData.total >= 10000 ? "text-3xl" : "text-4xl")}>
+                  ${monthlyData.total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+                <span className="text-xs font-medium text-muted-foreground whitespace-nowrap mb-1">este mes</span>
               </div>
               <div className="mt-auto pt-4 h-24 w-full">
                 {monthlyData.paymentsByDay.length > 0 ? (
