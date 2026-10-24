@@ -254,11 +254,9 @@ export function AgendaWeekDayGrid({
                                   Añadir Invitados
                                 </p>
                                 <div className="flex items-center gap-1 mt-1">
-                                  <img
-                                    src={`https://api.dicebear.com/7.x/notionists/svg?seed=${ev.patient_name}`}
-                                    alt={ev.patient_name || "Avatar del paciente"}
-                                    className="h-4 w-4 rounded-full bg-primary/10"
-                                  />
+                                  <div className="h-4 w-4 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[9px] font-bold">
+                                    {ev.patient_name?.[0]?.toUpperCase() || "P"}
+                                  </div>
                                   <p className="text-[9px] text-muted-foreground font-bold">
                                     1 Asiste, 1 Esperando
                                   </p>

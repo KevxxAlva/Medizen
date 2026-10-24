@@ -45,6 +45,8 @@ export interface AppointmentFilters {
   status?: string;
   limit?: number;
   ascending?: boolean;
+  includeInvoices?: boolean;
+  includeTestLoad?: boolean;
 }
 
 export function useAppointments(filters?: AppointmentFilters) {
@@ -71,6 +73,10 @@ export function useAppointments(filters?: AppointmentFilters) {
             consultas(id_consulta)
           `)
           .order("fecha_hora", { ascending });
+
+        if (!filters?.includeTestLoad) {
+          query = query.or("motivo.is.null,motivo.not.ilike.%[TEST-LOAD]%");
+        }
 
         if (filters?.from) {
           query = query.gte("fecha_hora", filters.from);
@@ -103,8 +109,8 @@ export function useAppointments(filters?: AppointmentFilters) {
       const patientIds = [...new Set(results.map((a: any) => a.id_paciente).filter(Boolean))];
       const invoiceByPatientAndDate = new Map<string, any>();
 
-      if (patientIds.length > 0) {
-        // Chunk patientIds in batches of 50 to avoid URL length overflow
+      // Only fetch invoices if explicitly requested (e.g. in Facturación), avoids dozens of queries in Agenda
+      if (filters?.includeInvoices && patientIds.length > 0) {
         const CHUNK_SIZE = 50;
         for (let i = 0; i < patientIds.length; i += CHUNK_SIZE) {
           const chunk = patientIds.slice(i, i + CHUNK_SIZE);

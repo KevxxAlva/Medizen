@@ -26,7 +26,7 @@ const MONTHS_ES = [
 ];
 
 export function FacturacionPage() {
-  const { data: appointments = [], isLoading } = useAppointments();
+  const { data: appointments = [], isLoading } = useAppointments({ includeInvoices: true });
   const updateAppointment = useUpdateAppointment();
   const { data: doctors = [] } = useDoctors();
   const { data: clinic } = useClinicInfo();
