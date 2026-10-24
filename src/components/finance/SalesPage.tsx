@@ -1,3 +1,4 @@
+import { APP_LOCALE, APP_TIME_ZONE } from "@/lib/constants/locale";
 import { useState } from "react";
 import { Search, Plus, X, Pencil, Trash2, ChevronLeft, ChevronRight, Filter, ReceiptText, Loader2, CreditCard, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -11,11 +12,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { logAuditAction } from "@/lib/api/audit";
 import { usePaymentMethods } from "@/lib/api/paymentMethods";
 
-type Invoice = {
+export type Invoice = {
   id_factura: number;
   id_paciente: number | null;
   paciente_nombre?: string;
@@ -39,9 +41,6 @@ export function SalesPage() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
-  const [editTotal, setEditTotal] = useState("");
-  const [editStatus, setEditStatus] = useState("pendiente");
-  const [editDate, setEditDate] = useState("");
 
   const { data: methods = [] } = usePaymentMethods();
 
@@ -81,47 +80,40 @@ export function SalesPage() {
 
   const updatePaymentStatus = useMutation({
     mutationFn: async ({ id, status, invoice }: { id: number; status: string; invoice: Invoice }) => {
-      // 1. Update invoice status
-      const { data: invData, error: invError } = await supabase
+      const { error: invError } = await supabase
         .from("facturas")
         .update({ estado_pago: status })
-        .eq("id_factura", id)
-        .select()
-        .single();
+        .eq("id_factura", id);
         
       if (invError) throw invError;
 
-      // 2. Insert payment record
       const { error: payError } = await supabase
         .from("pagos")
         .insert({
           id_factura: id,
-          monto_pagado: invoice.total_general,
+          monto: invoice.total_general,
           metodo_pago: paymentMethod || "Efectivo",
           referencia: paymentReference || null,
+          fecha_pago: new Date().toISOString(),
         });
 
       if (payError) throw payError;
 
-      // 3. Update financial account
-      const { data: pm } = await supabase.from("payment_methods").select("account_id").eq("name", paymentMethod).maybeSingle();
-      if (pm?.account_id) {
-        const { data: acc } = await supabase.from("financial_accounts").select("balance").eq("id", pm.account_id).maybeSingle();
-        if (acc) {
-           await supabase.from("financial_accounts").update({ balance: acc.balance + invoice.total_general }).eq("id", pm.account_id);
-        }
-      }
-
-      return invData;
+      await logAuditAction("UPDATE", "INVOICE", id.toString(), {
+        status,
+        monto: invoice.total_general,
+        metodo_pago: paymentMethod,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["facturas"] });
-      queryClient.invalidateQueries({ queryKey: ["financial_accounts"] });
-      toast.success("Pago confirmado exitosamente");
+      queryClient.invalidateQueries({ queryKey: ["monthly_payments"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard_stats"] });
+      toast.success("Pago confirmado y registrado exitosamente");
       setConfirmOpen(false);
     },
-    onError: (error: any) => {
-      toast.error(`Error al confirmar pago: ${error.message}`);
+    onError: (err: any) => {
+      toast.error(`Error al actualizar estado: ${err.message}`);
     }
   });
 
@@ -129,15 +121,16 @@ export function SalesPage() {
     mutationFn: async (id: number) => {
       const { error } = await supabase.from("facturas").delete().eq("id_factura", id);
       if (error) throw error;
-      
-      await logAuditAction("DELETE", "INVOICE", id.toString(), { message: "Factura eliminada desde SalesPage" });
+      await logAuditAction("DELETE", "INVOICE", id.toString());
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["facturas"] });
+      queryClient.invalidateQueries({ queryKey: ["monthly_payments"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard_stats"] });
       toast.success("Factura eliminada");
     },
     onError: (err: any) => {
-      toast.error("Error al eliminar la factura: " + err.message);
+      toast.error(`Error al eliminar: ${err.message}`);
     }
   });
 
@@ -184,33 +177,7 @@ export function SalesPage() {
 
   const handleEditClick = (invoice: Invoice) => {
     setEditingInvoice(invoice);
-    setEditTotal(String(invoice.total_general ?? 0));
-    const st = (invoice.estado_pago || "").toLowerCase();
-    setEditStatus(
-      ["pagado", "pagada", "paid"].includes(st)
-        ? "pagado"
-        : ["cancelado", "cancelada", "cancelled"].includes(st)
-        ? "cancelado"
-        : "pendiente"
-    );
-    setEditDate(invoice.fecha_emision ? invoice.fecha_emision.slice(0, 10) : new Date().toISOString().slice(0, 10));
     setEditOpen(true);
-  };
-
-  const handleSaveEdit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingInvoice) return;
-    const parsedTotal = parseFloat(editTotal);
-    if (isNaN(parsedTotal) || parsedTotal < 0) {
-      toast.error("Ingrese un monto válido");
-      return;
-    }
-    updateInvoiceMutation.mutate({
-      id: editingInvoice.id_factura,
-      total_general: parsedTotal,
-      estado_pago: editStatus,
-      fecha_emision: editDate ? new Date(`${editDate}T12:00:00`).toISOString() : editingInvoice.fecha_emision,
-    });
   };
 
   const handleConfirmClick = (invoice: Invoice) => {
@@ -220,10 +187,20 @@ export function SalesPage() {
     setConfirmOpen(true);
   };
 
-  const handleSavePayment = () => {
-    if (!selectedInvoice) return;
-    updatePaymentStatus.mutate({ id: selectedInvoice.id_factura, status: "pagado", invoice: selectedInvoice });
-  };
+  const filtered = facturas.filter((f) => {
+    if (q) {
+      const query = q.toLowerCase();
+      const numMatch = `inv-${f.id_factura.toString().padStart(4, "0")}`.includes(query) || f.id_factura.toString().includes(query);
+      const nameMatch = (f.paciente_nombre || "").toLowerCase().includes(query);
+      if (!numMatch && !nameMatch) return false;
+    }
+    if (filterMonth && !f.fecha_emision.startsWith(filterMonth)) return false;
+    if (filterStatus !== "all" && (f.estado_pago || "pendiente").toLowerCase() !== filterStatus) return false;
+    return true;
+  });
+
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginated = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const generatePDFReport = async () => {
     try {
@@ -234,333 +211,467 @@ export function SalesPage() {
     }
   };
 
-  const filtered = facturas.filter((f) => {
-    if (q) {
-      const term = q.toLowerCase();
-      if (!(f.id_factura.toString().includes(term) || (f.paciente_nombre?.toLowerCase().includes(term)))) return false;
-    }
-    if (filterMonth && f.fecha_emision) {
-      const date = new Date(f.fecha_emision);
-      const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      if (yearMonth !== filterMonth) return false;
-    }
-    if (filterStatus !== "all") {
-      const estado = (f.estado_pago || "").toLowerCase();
-      if (filterStatus === "pagado" && !["pagado", "pagada", "paid"].includes(estado)) return false;
-      if (filterStatus === "pendiente" && !["pendiente", "pending"].includes(estado)) return false;
-      if (filterStatus === "cancelado" && !["cancelado", "cancelada", "cancelled"].includes(estado)) return false;
-    }
-    return true;
-  });
-
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const paginated = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center min-h-[50vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-card rounded-[2rem] p-6 shadow-sm min-h-[calc(100vh-8rem)] font-sans flex flex-col">
+    <div className="bg-card rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-6 shadow-sm min-h-[calc(100vh-8rem)] font-sans flex flex-col">
       <header className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <button type="button" onClick={() => window.history.back()} className="text-muted-foreground hover:text-foreground" title="Volver"><ChevronLeft className="h-5 w-5" /></button>
-          <h1 className="text-xl font-bold text-foreground">Facturación</h1>
+          <button type="button" onClick={() => window.history.back()} className="text-muted-foreground hover:text-foreground" title="Volver" aria-label="Volver"><ChevronLeft className="h-5 w-5" /></button>
+          <h1 className="text-xl font-bold text-foreground">Ventas y Facturación</h1>
         </div>
-        <div className="flex-1 max-w-xl mx-auto">
-          <div className="flex items-center gap-2 rounded-full bg-muted border border-gray-100 px-4 py-2.5 w-full">
+        <div className="flex-1 max-w-xl mx-auto w-full sm:w-auto">
+          <div className="flex items-center gap-2 rounded-full bg-muted border border-border/50 px-4 py-2.5 w-full">
             <Search className="h-4 w-4 text-muted-foreground" />
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar facturas por ID o paciente..."
+              placeholder="Buscar por paciente o N° Factura (ej: 0001)..."
+              aria-label="Buscar por paciente o N° Factura"
               className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground text-foreground"
             />
-            {q && <button onClick={() => setQ("")} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
+            {q && <button type="button" aria-label="Limpiar búsqueda" onClick={() => setQ("")} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
           </div>
         </div>
-        <div className="flex items-center gap-4 hidden md:flex">
-          {/* Nueva Factura button was removed here */}
-        </div>
+        <div className="flex items-center gap-4 hidden md:flex"></div>
       </header>
 
-      <div className="flex flex-wrap items-center justify-between mb-4 border-b border-border/40 pb-4 mt-2">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-border/40 pb-4 mt-2">
         <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
-          <ReceiptText className="h-4 w-4" /> {filtered.length} facturas
+          <ReceiptText className="h-4 w-4" /> {filtered.length} facturas registradas
         </div>
         <div className="flex items-center gap-3">
-          <button 
+          <SalesFilterPopover
+            filterMonth={filterMonth}
+            setFilterMonth={setFilterMonth}
+            filterStatus={filterStatus}
+            setFilterStatus={setFilterStatus}
+            onReset={() => { setFilterMonth(""); setFilterStatus("all"); setCurrentPage(1); }}
+          />
+
+          <Button
+            type="button"
             onClick={generatePDFReport}
-            className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-foreground border border-border/40 rounded-xl hover:bg-muted"
-            title="Descargar reporte de pagos filtrados"
+            variant="outline"
+            className="flex items-center gap-2 border-border/40 text-foreground font-bold rounded-xl text-xs hover:bg-muted"
           >
-            <Download className="h-3.5 w-3.5" /> Descargar PDF
-          </button>
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className={cn("flex items-center gap-2 px-4 py-2 text-xs font-bold text-foreground border border-border/40 rounded-xl hover:bg-muted transition-colors", (filterMonth || filterStatus !== "all") && "bg-muted border-mauve text-mauve")}>
-                <Filter className="h-3.5 w-3.5" /> {(filterMonth || filterStatus !== "all") ? "Filtrado" : "Filtros"}
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-60 rounded-2xl glass-card border-0 shadow-2xl p-4" align="end">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <h4 className="font-medium text-sm">Filtrar por Mes</h4>
-                  <div className="flex gap-2 items-center">
-                    <input
-                      type="month"
-                      value={filterMonth}
-                      onChange={(e) => setFilterMonth(e.target.value)}
-                      className="flex h-9 w-full rounded-xl border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                    />
-                    {filterMonth && (
-                      <button 
-                        onClick={() => setFilterMonth("")}
-                        className="p-2 hover:bg-muted rounded-lg text-muted-foreground transition-colors"
-                        title="Limpiar filtro"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <h4 className="font-medium text-sm">Estado de Pago</h4>
-                  <Select value={filterStatus} onValueChange={setFilterStatus}>
-                    <SelectTrigger className="w-full rounded-xl h-9 bg-transparent border-input">
-                      <SelectValue placeholder="Todos" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl">
-                      <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="pagado">Pagados</SelectItem>
-                      <SelectItem value="pendiente">Pendientes</SelectItem>
-                      <SelectItem value="cancelado">Cancelados</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
+            <Download className="h-3.5 w-3.5 text-muted-foreground" /> Reporte Mensual
+          </Button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[700px]">
-          <thead>
-            <tr className="bg-muted text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-              <th className="p-4 w-12 rounded-tl-xl"><input type="checkbox" className="rounded border-gray-300" /></th>
-              <th className="p-4">ID Factura <span className="ml-1">↕</span></th>
-              <th className="p-4">Paciente <span className="ml-1">↕</span></th>
-              <th className="p-4">Fecha <span className="ml-1">↕</span></th>
-              <th className="p-4">Monto Total <span className="ml-1">↕</span></th>
-              <th className="p-4">Estado <span className="ml-1">↕</span></th>
-              <th className="p-4 rounded-tr-xl">Acción <span className="ml-1">↕</span></th>
-            </tr>
-          </thead>
-          <tbody className="text-sm">
-            {isLoading ? (
-              <tr><td colSpan={7} className="p-12 text-center"><Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" /></td></tr>
-            ) : paginated.length === 0 ? (
-              <tr><td colSpan={7} className="p-12 text-center text-muted-foreground font-medium">No se encontraron facturas.</td></tr>
-            ) : (
-              paginated.map((f) => (
-                <tr key={f.id_factura} className="border-b border-border/40 hover:bg-muted/50 transition group">
-                  <td className="p-4"><input type="checkbox" className="rounded border-gray-300" /></td>
-                  <td className="p-4 font-bold text-foreground">INV-{f.id_factura.toString().padStart(4, '0')}</td>
-                  <td className="p-4 text-muted-foreground font-medium">{f.paciente_nombre}</td>
-                  <td className="p-4 text-muted-foreground font-medium">{f.fecha_emision ? new Date(f.fecha_emision).toLocaleDateString() : '—'}</td>
-                  <td className="p-4">
-                    <span className="font-bold text-foreground">
-                      ${f.total_general.toFixed(2)}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    {(() => {
-                      const st = (f.estado_pago || "").toLowerCase();
-                      const isPaid = ["pagado", "pagada", "paid"].includes(st);
-                      const isPending = ["pendiente", "pending"].includes(st);
-                      return (
-                        <span className={cn(
-                          "text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wide capitalize",
-                          isPaid ? "bg-green-50 text-green-600 border border-green-100" : 
-                          isPending ? "bg-yellow-50 text-yellow-600 border border-yellow-100" :
-                          "bg-destructive/10 text-destructive border border-red-100"
-                        )}>
-                          {isPaid ? "pagado" : isPending ? "pendiente" : f.estado_pago}
-                        </span>
-                      );
-                    })()}
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-3 text-muted-foreground">
-                      {["pagado", "pagada", "paid"].includes((f.estado_pago || "").toLowerCase()) && (
-                        <button 
-                          onClick={() => {
-                            toast.loading("Generando recibo...", { id: "receipt" });
-                            generateIndividualInvoice(f)
-                              .then(() => toast.success("Recibo generado", { id: "receipt" }))
-                              .catch(() => toast.error("Error al generar", { id: "receipt" }));
-                          }}
-                          className="hover:text-primary cursor-pointer transition-colors"
-                          title="Descargar Recibo"
-                        >
-                          <Download className="h-4 w-4" />
-                        </button>
-                      )}
-                      {["pendiente", "pending"].includes((f.estado_pago || "").toLowerCase()) && (
-                        <button 
-                          onClick={() => handleConfirmClick(f)}
-                          className="flex items-center gap-1 text-xs font-bold text-mauve border border-mauve px-2 py-1 rounded-xl hover:bg-mauve/10 transition-colors cursor-pointer"
-                          title="Confirmar Pago"
-                        >
-                          <CreditCard className="h-3.5 w-3.5" />
-                          Confirmar
-                        </button>
-                      )}
+      <SalesTable
+        paginated={paginated}
+        onEdit={handleEditClick}
+        onConfirm={handleConfirmClick}
+        onDelete={(id) => deleteMutation.mutate(id)}
+      />
+
+      <EditInvoiceDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        invoice={editingInvoice}
+        isPending={updateInvoiceMutation.isPending}
+        onSave={(data) => updateInvoiceMutation.mutate(data)}
+      />
+
+      <ConfirmPaymentDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        invoice={selectedInvoice}
+        methods={methods}
+        paymentMethod={paymentMethod}
+        setPaymentMethod={setPaymentMethod}
+        paymentReference={paymentReference}
+        setPaymentReference={setPaymentReference}
+        isPending={updatePaymentStatus.isPending}
+        onConfirm={() => {
+          if (!selectedInvoice) return;
+          updatePaymentStatus.mutate({ id: selectedInvoice.id_factura, status: "pagado", invoice: selectedInvoice });
+        }}
+      />
+
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={filtered.length}
+        itemsPerPage={itemsPerPage}
+        entityLabel="facturas"
+        onPageChange={setCurrentPage}
+      />
+    </div>
+  );
+}
+
+function SalesFilterPopover({
+  filterMonth,
+  setFilterMonth,
+  filterStatus,
+  setFilterStatus,
+  onReset,
+}: {
+  filterMonth: string;
+  setFilterMonth: (val: string) => void;
+  filterStatus: string;
+  setFilterStatus: (val: string) => void;
+  onReset: () => void;
+}) {
+  const isFiltered = filterMonth !== "" || filterStatus !== "all";
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            "flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-bold text-foreground border border-border/40 rounded-xl hover:bg-muted transition-colors",
+            isFiltered && "bg-primary/10 border-primary text-primary"
+          )}
+        >
+          <Filter className="h-3.5 w-3.5" />
+          {isFiltered ? "Filtrado" : "Filtros"}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-64 rounded-2xl glass-card border-0 shadow-2xl p-4" align="end">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-muted-foreground">Mes de Emisión</h4>
+            <input
+              type="month"
+              aria-label="Filtrar por mes de emisión"
+              value={filterMonth}
+              onChange={(e) => setFilterMonth(e.target.value)}
+              className="w-full h-9 px-3 rounded-xl bg-background border border-input text-xs font-semibold outline-none"
+            />
+          </div>
+          <div className="space-y-2">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-muted-foreground">Estado de Pago</h4>
+            <select
+              aria-label="Filtrar por estado de pago"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="w-full h-9 px-3 rounded-xl bg-background border border-input text-xs font-semibold outline-none"
+            >
+              <option value="all">Todos los estados</option>
+              <option value="pagado">Pagado</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+          </div>
+          {isFiltered && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onReset}
+              className="w-full rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground"
+            >
+              Limpiar filtros
+            </Button>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function SalesTable({
+  paginated,
+  onEdit,
+  onConfirm,
+  onDelete,
+}: {
+  paginated: Invoice[];
+  onEdit: (invoice: Invoice) => void;
+  onConfirm: (invoice: Invoice) => void;
+  onDelete: (id: number) => void;
+}) {
+  return (
+    <div className="flex-1 overflow-x-auto">
+      <table className="w-full text-left border-collapse min-w-[700px]">
+        <thead>
+          <tr className="bg-muted text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+            <th className="p-4 w-12 rounded-tl-xl"><input type="checkbox" aria-label="Seleccionar todas las facturas" className="rounded border-gray-300" /></th>
+            <th className="p-4">Factura N°</th>
+            <th className="p-4">Paciente</th>
+            <th className="p-4">Fecha de Emisión</th>
+            <th className="p-4">Total</th>
+            <th className="p-4">Estado</th>
+            <th className="p-4 rounded-tr-xl">Acciones</th>
+          </tr>
+        </thead>
+        <tbody className="text-sm">
+          {paginated.length === 0 ? (
+            <tr><td colSpan={7} className="p-12 text-center text-muted-foreground font-medium">No se encontraron ventas.</td></tr>
+          ) : (
+            paginated.map((f) => (
+              <tr key={f.id_factura} className="border-b border-border/40 hover:bg-muted/50 transition-colors group">
+                <td className="p-4"><input type="checkbox" aria-label={`Seleccionar factura INV-${f.id_factura.toString().padStart(4, "0")}`} className="rounded border-gray-300" /></td>
+                <td className="p-4 font-bold text-primary">
+                  INV-{f.id_factura.toString().padStart(4, "0")}
+                </td>
+                <td className="p-4 font-semibold text-foreground">
+                  {f.paciente_nombre}
+                </td>
+                <td className="p-4 text-muted-foreground text-xs font-medium">
+                  {new Date(f.fecha_emision).toLocaleDateString(APP_LOCALE, { timeZone: APP_TIME_ZONE })}
+                </td>
+                <td className="p-4 font-bold text-foreground">
+                  ${f.total_general.toFixed(2)}
+                </td>
+                <td className="p-4">
+                  <span className={cn(
+                    "text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider",
+                    (f.estado_pago || "").toLowerCase() === "pagado" || (f.estado_pago || "").toLowerCase() === "pagada"
+                      ? "bg-green-50 text-green-600 border border-green-100"
+                      : (f.estado_pago || "").toLowerCase() === "cancelado" || (f.estado_pago || "").toLowerCase() === "cancelada"
+                      ? "bg-red-50 text-red-600 border border-red-100"
+                      : "bg-amber-50 text-amber-600 border border-amber-100"
+                  )}>
+                    {f.estado_pago}
+                  </span>
+                </td>
+                <td className="p-4 text-muted-foreground">
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => generateIndividualInvoice(f)}
+                      className="hover:text-primary cursor-pointer transition-colors"
+                      title="Descargar Comprobante PDF"
+                    >
+                      <Download className="h-4 w-4" />
+                    </button>
+                    {(f.estado_pago || "").toLowerCase() !== "pagado" && (f.estado_pago || "").toLowerCase() !== "pagada" && (
                       <button
                         type="button"
-                        onClick={() => handleEditClick(f)}
-                        className="hover:text-foreground cursor-pointer"
-                        title="Editar Factura"
+                        onClick={() => onConfirm(f)}
+                        className="flex items-center gap-1 text-[11px] font-bold bg-primary/10 text-primary hover:bg-primary/20 px-2 py-1 rounded-md transition-colors"
+                        title="Confirmar Pago"
                       >
-                        <Pencil className="h-4 w-4" />
+                        <CreditCard className="h-3.5 w-3.5" />
+                        Confirmar
                       </button>
-                      <button 
-                        className="hover:text-destructive cursor-pointer"
-                        onClick={() => {
-                          if (window.confirm(`¿Estás segura de que deseas eliminar la factura INV-${f.id_factura.toString().padStart(4, '0')}?`)) {
-                            deleteMutation.mutate(f.id_factura);
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => onEdit(f)}
+                      className="hover:text-foreground cursor-pointer"
+                      title="Editar Factura"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Eliminar factura INV-${f.id_factura.toString().padStart(4, "0")}`}
+                      className="hover:text-destructive cursor-pointer"
+                      onClick={() => {
+                        if (window.confirm(`¿Estás segura de que deseas eliminar la factura INV-${f.id_factura.toString().padStart(4, "0")}?`)) {
+                          onDelete(f.id_factura);
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-[425px] rounded-[2rem] p-6 border-0 shadow-2xl glass-card">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Editar Factura</DialogTitle>
-            <DialogDescription>
-              Modifica los datos de la factura INV-{editingInvoice?.id_factura?.toString().padStart(4, "0")} ({editingInvoice?.paciente_nombre}).
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSaveEdit} className="space-y-4 py-2">
-            <div className="grid gap-2">
-              <Label htmlFor="edit-invoice-date">Fecha de Emisión</Label>
-              <Input
-                id="edit-invoice-date"
-                type="date"
-                value={editDate}
-                onChange={(e) => setEditDate(e.target.value)}
-                className="rounded-xl bg-background/50"
-                required
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-invoice-total">Monto Total ($)</Label>
-              <Input
-                id="edit-invoice-total"
-                type="number"
-                step="0.01"
-                min="0"
-                value={editTotal}
-                onChange={(e) => setEditTotal(e.target.value)}
-                className="rounded-xl bg-background/50"
-                required
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-invoice-status">Estado de Pago</Label>
-              <Select value={editStatus} onValueChange={setEditStatus}>
-                <SelectTrigger id="edit-invoice-status" className="rounded-xl bg-background/50">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  <SelectItem value="pendiente">Pendiente</SelectItem>
-                  <SelectItem value="pagado">Pagado</SelectItem>
-                  <SelectItem value="cancelado">Cancelado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <DialogFooter className="pt-2">
-              <Button type="button" variant="outline" onClick={() => setEditOpen(false)} className="rounded-xl hover:bg-muted" disabled={updateInvoiceMutation.isPending}>
-                Cancelar
-              </Button>
-              <Button type="submit" className="rounded-xl bg-primary text-primary-foreground" disabled={updateInvoiceMutation.isPending}>
-                {updateInvoiceMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Guardar Cambios"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+function EditInvoiceDialog({
+  open,
+  onOpenChange,
+  invoice,
+  isPending,
+  onSave,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  invoice: Invoice | null;
+  isPending: boolean;
+  onSave: (data: { id: number; total_general: number; estado_pago: string; fecha_emision: string }) => void;
+}) {
+  const [editTotal, setEditTotal] = useState("");
+  const [editStatus, setEditStatus] = useState("pendiente");
+  const [editDate, setEditDate] = useState("");
 
-      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent className="sm:max-w-[425px] rounded-[2rem] p-6 border-0 shadow-2xl glass-card">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Confirmar Pago</DialogTitle>
-            <DialogDescription>
-              Selecciona el método de pago utilizado para la factura INV-{selectedInvoice?.id_factura?.toString().padStart(4, "0")}.
-            </DialogDescription>
-          </DialogHeader>
+  const handleOpen = (isOpen: boolean) => {
+    if (isOpen && invoice) {
+      setEditTotal(String(invoice.total_general ?? 0));
+      const st = (invoice.estado_pago || "").toLowerCase();
+      setEditStatus(
+        ["pagado", "pagada", "paid"].includes(st)
+          ? "pagado"
+          : ["cancelado", "cancelada", "cancelled"].includes(st)
+          ? "cancelado"
+          : "pendiente"
+      );
+      setEditDate(invoice.fecha_emision ? invoice.fecha_emision.slice(0, 10) : new Date().toISOString().slice(0, 10));
+    }
+    onOpenChange(isOpen);
+  };
 
-          <div className="space-y-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="metodo-pago">Método de Pago</Label>
-              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                <SelectTrigger id="metodo-pago" className="rounded-xl bg-background/50">
-                  <SelectValue placeholder="Seleccione un método..." />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  {methods.filter(m => m.status === "Active").map(m => (
-                    <SelectItem key={m.id} value={m.name}>{m.name}</SelectItem>
-                  ))}
-                  {methods.length === 0 && (
-                     <SelectItem value="Efectivo">Efectivo</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!invoice) return;
+    const parsedTotal = parseFloat(editTotal);
+    if (isNaN(parsedTotal) || parsedTotal < 0) {
+      toast.error("Ingrese un monto válido");
+      return;
+    }
+    onSave({
+      id: invoice.id_factura,
+      total_general: parsedTotal,
+      estado_pago: editStatus,
+      fecha_emision: editDate ? new Date(`${editDate}T12:00:00`).toISOString() : invoice.fecha_emision,
+    });
+  };
 
-            {paymentMethod && methods.find(m => m.name === paymentMethod)?.category !== "Cash" && (
-              <div className="grid gap-2">
-                <Label htmlFor="referencia">Referencia</Label>
-                <Input
-                  id="referencia"
-                  placeholder="Ej. 12345678"
-                  value={paymentReference}
-                  onChange={(e) => setPaymentReference(e.target.value)}
-                  className="rounded-xl bg-background/50"
-                />
-              </div>
-            )}
+  return (
+    <Dialog open={open} onOpenChange={handleOpen}>
+      <DialogContent className="sm:max-w-[425px] rounded-[2rem] p-6 border-0 shadow-2xl glass-card">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold">Editar Factura</DialogTitle>
+          <DialogDescription>
+            Modifica los datos de la factura INV-{invoice?.id_factura?.toString().padStart(4, "0")} ({invoice?.paciente_nombre}).
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSaveEdit} className="space-y-4 py-2">
+          <div className="grid gap-2">
+            <Label htmlFor="edit-invoice-date">Fecha de Emisión</Label>
+            <Input
+              id="edit-invoice-date"
+              type="date"
+              value={editDate}
+              onChange={(e) => setEditDate(e.target.value)}
+              className="rounded-xl bg-background/50"
+              required
+            />
           </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmOpen(false)} className="rounded-xl hover:bg-muted" disabled={updatePaymentStatus.isPending}>
+          <div className="grid gap-2">
+            <Label htmlFor="edit-invoice-total">Monto Total ($)</Label>
+            <Input
+              id="edit-invoice-total"
+              type="number"
+              step="0.01"
+              min="0"
+              value={editTotal}
+              onChange={(e) => setEditTotal(e.target.value)}
+              className="rounded-xl bg-background/50"
+              required
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="edit-invoice-status">Estado de Pago</Label>
+            <Select value={editStatus} onValueChange={setEditStatus}>
+              <SelectTrigger id="edit-invoice-status" className="rounded-xl bg-background/50">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="pendiente">Pendiente</SelectItem>
+                <SelectItem value="pagado">Pagado</SelectItem>
+                <SelectItem value="cancelado">Cancelado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter className="pt-2">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl hover:bg-muted" disabled={isPending}>
               Cancelar
             </Button>
-            <Button onClick={handleSavePayment} className="rounded-xl bg-mauve text-white hover:bg-mauve-dark" disabled={updatePaymentStatus.isPending}>
-              {updatePaymentStatus.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Confirmar"}
+            <Button type="submit" className="rounded-xl bg-primary text-primary-foreground" disabled={isPending}>
+              {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Guardar Cambios"}
             </Button>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
-      {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between pt-4 border-t border-border/40">
-          <p className="text-xs text-muted-foreground font-medium">
-            Mostrando <span className="font-bold text-foreground">{(currentPage - 1) * itemsPerPage + 1} - {Math.min(filtered.length, currentPage * itemsPerPage)}</span> de <span className="font-bold text-foreground">{filtered.length}</span> facturas
-          </p>
-          <div className="flex gap-1">
-            <button disabled={currentPage === 1} onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))} className="h-8 w-8 flex items-center justify-center rounded-lg border border-border/40 text-muted-foreground hover:bg-muted disabled:opacity-50"><ChevronLeft className="h-4 w-4" /></button>
-            <button disabled={currentPage === totalPages} onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))} className="h-8 w-8 flex items-center justify-center rounded-lg border border-border/40 text-muted-foreground hover:bg-muted disabled:opacity-50"><ChevronRight className="h-4 w-4" /></button>
+function ConfirmPaymentDialog({
+  open,
+  onOpenChange,
+  invoice,
+  methods,
+  paymentMethod,
+  setPaymentMethod,
+  paymentReference,
+  setPaymentReference,
+  isPending,
+  onConfirm,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  invoice: Invoice | null;
+  methods: any[];
+  paymentMethod: string;
+  setPaymentMethod: (val: string) => void;
+  paymentReference: string;
+  setPaymentReference: (val: string) => void;
+  isPending: boolean;
+  onConfirm: () => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px] rounded-[2rem] p-6 border-0 shadow-2xl glass-card">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold">Confirmar Pago</DialogTitle>
+          <DialogDescription>
+            Selecciona el método de pago utilizado para la factura INV-{invoice?.id_factura?.toString().padStart(4, "0")}.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="metodo-pago">Método de Pago</Label>
+            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+              <SelectTrigger id="metodo-pago" className="rounded-xl bg-background/50">
+                <SelectValue placeholder="Seleccione un método..." />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                {methods.filter(m => m.status === "Active").map(m => (
+                  <SelectItem key={m.id} value={m.name}>{m.name}</SelectItem>
+                ))}
+                {methods.length === 0 && (
+                   <SelectItem value="Efectivo">Efectivo</SelectItem>
+                )}
+              </SelectContent>
+            </Select>
           </div>
+
+          {paymentMethod && methods.find(m => m.name === paymentMethod)?.category !== "Cash" && (
+            <div className="grid gap-2">
+              <Label htmlFor="referencia">Referencia</Label>
+              <Input
+                id="referencia"
+                placeholder="Ej. 12345678"
+                value={paymentReference}
+                onChange={(e) => setPaymentReference(e.target.value)}
+                className="rounded-xl bg-background/50"
+              />
+            </div>
+          )}
         </div>
-      )}
-    </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl hover:bg-muted" disabled={isPending}>
+            Cancelar
+          </Button>
+          <Button onClick={onConfirm} className="rounded-xl bg-primary text-primary-foreground" disabled={isPending}>
+            {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Confirmar"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

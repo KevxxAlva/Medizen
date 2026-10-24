@@ -113,16 +113,23 @@ const framesDir = join(OUT, "frames-" + NAME);
 mkdirSync(framesDir, { recursive: true });
 
 // Deps PINNED exact (mutable @5/@2 majors would drift the bake over time).
+function safeJson(val) {
+  return JSON.stringify(val)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026");
+}
+
 const PAGE = `<!doctype html><html><head>
 <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 <style>*{margin:0}html,body{width:1920px;height:1080px;overflow:hidden;background:#05070d}#map{width:1920px;height:1080px}.maplibregl-control-container{display:none!important}</style>
 </head><body><div id="map"></div><script>
-var CENTER=${JSON.stringify(CENTER)}, ZSTART=${ZSTART}, ZEND=${ZEND}, PITCH=${PITCH}, BEARING=${BEARING}, HOLD=${HOLD};
-var MARGIN=${JSON.stringify(MARGIN)}, WANT=${JSON.stringify(COUNTRIES)};
+var CENTER=${safeJson(CENTER)}, ZSTART=${ZSTART}, ZEND=${ZEND}, PITCH=${PITCH}, BEARING=${BEARING}, HOLD=${HOLD};
+var MARGIN=${safeJson(MARGIN)}, WANT=${safeJson(COUNTRIES)};
 var map=new maplibregl.Map({container:"map",style:{version:8,projection:{type:"mercator"},
-  sources:{s:{type:"raster",tiles:[${JSON.stringify(TILES)}],tileSize:256,maxzoom:19}},
+  sources:{s:{type:"raster",tiles:[${safeJson(TILES)}],tileSize:256,maxzoom:19}},
   layers:[{id:"bg",type:"background",paint:{"background-color":"#05070d"}},{id:"s",type:"raster",source:"s"}]},
   center:CENTER,zoom:ZSTART,pitch:0,bearing:0,interactive:false,attributionControl:false,fadeDuration:0,preserveDrawingBuffer:true,maxTileCacheSize:6000});
 function ease(x){return x<0.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;} // easeInOutCubic (= Remotion interpolate+Easing)

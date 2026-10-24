@@ -1,9 +1,10 @@
+import { APP_LOCALE, APP_TIME_ZONE } from "@/lib/constants/locale";
 import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, File, Upload, Trash2, Download, FileText, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { formatBytes, cn } from "@/lib/utils";
 
@@ -208,8 +209,19 @@ export function PatientFilesTab({ patientId }: { patientId: number | string }) {
             return (
               <div 
                 key={f.id} 
+                role="button"
+                tabIndex={0}
+                aria-label={`Abrir archivo ${f.nombre_archivo}`}
                 onClick={() => handleFileClick(f)}
-                className="flex flex-col items-center justify-center p-4 rounded-2xl border border-border/40 bg-card shadow-sm hover:shadow-md hover:border-mauve/30 transition-all group cursor-pointer relative"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    if (e.target === e.currentTarget) {
+                      e.preventDefault();
+                      handleFileClick(f);
+                    }
+                  }
+                }}
+                className="flex flex-col items-center justify-center p-4 rounded-2xl border border-border/40 bg-card shadow-sm hover:shadow-md hover:border-mauve/30 transition-colors group cursor-pointer relative"
               >
                 <div className={`p-4 rounded-xl flex-shrink-0 mb-3 transition-transform group-hover:scale-105 ${isImage ? 'bg-indigo-50 text-indigo-500' : 'bg-rose-50 text-rose-500'}`}>
                   {isImage ? <ImageIcon className="h-8 w-8" /> : <FileText className="h-8 w-8" />}
@@ -219,11 +231,11 @@ export function PatientFilesTab({ patientId }: { patientId: number | string }) {
                     {f.nombre_archivo}
                   </p>
                   <p className="text-[10px] text-muted-foreground font-medium mt-1">
-                    {formatBytes(f.tamano_bytes)} • {new Date(f.fecha_subida).toLocaleDateString()}
+                    {formatBytes(f.tamano_bytes)} • {new Date(f.fecha_subida).toLocaleDateString(APP_LOCALE, { timeZone: APP_TIME_ZONE })}
                   </p>
                 </div>
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
-                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full bg-background shadow-sm hover:bg-destructive/10 hover:text-destructive cursor-pointer" onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(f); }}>
+                  <Button variant="ghost" size="icon" aria-label={`Eliminar archivo ${f.nombre_archivo}`} className="h-7 w-7 rounded-full bg-background shadow-sm hover:bg-destructive/10 hover:text-destructive cursor-pointer" onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(f); }}>
                     <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>
@@ -236,6 +248,7 @@ export function PatientFilesTab({ patientId }: { patientId: number | string }) {
       {/* Lightbox Dialog */}
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
         <DialogContent className="max-w-4xl p-1 bg-transparent border-none shadow-none flex justify-center items-center [&>button]:text-white">
+          <DialogTitle className="sr-only">Vista previa de archivo</DialogTitle>
           {selectedImage && <img src={selectedImage} alt="Preview" className="max-h-[80vh] max-w-full rounded-xl object-contain shadow-2xl" />}
         </DialogContent>
       </Dialog>

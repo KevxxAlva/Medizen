@@ -47,9 +47,12 @@ dist-ssr
 # Temporary files & utility scripts with secrets
 temp_*.txt
 setAdmin.js
+scripts/setAdmin.js
 
 # Nested projects & scratch folders
 careflow-suite/
+scratch/
+scripts/
 *.bak
 renders/
 videos/

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import QRCode from "qrcode";
 import {
   Dialog,
@@ -34,12 +34,12 @@ export function InstallAppModal({ open, onOpenChange }: InstallAppModalProps) {
   const { canInstall, isInstalled, installApp, platform } = usePWAInstall();
   const [installing, setInstalling] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
-  const [currentUrl, setCurrentUrl] = useState<string>("");
+  const currentUrlRef = useRef<string>("");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const url = `${window.location.origin}/descargar`;
-      setCurrentUrl(url);
+      currentUrlRef.current = url;
       QRCode.toDataURL(url, {
         width: 180,
         margin: 1.5,
@@ -74,7 +74,7 @@ export function InstallAppModal({ open, onOpenChange }: InstallAppModalProps) {
 
   const handleCopyLink = () => {
     if (typeof navigator !== "undefined" && navigator.clipboard) {
-      navigator.clipboard.writeText(currentUrl || window.location.href);
+      navigator.clipboard.writeText(currentUrlRef.current || window.location.href);
       toast.success("Enlace de instalación copiado al portapapeles.");
     }
   };

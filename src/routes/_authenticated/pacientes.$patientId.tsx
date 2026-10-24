@@ -1,76 +1,43 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { useState } from "react"
+import { APP_TIME_ZONE } from "@/lib/constants/locale";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { 
-  ArrowLeft, FileDown, FileText, Printer, Loader2, User, Calendar, Phone, Mail, 
-  MapPin, Briefcase, GraduationCap, HeartPulse, Baby, Stethoscope, Clock, 
-  StickyNote, Activity, AlertCircle, Sparkles, FileSpreadsheet, ShieldCheck, Heart, Pill, Pencil
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { PatientTimeline } from "@/components/PatientTimeline"
-import { ClinicalNotesPanel } from "@/components/ClinicalNotesPanel"
-import { PatientConsultationsPanel } from "@/components/PatientConsultationsPanel"
-import { PatientForm } from "@/components/PatientForm"
-import { usePatient } from "@/lib/api/patients"
-import { useDoctors, useMyProfile } from "@/lib/api/profiles"
-import { useAuthSession } from "@/hooks/useAuth"
-import { PatientClinicalBanner } from "@/components/PatientClinicalBanner"
-import { PatientProfileSkeleton } from "@/components/skeletons/PatientProfileSkeleton"
-import { cn } from "@/lib/utils"
+  ArrowLeft, FileDown, FileText, Printer, Loader2, User, 
+  Baby, Stethoscope, Clock, StickyNote, AlertCircle, Sparkles, 
+  FileSpreadsheet, Heart, Pill, Pencil
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PatientTimeline } from "@/components/PatientTimeline";
+import { ClinicalNotesPanel } from "@/components/ClinicalNotesPanel";
+import { PatientConsultationsPanel } from "@/components/PatientConsultationsPanel";
+import { PatientForm } from "@/components/PatientForm";
+import { usePatient, fetchPatientById } from "@/lib/api/patients";
+import { useDoctors, useMyProfile } from "@/lib/api/profiles";
+import { useAuthSession } from "@/hooks/useAuth";
+import { PatientClinicalBanner } from "@/components/PatientClinicalBanner";
+import { PatientProfileSkeleton } from "@/components/skeletons/PatientProfileSkeleton";
+import { usePatientConsultations } from "@/lib/api/consultations";
+import {
+  PatientGeneralTab,
+  PatientAntecedentesTab,
+  PatientGinecologiaTab,
+  PatientObstetriciaTab,
+} from "@/components/patient-detail/PatientDetailTabs";
+import { PatientMedicalReportDialogs } from "@/components/patient-detail/PatientMedicalReportDialogs";
 
-const getInitials = (name?: string) => {
-  if (!name) return "NN";
-  return name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
-}
-
-const calculateAge = (dob: string | Date | undefined | null) => {
-  if (!dob) return "—";
-  const birthDate = new Date(dob);
-  const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const m = today.getMonth() - birthDate.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
-  }
-  return age;
-};
-import { usePatientConsultations } from "@/lib/api/consultations"
-import { fetchPatientById } from "@/lib/api/patients"
-
-export const Route = createFileRoute('/_authenticated/pacientes/$patientId')({
+export const Route = createFileRoute("/_authenticated/pacientes/$patientId")({
   loader: ({ context: { queryClient }, params: { patientId } }) => {
     if (typeof window !== "undefined") {
       queryClient.prefetchQuery({
         queryKey: ["patient", patientId],
         queryFn: () => fetchPatientById(patientId),
-      })
+      });
     }
   },
   component: PatientDetailRoute,
-})
-
-const tagBg: Record<string, string> = {
-  "activo": "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
-  "nuevo": "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
-  "alta": "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20",
-  "reposo": "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-};
-
-const statusLabel = (s?: string) => {
-  if (!s) return "Desconocido";
-  const m: Record<string, string> = {
-    "activo": "Activo",
-    "nuevo": "Nuevo",
-    "alta": "De Alta",
-    "reposo": "En Reposo",
-  };
-  return m[s] || s;
-};
+});
 
 function PatientRecipesTab({ patientId, patient, doctors }: any) {
   const { data: consultations, isLoading } = usePatientConsultations(patientId);
@@ -89,7 +56,7 @@ function PatientRecipesTab({ patientId, patient, doctors }: any) {
           <div key={c.id} className="p-4 border border-border/50 rounded-2xl bg-muted/10 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             <div>
               <p className="font-bold text-sm text-foreground">
-                Receta de Consulta - {new Date(c.created_at).toLocaleDateString("es-ES")}
+                Receta de Consulta - {new Date(c.created_at).toLocaleDateString("es-ES", { timeZone: APP_TIME_ZONE })}
               </p>
               <p className="text-xs text-muted-foreground mt-1 line-clamp-2 max-w-md">
                 {c.indications}
@@ -98,14 +65,14 @@ function PatientRecipesTab({ patientId, patient, doctors }: any) {
             <Button 
               size="sm" 
               variant="outline" 
-              className="rounded-xl flex-shrink-0"
+              className="rounded-xl border-border/60 hover:bg-muted text-xs font-semibold"
               onClick={async () => {
                 const { generateRecipePDF } = await import("@/lib/utils/recipePdf");
                 await generateRecipePDF(
                   patient, 
                   c, 
                   doc?.full_name || "Médico Tratante",
-                  doc?.specialty || "",
+                  doc?.specialty || "Ginecología - Obstetricia",
                   doc?.university || "",
                   doc?.mpps || "",
                   doc?.cmc || ""
@@ -122,16 +89,122 @@ function PatientRecipesTab({ patientId, patient, doctors }: any) {
   );
 }
 
-function PatientDetailRoute() {
-  const { patientId } = Route.useParams()
-  const { data: viewing, isLoading } = usePatient(patientId)
-  const { data: doctors } = useDoctors()
-  const { user: me } = useAuthSession()
-  const { data: myProfile } = useMyProfile(me?.id)
-  
-  const doctorMap = new Map(doctors?.map(d => [d.id, d.full_name]) || []);
+function PatientNotFoundView({ patientId }: { patientId: string }) {
+  return (
+    <div className="p-6 sm:p-10 max-w-2xl mx-auto w-full my-10 bg-card rounded-[2.5rem] border border-border/50 shadow-sm flex flex-col items-center justify-center text-center gap-4">
+      <div className="h-14 w-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+        <AlertCircle className="h-7 w-7" />
+      </div>
+      <div className="space-y-1.5">
+        <h2 className="text-lg font-extrabold text-foreground">
+          Expediente #{patientId} no encontrado
+        </h2>
+        <p className="text-xs text-muted-foreground max-w-md">
+          El paciente solicitado no existe en el registro clínico o el identificador en la URL no
+          corresponde a un expediente activo.
+        </p>
+      </div>
+      <div className="flex items-center gap-3 pt-2">
+        <Link to="/pacientes">
+          <Button className="rounded-xl gap-2 font-bold text-xs">
+            <ArrowLeft className="h-4 w-4" /> Volver al directorio de pacientes
+          </Button>
+        </Link>
+      </div>
+    </div>
+  );
+}
 
-  const [editOpen, setEditOpen] = useState(false);
+function PatientDetailHeader({
+  viewing,
+  onEditOpen,
+  onExportFicha,
+  onOpenReposo,
+  onOpenAtencion,
+  onOpenJustificativo,
+}: {
+  viewing: any;
+  onEditOpen: () => void;
+  onExportFicha: (p: any) => void;
+  onOpenReposo: (p: any) => void;
+  onOpenAtencion: (p: any) => void;
+  onOpenJustificativo: (p: any) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+      <div className="flex items-center gap-3">
+        <Link to="/pacientes">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Volver a la lista de pacientes"
+            className="h-10 w-10 rounded-2xl bg-background/80 border border-border/40 shadow-sm hover:bg-muted/80 transition-colors duration-200"
+          >
+            <ArrowLeft className="h-5 w-5 text-muted-foreground" />
+            <span className="sr-only">Volver a la lista de pacientes</span>
+          </Button>
+        </Link>
+        <div>
+          <h1 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-2">
+            Expediente Clínico
+            <Sparkles className="h-4 w-4 text-primary/70 animate-pulse" />
+          </h1>
+          <p className="text-xs text-muted-foreground font-medium">
+            Historial médico centralizado, antecedentes y registro evolutivo.
+          </p>
+        </div>
+      </div>
+
+      <div className="ml-auto flex items-center gap-2">
+        <Button
+          variant="outline"
+          onClick={onEditOpen}
+          className="rounded-2xl flex items-center gap-2 h-10 px-4 font-bold text-xs border-border/60 hover:bg-muted/80 transition-colors duration-200 cursor-pointer"
+        >
+          <Pencil className="h-3.5 w-3.5 text-primary" /> Editar Expediente
+        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button className="rounded-2xl flex items-center gap-2 h-10 px-4 font-bold text-xs bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary/90 transition-colors duration-200 cursor-pointer">
+              <FileDown className="h-4 w-4" /> Exportar Documentos
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            className="rounded-2xl bg-popover/95 backdrop-blur-md border border-border/50 p-2 shadow-2xl min-w-[200px]"
+            align="end"
+          >
+            <DropdownMenuItem
+              onClick={() => onExportFicha(viewing)}
+              className="rounded-xl cursor-pointer text-xs font-semibold flex items-center gap-2 px-3 py-2.5 hover:bg-muted/80 transition-colors"
+            >
+              <FileText className="h-4 w-4 text-primary" /> Expediente Clínico Completo
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onOpenReposo(viewing)}
+              className="rounded-xl cursor-pointer text-xs font-semibold flex items-center gap-2 px-3 py-2.5 hover:bg-muted/80 transition-colors"
+            >
+              <Printer className="h-4 w-4 text-emerald-500" /> Constancia de Reposo
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onOpenAtencion(viewing)}
+              className="rounded-xl cursor-pointer text-xs font-semibold flex items-center gap-2 px-3 py-2.5 hover:bg-muted/80 transition-colors"
+            >
+              <Printer className="h-4 w-4 text-sky-500" /> Constancia de Atención
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onOpenJustificativo(viewing)}
+              className="rounded-xl cursor-pointer text-xs font-semibold flex items-center gap-2 px-3 py-2.5 hover:bg-muted/80 transition-colors"
+            >
+              <Printer className="h-4 w-4 text-amber-500" /> Justificativo Médico
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
+  );
+}
+
+function usePatientReportsState(doctors: any[] | undefined, myProfile: any) {
   const [openReposo, setOpenReposo] = useState(false);
   const [openAtencion, setOpenAtencion] = useState(false);
   const [openJustificativo, setOpenJustificativo] = useState(false);
@@ -153,7 +226,7 @@ function PatientDetailRoute() {
   const [doctorCmc, setDoctorCmc] = useState("");
 
   const prefillDoctorFields = (p: any) => {
-    const assignedDoc = doctors?.find(d => d.id === p?.assigned_doctor_id);
+    const assignedDoc = doctors?.find((d) => d.id === p?.assigned_doctor_id);
     const activeDoc = assignedDoc || myProfile || doctors?.[0];
     setDoctorName(activeDoc?.full_name || "Médico Tratante");
     setDoctorUni(activeDoc?.university || "");
@@ -184,7 +257,9 @@ function PatientDetailRoute() {
   const handleOpenJustificativoDialog = (p: any) => {
     setJustificativoDate(new Date().toISOString().slice(0, 10));
     prefillDoctorFields(p);
-    setJustificativoReason(p.diagnosis || p.current_illness || p.consultation_reason || "Evaluación médica de rutina");
+    setJustificativoReason(
+      p.diagnosis || p.current_illness || p.consultation_reason || "Evaluación médica de rutina",
+    );
     setOpenJustificativo(true);
   };
 
@@ -235,6 +310,242 @@ function PatientDetailRoute() {
     setOpenJustificativo(false);
   };
 
+  return {
+    openReposo,
+    setOpenReposo,
+    reposoDays,
+    setReposoDays,
+    reposoStart,
+    setReposoStart,
+    reposoReason,
+    setReposoReason,
+    handleOpenReposoDialog,
+    handleExportReposo,
+
+    openAtencion,
+    setOpenAtencion,
+    atencionDate,
+    setAtencionDate,
+    atencionTime,
+    setAtencionTime,
+    atencionReason,
+    setAtencionReason,
+    handleOpenAtencionDialog,
+    handleExportAtencion,
+
+    openJustificativo,
+    setOpenJustificativo,
+    justificativoDate,
+    setJustificativoDate,
+    justificativoReason,
+    setJustificativoReason,
+    handleOpenJustificativoDialog,
+    handleExportJustificativo,
+
+    doctorName,
+    setDoctorName,
+    doctorUni,
+    setDoctorUni,
+    doctorMpps,
+    setDoctorMpps,
+    doctorCmc,
+    setDoctorCmc,
+
+    handleExportFicha,
+  };
+}
+
+function PatientDetailTabsContent({
+  viewing,
+  doctors,
+}: {
+  viewing: any;
+  doctors: any;
+}) {
+  return (
+    <Tabs defaultValue="general" className="flex-1 flex flex-col min-h-0">
+      <TabsList className="flex flex-wrap w-full bg-muted/40 p-1.5 rounded-2xl mb-6 border border-border/40 gap-1.5 h-auto">
+        <TabsTrigger
+          value="general"
+          className="rounded-xl font-bold text-xs py-2.5 px-3.5 flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-colors"
+        >
+          <User className="h-3.5 w-3.5" /> Identificación
+        </TabsTrigger>
+        <TabsTrigger
+          value="antecedentes"
+          className="rounded-xl font-bold text-xs py-2.5 px-3.5 flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-colors"
+        >
+          <FileSpreadsheet className="h-3.5 w-3.5" /> Antecedentes
+        </TabsTrigger>
+        <TabsTrigger
+          value="ginecologia"
+          className="rounded-xl font-bold text-xs py-2.5 px-3.5 flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-colors"
+        >
+          <Heart className="h-3.5 w-3.5" /> Ginecológico
+        </TabsTrigger>
+        <TabsTrigger
+          value="obstetricia"
+          className="rounded-xl font-bold text-xs py-2.5 px-3.5 flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-colors"
+        >
+          <Baby className="h-3.5 w-3.5" /> Obstétrico
+        </TabsTrigger>
+        <TabsTrigger
+          value="consultas"
+          className="rounded-xl font-bold text-xs py-2.5 px-3.5 flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-colors"
+        >
+          <Stethoscope className="h-3.5 w-3.5" /> Consultas
+        </TabsTrigger>
+        <TabsTrigger
+          value="timeline"
+          className="rounded-xl font-bold text-xs py-2.5 px-3.5 flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-colors"
+        >
+          <Clock className="h-3.5 w-3.5" /> Timeline
+        </TabsTrigger>
+        <TabsTrigger
+          value="notas"
+          className="rounded-xl font-bold text-xs py-2.5 px-3.5 flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-colors"
+        >
+          <StickyNote className="h-3.5 w-3.5" /> Notas y Estudios
+        </TabsTrigger>
+        <TabsTrigger
+          value="recetas"
+          className="rounded-xl font-bold text-xs py-2.5 px-3.5 flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-colors"
+        >
+          <Pill className="h-3.5 w-3.5" /> Recetas
+        </TabsTrigger>
+      </TabsList>
+
+      <div className="flex-1 pb-10">
+        <TabsContent value="general" className="space-y-6 outline-none animate-fade-in">
+          <PatientGeneralTab viewing={viewing} />
+        </TabsContent>
+
+        <TabsContent value="antecedentes" className="space-y-6 outline-none">
+          <PatientAntecedentesTab viewing={viewing} />
+        </TabsContent>
+
+        <TabsContent value="ginecologia" className="space-y-4 outline-none">
+          <PatientGinecologiaTab viewing={viewing} />
+        </TabsContent>
+
+        <TabsContent value="obstetricia" className="space-y-6 outline-none">
+          <PatientObstetriciaTab viewing={viewing} />
+        </TabsContent>
+
+        <TabsContent value="consultas" className="space-y-4 outline-none">
+          <PatientConsultationsPanel patientId={viewing.id} />
+        </TabsContent>
+
+        <TabsContent value="notas" className="space-y-4 outline-none">
+          <ClinicalNotesPanel patientId={viewing.id} />
+        </TabsContent>
+
+        <TabsContent value="timeline" className="space-y-4 outline-none">
+          <div className="max-w-2xl">
+            <PatientTimeline patientId={viewing.id} />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="recetas" className="space-y-4 outline-none">
+          <div className="bg-card border border-border/40 p-6 rounded-3xl shadow-sm">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-primary mb-4 flex items-center gap-2">
+              <Pill className="h-4 w-4" /> Historial de Recetas e Indicaciones
+            </h3>
+            <PatientRecipesTab patientId={viewing.id} patient={viewing} doctors={doctors} />
+          </div>
+        </TabsContent>
+      </div>
+    </Tabs>
+  );
+}
+
+function PatientDetailView({
+  viewing,
+  doctors,
+  myProfile,
+}: {
+  viewing: any;
+  doctors: any[] | undefined;
+  myProfile: any;
+}) {
+  const doctorMap = useMemo(
+    () => new Map(doctors?.map((d) => [d.id, d.full_name]) || []),
+    [doctors],
+  );
+
+  const [editOpen, setEditOpen] = useState(false);
+  const reports = usePatientReportsState(doctors, myProfile);
+
+  return (
+    <div className="space-y-6">
+      <div className="p-4 sm:p-6 md:p-8 max-w-6xl mx-auto w-full bg-card/60 backdrop-blur-md rounded-[2.5rem] border border-border/40 shadow-sm">
+        <PatientDetailHeader
+          viewing={viewing}
+          onEditOpen={() => setEditOpen(true)}
+          onExportFicha={reports.handleExportFicha}
+          onOpenReposo={reports.handleOpenReposoDialog}
+          onOpenAtencion={reports.handleOpenAtencionDialog}
+          onOpenJustificativo={reports.handleOpenJustificativoDialog}
+        />
+
+        <PatientClinicalBanner
+          patient={viewing}
+          assignedDoctorName={doctorMap.get(viewing.assigned_doctor_id ?? "")}
+          className="mb-6"
+        />
+
+        <PatientDetailTabsContent viewing={viewing} doctors={doctors} />
+
+        <PatientMedicalReportDialogs
+          viewing={viewing}
+          openReposo={reports.openReposo}
+          setOpenReposo={reports.setOpenReposo}
+          reposoDays={reports.reposoDays}
+          setReposoDays={reports.setReposoDays}
+          reposoStart={reports.reposoStart}
+          setReposoStart={reports.setReposoStart}
+          reposoReason={reports.reposoReason}
+          setReposoReason={reports.setReposoReason}
+          onExportReposo={reports.handleExportReposo}
+          openAtencion={reports.openAtencion}
+          setOpenAtencion={reports.setOpenAtencion}
+          atencionDate={reports.atencionDate}
+          setAtencionDate={reports.setAtencionDate}
+          atencionTime={reports.atencionTime}
+          setAtencionTime={reports.setAtencionTime}
+          atencionReason={reports.atencionReason}
+          setAtencionReason={reports.setAtencionReason}
+          onExportAtencion={reports.handleExportAtencion}
+          openJustificativo={reports.openJustificativo}
+          setOpenJustificativo={reports.setOpenJustificativo}
+          justificativoDate={reports.justificativoDate}
+          setJustificativoDate={reports.setJustificativoDate}
+          justificativoReason={reports.justificativoReason}
+          setJustificativoReason={reports.setJustificativoReason}
+          onExportJustificativo={reports.handleExportJustificativo}
+          doctorName={reports.doctorName}
+          setDoctorName={reports.setDoctorName}
+          doctorUni={reports.doctorUni}
+          setDoctorUni={reports.setDoctorUni}
+          doctorMpps={reports.doctorMpps}
+          setDoctorMpps={reports.setDoctorMpps}
+          doctorCmc={reports.doctorCmc}
+          setDoctorCmc={reports.setDoctorCmc}
+        />
+
+        <PatientForm open={editOpen} onOpenChange={setEditOpen} patient={viewing} />
+      </div>
+    </div>
+  );
+}
+
+function PatientDetailRoute() {
+  const { patientId } = Route.useParams();
+  const { data: viewing, isLoading } = usePatient(patientId);
+  const { data: doctors } = useDoctors();
+  const { user: me } = useAuthSession();
+  const { data: myProfile } = useMyProfile(me?.id);
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -244,738 +555,8 @@ function PatientDetailRoute() {
   }
 
   if (!viewing) {
-    return (
-      <div className="p-6 sm:p-10 max-w-2xl mx-auto w-full my-10 bg-card rounded-[2.5rem] border border-border/50 shadow-sm flex flex-col items-center justify-center text-center gap-4">
-        <div className="h-14 w-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
-          <AlertCircle className="h-7 w-7" />
-        </div>
-        <div className="space-y-1.5">
-          <h2 className="text-lg font-extrabold text-foreground">
-            Expediente #{patientId} no encontrado
-          </h2>
-          <p className="text-xs text-muted-foreground max-w-md">
-            El paciente solicitado no existe en el registro clínico o el identificador en la URL no corresponde a un expediente activo.
-          </p>
-        </div>
-        <div className="flex items-center gap-3 pt-2">
-          <Link to="/pacientes">
-            <Button className="rounded-xl gap-2 font-bold text-xs">
-              <ArrowLeft className="h-4 w-4" /> Volver al directorio de pacientes
-            </Button>
-          </Link>
-        </div>
-      </div>
-    );
+    return <PatientNotFoundView patientId={patientId} />;
   }
 
-  const formattedHistoria = viewing.historia_number
-    ? `HC-${String(viewing.historia_number).padStart(5, "0")}`
-    : `HC-${String(viewing.id).padStart(5, "0")}`;
-
-  return (
-    <div className="space-y-6">
-      <div className="p-4 sm:p-6 md:p-8 max-w-6xl mx-auto w-full bg-card/60 backdrop-blur-md rounded-[2.5rem] border border-border/40 shadow-sm">
-          {/* Header Banner & Navigation */}
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-            <div className="flex items-center gap-3">
-              <Link to="/pacientes">
-                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-2xl bg-background/80 border border-border/40 shadow-sm hover:bg-muted/80 transition-all duration-200">
-                  <ArrowLeft className="h-5 w-5 text-muted-foreground" />
-                </Button>
-              </Link>
-              <div>
-                <h1 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-2">
-                  Expediente Clínico
-                  <Sparkles className="h-4 w-4 text-primary/70 animate-pulse" />
-                </h1>
-                <p className="text-xs text-muted-foreground font-medium">
-                  Historial médico centralizado, antecedentes y registro evolutivo.
-                </p>
-              </div>
-            </div>
-            
-            <div className="ml-auto flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setEditOpen(true)}
-                className="rounded-2xl flex items-center gap-2 h-10 px-4 font-bold text-xs border-border/60 hover:bg-muted/80 transition-all duration-200 cursor-pointer"
-              >
-                <Pencil className="h-3.5 w-3.5 text-primary" /> Editar Expediente
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button className="rounded-2xl flex items-center gap-2 h-10 px-4 font-bold text-xs bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary/90 transition-all duration-200 cursor-pointer">
-                    <FileDown className="h-4 w-4" /> Exportar Documentos
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="rounded-2xl bg-popover/95 backdrop-blur-md border border-border/50 p-2 shadow-2xl min-w-[200px]" align="end">
-                  <DropdownMenuItem onClick={() => handleExportFicha(viewing)} className="rounded-xl cursor-pointer text-xs font-semibold flex items-center gap-2 px-3 py-2.5 hover:bg-muted/80 transition-colors">
-                    <FileText className="h-4 w-4 text-primary" /> Expediente Clínico Completo
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleOpenReposoDialog(viewing)} className="rounded-xl cursor-pointer text-xs font-semibold flex items-center gap-2 px-3 py-2.5 hover:bg-muted/80 transition-colors">
-                    <Printer className="h-4 w-4 text-emerald-500" /> Constancia de Reposo
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleOpenAtencionDialog(viewing)} className="rounded-xl cursor-pointer text-xs font-semibold flex items-center gap-2 px-3 py-2.5 hover:bg-muted/80 transition-colors">
-                    <Printer className="h-4 w-4 text-sky-500" /> Constancia de Atención
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleOpenJustificativoDialog(viewing)} className="rounded-xl cursor-pointer text-xs font-semibold flex items-center gap-2 px-3 py-2.5 hover:bg-muted/80 transition-colors">
-                    <Printer className="h-4 w-4 text-amber-500" /> Justificativo Médico
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-
-          {/* Clinical Banner with Allergies & Risk Alerts */}
-          <PatientClinicalBanner
-            patient={viewing}
-            assignedDoctorName={doctorMap.get(viewing.assigned_doctor_id ?? "")}
-            className="mb-6"
-          />
-
-          {/* Styled Navigation Tabs */}
-          <Tabs defaultValue="general" className="flex-1 flex flex-col min-h-0">
-            <TabsList className="flex flex-wrap w-full bg-muted/40 p-1.5 rounded-2xl mb-6 border border-border/40 gap-1.5 h-auto">
-              <TabsTrigger value="general" className="rounded-xl font-bold text-xs py-2.5 px-3.5 flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">
-                <User className="h-3.5 w-3.5" /> Identificación
-              </TabsTrigger>
-              <TabsTrigger value="antecedentes" className="rounded-xl font-bold text-xs py-2.5 px-3.5 flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">
-                <FileSpreadsheet className="h-3.5 w-3.5" /> Antecedentes
-              </TabsTrigger>
-              <TabsTrigger value="ginecologia" className="rounded-xl font-bold text-xs py-2.5 px-3.5 flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">
-                <Heart className="h-3.5 w-3.5" /> Ginecológico
-              </TabsTrigger>
-              <TabsTrigger value="obstetricia" className="rounded-xl font-bold text-xs py-2.5 px-3.5 flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">
-                <Baby className="h-3.5 w-3.5" /> Obstétrico
-              </TabsTrigger>
-              <TabsTrigger value="consultas" className="rounded-xl font-bold text-xs py-2.5 px-3.5 flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">
-                <Stethoscope className="h-3.5 w-3.5" /> Consultas
-              </TabsTrigger>
-              <TabsTrigger value="timeline" className="rounded-xl font-bold text-xs py-2.5 px-3.5 flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">
-                <Clock className="h-3.5 w-3.5" /> Timeline
-              </TabsTrigger>
-              <TabsTrigger value="notas" className="rounded-xl font-bold text-xs py-2.5 px-3.5 flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">
-                <StickyNote className="h-3.5 w-3.5" /> Notas y Estudios
-              </TabsTrigger>
-              <TabsTrigger value="recetas" className="rounded-xl font-bold text-xs py-2.5 px-3.5 flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">
-                <Pill className="h-3.5 w-3.5" /> Recetas
-              </TabsTrigger>
-            </TabsList>
-
-            <div className="flex-1 pb-10">
-              {/* TAB 1: GENERAL / IDENTIFICATION */}
-              <TabsContent value="general" className="space-y-6 outline-none animate-fade-in">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                  {/* Card 1: Datos Personales */}
-                  <div className="bg-card/90 dark:bg-muted/15 border border-border/60 p-5 rounded-3xl space-y-4 shadow-sm hover:border-primary/30 transition-all">
-                    <div className="flex items-center gap-2 pb-3 border-b border-border/40">
-                      <User className="h-4 w-4 text-primary" />
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-primary">Datos Personales</h3>
-                    </div>
-                    <div className="space-y-3.5 text-xs">
-                      <div>
-                        <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Nombre Completo</span>
-                        <span className="font-bold text-foreground text-sm">{viewing.full_name}</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Cédula</span>
-                          <span className="font-bold text-foreground">{viewing.document_id || "—"}</span>
-                        </div>
-                        <div>
-                          <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Edad</span>
-                          <span className="font-bold text-foreground">
-                            {viewing.birth_date ? `${calculateAge(viewing.birth_date)} años` : "—"}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Sexo / Género</span>
-                          <span className="font-bold text-foreground">{viewing.gender || "No especificado"}</span>
-                        </div>
-                        <div>
-                          <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Grupo Sanguíneo</span>
-                          <span className="font-bold text-rose-600 dark:text-rose-400">{viewing.blood_type || "No especificado"}</span>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Fecha de Nacimiento</span>
-                          <span className="font-bold text-foreground">{viewing.birth_date || "—"}</span>
-                        </div>
-                        <div>
-                          <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Lugar de Nacimiento</span>
-                          <span className="font-bold text-foreground">{viewing.birthplace || "—"}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Card 2: Contacto y Demografía */}
-                  <div className="bg-card/90 dark:bg-muted/15 border border-border/60 p-5 rounded-3xl space-y-4 shadow-sm hover:border-primary/30 transition-all">
-                    <div className="flex items-center gap-2 pb-3 border-b border-border/40">
-                      <MapPin className="h-4 w-4 text-primary" />
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-primary">Contacto y Demografía</h3>
-                    </div>
-                    <div className="space-y-3.5 text-xs">
-                      <div>
-                        <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Teléfono Principal</span>
-                        <span className="font-bold text-foreground">{viewing.phone || "—"}</span>
-                      </div>
-                      <div>
-                        <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Correo Electrónico</span>
-                        <span className="font-bold text-foreground truncate block">{viewing.email || "—"}</span>
-                      </div>
-                      <div>
-                        <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Contacto de Emergencia</span>
-                        <span className="font-bold text-foreground">{viewing.emergency_contact || "No registrado"}</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Estado Civil</span>
-                          <span className="font-bold text-foreground">{viewing.marital_status || "—"}</span>
-                        </div>
-                        <div>
-                          <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Instrucción</span>
-                          <span className="font-bold text-foreground">{viewing.education_level || "—"}</span>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Ocupación</span>
-                          <span className="font-bold text-foreground">{viewing.occupation || "—"}</span>
-                        </div>
-                        <div>
-                          <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Etnia</span>
-                          <span className="font-bold text-foreground">{viewing.ethnicity || "—"}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Card 3: Expediente e Ingreso */}
-                  <div className="bg-card/90 dark:bg-muted/15 border border-border/60 p-5 rounded-3xl space-y-4 shadow-sm hover:border-primary/30 transition-all">
-                    <div className="flex items-center gap-2 pb-3 border-b border-border/40">
-                      <Activity className="h-4 w-4 text-primary" />
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-primary">Registro Clínico</h3>
-                    </div>
-                    <div className="space-y-3.5 text-xs">
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">N.º de Historia</span>
-                          <span className="font-bold font-mono text-foreground">{formattedHistoria}</span>
-                        </div>
-                        <div>
-                          <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Fecha Primera Cita</span>
-                          <span className="font-bold text-foreground">{viewing.first_visit_date || "—"}</span>
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Médico Asignado</span>
-                        <span className="font-bold text-primary">{doctorMap.get(viewing.assigned_doctor_id ?? "") || "Sin asignar"}</span>
-                      </div>
-                      <div>
-                        <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Seguro / Cobertura</span>
-                        <span className="font-bold text-foreground">{viewing.insurance_provider || "Particular"}</span>
-                      </div>
-                      <div>
-                        <span className="text-[11px] text-muted-foreground font-medium block mb-0.5">Dirección de Domicilio</span>
-                        <span className="font-bold text-foreground">{viewing.address || "No registrada"}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Full-width Motivo / Enfermedad Actual */}
-                  {(viewing.consultation_reason || viewing.current_illness || viewing.notes) && (
-                    <div className="col-span-1 md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {viewing.consultation_reason && (
-                        <div className="bg-primary/5 border border-primary/10 p-4 rounded-2xl">
-                          <span className="text-xs font-bold uppercase tracking-wider text-primary block mb-1.5">Motivo de Consulta Inicial</span>
-                          <p className="text-xs font-medium text-foreground whitespace-pre-wrap leading-relaxed">{viewing.consultation_reason}</p>
-                        </div>
-                      )}
-                      {viewing.current_illness && (
-                        <div className="bg-primary/5 border border-primary/10 p-4 rounded-2xl">
-                          <span className="text-xs font-bold uppercase tracking-wider text-primary block mb-1.5">Enfermedad Actual</span>
-                          <p className="text-xs font-medium text-foreground whitespace-pre-wrap leading-relaxed">{viewing.current_illness}</p>
-                        </div>
-                      )}
-                      {viewing.notes && (
-                        <div className="col-span-1 md:col-span-2 bg-muted/40 border border-border/40 p-4 rounded-2xl">
-                          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-1.5">Notas Administrativas</span>
-                          <p className="text-xs font-medium text-foreground whitespace-pre-wrap leading-relaxed">{viewing.notes}</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </TabsContent>
-
-              {/* TAB 2: ANTECEDENTES */}
-              <TabsContent value="antecedentes" className="space-y-6 outline-none">
-                <div className="space-y-3">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-mauve">Antecedentes Familiares</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm bg-muted/20 border border-border/40 p-5 rounded-3xl">
-                    <div>
-                      <span className="text-xs text-muted-foreground block mb-1">Madre</span>
-                      <span className="font-semibold text-foreground">{viewing.family_history?.mother || "Niega / Sano"}</span>
-                    </div>
-                    <div>
-                      <span className="text-xs text-muted-foreground block mb-1">Padre</span>
-                      <span className="font-semibold text-foreground">{viewing.family_history?.father || "Niega / Sano"}</span>
-                    </div>
-                    <div>
-                      <span className="text-xs text-muted-foreground block mb-1">Hermanos</span>
-                      <span className="font-semibold text-foreground">{viewing.family_history?.siblings || "Niega / Sano"}</span>
-                    </div>
-                    <div>
-                      <span className="text-xs text-muted-foreground block mb-1">Hijos</span>
-                      <span className="font-semibold text-foreground">{viewing.family_history?.children || "Niega / Sano"}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-mauve">Antecedentes Personales Patológicos, Medicación y Hábitos</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm bg-muted/20 border border-border/40 p-5 rounded-3xl">
-                    <div>
-                      <span className="text-xs text-muted-foreground block mb-1">Tabaco</span>
-                      <span className="font-semibold text-foreground">{viewing.personal_history?.tobacco || "NIEGA"}</span>
-                    </div>
-                    <div>
-                      <span className="text-xs text-muted-foreground block mb-1">Alcohol</span>
-                      <span className="font-semibold text-foreground">{viewing.personal_history?.alcohol || "NIEGA"}</span>
-                    </div>
-                    <div>
-                      <span className="text-xs text-muted-foreground block mb-1">Drogas</span>
-                      <span className="font-semibold text-foreground">{viewing.personal_history?.drugs || "NIEGA"}</span>
-                    </div>
-                    <div>
-                      <span className="text-xs text-muted-foreground block mb-1">Patología de Base</span>
-                      <span className="font-semibold text-foreground">{viewing.personal_history?.base_pathology || "Niega"}</span>
-                    </div>
-                    <div className="col-span-2">
-                      <span className="text-xs text-muted-foreground block mb-1">Quirúrgicos / Hospitalizaciones</span>
-                      <span className="font-semibold text-foreground">{viewing.personal_history?.surgical || "Niega"}</span>
-                    </div>
-                    <div className="col-span-2">
-                      <span className="text-xs text-muted-foreground block mb-1">Alérgicos (Medicamentos / Alimentos)</span>
-                      <span className="font-semibold text-destructive">{viewing.personal_history?.allergies || "Niega"}</span>
-                    </div>
-                    <div className="col-span-2">
-                      <span className="text-xs text-muted-foreground block mb-1">Medicación Habitual Activa</span>
-                      <span className="font-semibold text-foreground">{viewing.personal_history?.current_medications || "Niega"}</span>
-                    </div>
-                    <div className="col-span-2">
-                      <span className="text-xs text-muted-foreground block mb-1">Transfusiones e Inmunizaciones</span>
-                      <span className="font-semibold text-foreground">{viewing.personal_history?.transfusions || "Niega"}</span>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-
-              {/* TAB 3: GINECOLOGICO */}
-              <TabsContent value="ginecologia" className="space-y-4 outline-none">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm bg-muted/20 border border-border/40 p-6 rounded-3xl">
-                  <div>
-                    <span className="text-xs text-muted-foreground block mb-1">Menarquía (Edad primera menstruación)</span>
-                    <span className="font-semibold text-foreground">{viewing.gynecological_data?.menarche || "—"}</span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-muted-foreground block mb-1">Sexarquía (Edad inicio relaciones sexuales)</span>
-                    <span className="font-semibold text-foreground">{viewing.gynecological_data?.sexarche || "—"}</span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-muted-foreground block mb-1">Ciclo Menstrual</span>
-                    <span className="font-semibold text-foreground">{viewing.gynecological_data?.menstrual_cycle || "—"}</span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-muted-foreground block mb-1">Dismenorrea (Menstruación dolorosa)</span>
-                    <span className="font-semibold text-foreground">{viewing.gynecological_data?.dysmenorrhea || "—"}</span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-muted-foreground block mb-1">NPS (Número parejas sexuales)</span>
-                    <span className="font-semibold text-foreground">{viewing.gynecological_data?.nps || "—"}</span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-muted-foreground block mb-1">ITS (Infecciones de Transmisión Sexual)</span>
-                    <span className="font-semibold text-foreground">{viewing.gynecological_data?.its || "—"}</span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-muted-foreground block mb-1">Última Citología</span>
-                    <span className="font-semibold text-foreground">{viewing.gynecological_data?.cytology || "—"}</span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-muted-foreground block mb-1">Anticonceptivos</span>
-                    <span className="font-semibold text-foreground">{viewing.gynecological_data?.contraceptives || "—"}</span>
-                  </div>
-                </div>
-              </TabsContent>
-
-              {/* TAB 4: OBSTETRICO */}
-              <TabsContent value="obstetricia" className="space-y-6 outline-none">
-                <div className="grid grid-cols-4 gap-4 text-sm bg-muted/20 border border-border/40 p-6 rounded-3xl">
-                  <div className="text-center">
-                    <span className="text-xs text-muted-foreground block mb-1 uppercase tracking-wider">Gestas</span>
-                    <span className="font-bold text-2xl text-mauve">{viewing.obstetric_data?.g ?? 0}</span>
-                  </div>
-                  <div className="text-center">
-                    <span className="text-xs text-muted-foreground block mb-1 uppercase tracking-wider">Partos</span>
-                    <span className="font-bold text-2xl text-mauve">{viewing.obstetric_data?.p ?? 0}</span>
-                  </div>
-                  <div className="text-center">
-                    <span className="text-xs text-muted-foreground block mb-1 uppercase tracking-wider">Cesáreas</span>
-                    <span className="font-bold text-2xl text-mauve">{viewing.obstetric_data?.c ?? 0}</span>
-                  </div>
-                  <div className="text-center">
-                    <span className="text-xs text-muted-foreground block mb-1 uppercase tracking-wider">Abortos</span>
-                    <span className="font-bold text-2xl text-mauve">{viewing.obstetric_data?.a ?? 0}</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm bg-muted/20 border border-border/40 p-6 rounded-3xl">
-                  <div>
-                    <span className="text-xs text-muted-foreground block mb-1">PIG (Período Intergenésico)</span>
-                    <span className="font-semibold text-foreground">{viewing.obstetric_data?.pig || "—"}</span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-muted-foreground block mb-1">Embarazos Múltiples</span>
-                    <span className="font-semibold text-foreground">{viewing.obstetric_data?.em ?? "0"}</span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-muted-foreground block mb-1">Embarazos Ectópicos</span>
-                    <span className="font-semibold text-foreground">{viewing.obstetric_data?.ee ?? "0"}</span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-muted-foreground block mb-1">Complicaciones Obstétricas</span>
-                    <span className="font-semibold text-foreground">{viewing.obstetric_data?.complications || "Ninguna"}</span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-muted-foreground block mb-1">FUM (Fecha Última Menstruación)</span>
-                    <span className="font-semibold text-foreground">{viewing.obstetric_data?.fum || "—"}</span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-muted-foreground block mb-1">EG (Edad Gestacional)</span>
-                    <span className="font-semibold text-foreground">{viewing.obstetric_data?.eg || "—"}</span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-muted-foreground block mb-1">FPP (Fecha Probable de Parto)</span>
-                    <span className="font-semibold text-mauve">{viewing.obstetric_data?.fpp || "—"}</span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-muted-foreground block mb-1">Número de Consultas Control</span>
-                    <span className="font-semibold text-foreground">{viewing.obstetric_data?.num_consultations || "—"}</span>
-                  </div>
-                  <div className="col-span-2">
-                    <span className="text-xs text-muted-foreground block mb-1">Vacunas</span>
-                    <span className="font-semibold text-foreground">{viewing.obstetric_data?.vaccines || "—"}</span>
-                  </div>
-                </div>
-              </TabsContent>
-
-              {/* TAB 5: CONSULTAS */}
-              <TabsContent value="consultas" className="space-y-4 outline-none">
-                <PatientConsultationsPanel patientId={viewing.id} />
-              </TabsContent>
-
-              {/* TAB 6: NOTAS CLINICAS */}
-              <TabsContent value="notas" className="space-y-4 outline-none">
-                <ClinicalNotesPanel patientId={viewing.id} />
-              </TabsContent>
-
-              {/* TAB 7: TIMELINE */}
-              <TabsContent value="timeline" className="space-y-4 outline-none">
-                <div className="max-w-2xl">
-                  <PatientTimeline patientId={viewing.id} />
-                </div>
-              </TabsContent>
-
-              {/* TAB 8: RECETAS */}
-              <TabsContent value="recetas" className="space-y-4 outline-none">
-                <div className="bg-card border border-border/40 p-6 rounded-3xl shadow-sm">
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-primary mb-4 flex items-center gap-2">
-                    <Pill className="h-4 w-4" /> Historial de Recetas e Indicaciones
-                  </h3>
-                  <PatientRecipesTab patientId={viewing.id} patient={viewing} doctors={doctors} />
-                </div>
-              </TabsContent>
-            </div>
-          </Tabs>
-
-      {/* Dialog Constancia de Reposo */}
-      <Dialog open={openReposo} onOpenChange={setOpenReposo}>
-        <DialogContent className="rounded-3xl sm:max-w-md bg-card p-6 border border-muted/50 shadow-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-1.5"><Printer className="h-5 w-5 text-mauve" /> Constancia de Reposo</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-3 py-2 text-sm">
-            <div className="grid gap-1">
-              <Label htmlFor="rp-days">Días de reposo</Label>
-              <Input
-                id="rp-days"
-                type="number"
-                min="1"
-                max="90"
-                value={reposoDays}
-                onChange={(e) => setReposoDays(e.target.value)}
-                className="rounded-xl"
-              />
-            </div>
-            <div className="grid gap-1">
-              <Label htmlFor="rp-start">Fecha de inicio</Label>
-              <Input
-                id="rp-start"
-                type="date"
-                value={reposoStart}
-                onChange={(e) => setReposoStart(e.target.value)}
-                className="rounded-xl"
-              />
-            </div>
-            <div className="grid gap-1">
-              <Label htmlFor="rp-reason">Diagnóstico / Motivo de reposo</Label>
-              <Textarea
-                id="rp-reason"
-                value={reposoReason}
-                onChange={(e) => setReposoReason(e.target.value)}
-                placeholder="Escribe el diagnóstico médico o motivo..."
-                className="rounded-xl min-h-[70px]"
-              />
-            </div>
-
-            <div className="border-t border-border/60 pt-3 mt-1 space-y-2.5">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Datos de Firma del Médico</p>
-              <div className="grid gap-1">
-                <Label htmlFor="rp-doc-name">Nombre del Médico</Label>
-                <Input
-                  id="rp-doc-name"
-                  placeholder="Ej. Dra. Nombre Apellido"
-                  value={doctorName}
-                  onChange={(e) => setDoctorName(e.target.value)}
-                  className="rounded-xl text-xs h-9"
-                />
-              </div>
-              <div className="grid gap-1">
-                <Label htmlFor="rp-doc-uni">Universidad / Título Adicional</Label>
-                <Input
-                  id="rp-doc-uni"
-                  placeholder="Ej. UC-CHET"
-                  value={doctorUni}
-                  onChange={(e) => setDoctorUni(e.target.value)}
-                  className="rounded-xl text-xs h-9"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="grid gap-1">
-                  <Label htmlFor="rp-doc-mpps">Registro MPPS</Label>
-                  <Input
-                    id="rp-doc-mpps"
-                    placeholder="Ej. 102.927"
-                    value={doctorMpps}
-                    onChange={(e) => setDoctorMpps(e.target.value)}
-                    className="rounded-xl text-xs h-9"
-                  />
-                </div>
-                <div className="grid gap-1">
-                  <Label htmlFor="rp-doc-cmc">Registro CMC</Label>
-                  <Input
-                    id="rp-doc-cmc"
-                    placeholder="Ej. 11.619"
-                    value={doctorCmc}
-                    onChange={(e) => setDoctorCmc(e.target.value)}
-                    className="rounded-xl text-xs h-9"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 border-t border-border/60 pt-3 mt-2">
-            <Button variant="ghost" onClick={() => setOpenReposo(false)} className="rounded-xl">Cancelar</Button>
-            <Button onClick={() => viewing && handleExportReposo(viewing)} className="rounded-xl bg-gradient-to-r from-mauve to-mauve-soft text-primary-foreground shadow-sm shadow-mauve/30">
-              Generar PDF
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog Constancia de Atención */}
-      <Dialog open={openAtencion} onOpenChange={setOpenAtencion}>
-        <DialogContent className="rounded-3xl sm:max-w-md bg-card p-6 border border-muted/50 shadow-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-1.5"><Printer className="h-5 w-5 text-mauve" /> Constancia de Atención</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-3 py-2 text-sm">
-            <div className="grid gap-1">
-              <Label htmlFor="at-date">Fecha de consulta</Label>
-              <Input
-                id="at-date"
-                type="date"
-                value={atencionDate}
-                onChange={(e) => setAtencionDate(e.target.value)}
-                className="rounded-xl"
-              />
-            </div>
-            <div className="grid gap-1">
-              <Label htmlFor="at-time">Hora de consulta</Label>
-              <Input
-                id="at-time"
-                type="time"
-                value={atencionTime}
-                onChange={(e) => setAtencionTime(e.target.value)}
-                className="rounded-xl"
-              />
-            </div>
-            <div className="grid gap-1">
-              <Label htmlFor="at-reason">Concepto de la consulta</Label>
-              <Textarea
-                id="at-reason"
-                value={atencionReason}
-                onChange={(e) => setAtencionReason(e.target.value)}
-                placeholder="Escribe el concepto..."
-                className="rounded-xl min-h-[70px]"
-              />
-            </div>
-
-            <div className="border-t border-border/60 pt-3 mt-1 space-y-2.5">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Datos de Firma del Médico</p>
-              <div className="grid gap-1">
-                <Label htmlFor="at-doc-name">Nombre del Médico</Label>
-                <Input
-                  id="at-doc-name"
-                  placeholder="Ej. Dra. Nombre Apellido"
-                  value={doctorName}
-                  onChange={(e) => setDoctorName(e.target.value)}
-                  className="rounded-xl text-xs h-9"
-                />
-              </div>
-              <div className="grid gap-1">
-                <Label htmlFor="at-doc-uni">Universidad / Título Adicional</Label>
-                <Input
-                  id="at-doc-uni"
-                  placeholder="Ej. UC-CHET"
-                  value={doctorUni}
-                  onChange={(e) => setDoctorUni(e.target.value)}
-                  className="rounded-xl text-xs h-9"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="grid gap-1">
-                  <Label htmlFor="at-doc-mpps">Registro MPPS</Label>
-                  <Input
-                    id="at-doc-mpps"
-                    placeholder="Ej. 102.927"
-                    value={doctorMpps}
-                    onChange={(e) => setDoctorMpps(e.target.value)}
-                    className="rounded-xl text-xs h-9"
-                  />
-                </div>
-                <div className="grid gap-1">
-                  <Label htmlFor="at-doc-cmc">Registro CMC</Label>
-                  <Input
-                    id="at-doc-cmc"
-                    placeholder="Ej. 11.619"
-                    value={doctorCmc}
-                    onChange={(e) => setDoctorCmc(e.target.value)}
-                    className="rounded-xl text-xs h-9"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 border-t border-border/60 pt-3 mt-2">
-            <Button variant="ghost" onClick={() => setOpenAtencion(false)} className="rounded-xl">Cancelar</Button>
-            <Button onClick={() => viewing && handleExportAtencion(viewing)} className="rounded-xl bg-gradient-to-r from-mauve to-mauve-soft text-primary-foreground shadow-sm shadow-mauve/30">
-              Generar PDF
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog Justificativo Médico */}
-      <Dialog open={openJustificativo} onOpenChange={setOpenJustificativo}>
-        <DialogContent className="rounded-3xl sm:max-w-md bg-card p-6 border border-muted/50 shadow-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-1.5"><Printer className="h-5 w-5 text-mauve" /> Justificativo Médico</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-3 py-2 text-sm">
-            <div className="grid gap-1">
-              <Label htmlFor="jus-date">Fecha</Label>
-              <Input
-                id="jus-date"
-                type="date"
-                value={justificativoDate}
-                onChange={(e) => setJustificativoDate(e.target.value)}
-                className="rounded-xl"
-              />
-            </div>
-            <div className="grid gap-1">
-              <Label htmlFor="jus-reason">Motivo / Justificación Médica</Label>
-              <Textarea
-                id="jus-reason"
-                value={justificativoReason}
-                onChange={(e) => setJustificativoReason(e.target.value)}
-                placeholder="Escribe el motivo o diagnóstico..."
-                className="rounded-xl min-h-[90px]"
-              />
-            </div>
-
-            <div className="border-t border-border/60 pt-3 mt-1 space-y-2.5">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Datos de Firma del Médico</p>
-              <div className="grid gap-1">
-                <Label htmlFor="jus-doc-name">Nombre del Médico</Label>
-                <Input
-                  id="jus-doc-name"
-                  placeholder="Ej. Dra. Nombre Apellido"
-                  value={doctorName}
-                  onChange={(e) => setDoctorName(e.target.value)}
-                  className="rounded-xl text-xs h-9"
-                />
-              </div>
-              <div className="grid gap-1">
-                <Label htmlFor="jus-doc-uni">Universidad / Título Adicional</Label>
-                <Input
-                  id="jus-doc-uni"
-                  placeholder="Ej. UC-CHET"
-                  value={doctorUni}
-                  onChange={(e) => setDoctorUni(e.target.value)}
-                  className="rounded-xl text-xs h-9"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="grid gap-1">
-                  <Label htmlFor="jus-doc-mpps">Registro MPPS</Label>
-                  <Input
-                    id="jus-doc-mpps"
-                    placeholder="Ej. 102.927"
-                    value={doctorMpps}
-                    onChange={(e) => setDoctorMpps(e.target.value)}
-                    className="rounded-xl text-xs h-9"
-                  />
-                </div>
-                <div className="grid gap-1">
-                  <Label htmlFor="jus-doc-cmc">Registro CMC</Label>
-                  <Input
-                    id="jus-doc-cmc"
-                    placeholder="Ej. 11.619"
-                    value={doctorCmc}
-                    onChange={(e) => setDoctorCmc(e.target.value)}
-                    className="rounded-xl text-xs h-9"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 border-t border-border/60 pt-3 mt-2">
-            <Button variant="ghost" onClick={() => setOpenJustificativo(false)} className="rounded-xl">Cancelar</Button>
-            <Button onClick={() => viewing && handleExportJustificativo(viewing)} className="rounded-xl bg-gradient-to-r from-mauve to-mauve-soft text-primary-foreground shadow-sm shadow-mauve/30">
-              Generar PDF
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <PatientForm open={editOpen} onOpenChange={setEditOpen} patient={viewing} />
-      </div>
-    </div>
-  )
+  return <PatientDetailView viewing={viewing} doctors={doctors} myProfile={myProfile} />;
 }

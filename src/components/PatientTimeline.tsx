@@ -1,3 +1,4 @@
+import { APP_TIME_ZONE } from "@/lib/constants/locale";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -147,13 +148,13 @@ export function PatientTimeline({ patientId }: { patientId: string }) {
                     dotClass
                   )}
                 />
-                <div className="rounded-2xl border border-border/60 bg-card/80 p-4 shadow-xs hover:border-primary/30 transition-all space-y-2">
+                <div className="rounded-2xl border border-border/60 bg-card/80 p-4 shadow-xs hover:border-primary/30 transition-colors space-y-2">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
                       <Icon className="h-3.5 w-3.5" /> {ev.badge}
                     </span>
                     <span className="text-[11px] font-medium text-muted-foreground">
-                      {new Date(ev.date).toLocaleDateString("es-ES", {
+                      {new Date(ev.date).toLocaleDateString("es-ES", { timeZone: APP_TIME_ZONE,
                         day: "2-digit",
                         month: "short",
                         year: "numeric",

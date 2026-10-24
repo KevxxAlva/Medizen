@@ -1,176 +1,35 @@
-import { useMemo, useState, useEffect, memo } from "react";
-import { Link } from "@tanstack/react-router";
-import { 
-  Search, Bell, Settings, MoreHorizontal, MapPin, Edit2, ChevronDown, ChevronLeft, ChevronRight, Users, CalendarClock, Plus, Check, Clock
-} from "lucide-react";
+import React, { useMemo, useEffect } from "react";
+import { Users, CalendarClock } from "lucide-react";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
+
 import { useAuthSession, useRoles } from "@/hooks/useAuth";
 import { useMyProfile, useDoctors } from "@/lib/api/profiles";
 import { useAppointments } from "@/lib/api/appointments";
 import { useRecentPatients, usePatientsCountByDateRange } from "@/lib/api/patients";
-import { useDashboardStats, useMonthlyPayments, useDailyGoals, useAddDailyGoal, useIncrementDailyGoal, useDashboardTrends, useTopTreatments } from "@/lib/api/dashboard";
+import {
+  useDashboardStats,
+  useMonthlyPayments,
+  useDailyGoals,
+  useAddDailyGoal,
+  useIncrementDailyGoal,
+  useDashboardTrends,
+  useTopTreatments,
+} from "@/lib/api/dashboard";
 import { useClinicInfo } from "@/lib/api/clinic";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { generateSalesReport } from "@/lib/utils/generateSalesReport";
-import { generatePatientsReport } from "@/lib/utils/generatePatientsReport";
-import { generateAppointmentsReport } from "@/lib/utils/generateAppointmentsReport";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
-import { AreaChart, Area, ResponsiveContainer, Tooltip, XAxis, PieChart, Pie, Cell, BarChart, Bar, CartesianGrid, YAxis } from "recharts";
-import { driver } from "driver.js";
-import "driver.js/dist/driver.css";
+
 import { DashboardSkeleton } from "@/components/skeletons/DashboardSkeleton";
 import { AiClinicalInsightsCard } from "@/components/dashboard/AiClinicalInsightsCard";
-
-const MiniAreaChart = memo(function MiniAreaChart({ data, colorVar, gradientId }: { data: number[]; colorVar: string; gradientId: string }) {
-  const chartData = useMemo(() => data.map((val, i) => ({ index: i, value: val })), [data]);
-  return (
-    <ResponsiveContainer width="100%" height="100%">
-      <AreaChart data={chartData}>
-        <defs>
-          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor={colorVar} stopOpacity={0.5}/>
-            <stop offset="95%" stopColor={colorVar} stopOpacity={0}/>
-          </linearGradient>
-        </defs>
-        <Tooltip 
-          cursor={false}
-          contentStyle={{ borderRadius: '0.5rem', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-card)', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', padding: '4px 8px', fontSize: '12px', fontWeight: 'bold' }}
-          formatter={(value: number) => [value, 'Total']}
-          labelFormatter={() => ''}
-        />
-        <Area type="monotone" dataKey="value" stroke={colorVar} strokeWidth={2.5} fillOpacity={1} fill={`url(#${gradientId})`} />
-      </AreaChart>
-    </ResponsiveContainer>
-  );
-});
-
-const DonutChart = memo(function DonutChart({ percentage }: { percentage: number }) {
-  const data = useMemo(() => [
-    { name: "Ocupado", value: percentage },
-    { name: "Libre", value: 100 - percentage }
-  ], [percentage]);
-
-  return (
-    <div className="relative flex items-center justify-center w-[120px] h-[120px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
-          <defs>
-            <linearGradient id="pieGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="var(--color-primary)" />
-              <stop offset="100%" stopColor="var(--color-secondary)" />
-            </linearGradient>
-          </defs>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            innerRadius={46}
-            outerRadius={60}
-            startAngle={90}
-            endAngle={-270}
-            dataKey="value"
-            stroke="none"
-            cornerRadius={10}
-          >
-            <Cell fill="url(#pieGradient)" />
-            <Cell fill="var(--color-muted)" opacity={0.3} />
-          </Pie>
-          <Tooltip 
-            formatter={(value: number) => [`${value}%`, '']}
-            contentStyle={{ borderRadius: '0.5rem', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-card)', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', padding: '4px 8px', fontSize: '12px', fontWeight: 'bold' }}
-            itemStyle={{ color: "var(--color-foreground)" }}
-          />
-        </PieChart>
-      </ResponsiveContainer>
-      <div className="absolute flex flex-col items-center justify-center pointer-events-none">
-        <span className="text-2xl font-display font-bold text-foreground">{percentage}%</span>
-        <span className="text-[9px] font-bold text-muted-foreground tracking-wider">OCUPACIÓN</span>
-      </div>
-    </div>
-  );
-});
-
-const LiveClockBadge = memo(function LiveClockBadge() {
-  const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const formattedTime = currentTime.toLocaleTimeString("es-VE", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true,
-  });
-
-  const formattedDate = currentTime.toLocaleDateString("es-VE", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  });
-
-  return (
-    <div
-      className="flex items-center gap-2.5 bg-card rounded-full px-3.5 py-2 shadow-sm border border-border/40 text-foreground transition-all hover:border-primary/30 select-none"
-      title={currentTime.toLocaleDateString("es-VE", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-    >
-      <div className="relative flex items-center justify-center shrink-0">
-        <Clock className="h-4 w-4 text-primary" />
-        <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-        </span>
-      </div>
-      <div className="flex items-center gap-1.5 font-mono">
-        <span className="hidden lg:inline text-[11px] font-medium text-muted-foreground uppercase tracking-tight">
-          {formattedDate} •
-        </span>
-        <span className="text-xs font-bold tabular-nums text-foreground tracking-wider uppercase">
-          {formattedTime}
-        </span>
-      </div>
-    </div>
-  );
-});
-
-const HeroDateTimeBadge = memo(function HeroDateTimeBadge() {
-  const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const formattedTime = currentTime.toLocaleTimeString("es-VE", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true,
-  });
-
-  return (
-    <div className="flex items-center gap-2 bg-black/10 w-max px-3 py-1.5 rounded-full backdrop-blur-md mb-4 border border-white/10 shadow-sm">
-      <span className="text-xs font-medium">
-        📅 {currentTime.toLocaleDateString("es-ES", { month: "short", day: "numeric", year: "numeric" })} {formattedTime}
-      </span>
-    </div>
-  );
-});
+import { DashboardHeader, DashboardNotification } from "@/components/dashboard/DashboardHeader";
+import { DashboardHero } from "@/components/dashboard/DashboardHero";
+import { DashboardMetricsCards } from "@/components/dashboard/DashboardMetricsCards";
+import { DashboardGoalsAndEvents } from "@/components/dashboard/DashboardGoalsAndEvents";
+import { DashboardTrendsAndTreatments } from "@/components/dashboard/DashboardTrendsAndTreatments";
+import { DashboardProfileCard } from "@/components/dashboard/DashboardProfileCard";
+import { DashboardCalendarWidget } from "@/components/dashboard/DashboardCalendarWidget";
 
 export function Dashboard() {
   const { user } = useAuthSession();
-
   const { data: roles = [] } = useRoles();
   const { data: profile } = useMyProfile(user?.id);
   const { data: doctors = [] } = useDoctors();
@@ -181,260 +40,74 @@ export function Dashboard() {
   const { data: clinic } = useClinicInfo();
   const { data: trends = [] } = useDashboardTrends();
   const { data: topTreatments = [] } = useTopTreatments();
-  
-  // Real data
+
   const startOfLastMonthStr = useMemo(() => {
     const now = new Date();
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     return startOfLastMonth.toISOString().slice(0, 10);
   }, []);
   const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const today = useMemo(() => new Date(), []);
+
   const { data: dailyGoals = [] } = useDailyGoals(todayStr);
   const addDailyGoal = useAddDailyGoal();
   const incrementDailyGoal = useIncrementDailyGoal();
-  
-  const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
-  const [newGoalTitle, setNewGoalTitle] = useState("");
-  const [newGoalTarget, setNewGoalTarget] = useState(1);
-  const [eventsRange, setEventsRange] = useState<"today" | "week">("today");
-  const [goalsRange, setGoalsRange] = useState<"today" | "week">("today");
-
-  const handleAddGoal = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newGoalTitle.trim() || newGoalTarget < 1) return;
-    await addDailyGoal.mutateAsync({
-      title: newGoalTitle.trim(),
-      target_value: newGoalTarget,
-      date: todayStr
-    });
-    setNewGoalTitle("");
-    setNewGoalTarget(1);
-    setIsGoalModalOpen(false);
-  };
 
   const { data: appointments = [] } = useAppointments({ from: startOfLastMonthStr });
 
-  const getCurrentMonthRange = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
-    const startOfMonth = new Date(year, month, 1, 0, 0, 0, 0).toISOString();
-    const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999).toISOString();
-    const filterMonth = `${year}-${String(month + 1).padStart(2, "0")}`;
-    return { startOfMonth, endOfMonth, filterMonth };
-  };
-
-  const handleDownloadMonthlySalesReport = async () => {
-    try {
-      toast.loading("Generando reporte del mes...", { id: "report_sales" });
-      const { startOfMonth, endOfMonth, filterMonth } = getCurrentMonthRange();
-      const { data, error } = await supabase
-        .from("facturas")
-        .select(`id_factura, id_paciente, fecha_emision, subtotal, monto_paciente, total_general, estado_pago, pacientes (nombre, apellido)`)
-        .gte("fecha_emision", startOfMonth)
-        .lte("fecha_emision", endOfMonth)
-        .order("fecha_emision", { ascending: false });
-
-      if (error) throw error;
-      const formatted = (data || []).map(d => ({
-        ...d,
-        paciente_nombre: d.pacientes ? `${d.pacientes.nombre} ${d.pacientes.apellido}` : ''
-      }));
-      await generateSalesReport(formatted, filterMonth);
-      toast.success("Reporte del mes generado", { id: "report_sales" });
-    } catch (e) {
-      toast.error("Error al generar reporte", { id: "report_sales" });
-    }
-  };
-
-  const handleDownloadGeneralSalesReport = async () => {
-    try {
-      toast.loading("Generando reporte general...", { id: "report_sales" });
-      const { data, error } = await supabase
-        .from("facturas")
-        .select(`id_factura, id_paciente, fecha_emision, subtotal, monto_paciente, total_general, estado_pago, pacientes (nombre, apellido)`)
-        .order("fecha_emision", { ascending: false });
-
-      if (error) throw error;
-      const formatted = (data || []).map(d => ({
-        ...d,
-        paciente_nombre: d.pacientes ? `${d.pacientes.nombre} ${d.pacientes.apellido}` : ''
-      }));
-      await generateSalesReport(formatted, "");
-      toast.success("Reporte histórico generado", { id: "report_sales" });
-    } catch (e) {
-      toast.error("Error al generar reporte", { id: "report_sales" });
-    }
-  };
-
-  const handleDownloadPatientsReport = async () => {
-    try {
-      toast.loading("Generando reporte del mes...", { id: "report_patients" });
-      const { startOfMonth, endOfMonth, filterMonth } = getCurrentMonthRange();
-
-      const { data, error } = await supabase
-        .from("pacientes")
-        .select(`id_paciente, nombre, apellido, documento_identidad, telefono, creado_en`)
-        .gte("creado_en", startOfMonth)
-        .lte("creado_en", endOfMonth)
-        .order("creado_en", { ascending: false });
-
-      if (error) throw error;
-      
-      await generatePatientsReport(data || [], filterMonth);
-      toast.success("Reporte del mes generado", { id: "report_patients" });
-    } catch (e) {
-      toast.error("Error al generar reporte", { id: "report_patients" });
-    }
-  };
-
-  const handleDownloadAllPatientsReport = async () => {
-    try {
-      toast.loading("Generando reporte histórico...", { id: "report_patients" });
-      const { data, error } = await supabase
-        .from("pacientes")
-        .select(`id_paciente, nombre, apellido, documento_identidad, telefono, creado_en`)
-        .order("creado_en", { ascending: false });
-
-      if (error) throw error;
-      await generatePatientsReport(data || [], "");
-      toast.success("Reporte histórico generado", { id: "report_patients" });
-    } catch (e) {
-      toast.error("Error al generar reporte", { id: "report_patients" });
-    }
-  };
-
-  const handleDownloadAppointmentsReport = async () => {
-    try {
-      toast.loading("Generando reporte del mes...", { id: "report_apps" });
-      const { startOfMonth, endOfMonth, filterMonth } = getCurrentMonthRange();
-
-      const { data, error } = await supabase
-        .from("citas")
-        .select(`id_cita, fecha_hora, estado, motivo, pacientes (nombre, apellido), medicos (nombre, apellido)`)
-        .gte("fecha_hora", startOfMonth)
-        .lte("fecha_hora", endOfMonth)
-        .order("fecha_hora", { ascending: false });
-
-      if (error) throw error;
-      
-      const formatted = (data || []).map(d => ({
-        ...d,
-        paciente_nombre: d.pacientes ? `${d.pacientes.nombre} ${d.pacientes.apellido}` : '',
-        medico_nombre: d.medicos ? `Dr(a). ${d.medicos.nombre} ${d.medicos.apellido}` : ''
-      }));
-      
-      await generateAppointmentsReport(formatted, filterMonth);
-      toast.success("Reporte del mes generado", { id: "report_apps" });
-    } catch (e) {
-      toast.error("Error al generar reporte", { id: "report_apps" });
-    }
-  };
-
-  const handleDownloadAllAppointmentsReport = async () => {
-    try {
-      toast.loading("Generando reporte histórico...", { id: "report_apps" });
-      const { data, error } = await supabase
-        .from("citas")
-        .select(`id_cita, fecha_hora, estado, motivo, pacientes (nombre, apellido), medicos (nombre, apellido)`)
-        .order("fecha_hora", { ascending: false });
-
-      if (error) throw error;
-      
-      const formatted = (data || []).map(d => ({
-        ...d,
-        paciente_nombre: d.pacientes ? `${d.pacientes.nombre} ${d.pacientes.apellido}` : '',
-        medico_nombre: d.medicos ? `Dr(a). ${d.medicos.nombre} ${d.medicos.apellido}` : ''
-      }));
-      
-      await generateAppointmentsReport(formatted, "");
-      toast.success("Reporte histórico generado", { id: "report_apps" });
-    } catch (e) {
-      toast.error("Error al generar reporte", { id: "report_apps" });
-    }
-  };
-
-  const doctorMap = useMemo(() => new Map(doctors.map((d) => [d.id, d.full_name || d.email])), [doctors]);
-  
-  const today = useMemo(() => new Date(), []);
-  
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [appointmentPage, setAppointmentPage] = useState(1);
-  const itemsPerPage = 8;
-  
-  // Reset page when selected date changes
-  useEffect(() => {
-    setAppointmentPage(1);
-  }, [selectedDate]);
-
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const isTourDone = localStorage.getItem('femesalud_tour_done');
+      const isTourDone = localStorage.getItem("femesalud_tour_done");
       if (!isTourDone) {
         const driverObj = driver({
           showProgress: true,
           steps: [
             {
-              element: 'aside',
-              popover: { title: 'Menú Principal', description: 'Accede a todas las herramientas de la clínica desde aquí.' }
+              element: "aside",
+              popover: {
+                title: "Menú Principal",
+                description: "Accede a todas las herramientas de la clínica desde aquí.",
+              },
             },
             {
-              element: '#search-bar',
-              popover: { title: 'Buscador', description: 'Encuentra rápidamente pacientes, citas y más.' }
+              element: "#search-bar",
+              popover: {
+                title: "Buscador",
+                description: "Encuentra rápidamente pacientes, citas o acciones.",
+              },
             },
             {
-              element: '#calendar-widget',
-              popover: { title: 'Tu Agenda', description: 'Controla tus citas diarias y mantente al día con tu calendario.' }
-            }
+              element: "#calendar-widget",
+              popover: {
+                title: "Tu Agenda",
+                description: "Controla tus citas diarias y mantente al día con tu calendario.",
+              },
+            },
           ],
           onDestroyStarted: () => {
             if (!driverObj.hasNextStep() || confirm("¿Estás seguro de saltar el tour?")) {
-              localStorage.setItem('femesalud_tour_done', 'true');
+              localStorage.setItem("femesalud_tour_done", "true");
               driverObj.destroy();
             }
           },
         });
-        setTimeout(() => driverObj.drive(), 1000);
+        const timerId = setTimeout(() => driverObj.drive(), 1000);
+        return () => {
+          clearTimeout(timerId);
+          driverObj.destroy();
+        };
       }
     }
   }, []);
-  
-  const selectedDateStr = useMemo(() => {
-    return selectedDate.toISOString().slice(0, 10);
-  }, [selectedDate]);
 
-  
   const todaysAppointments = useMemo(() => {
-    return appointments.filter(a => a.scheduled_at.slice(0, 10) === todayStr)
+    return appointments
+      .filter((a) => a.scheduled_at.slice(0, 10) === todayStr)
       .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
   }, [appointments, todayStr]);
 
-  const selectedDateAppointments = useMemo(() => {
-    return appointments.filter(a => a.scheduled_at.slice(0, 10) === selectedDateStr)
-      .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
-  }, [appointments, selectedDateStr]);
-
-  const currentWeek = useMemo(() => {
-    const days = [];
-    const date = new Date(selectedDate);
-    // Move to Sunday of selected date's week
-    date.setDate(date.getDate() - date.getDay());
-    for (let i = 0; i < 7; i++) {
-      const fullDate = new Date(date);
-      days.push({
-        day: date.toLocaleString('es-ES', { weekday: 'short' }).slice(0, 3).replace(/^\w/, c => c.toUpperCase()),
-        date: date.getDate(),
-        fullDate,
-        dateStr: fullDate.toISOString().slice(0, 10),
-        active: fullDate.toDateString() === selectedDate.toDateString()
-      });
-      date.setDate(date.getDate() + 1);
-    }
-    return days;
-  }, [selectedDate]);
-
   const notifications = useMemo(() => {
-    const list = [];
+    const list: DashboardNotification[] = [];
     if (todaysAppointments.length > 0) {
       list.push({
         id: "app-1",
@@ -471,680 +144,40 @@ export function Dashboard() {
 
   return (
     <div className="min-h-full bg-muted/50 rounded-[2rem] p-4 md:p-8 font-sans text-foreground">
-      {/* Header Bar */}
-      <header className="flex flex-wrap items-center justify-between gap-4 mb-8">
-        <button 
-          id="search-bar" 
-          type="button"
-          onClick={() => {
-            document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true }));
-          }}
-          className="relative w-full max-w-sm flex items-center justify-between bg-card rounded-full px-4 py-2.5 shadow-sm text-left hover:bg-muted/40 transition-colors cursor-pointer group focus:outline-none focus:ring-2 focus:ring-primary/20"
-        >
-          <div className="flex items-center gap-2.5 min-w-0">
-            <Search className="h-4 w-4 text-muted-foreground shrink-0 group-hover:text-primary transition-colors" />
-            <span className="text-sm text-muted-foreground truncate">Buscar pacientes, citas o acciones...</span>
-          </div>
-          <kbd className="hidden sm:inline-flex items-center text-[10px] font-bold text-muted-foreground bg-muted/80 px-2 py-0.5 rounded-full border border-border/50 shrink-0">
-            Ctrl + K
-          </kbd>
-        </button>
-        <div className="flex items-center gap-3">
-          {/* Reloj en Tiempo Real aislado para evitar re-renders del Dashboard */}
-          <LiveClockBadge />
-
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className="flex items-center justify-center h-10 w-10 bg-card rounded-full shadow-sm text-primary relative transition hover:bg-muted focus:outline-none">
-                <Bell className="h-5 w-5 fill-current" />
-                {notifications.length > 0 && (
-                  <span className="absolute top-2 right-2 h-2 w-2 bg-destructive/100 rounded-full border border-white"></span>
-                )}
-              </button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-80 p-0 rounded-[1.5rem] shadow-xl overflow-hidden border-border/40 font-sans">
-              <div className="px-4 py-3 bg-primary text-primary-foreground flex justify-between items-center">
-                <span className="font-bold text-xs uppercase tracking-wider">Notificaciones</span>
-                <span className="text-xs bg-card/20 px-2 py-0.5 rounded-full font-bold">{notifications.length} nuevas</span>
-              </div>
-              <div className="max-h-[300px] overflow-y-auto p-2 bg-card">
-                {notifications.length > 0 ? (
-                  notifications.map((n) => {
-                    const Icon = n.icon;
-                    return (
-                      <div key={n.id} className="flex gap-3 p-3 hover:bg-muted/50 rounded-xl transition cursor-default">
-                        <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-full", n.bg, n.color)}>
-                          <Icon className="h-4 w-4" strokeWidth={2.5} />
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-foreground">{n.title}</p>
-                          <p className="text-xs text-muted-foreground font-medium">{n.desc}</p>
-                        </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="p-6 text-center text-sm font-medium text-muted-foreground">
-                    No hay notificaciones nuevas
-                  </div>
-                )}
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          <Link to="/configuracion" className="flex items-center justify-center h-10 w-10 bg-card rounded-full shadow-sm text-muted-foreground transition hover:bg-muted/50 hover:text-primary focus:outline-none">
-            <Settings className="h-5 w-5" />
-          </Link>
-        </div>
-      </header>
+      <DashboardHeader notifications={notifications} />
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-        
         {/* LEFT COLUMN (Content) */}
         <div className="xl:col-span-8 flex flex-col gap-6">
-          
-          {/* HERO BANNER */}
-          <div className="relative bg-gradient-to-br from-primary to-primary/80 rounded-3xl p-8 overflow-hidden text-primary-foreground shadow-xl shadow-primary/20 flex justify-between items-center h-48 border border-white/10">
-            <div className="relative z-10">
-              <HeroDateTimeBadge />
-              <h1 className="font-display text-4xl font-bold mb-1 tracking-tight">¡Buen día, {displayName}!</h1>
-              <p className="text-primary-foreground/90 font-medium">¡Que tengas un excelente {today.toLocaleDateString("es-ES", { weekday: "long" })}!</p>
-            </div>
-            
-            {/* Abstract Doctor Illustration using CSS/Icons */}
-            <div className="absolute right-0 bottom-0 top-0 w-1/2 overflow-hidden hidden md:block">
-              {/* Background waves */}
-              <div className="absolute inset-0 opacity-20">
-                <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg" className="h-full w-full">
-                  <path fill="currentColor" className="text-card" d="M0,100 C150,200 250,0 400,100 L400,200 L0,200 Z" />
-                  <path fill="currentColor" className="text-card" d="M0,50 C150,-50 250,250 400,50 L400,200 L0,200 Z" opacity="0.5"/>
-                </svg>
-              </div>
-              
-              {/* Stylized Avatar Placeholder */}
-              <div className="absolute bottom-0 right-16 w-32 h-40 bg-card/10 rounded-t-[3rem] border border-white/20 flex flex-col items-center justify-end overflow-hidden">
-                <div className="w-16 h-16 bg-[#ffd166] rounded-full mb-2"></div> {/* Head */}
-                <div className="w-24 h-24 bg-card rounded-t-full"></div> {/* Coat */}
-              </div>
-              {/* Floating medical elements */}
-              <div className="absolute top-8 right-8 text-primary-foreground/50 text-2xl rotate-12">💊</div>
-              <div className="absolute bottom-12 right-4 text-primary-foreground/50 text-2xl -rotate-12">🩺</div>
-              <div className="absolute top-16 right-48 text-primary-foreground/50 text-2xl rotate-45">📋</div>
-            </div>
-          </div>
-
-          {/* 3 WORK CARDS */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Total Patients */}
-            <div className="glass-card rounded-[2rem] p-5 shadow-lg shadow-black/5 flex flex-col hover:-translate-y-1 transition-transform duration-300">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Pacientes Registrados</h3>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="text-muted-foreground hover:text-foreground focus:outline-none transition-colors"><MoreHorizontal className="h-4 w-4" /></button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 rounded-xl">
-                    <DropdownMenuItem asChild className="text-xs font-bold cursor-pointer">
-                      <Link to="/pacientes">Ver Todos</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="text-xs font-bold cursor-pointer">
-                      <Link to="/agenda">Ver Citas</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleDownloadPatientsReport} className="text-xs font-bold cursor-pointer text-primary focus:text-primary">
-                      Descargar Reporte del Mes
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleDownloadAllPatientsReport} className="text-xs font-medium cursor-pointer text-muted-foreground hover:text-foreground">
-                      Descargar Reporte Histórico
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              <div className="flex flex-wrap items-baseline gap-x-2 mb-1">
-                <span className="font-display text-4xl font-bold text-foreground tracking-tight">{totalPatients.toLocaleString("es-ES")}</span>
-                <span className="text-xs font-medium text-muted-foreground whitespace-nowrap mb-1">en el sistema</span>
-              </div>
-              <div className="mt-auto pt-4 h-16 w-full -mb-2">
-                <MiniAreaChart data={stats?.offlineWork.sparkline || [0, 0, 0, 0, 0, 0, 0]} colorVar="var(--color-primary)" gradientId="colorOffline" />
-              </div>
-            </div>
-
-            {/* Completed Consultations (Last 7 Days) */}
-            <div className="glass-card rounded-[2rem] p-5 shadow-lg shadow-black/5 flex flex-col hover:-translate-y-1 transition-transform duration-300">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Consultas Atendidas</h3>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="text-muted-foreground hover:text-foreground focus:outline-none transition-colors"><MoreHorizontal className="h-4 w-4" /></button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 rounded-xl">
-                    <DropdownMenuItem asChild className="text-xs font-bold cursor-pointer">
-                      <Link to="/agenda">Ir a la Agenda</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleDownloadAppointmentsReport} className="text-xs font-bold cursor-pointer text-primary focus:text-primary">
-                      Descargar Reporte del Mes
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleDownloadAllAppointmentsReport} className="text-xs font-medium cursor-pointer text-muted-foreground hover:text-foreground">
-                      Descargar Reporte Histórico
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              <div className="flex flex-wrap items-baseline gap-x-2 mb-1">
-                <span className="font-display text-4xl font-bold text-foreground tracking-tight">{(stats?.onlineWork.total || 0).toLocaleString("es-ES")}</span>
-                <span className="text-xs font-medium text-muted-foreground whitespace-nowrap mb-1">últimos 7 días</span>
-              </div>
-              <div>
-                <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded", (stats?.onlineWork.change || 0) >= 0 ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-destructive/10 text-destructive")}>
-                  {(stats?.onlineWork.change || 0) >= 0 ? "+" : ""}{stats?.onlineWork.change || 0}% hoy respecto a ayer
-                </span>
-              </div>
-              <div className="mt-auto pt-4 h-16 w-full -mb-2">
-                <MiniAreaChart data={stats?.onlineWork.sparkline || [0, 0, 0, 0, 0, 0, 0]} colorVar="var(--color-secondary)" gradientId="colorOnline" />
-              </div>
-            </div>
-
-            {/* Monthly Payments */}
-            <div className="glass-card rounded-[2rem] p-5 shadow-lg shadow-black/5 flex flex-col hover:-translate-y-1 transition-transform duration-300">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Ingresos Mensuales</h3>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="text-muted-foreground hover:text-foreground focus:outline-none transition-colors"><MoreHorizontal className="h-4 w-4" /></button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 rounded-xl">
-                    <DropdownMenuItem asChild className="text-xs font-bold cursor-pointer">
-                      <Link to="/facturacion">Ver Facturación</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleDownloadMonthlySalesReport} className="text-xs font-bold cursor-pointer text-primary focus:text-primary">
-                      Descargar Reporte del Mes
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleDownloadGeneralSalesReport} className="text-xs font-medium cursor-pointer text-muted-foreground hover:text-foreground">
-                      Descargar Reporte Histórico
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              <div className="flex flex-wrap items-baseline gap-x-2 mb-1">
-                <span className={cn("font-display font-bold text-foreground tracking-tight", monthlyData.total >= 100000 ? "text-2xl sm:text-3xl" : monthlyData.total >= 10000 ? "text-3xl" : "text-4xl")}>
-                  ${monthlyData.total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
-                <span className="text-xs font-medium text-muted-foreground whitespace-nowrap mb-1">este mes</span>
-              </div>
-              <div className="mt-auto pt-4 h-24 w-full">
-                {monthlyData.paymentsByDay.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={monthlyData.paymentsByDay}>
-                      <defs>
-                        <linearGradient id="colorPayments" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.5}/>
-                          <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <Tooltip 
-                        contentStyle={{ borderRadius: '1rem', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-card)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)' }}
-                        formatter={(value: number) => [`$${value.toFixed(2)}`, 'Ingresos']}
-                        labelFormatter={(label) => `Día: ${new Date(label).toLocaleDateString()}`}
-                      />
-                      <Area type="monotone" dataKey="amount" stroke="var(--color-primary)" strokeWidth={2} fillOpacity={1} fill="url(#colorPayments)" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="h-full w-full bg-muted/20 rounded-xl flex items-center justify-center text-muted-foreground text-xs font-medium">Sin datos de ingresos</div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* BOTTOM CARDS ROW */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            {/* Scheduled Events */}
-            <div className="glass-card rounded-[2rem] p-6 shadow-lg shadow-black/5 flex flex-col">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Mis Eventos Programados</h3>
-                <button
-                  type="button"
-                  onClick={() => setEventsRange((prev) => (prev === "today" ? "week" : "today"))}
-                  className="flex items-center gap-1 text-primary font-bold text-xs bg-primary/10 px-3 py-1.5 rounded-lg hover:bg-primary/20 transition cursor-pointer"
-                >
-                  {eventsRange === "today" ? "Hoy" : "7 Días"} <ChevronDown className="h-3 w-3" />
-                </button>
-              </div>
-              
-              <div className="flex items-center gap-6 mt-2">
-                <DonutChart
-                  percentage={
-                    eventsRange === "today"
-                      ? stats?.scheduledEvents.donutPercentage || 0
-                      : stats?.scheduledEvents.week?.donutPercentage || 0
-                  }
-                />
-                
-                <div className="flex flex-col gap-4 flex-1">
-                  <div>
-                    <div className="text-xl font-bold text-foreground font-display">
-                      {eventsRange === "today"
-                        ? stats?.scheduledEvents.consultations || 0
-                        : stats?.scheduledEvents.week?.consultations || 0}
-                    </div>
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase">Consultas</div>
-                  </div>
-                  <div>
-                    <div className="text-xl font-bold text-foreground font-display">
-                      {eventsRange === "today"
-                        ? stats?.scheduledEvents.labs || 0
-                        : stats?.scheduledEvents.week?.labs || 0}
-                    </div>
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase">Análisis de Lab.</div>
-                  </div>
-                  <div>
-                    <div className="text-xl font-bold text-foreground font-display">
-                      {eventsRange === "today"
-                        ? stats?.scheduledEvents.invoices || 0
-                        : stats?.scheduledEvents.week?.invoices || 0}
-                    </div>
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase">Facturas</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Plans Done */}
-            <div className="glass-card rounded-[2rem] p-6 shadow-lg shadow-black/5 flex flex-col">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                  {goalsRange === "today" ? "Mis Metas de Hoy" : "Mis Metas (7 Días)"}
-                </h3>
-                <button
-                  type="button"
-                  onClick={() => setGoalsRange((prev) => (prev === "today" ? "week" : "today"))}
-                  className="flex items-center gap-1 text-primary font-bold text-xs bg-primary/10 px-3 py-1.5 rounded-lg hover:bg-primary/20 transition cursor-pointer"
-                >
-                  {goalsRange === "today" ? "Hoy" : "7 Días"} <ChevronDown className="h-3 w-3" />
-                </button>
-              </div>
-
-              <div className="space-y-5 flex-1">
-                {/* Progress 1 */}
-                <div>
-                  <div className="flex justify-between text-xs font-bold mb-2">
-                    <span className="text-foreground">Consultas</span>
-                    <span className="text-foreground">
-                      {goalsRange === "today"
-                        ? stats?.plansDone.consultations || 0
-                        : stats?.plansDone.week?.consultations || 0}%
-                    </span>
-                  </div>
-                  <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary rounded-full transition-all duration-500"
-                      style={{
-                        width: `${
-                          goalsRange === "today"
-                            ? stats?.plansDone.consultations || 0
-                            : stats?.plansDone.week?.consultations || 0
-                        }%`,
-                      }}
-                    ></div>
-                  </div>
-                </div>
-                {/* Progress 2 */}
-                <div>
-                  <div className="flex justify-between text-xs font-bold mb-2">
-                    <span className="text-foreground">Análisis</span>
-                    <span className="text-foreground">
-                      {goalsRange === "today"
-                        ? stats?.plansDone.labs || 0
-                        : stats?.plansDone.week?.labs || 0}%
-                    </span>
-                  </div>
-                  <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-secondary rounded-full transition-all duration-500"
-                      style={{
-                        width: `${
-                          goalsRange === "today"
-                            ? stats?.plansDone.labs || 0
-                            : stats?.plansDone.week?.labs || 0
-                        }%`,
-                      }}
-                    ></div>
-                  </div>
-                </div>
-                {/* Progress 3 */}
-                <div>
-                  <div className="flex justify-between text-xs font-bold mb-2">
-                    <span className="text-foreground">Facturas Pagadas</span>
-                    <span className="text-foreground">
-                      {goalsRange === "today"
-                        ? stats?.plansDone.invoices || 0
-                        : stats?.plansDone.week?.invoices || 0}%
-                    </span>
-                  </div>
-                  <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-foreground/50 rounded-full transition-all duration-500"
-                      style={{
-                        width: `${
-                          goalsRange === "today"
-                            ? stats?.plansDone.invoices || 0
-                            : stats?.plansDone.week?.invoices || 0
-                        }%`,
-                      }}
-                    ></div>
-                  </div>
-                </div>
-
-                {/* Custom Daily Goals */}
-                {dailyGoals.map(goal => {
-                  const percentage = Math.min(Math.round((goal.current_value / goal.target_value) * 100), 100);
-                  const isComplete = goal.current_value >= goal.target_value;
-                  return (
-                    <div key={goal.id}>
-                      <div className="flex justify-between text-xs font-bold mb-2">
-                        <span className="text-foreground flex items-center gap-2">
-                          {goal.title}
-                          {isComplete && <Check className="h-3 w-3 text-emerald-500" />}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-foreground">{percentage}%</span>
-                          {!isComplete && (
-                            <button 
-                              onClick={() => incrementDailyGoal.mutate({ id: goal.id, currentValue: goal.current_value, date: goal.date })}
-                              className="bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded hover:bg-emerald-500/30 w-5 h-5 flex items-center justify-center transition disabled:opacity-50"
-                              disabled={incrementDailyGoal.isPending}
-                            >
-                              <Plus className="h-3 w-3" />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                      <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${percentage}%` }}></div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <Dialog open={isGoalModalOpen} onOpenChange={setIsGoalModalOpen}>
-                <DialogTrigger asChild>
-                  <button className="mt-6 w-full py-2.5 border-2 border-dashed border-border text-muted-foreground font-bold text-xs rounded-xl hover:bg-muted transition flex items-center justify-center gap-2">
-                    <Plus className="h-4 w-4" /> Añadir meta
-                  </button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Nueva meta de hoy</DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleAddGoal} className="space-y-4 pt-4">
-                    <div className="space-y-2">
-                      <Label>¿Qué quieres lograr hoy?</Label>
-                      <Input 
-                        placeholder="Ej: Entregar presupuestos" 
-                        value={newGoalTitle}
-                        onChange={(e) => setNewGoalTitle(e.target.value)}
-                        autoFocus
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Cantidad objetivo</Label>
-                      <Input 
-                        type="number" 
-                        min={1} 
-                        value={newGoalTarget}
-                        onChange={(e) => setNewGoalTarget(parseInt(e.target.value) || 1)}
-                      />
-                    </div>
-                    <button type="submit" disabled={addDailyGoal.isPending || !newGoalTitle.trim()} className="w-full py-2.5 bg-primary text-primary-foreground font-bold rounded-xl mt-2 disabled:opacity-50">
-                      Guardar Meta
-                    </button>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </div>
-
-          {/* CHARTS ROW */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Trends Chart */}
-            <div className="glass-card rounded-[2rem] p-6 shadow-lg shadow-black/5 flex flex-col">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Tendencias de Ingresos (6 Meses)</h3>
-              </div>
-              <div className="flex-1 min-h-[250px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={trends} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
-                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }} dy={10} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }} tickFormatter={(val) => `$${val}`} />
-                    <Tooltip
-                      contentStyle={{ borderRadius: '1rem', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-card)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                      formatter={(value: number) => [`$${value.toFixed(2)}`, 'Ingresos']}
-                      cursor={{ fill: 'var(--color-muted)', opacity: 0.2 }}
-                    />
-                    <Bar dataKey="amount" fill="var(--color-primary)" radius={[4, 4, 0, 0]} barSize={30} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* Top Treatments */}
-            <div className="glass-card rounded-[2rem] p-6 shadow-lg shadow-black/5 flex flex-col">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Servicios Populares</h3>
-              </div>
-              <div className="flex-1 space-y-4 pt-2">
-                {topTreatments.length > 0 ? (
-                  topTreatments.map((t, idx) => (
-                    <div key={idx} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-secondary/20 flex items-center justify-center text-secondary font-bold text-xs">
-                          #{idx + 1}
-                        </div>
-                        <span className="font-bold text-sm text-foreground">{t.name}</span>
-                      </div>
-                      <span className="font-bold text-xs bg-muted px-2 py-1 rounded-md">{t.count} consultas</span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="flex h-full min-h-[150px] items-center justify-center text-muted-foreground text-xs">
-                    Sin datos suficientes
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* AI CLINICAL INSIGHTS ROW */}
+          <DashboardHero displayName={displayName} today={today} />
+          <DashboardMetricsCards
+            totalPatients={totalPatients}
+            stats={stats}
+            monthlyData={monthlyData}
+          />
+          <DashboardGoalsAndEvents
+            stats={stats}
+            dailyGoals={dailyGoals}
+            todayStr={todayStr}
+            addDailyGoal={addDailyGoal}
+            incrementDailyGoal={incrementDailyGoal}
+          />
+          <DashboardTrendsAndTreatments trends={trends} topTreatments={topTreatments} />
           <AiClinicalInsightsCard />
         </div>
 
         {/* RIGHT COLUMN (Sidebar Profile & Calendar) */}
         <div className="xl:col-span-4 flex flex-col gap-6">
-          
-          {/* PROFILE CARD */}
-          <div className="glass-card rounded-[2rem] overflow-hidden shadow-lg shadow-black/5 relative pt-16">
-            <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-primary to-primary/90 px-6 py-4 flex justify-between items-start text-primary-foreground border-b border-primary/20">
-              <span className="text-xs font-bold tracking-widest uppercase">Mi Perfil</span>
-              <Link to="/configuracion" className="bg-black/10 p-1.5 rounded-lg hover:bg-black/20 transition">
-                <Edit2 className="h-3 w-3" />
-              </Link>
-            </div>
-            
-            <div className="px-6 pb-6 relative">
-              <div className="h-20 w-20 bg-card border-4 border-card rounded-2xl mx-auto -mt-10 mb-3 overflow-hidden flex items-center justify-center relative z-10 shadow-md">
-                <div className="h-full w-full bg-primary/10 text-primary font-display font-bold text-2xl flex items-center justify-center">
-                  {displayName.split(" ").filter(Boolean).map(n => n[0]).slice(0, 2).join("").toUpperCase() || "DR"}
-                </div>
-              </div>
-              
-              <div className="text-center mb-6">
-                <h2 className="text-lg font-display font-bold text-foreground">{displayName}</h2>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">{profile?.specialty || roleDisplay}</p>
-                <div className="flex items-center justify-center gap-1 text-xs text-primary font-bold">
-                  <MapPin className="h-3 w-3" /> {clinic?.name || "Clínica"}
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-2 text-center pt-4 border-t border-border/40">
-                <div>
-                  <p className="text-[9px] text-muted-foreground font-bold mb-1 uppercase tracking-wider">Status</p>
-                  <p className="text-xs font-bold text-emerald-500 dark:text-emerald-400">Activo</p>
-                </div>
-                <div>
-                  <p className="text-[9px] text-muted-foreground font-bold mb-1 uppercase tracking-wider">MPPS</p>
-                  <p className="text-xs font-bold text-foreground font-mono">{profile?.mpps || "N/A"}</p>
-                </div>
-                <div>
-                  <p className="text-[9px] text-muted-foreground font-bold mb-1 uppercase tracking-wider">Rol</p>
-                  <p className="text-xs font-bold text-foreground capitalize">{roleDisplay}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* CALENDAR & SCHEDULE WIDGET */}
-          <div id="calendar-widget" className="glass-card rounded-[2rem] overflow-hidden shadow-lg shadow-black/5 flex-1 flex flex-col">
-            
-            {/* Calendar Header */}
-            <div className="flex justify-between items-center bg-gradient-to-r from-primary to-primary/90 text-primary-foreground px-6 py-4 border-b border-primary/20">
-              <span className="text-xs font-bold uppercase tracking-widest">Mi Calendario</span>
-              <div className="flex items-center gap-1.5">
-                <button 
-                  onClick={() => {
-                    const prev = new Date(selectedDate);
-                    prev.setDate(prev.getDate() - 7);
-                    setSelectedDate(prev);
-                  }}
-                  className="p-1 hover:bg-black/20 rounded-lg transition cursor-pointer"
-                  title="Semana anterior"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <button 
-                  onClick={() => setSelectedDate(new Date())}
-                  className="bg-black/10 px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-black/20 transition capitalize cursor-pointer"
-                >
-                  {selectedDate.toLocaleString("es-ES", { month: "long" })} {selectedDate.getFullYear()}
-                </button>
-                <button 
-                  onClick={() => {
-                    const next = new Date(selectedDate);
-                    next.setDate(next.getDate() + 7);
-                    setSelectedDate(next);
-                  }}
-                  className="p-1 hover:bg-black/20 rounded-lg transition cursor-pointer"
-                  title="Semana siguiente"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-            
-            {/* Calendar Grid (Interactive Row of Days) */}
-            <div className="bg-muted px-4 py-4 border-b border-border/40">
-              <div className="flex justify-between items-center gap-1">
-                {currentWeek.map((d) => (
-                  <button 
-                    key={d.dateStr}
-                    onClick={() => setSelectedDate(d.fullDate)}
-                    className={cn(
-                      "flex flex-col items-center justify-center w-12 py-2 rounded-[1rem] transition-all cursor-pointer hover:scale-105",
-                      d.active 
-                        ? "bg-primary text-primary-foreground shadow-md font-bold" 
-                        : "text-muted-foreground bg-transparent hover:bg-background/60 hover:text-foreground"
-                    )}
-                  >
-                    <span className="text-[10px] font-bold mb-1">{d.day}</span>
-                    <span className={cn(
-                      "text-sm font-bold",
-                      d.active ? "text-primary-foreground" : "text-foreground"
-                    )}>{d.date}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Timeline for Selected Date */}
-            <div className="px-6 py-4 flex-1 flex flex-col">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                  <span>{selectedDate.toLocaleString("es-ES", { month: "long", day: "numeric", year: "numeric" }).toUpperCase()}</span>
-                  {selectedDate.toDateString() === today.toDateString() && (
-                    <span className="bg-primary/20 text-primary text-[10px] px-2 py-0.5 rounded-full font-extrabold">HOY</span>
-                  )}
-                </h3>
-                <span className="text-xs text-muted-foreground font-semibold">
-                  {selectedDateAppointments.length} cita(s)
-                </span>
-              </div>
-
-              <div className="flex flex-col flex-1">
-                {selectedDateAppointments.length > 0 ? (
-                  <>
-                    {selectedDateAppointments
-                      .slice((appointmentPage - 1) * itemsPerPage, appointmentPage * itemsPerPage)
-                      .map((app, i) => {
-                      const d = new Date(app.scheduled_at);
-                      const time = d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
-                      const isEven = i % 2 === 0;
-                      const dotColor = isEven ? "var(--color-primary)" : "var(--color-secondary)";
-                      return (
-                        <div key={app.id} className="relative flex flex-col pt-2 pb-4 border-b border-dashed border-border/40 last:border-0 hover:bg-muted/30 transition-colors -mx-4 px-4 rounded-xl">
-                          <div className="flex items-center gap-3 text-xs font-bold">
-                            <span className="w-14 text-left text-muted-foreground font-medium">{time}</span>
-                            <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: dotColor }} />
-                            <span className="text-foreground truncate flex-1">Consulta con {app.patient_name}</span>
-                            <span className={cn(
-                              "px-2 py-0.5 rounded text-[10px] uppercase font-bold",
-                              app.status === "completada" ? "bg-emerald-500/10 text-emerald-600" :
-                              app.status === "cancelada" ? "bg-destructive/10 text-destructive" :
-                              "bg-primary/10 text-primary"
-                            )}>
-                              {app.status}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                    
-                    {selectedDateAppointments.length > itemsPerPage && (
-                      <div className="flex justify-between items-center mt-4 pt-4 border-t border-border/40">
-                        <button
-                          onClick={() => setAppointmentPage(p => Math.max(1, p - 1))}
-                          disabled={appointmentPage === 1}
-                          className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider bg-muted hover:bg-muted/80 rounded-lg disabled:opacity-50 transition cursor-pointer text-foreground"
-                        >
-                          Anterior
-                        </button>
-                        <span className="text-xs text-muted-foreground font-bold">
-                          Página {appointmentPage} de {Math.ceil(selectedDateAppointments.length / itemsPerPage)}
-                        </span>
-                        <button
-                          onClick={() => setAppointmentPage(p => Math.min(Math.ceil(selectedDateAppointments.length / itemsPerPage), p + 1))}
-                          disabled={appointmentPage === Math.ceil(selectedDateAppointments.length / itemsPerPage)}
-                          className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider bg-muted hover:bg-muted/80 rounded-lg disabled:opacity-50 transition cursor-pointer text-foreground"
-                        >
-                          Siguiente
-                        </button>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-10 text-center opacity-60">
-                    <CalendarClock className="h-10 w-10 text-muted-foreground mb-2" />
-                    <p className="text-sm font-bold text-foreground">Sin eventos para este día</p>
-                    <p className="text-xs text-muted-foreground font-medium">No hay citas programadas para esta fecha</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-          </div>
-
+          <DashboardProfileCard
+            displayName={displayName}
+            profile={profile}
+            roleDisplay={roleDisplay}
+            clinic={clinic}
+          />
+          <DashboardCalendarWidget appointments={appointments} today={today} />
         </div>
       </div>
     </div>
   );
 }
+export default Dashboard;

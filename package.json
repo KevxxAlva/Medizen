@@ -96,5 +96,15 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
     "vite": "^7.3.1"
+  },
+  "reactDoctor": {
+    "ignore": {
+      "files": [
+        "scripts/**",
+        "scratch/**",
+        "setAdmin.js",
+        "generate_narration.cjs"
+      ]
+    }
   }
 }

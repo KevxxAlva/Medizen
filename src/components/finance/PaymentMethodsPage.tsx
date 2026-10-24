@@ -5,6 +5,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { TableRowActions } from "@/components/ui/table-row-actions";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { usePaymentMethods, useCreatePaymentMethod, useUpdatePaymentMethod, useDeletePaymentMethod, type PaymentMethod } from "@/lib/api/paymentMethods";
 import { useAccounts } from "@/lib/api/accounts";
 import { toast } from "sonner";
@@ -44,6 +46,7 @@ export function PaymentMethodsPage() {
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (createMethod.isPending || updateMethod.isPending) return;
     const fd = new FormData(e.currentTarget);
     const methodData = {
       name: fd.get("name") as string,
@@ -78,7 +81,7 @@ export function PaymentMethodsPage() {
     <div className="bg-card rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-6 shadow-sm min-h-[calc(100vh-8rem)] font-sans flex flex-col">
       <header className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <button className="text-muted-foreground hover:text-foreground"><ChevronLeft className="h-5 w-5" /></button>
+          <button type="button" aria-label="Volver" className="text-muted-foreground hover:text-foreground"><ChevronLeft className="h-5 w-5" /></button>
           <h1 className="text-xl font-bold text-foreground">Métodos de Pago</h1>
         </div>
         <div className="flex-1 max-w-xl mx-auto w-full sm:w-auto">
@@ -88,9 +91,10 @@ export function PaymentMethodsPage() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Buscar métodos de pago..."
+              aria-label="Buscar métodos de pago"
               className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground text-foreground"
             />
-            {q && <button onClick={() => setQ("")} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
+            {q && <button type="button" aria-label="Limpiar búsqueda" onClick={() => setQ("")} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
           </div>
         </div>
         <div className="flex items-center gap-4 hidden md:flex"></div>
@@ -114,7 +118,7 @@ export function PaymentMethodsPage() {
         <table className="w-full text-left border-collapse min-w-[600px]">
           <thead>
             <tr className="bg-muted text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-              <th className="p-4 w-12 rounded-tl-xl"><input type="checkbox" className="rounded border-gray-300" /></th>
+              <th className="p-4 w-12 rounded-tl-xl"><input type="checkbox" aria-label="Seleccionar todos los métodos de pago" className="rounded border-gray-300" /></th>
               <th className="p-4">Nombre del Método <span className="ml-1">↕</span></th>
               <th className="p-4">Categoría <span className="ml-1">↕</span></th>
               <th className="p-4">Cuenta Vinculada <span className="ml-1">↕</span></th>
@@ -128,7 +132,7 @@ export function PaymentMethodsPage() {
             ) : (
               paginated.map((m) => (
                 <tr key={m.id} className="border-b border-border/40 hover:bg-muted/50 transition group">
-                  <td className="p-4"><input type="checkbox" className="rounded border-gray-300" /></td>
+                  <td className="p-4"><input type="checkbox" aria-label={`Seleccionar método ${m.name}`} className="rounded border-gray-300" /></td>
                   <td className="p-4 font-bold text-foreground">{m.name}</td>
                   <td className="p-4 text-muted-foreground font-medium">{m.category}</td>
                   <td className="p-4 text-muted-foreground font-medium">
@@ -142,12 +146,12 @@ export function PaymentMethodsPage() {
                       {m.status === "Active" ? "Activo" : "Inactivo"}
                     </span>
                   </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-3 text-muted-foreground">
-                      <button onClick={() => { setEditing(m); setFormOpen(true); }} className="hover:text-foreground"><Pencil className="h-4 w-4" /></button>
-                      <button onClick={() => handleDelete(m.id)} className="hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
-                    </div>
-                  </td>
+                  <TableRowActions
+                    editLabel={`Editar método ${m.name}`}
+                    deleteLabel={`Eliminar método ${m.name}`}
+                    onEdit={() => { setEditing(m); setFormOpen(true); }}
+                    onDelete={() => handleDelete(m.id)}
+                  />
                 </tr>
               ))
             )}
@@ -155,17 +159,14 @@ export function PaymentMethodsPage() {
         </table>
       </div>
 
-      {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between pt-4 border-t border-border/40">
-          <p className="text-xs text-muted-foreground font-medium">
-            Mostrando <span className="font-bold text-foreground">{(currentPage - 1) * itemsPerPage + 1} - {Math.min(filtered.length, currentPage * itemsPerPage)}</span> de <span className="font-bold text-foreground">{filtered.length}</span> métodos
-          </p>
-          <div className="flex gap-1">
-            <button disabled={currentPage === 1} onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))} className="h-8 w-8 flex items-center justify-center rounded-lg border border-border/40 text-muted-foreground hover:bg-muted disabled:opacity-50"><ChevronLeft className="h-4 w-4" /></button>
-            <button disabled={currentPage === totalPages} onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))} className="h-8 w-8 flex items-center justify-center rounded-lg border border-border/40 text-muted-foreground hover:bg-muted disabled:opacity-50"><ChevronRight className="h-4 w-4" /></button>
-          </div>
-        </div>
-      )}
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={filtered.length}
+        itemsPerPage={itemsPerPage}
+        entityLabel="métodos"
+        onPageChange={setCurrentPage}
+      />
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="sm:max-w-[425px]">

@@ -69,9 +69,7 @@ export function useAuthSession(): AuthState {
 
   useEffect(() => {
     ensureAuthSubscription();
-    if (state !== sharedAuthState) {
-      setState(sharedAuthState);
-    }
+    setState((current) => (current !== sharedAuthState ? sharedAuthState : current));
     authListeners.add(setState);
     return () => {
       authListeners.delete(setState);

@@ -1,68 +1,26 @@
-import { useMemo, useState, useEffect } from "react";
-import { Link } from "@tanstack/react-router";
-import { Plus, ChevronLeft, ChevronRight, Download, Filter, Search, Grid, MoreHorizontal, Clock, LifeBuoy, Stethoscope, Video, Network } from "lucide-react";
-import { useAppointments, useUpdateAppointment, useDeleteAppointment, type AppointmentWithPatient } from "@/lib/api/appointments";
+import { useMemo, useState } from "react";
+import {
+  useAppointments,
+  useDeleteAppointment,
+  type AppointmentWithPatient,
+} from "@/lib/api/appointments";
 import { useDoctors } from "@/lib/api/profiles";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AppointmentForm } from "@/components/AppointmentForm";
 import { ConsultationForm } from "@/components/ConsultationForm";
 import { generateAppointmentsReport } from "@/lib/utils/generateAppointmentsReport";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-
-// Helpers
-function dateOnly(iso: string) { return iso.slice(0, 10); }
-function timeOnly(iso: string) {
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-function getMonday(d: Date) {
-  const date = new Date(d);
-  const day = date.getDay();
-  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-  return new Date(date.setDate(diff));
-}
-
-function getWeekDays(d: Date) {
-  const start = getMonday(d);
-  const days = [];
-  for (let i = 0; i < 7; i++) {
-    const next = new Date(start);
-    next.setDate(start.getDate() + i);
-    days.push(next);
-  }
-  return days;
-}
-
-function getCalendarMonthDays(d: Date) {
-  const start = new Date(d.getFullYear(), d.getMonth(), 1);
-  let dayOfWeek = start.getDay();
-  let offset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-  const calendarStart = new Date(start);
-  calendarStart.setDate(start.getDate() - offset);
-  
-  const days = [];
-  for (let i = 0; i < 35; i++) {
-    const next = new Date(calendarStart);
-    next.setDate(calendarStart.getDate() + i);
-    days.push(next);
-  }
-  return days;
-}
-
-function formatToYMD(d: Date) {
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-const MONTHS_ES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-const WEEKDAYS_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const HOURS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+import {
+  getWeekDays,
+  getCalendarMonthDays,
+  formatToYMD,
+} from "./agenda/agenda-helpers";
+import { AgendaHeader } from "./agenda/AgendaHeader";
+import { AgendaToolbar } from "./agenda/AgendaToolbar";
+import { AgendaSidebar } from "./agenda/AgendaSidebar";
+import { AgendaMonthView } from "./agenda/AgendaMonthView";
+import { AgendaWeekDayGrid } from "./agenda/AgendaWeekDayGrid";
+import { AgendaCalendarNav } from "./agenda/AgendaCalendarNav";
+import { useAgendaGridEvents } from "./agenda/useAgendaGridEvents";
 
 export function AgendaPage() {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -80,22 +38,30 @@ export function AgendaPage() {
   const [showAllSidebarApps, setShowAllSidebarApps] = useState(false);
 
   // Queries
-  const { data: appointments = [], isLoading } = useAppointments({
-    from: new Date(currentDate.getFullYear(), currentDate.getMonth() - 2, 1).toISOString().slice(0, 10),
-    to: new Date(currentDate.getFullYear(), currentDate.getMonth() + 3, 0).toISOString().slice(0, 10),
+  const { data: appointments = [] } = useAppointments({
+    from: new Date(currentDate.getFullYear(), currentDate.getMonth() - 2, 1)
+      .toISOString()
+      .slice(0, 10),
+    to: new Date(currentDate.getFullYear(), currentDate.getMonth() + 3, 0)
+      .toISOString()
+      .slice(0, 10),
   });
   const { data: doctors = [] } = useDoctors();
-  const update = useUpdateAppointment();
   const del = useDeleteAppointment();
 
-  const doctorMap = useMemo(() => new Map(doctors.map((d) => [d.id, d.full_name || d.email])), [doctors]);
+  const doctorMap = useMemo(
+    () => new Map(doctors.map((d) => [d.id, d.full_name || d.email])),
+    [doctors],
+  );
 
   const handleDownloadAgenda = async () => {
     try {
       toast.loading("Generando reporte de citas...", { id: "agenda_pdf" });
       const currentMonthStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}`;
       const formatted = appointments
-        .filter((a) => (statusFilter === "todas" ? a.status !== "cancelada" : a.status === statusFilter))
+        .filter((a) =>
+          statusFilter === "todas" ? a.status !== "cancelada" : a.status === statusFilter,
+        )
         .map((a) => ({
           id_cita: Number(a.id) || a.id,
           fecha_hora: a.scheduled_at,
@@ -110,569 +76,118 @@ export function AgendaPage() {
       toast.error(err?.message || "Error al exportar citas", { id: "agenda_pdf" });
     }
   };
-  
+
   const weekDays = useMemo(() => getWeekDays(currentDate), [currentDate]);
   const monthDays = useMemo(() => getCalendarMonthDays(currentDate), [currentDate]);
-
-  const changeStatus = async (id: string, status: string) => {
-    try { await update.mutateAsync({ id, status }); toast.success("Estado actualizado"); }
-    catch (err) { toast.error(err instanceof Error ? err.message : "Error"); }
-  };
+  const todayStr = useMemo(() => formatToYMD(new Date()), []);
 
   const deleteApp = async (id: string) => {
-    try { await del.mutateAsync(id); toast.success("Cita eliminada"); }
-    catch (err: any) { toast.error(err?.message || "Error al eliminar"); }
+    try {
+      await del.mutateAsync(id);
+      toast.success("Cita eliminada");
+    } catch (err: any) {
+      toast.error(err?.message || "Error al eliminar");
+    }
   };
 
-  // Process events for the grid
-  const gridEvents = useMemo(() => {
-    const weekStart = formatToYMD(weekDays[0]);
-    const weekEnd = formatToYMD(weekDays[6]);
-    
-    const processed = appointments.filter((a) => {
-      // Handle both "YYYY-MM-DD HH:MM:SS" and ISO strings safely
-      const safeIso = a.scheduled_at.replace(" ", "T");
-      const d = dateOnly(safeIso);
-      const matchesSearch = !searchQuery || (a.patient_name && a.patient_name.toLowerCase().includes(searchQuery.toLowerCase()));
-      const matchesStatus = statusFilter === "todas" ? a.status !== "cancelada" : a.status === statusFilter;
-      return d >= weekStart && d <= weekEnd && matchesSearch && matchesStatus;
-    }).map((app) => {
-      const safeIso = app.scheduled_at.replace(" ", "T");
-      const date = new Date(safeIso);
-      const hour = date.getHours();
-      const mins = date.getMinutes();
-      
-      // Calculate top position relative to 8 AM
-      const startFloat = hour + (mins / 60);
-      const startFrom8 = startFloat - 8;
-      
-      // Use actual duration or default to 1 hour
-      const durationHours = (app.duration_minutes || 60) / 60;
-      
-      let theme;
-      if (app.status?.toLowerCase() === 'completada') {
-        theme = { bg: "bg-green-50/90 backdrop-blur-sm", border: "border-green-400", text: "text-green-700" };
-      } else {
-        theme = { bg: "bg-primary/10 backdrop-blur-sm", border: "border-blue-300", text: "text-primary" };
-      }
-      
-      return {
-        ...app,
-        dayIndex: date.getDay() === 0 ? 6 : date.getDay() - 1, // 0 = Mon, 6 = Sun
-        topHours: startFrom8,
-        durationHours,
-        theme
-      };
-    }).sort((a, b) => {
-      if (a.dayIndex !== b.dayIndex) return a.dayIndex - b.dayIndex;
-      return a.topHours - b.topHours;
-    });
-
-    const result = [];
-    let currentGroup: any[] = [];
-    for (const ev of processed) {
-      currentGroup = currentGroup.filter(g => g.dayIndex === ev.dayIndex && g.topHours + g.durationHours > ev.topHours);
-      ev.overlapIndex = currentGroup.length;
-      currentGroup.push(ev);
-      result.push(ev);
-    }
-
-    return result;
-  }, [appointments, weekDays, searchQuery, statusFilter]);
-
-  const monthDaysGrid = useMemo(() => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const firstDayOfMonth = new Date(year, month, 1);
-    const startDate = getMonday(firstDayOfMonth);
-    
-    return Array.from({ length: 42 }, (_, i) => {
-      const d = new Date(startDate);
-      d.setDate(startDate.getDate() + i);
-      return d;
-    });
-  }, [currentDate]);
+  const gridEvents = useAgendaGridEvents(appointments, weekDays, searchQuery, statusFilter);
 
   const daysToRender = calendarView === "Diaria" ? [currentDate] : weekDays;
+
+  const handleOpenNewAppointment = (dateStr?: string) => {
+    setDefaultFormDate(dateStr || formatToYMD(new Date()));
+    setEditingApp(null);
+    setFormOpen(true);
+  };
+
+  const handleEditAppointment = (app: AppointmentWithPatient) => {
+    setEditingApp(app);
+    setFormOpen(true);
+  };
+
+  const handleStartConsultation = (app: AppointmentWithPatient) => {
+    setConsultationApp(app);
+    setConsultationOpen(true);
+  };
 
   return (
     <>
       <div className="bg-card rounded-[2rem] p-6 shadow-sm min-h-[calc(100vh-8rem)] font-sans text-foreground flex flex-col">
-        
         {/* HEADER */}
-        <header className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-primary tracking-tight">Agenda</h1>
-          <button 
-            onClick={() => { setDefaultFormDate(formatToYMD(new Date())); setEditingApp(null); setFormOpen(true); }}
-            className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-full font-bold shadow-md hover:bg-[#3451d6] transition-colors"
-          >
-            <Plus className="h-4 w-4" strokeWidth={3} /> Nueva Cita
-          </button>
-        </header>
+        <AgendaHeader onNewAppointment={() => handleOpenNewAppointment()} />
 
         {/* TOOLBAR */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-          <div className="flex items-center gap-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 text-xs font-bold text-foreground border border-border/40 rounded-xl px-4 py-2 hover:bg-muted focus:outline-none">
-                  <Filter className="h-4 w-4 text-muted-foreground" /> Filtro
-                  {statusFilter !== "todas" && <span className="bg-primary w-2 h-2 rounded-full absolute top-1 right-1"></span>}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56 rounded-xl">
-                <DropdownMenuItem onClick={() => setStatusFilter("todas")} className="text-xs font-bold cursor-pointer">Completadas y en Espera (Todas)</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter("pendiente")} className="text-xs font-bold cursor-pointer">Solo en Espera (Pendientes)</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter("completada")} className="text-xs font-bold cursor-pointer">Solo Completadas</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter("cancelada")} className="text-xs font-bold cursor-pointer text-destructive hover:text-destructive focus:text-destructive">Ver Canceladas</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <button
-              type="button"
-              onClick={handleDownloadAgenda}
-              className="flex items-center gap-2 text-xs font-bold text-foreground border border-border/40 rounded-xl px-4 py-2 hover:bg-muted cursor-pointer"
-            >
-              <Download className="h-4 w-4 text-muted-foreground" /> Descargar Datos
-            </button>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className={cn("flex items-center transition-all duration-300 overflow-hidden", isSearchOpen ? "w-48 opacity-100" : "w-9 opacity-100")}>
-              {isSearchOpen ? (
-                <div className="relative w-full">
-                  <input
-                    autoFocus
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onBlur={() => { if (!searchQuery) setIsSearchOpen(false); }}
-                    placeholder="Buscar paciente..."
-                    className="w-full h-9 pl-9 pr-3 text-xs border border-[#4361ee] rounded-full focus:outline-none focus:ring-1 focus:ring-[#4361ee]"
-                  />
-                  <Search className="h-4 w-4 text-primary absolute left-3 top-2.5" />
-                </div>
-              ) : (
-                <button onClick={() => setIsSearchOpen(true)} className="h-9 w-9 shrink-0 flex items-center justify-center border border-border/40 rounded-full text-muted-foreground hover:bg-muted focus:outline-none">
-                  <Search className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-            <Link to="/support">
-              <button className="flex items-center gap-2 text-xs font-bold text-foreground border border-border/40 rounded-xl px-4 py-2 hover:bg-muted">
-                <LifeBuoy className="h-4 w-4 text-muted-foreground" /> Soporte
-              </button>
-            </Link>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 text-xs font-bold text-foreground border border-border/40 rounded-xl px-4 py-2 hover:bg-muted focus:outline-none focus:ring-0">
-                  <Grid className="h-4 w-4 text-muted-foreground" /> Diseño
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 rounded-xl">
-                <DropdownMenuItem onClick={() => setCompactMode(false)} className="text-xs font-bold cursor-pointer">
-                  Vista Cómoda (Normal)
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setCompactMode(true)} className="text-xs font-bold cursor-pointer">
-                  Vista Compacta
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
+        <AgendaToolbar
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          onDownloadAgenda={handleDownloadAgenda}
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
+          isSearchOpen={isSearchOpen}
+          onSearchOpenChange={setIsSearchOpen}
+          compactMode={compactMode}
+          onCompactModeChange={setCompactMode}
+        />
 
         <div className="flex flex-col lg:flex-row gap-8 flex-1">
           {/* LEFT SIDEBAR */}
-          <aside className="w-full lg:w-[280px] flex flex-col gap-8 shrink-0">
-            
-            {/* Appointment Calendar */}
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="font-bold text-sm tracking-wide text-foreground">Calendario de Citas</h2>
-                <div className="flex gap-1">
-                  <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))} className="h-6 w-6 flex items-center justify-center bg-primary text-primary-foreground rounded-full hover:opacity-90">
-                    <ChevronLeft className="h-3 w-3" />
-                  </button>
-                  <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))} className="h-6 w-6 flex items-center justify-center bg-muted text-gray-400 rounded-full hover:bg-gray-200">
-                    <ChevronRight className="h-3 w-3" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-7 text-center gap-y-3 gap-x-1">
-                {WEEKDAYS_SHORT.map(d => (
-                  <div key={d} className="text-[10px] font-bold text-muted-foreground">{d}</div>
-                ))}
-                {monthDays.map((d, i) => {
-                  const isCurrentMonth = d.getMonth() === currentDate.getMonth();
-                  const isSelected = formatToYMD(d) === formatToYMD(currentDate);
-                  return (
-                    <div 
-                      key={i} 
-                      onClick={() => setCurrentDate(d)}
-                      className={cn(
-                        "h-8 w-8 mx-auto flex items-center justify-center text-xs font-bold rounded-full cursor-pointer transition-colors",
-                        !isCurrentMonth && "text-gray-300",
-                        isCurrentMonth && !isSelected && "text-foreground hover:bg-muted",
-                        isSelected && "bg-primary text-primary-foreground shadow-md"
-                      )}
-                    >
-                      {d.getDate()}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <hr className="border-border/40" />
-
-            {/* Doctor Appointment List */}
-            <div className="flex-1 flex flex-col">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="font-bold text-sm tracking-wide text-foreground">Lista de Citas Médicas</h2>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button type="button" className="text-muted-foreground border border-border/40 p-1 rounded-lg hover:bg-muted">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-44 rounded-xl">
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setDefaultFormDate(formatToYMD(currentDate));
-                        setEditingApp(null);
-                        setFormOpen(true);
-                      }}
-                      className="text-xs font-bold cursor-pointer"
-                    >
-                      Nueva Cita
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleDownloadAgenda} className="text-xs font-bold cursor-pointer">
-                      Exportar PDF
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              <div className="space-y-4 flex-1 overflow-y-auto max-h-[400px] pr-2">
-                {gridEvents.length === 0 ? (
-                  <div className="text-center text-xs text-muted-foreground mt-10">No hay citas en este rango de fechas.</div>
-                ) : (
-                  (showAllSidebarApps ? gridEvents : gridEvents.slice(0, 10)).map((app) => {
-                    const safeIso = app.scheduled_at.replace(" ", "T");
-                    const d = new Date(safeIso);
-                    const end = new Date(d.getTime() + (app.duration_minutes || 60) * 60000);
-                    const pad = (n: number) => String(n).padStart(2, '0');
-                    const patientInitials = (app.patient_name || "P")
-                      .split(" ")
-                      .filter(Boolean)
-                      .map((n: string) => n[0])
-                      .slice(0, 2)
-                      .join("")
-                      .toUpperCase();
-                    return (
-                      <div key={app.id} onClick={() => { setEditingApp(app); setFormOpen(true); }} className="flex items-center justify-between group cursor-pointer p-2 hover:bg-muted/50 rounded-xl transition">
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center border-2 border-card shadow-sm shrink-0">
-                            {patientInitials}
-                          </div>
-                          <div className="overflow-hidden max-w-[120px]">
-                            <p className="text-xs font-bold text-foreground group-hover:text-primary transition truncate">{app.patient_name}</p>
-                            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider truncate">{app.reason || "Cita"}</p>
-                          </div>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <Clock className="h-3 w-3 text-muted-foreground ml-auto mb-0.5" />
-                          <p className="text-[10px] font-bold text-foreground">{pad(d.getHours())}:{pad(d.getMinutes())} - {pad(end.getHours())}:{pad(end.getMinutes())}</p>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowAllSidebarApps((prev) => !prev)}
-                className="mt-4 w-full bg-primary text-primary-foreground text-xs font-bold py-3 rounded-2xl hover:bg-[#3451d6] transition shadow-md shadow-primary/20 cursor-pointer"
-              >
-                {showAllSidebarApps ? "Mostrar Menos" : `Ver Todo (${gridEvents.length})`}
-              </button>
-            </div>
-          </aside>
+          <AgendaSidebar
+            currentDate={currentDate}
+            onSelectDate={setCurrentDate}
+            onPrevMonth={() =>
+              setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))
+            }
+            onNextMonth={() =>
+              setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))
+            }
+            monthDays={monthDays}
+            gridEvents={gridEvents}
+            showAllSidebarApps={showAllSidebarApps}
+            onToggleShowAll={() => setShowAllSidebarApps((prev) => !prev)}
+            onNewAppointment={() => handleOpenNewAppointment(formatToYMD(currentDate))}
+            onEditAppointment={handleEditAppointment}
+            onDownloadAgenda={handleDownloadAgenda}
+          />
 
           {/* MAIN WEEK GRID */}
           <section className="flex-1 border border-border/40 rounded-3xl flex flex-col overflow-hidden shadow-sm relative">
-            
-            {/* Grid Toolbar */}
-            <div className="flex flex-wrap items-center justify-between p-4 border-b border-border/40 bg-card z-20 relative">
-              <div className="flex items-center gap-4">
-                <h2 className="text-base font-bold text-foreground">
-                  {MONTHS_ES[currentDate.getMonth()]} {currentDate.getFullYear()}
-                </h2>
-                <button onClick={() => setCurrentDate(new Date())} className="text-xs font-bold text-primary bg-muted/50 px-3 py-1 rounded-lg">Hoy</button>
-                <div className="flex items-center gap-1 text-muted-foreground">
-                  <button 
-                    onClick={() => {
-                      if (calendarView === "Mensual") {
-                        setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
-                      } else if (calendarView === "Diaria") {
-                        setCurrentDate(new Date(currentDate.getTime() - 86400000));
-                      } else {
-                        setCurrentDate(new Date(currentDate.getTime() - 7 * 86400000));
-                      }
-                    }} 
-                    className="hover:bg-muted p-1 rounded-md"
-                  ><ChevronLeft className="h-4 w-4" /></button>
-                  <button 
-                    onClick={() => {
-                      if (calendarView === "Mensual") {
-                        setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
-                      } else if (calendarView === "Diaria") {
-                        setCurrentDate(new Date(currentDate.getTime() + 86400000));
-                      } else {
-                        setCurrentDate(new Date(currentDate.getTime() + 7 * 86400000));
-                      }
-                    }} 
-                    className="hover:bg-muted p-1 rounded-md"
-                  ><ChevronRight className="h-4 w-4" /></button>
-                </div>
-                <div className="flex bg-muted/50 p-1 rounded-lg ml-4">
-                  {["Mensual", "Semanal", "Diaria"].map((v) => (
-                    <button
-                      key={v}
-                      onClick={() => setCalendarView(v)}
-                      className={cn(
-                        "px-3 py-1 text-xs font-bold rounded-md transition-colors",
-                        calendarView === v ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      {v}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground">
-                <button
-                  type="button"
-                  onClick={() => setStatusFilter("todas")}
-                  className={cn("hover:text-foreground transition-colors", statusFilter === "todas" && "text-primary")}
-                >
-                  Todas
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setStatusFilter("pendiente")}
-                  className={cn("hover:text-foreground transition-colors", statusFilter === "pendiente" && "text-primary")}
-                >
-                  En Espera
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setStatusFilter("completada")}
-                  className={cn("hover:text-foreground transition-colors", statusFilter === "completada" && "text-primary")}
-                >
-                  Completadas
-                </button>
-              </div>
-            </div>
+            <AgendaCalendarNav
+              currentDate={currentDate}
+              onCurrentDateChange={setCurrentDate}
+              calendarView={calendarView}
+              onCalendarViewChange={setCalendarView}
+              statusFilter={statusFilter}
+              onStatusFilterChange={setStatusFilter}
+            />
 
             {/* Timetable Body Container */}
             <div className="flex-1 overflow-y-auto overflow-x-auto relative bg-card">
-              
               {calendarView === "Mensual" ? (
-                <div className="flex flex-col min-h-full bg-card relative min-w-[640px] sm:min-w-full">
-                  {/* Monthly Header */}
-                  <div className="sticky top-0 z-20 grid grid-cols-7 border-b border-border/40 bg-card">
-                    {WEEKDAYS_SHORT.map((dayName, i) => (
-                      <div key={i} className="text-center py-3 border-r border-border/40 last:border-0">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{dayName}</p>
-                      </div>
-                    ))}
-                  </div>
-                  {/* Monthly Grid */}
-                  <div className="flex-1 grid grid-cols-7 grid-rows-5">
-                    {monthDays.map((d, i) => {
-                      const isToday = formatToYMD(d) === formatToYMD(new Date());
-                      const isCurrentMonth = d.getMonth() === currentDate.getMonth();
-                      
-                      const dayEvents = appointments.filter(a => {
-                        const safeIso = a.scheduled_at.replace(" ", "T");
-                        const matchesSearch = !searchQuery || (a.patient_name && a.patient_name.toLowerCase().includes(searchQuery.toLowerCase()));
-                        const matchesStatus = statusFilter === "todas" ? a.status !== "cancelada" : a.status === statusFilter;
-                        return dateOnly(safeIso) === formatToYMD(d) && matchesSearch && matchesStatus;
-                      });
-
-                      return (
-                        <div 
-                          key={i} 
-                          onClick={() => { setCurrentDate(d); setCalendarView("Semanal"); }}
-                          className={cn(
-                            "border-r border-b border-border/40 p-2 min-h-[120px] transition hover:bg-muted/50 cursor-pointer overflow-hidden flex flex-col", 
-                            !isCurrentMonth && "bg-muted/30 opacity-50", 
-                            isToday && "bg-muted/50"
-                          )}
-                        >
-                          <div className="flex justify-between items-center mb-1 shrink-0">
-                            <span className={cn("text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full", isToday ? "bg-primary text-primary-foreground" : "text-foreground")}>
-                              {d.getDate()}
-                            </span>
-                          </div>
-                          <div className="space-y-1 flex-1 overflow-y-auto no-scrollbar">
-                            {dayEvents.map(ev => {
-                              let dotColor = ev.status?.toLowerCase() === 'completada' ? "bg-green-500" : "bg-blue-500";
-                              return (
-                                <div 
-                                  key={ev.id}
-                                  onClick={(e) => { e.stopPropagation(); setEditingApp(ev); setFormOpen(true); }}
-                                  className="flex items-center gap-1.5 text-[10px] font-bold px-1.5 py-1 rounded hover:bg-muted transition"
-                                >
-                                  <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", dotColor)}></div>
-                                  <span className="truncate">{timeOnly(ev.scheduled_at.replace(" ", "T"))} {ev.patient_name}</span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
+                <AgendaMonthView
+                  currentDate={currentDate}
+                  monthDays={monthDays}
+                  todayStr={todayStr}
+                  appointments={appointments}
+                  searchQuery={searchQuery}
+                  statusFilter={statusFilter}
+                  onSelectDay={(d) => {
+                    setCurrentDate(d);
+                    setCalendarView("Semanal");
+                  }}
+                  onEditAppointment={handleEditAppointment}
+                />
               ) : (
-                <>
-                  {/* Days Header */}
-              <div className={cn("sticky top-0 z-20 flex bg-card border-b border-border/40", calendarView !== "Diaria" ? "min-w-[640px] sm:min-w-full" : "min-w-full")}>
-                <div className="w-16 shrink-0 border-r border-border/40 bg-card flex items-center justify-center">
-                  <span className="text-[10px] font-bold text-muted-foreground">GMT-4</span>
-                </div>
-                <div className={cn("flex-1 grid", calendarView === "Diaria" ? "grid-cols-1" : "grid-cols-7")}>
-                  {daysToRender.map((d, i) => (
-                    <div key={i} className="text-center py-3 border-r border-border/40 last:border-0">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{WEEKDAYS_SHORT[d.getDay() === 0 ? 6 : d.getDay() - 1]} {d.getDate()}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Grid Lines & Events Container */}
-              <div className={cn("flex relative", calendarView !== "Diaria" ? "min-w-[640px] sm:min-w-full" : "min-w-full")}>
-                {/* Y-Axis Hours */}
-                <div className="w-16 shrink-0 border-r border-border/40 bg-card relative z-10">
-                  {HOURS.map((h, i) => (
-                    <div key={h} className={cn("border-b border-transparent relative flex items-start justify-center pt-2", compactMode ? "h-12" : "h-24")}>
-                      {i > 0 && <span className={cn("text-[10px] font-bold text-muted-foreground bg-card px-1", compactMode ? "-mt-3" : "-mt-4")}>{h < 12 ? h : h === 12 ? 12 : h - 12} {h < 12 ? 'AM' : 'PM'}</span>}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Main Grid */}
-                <div className={cn("flex-1 grid relative", calendarView === "Diaria" ? "grid-cols-1" : "grid-cols-7")}>
-                  {/* Background horizontal lines */}
-                  <div className="absolute inset-0 pointer-events-none flex flex-col">
-                     {HOURS.map((h, i) => (
-                       <div key={h} className={cn("w-full", compactMode ? "h-12" : "h-24", i > 0 && "border-t border-border/40")}></div>
-                     ))}
-                  </div>
-
-                  {/* Day Columns */}
-                  {daysToRender.map((d, colIndex) => {
-                    const isToday = formatToYMD(d) === formatToYMD(new Date());
-                    const actualDayIndex = d.getDay() === 0 ? 6 : d.getDay() - 1; // 0=Mon
-                    return (
-                      <div 
-                        key={colIndex} 
-                        onClick={() => { setDefaultFormDate(formatToYMD(d)); setEditingApp(null); setFormOpen(true); }}
-                        className={cn("border-r border-border/40 last:border-0 relative h-full min-h-[800px] cursor-pointer hover:bg-muted/50 transition-colors", isToday && "bg-muted/50")}
-                      >
-                        {/* Render Events for this day */}
-                        {gridEvents.filter(ev => ev.dayIndex === actualDayIndex).map((ev) => {
-                          const pxPerHour = compactMode ? 48 : 96;
-                          const topPx = ev.topHours * pxPerHour; 
-                          const heightPx = ev.durationHours * pxPerHour;
-
-                          return (
-                            <Popover key={ev.id}>
-                              <PopoverTrigger asChild>
-                                <div 
-                                  onClick={(e) => e.stopPropagation()} // Prevent column click when clicking event
-                                  className={cn(
-                                    "absolute rounded-[1rem] p-3 text-xs font-bold cursor-pointer transition-all hover:scale-[1.02] hover:!z-50 overflow-hidden shadow-sm border border-l-4",
-                                    ev.theme.bg, ev.theme.border, ev.theme.text
-                                  )}
-                                  style={{ 
-                                    top: `${topPx}px`, 
-                                    height: `${heightPx}px`,
-                                    left: `${(ev.overlapIndex || 0) * 16 + 4}px`,
-                                    right: `4px`,
-                                    zIndex: 10 + (ev.overlapIndex || 0)
-                                  }}
-                                >
-                                  <p className="truncate font-extrabold">{ev.patient_name}</p>
-                                  <p className="text-[10px] opacity-80 font-medium tracking-wide mt-0.5 flex gap-1">
-                                    {timeOnly(ev.scheduled_at.replace(" ", "T"))} - {timeOnly(new Date(new Date(ev.scheduled_at.replace(" ", "T")).getTime() + ev.durationHours * 3600000).toISOString())}
-                                  </p>
-                                </div>
-                              </PopoverTrigger>
-                              
-                              {/* Edit Schedule Popover */}
-                              <PopoverContent align="start" side="right" className="w-64 p-0 rounded-2xl shadow-xl border-border/40 z-50">
-                                <div className="px-4 py-3 flex justify-between items-center border-b border-border/40">
-                                  <span className="text-xs font-bold text-foreground tracking-wide">Editar Horario</span>
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <button className="text-muted-foreground hover:text-foreground"><MoreHorizontal className="h-4 w-4" /></button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-40 rounded-xl">
-                                      <DropdownMenuItem className="text-xs font-bold text-destructive focus:text-destructive cursor-pointer" onClick={(e) => { e.stopPropagation(); deleteApp(ev.id); }}>
-                                        Eliminar Cita
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </div>
-                                <div className="p-4 space-y-4">
-                                  <div className="flex gap-3 text-sm">
-                                    <div className="mt-0.5 shrink-0"><div className="h-3 w-3 rounded-full border-2 border-[#4361ee]"></div></div>
-                                    <div className="flex-1">
-                                      <p className="font-bold text-foreground leading-tight">{ev.patient_name}</p>
-                                      <p className="text-[10px] text-primary font-medium mt-0.5 cursor-pointer hover:underline">Añadir Descripción</p>
-                                    </div>
-                                  </div>
-                                  <div className="flex gap-3 text-sm">
-                                    <Clock className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                                    <div className="flex-1">
-                                      <p className="font-bold text-foreground text-xs">Añadir Hora</p>
-                                      <p className="text-[10px] text-primary font-medium mt-0.5">
-                                        {timeOnly(ev.scheduled_at.replace(" ", "T"))} → {timeOnly(new Date(new Date(ev.scheduled_at.replace(" ", "T")).getTime() + ev.durationHours * 3600000).toISOString())}
-                                      </p>
-                                    </div>
-                                    <button className="text-muted-foreground"><Network className="h-4 w-4" /></button>
-                                  </div>
-                                  <div className="flex gap-3 text-sm">
-                                    <Users className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                                    <div className="flex-1">
-                                      <p className="font-bold text-foreground text-xs">Añadir Invitados</p>
-                                      <div className="flex items-center gap-1 mt-1">
-                                        <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${ev.patient_name}`} className="h-4 w-4 rounded-full bg-primary/10" />
-                                        <p className="text-[9px] text-muted-foreground font-bold">1 Asiste, 1 Esperando</p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="p-3 border-t border-border/40 flex justify-end gap-2 bg-muted/50 rounded-b-2xl">
-                                  <button onClick={() => { setEditingApp(ev); setFormOpen(true); }} className="text-xs font-bold text-foreground hover:bg-gray-200 px-4 py-2 rounded-xl transition">Editar</button>
-                                  <button onClick={() => { setConsultationApp(ev); setConsultationOpen(true); }} className={`text-xs font-bold text-primary-foreground px-4 py-2 rounded-xl shadow-sm flex items-center gap-1.5 transition ${ev.status?.toLowerCase() === 'completada' ? 'bg-[#05c46b] hover:bg-[#04b060]' : 'bg-primary hover:bg-[#3f37c9]'}`}>
-                                    <Stethoscope className="h-3.5 w-3.5" /> 
-                                    {ev.status?.toLowerCase() === 'completada' ? 'Ver / Editar Consulta' : 'Iniciar Consulta'}
-                                  </button>
-                                </div>
-                              </PopoverContent>
-                            </Popover>
-                          );
-                        })}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-              </>
+                <AgendaWeekDayGrid
+                  calendarView={calendarView}
+                  daysToRender={daysToRender}
+                  todayStr={todayStr}
+                  compactMode={compactMode}
+                  gridEvents={gridEvents}
+                  onNewAppointmentAtDate={(dateStr) => handleOpenNewAppointment(dateStr)}
+                  onEditAppointment={handleEditAppointment}
+                  onDeleteAppointment={deleteApp}
+                  onStartConsultation={handleStartConsultation}
+                />
               )}
             </div>
           </section>
@@ -681,8 +196,9 @@ export function AgendaPage() {
 
       {/* Appointment Creation/Editing Form */}
       {formOpen && (
-        <AppointmentForm 
-          open={formOpen} 
+        <AppointmentForm
+          key={`${editingApp?.id || "new"}-${defaultFormDate || ""}`}
+          open={formOpen}
           onOpenChange={setFormOpen}
           initialDate={defaultFormDate}
           appointment={editingApp}
@@ -691,24 +207,12 @@ export function AgendaPage() {
 
       {/* Consultation Process Form */}
       {consultationOpen && consultationApp && (
-        <ConsultationForm 
-          open={consultationOpen} 
+        <ConsultationForm
+          open={consultationOpen}
           onOpenChange={setConsultationOpen}
           appointment={consultationApp}
         />
       )}
     </>
-  );
-}
-
-// Inline missing icon
-function Users(props: any) {
-  return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
   );
 }

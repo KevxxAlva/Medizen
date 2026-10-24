@@ -1,3 +1,4 @@
+import { APP_TIME_ZONE } from "@/lib/constants/locale";
 import { useState } from "react";
 import { usePatientConsultations, type Consultation } from "@/lib/api/consultations";
 import { usePatient } from "@/lib/api/patients";
@@ -136,9 +137,11 @@ export function PatientConsultationsPanel({ patientId }: { patientId: string }) 
 
         return (
           <div key={c.id} className="border border-border/60 bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition duration-200">
-            <div 
+            <button
+              type="button"
               onClick={toggle}
-              className="p-4 flex items-center justify-between cursor-pointer hover:bg-muted/30 transition select-none"
+              aria-expanded={isExpanded}
+              className="w-full text-left p-4 flex items-center justify-between cursor-pointer hover:bg-muted/30 transition select-none"
             >
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
@@ -158,16 +161,16 @@ export function PatientConsultationsPanel({ patientId }: { patientId: string }) 
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground font-medium flex items-center gap-1.5 mt-0.5">
-                    {new Date(c.created_at).toLocaleDateString("es-ES", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+                    {new Date(c.created_at).toLocaleDateString("es-ES", { timeZone: APP_TIME_ZONE, weekday: "long", year: "numeric", month: "long", day: "numeric" })}
                     <span>•</span>
-                    {new Date(c.created_at).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}
+                    {new Date(c.created_at).toLocaleTimeString("es-ES", { timeZone: APP_TIME_ZONE, hour: "2-digit", minute: "2-digit" })}
                   </p>
                 </div>
               </div>
               <div className="text-muted-foreground">
                 {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
               </div>
-            </div>
+            </button>
 
             {isExpanded && (
               <div className="p-4 pt-0 border-t border-border/40 text-sm bg-muted/10">
@@ -270,7 +273,7 @@ export function PatientConsultationsPanel({ patientId }: { patientId: string }) 
                           </h5>
                           <ul className="space-y-1">
                             {c.consumables.map((item, idx) => (
-                              <li key={idx} className="flex justify-between items-center text-xs bg-card px-3 py-1.5 rounded-lg border border-border/40 shadow-sm">
+                              <li key={item.id || `${item.item_name}-${item.quantity}`} className="flex justify-between items-center text-xs bg-card px-3 py-1.5 rounded-lg border border-border/40 shadow-sm">
                                 <span className="font-medium text-foreground">{item.item_name}</span>
                                 <span className="bg-muted text-muted-foreground px-2 py-0.5 rounded-md font-semibold">{item.quantity} und</span>
                               </li>

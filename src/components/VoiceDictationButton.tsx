@@ -37,7 +37,7 @@ export function VoiceDictationButton({
             size={size}
             onClick={toggleListening}
             className={cn(
-              "rounded-xl transition-all duration-200 cursor-pointer",
+              "rounded-xl transition-colors duration-200 cursor-pointer",
               isListening
                 ? "bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 hover:bg-rose-500/25 animate-pulse"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/80",

@@ -3,6 +3,7 @@ import { Search, Plus, X, Pencil, Trash2, ChevronLeft, Loader2, Stethoscope, Che
 import { cn } from "@/lib/utils";
 import { useServices, useDeleteService, useSpecialties, Service } from "@/lib/api/services";
 import { ServiceForm } from "@/components/ServiceForm";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { getSpecialtyBadgeStyle } from "@/lib/constants/specialtyForms";
 
 export function ServiciosPage() {
@@ -68,7 +69,7 @@ export function ServiciosPage() {
       {/* TOP HEADER */}
       <header className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <button className="text-muted-foreground hover:text-foreground"><ChevronLeft className="h-5 w-5" /></button>
+          <button type="button" aria-label="Volver" className="text-muted-foreground hover:text-foreground"><ChevronLeft className="h-5 w-5" /></button>
           <div>
             <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
               <Stethoscope className="w-5 h-5 text-primary" /> Servicios Médicos
@@ -85,9 +86,10 @@ export function ServiciosPage() {
               value={q}
               onChange={(e) => { setQ(e.target.value); setCurrentPage(1); }}
               placeholder="Buscar por servicio, código o especialidad..."
+              aria-label="Buscar por servicio, código o especialidad"
               className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground text-foreground"
             />
-            {q && <button onClick={() => setQ("")} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
+            {q && <button type="button" aria-label="Limpiar búsqueda" onClick={() => setQ("")} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -240,17 +242,14 @@ export function ServiciosPage() {
         </table>
       </div>
 
-      {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between pt-4 border-t border-border/40">
-          <p className="text-xs text-muted-foreground font-medium">
-            Mostrando <span className="font-bold text-foreground">{(currentPage - 1) * itemsPerPage + 1} - {Math.min(filtered.length, currentPage * itemsPerPage)}</span> de <span className="font-bold text-foreground">{filtered.length}</span> servicios
-          </p>
-          <div className="flex gap-1">
-            <button disabled={currentPage === 1} onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))} className="h-8 w-8 flex items-center justify-center rounded-lg border border-border/40 text-muted-foreground hover:bg-muted disabled:opacity-50"><ChevronLeft className="h-4 w-4" /></button>
-            <button disabled={currentPage === totalPages} onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))} className="h-8 w-8 flex items-center justify-center rounded-lg border border-border/40 text-muted-foreground hover:bg-muted disabled:opacity-50"><ChevronRight className="h-4 w-4" /></button>
-          </div>
-        </div>
-      )}
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={filtered.length}
+        itemsPerPage={itemsPerPage}
+        entityLabel="servicios"
+        onPageChange={setCurrentPage}
+      />
 
       <ServiceForm open={formOpen} onOpenChange={setFormOpen} service={editing} />
     </div>

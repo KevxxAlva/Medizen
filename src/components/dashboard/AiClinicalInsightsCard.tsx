@@ -181,7 +181,7 @@ export function AiClinicalInsightsCard() {
         {insights.map((item) => (
           <div
             key={item.id}
-            className="p-3 rounded-2xl bg-card/60 hover:bg-card/90 border border-border/40 transition-all flex items-start gap-3 shadow-xs"
+            className="p-3 rounded-2xl bg-card/60 hover:bg-card/90 border border-border/40 transition-colors flex items-start gap-3 shadow-xs"
           >
             <div className={cn(
               "h-7 w-7 rounded-xl flex items-center justify-center shrink-0 mt-0.5",

@@ -5,6 +5,7 @@ import {
   HeadContent,
   Scripts,
   useRouter,
+  Link,
 } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -20,12 +21,13 @@ function NotFoundComponent() {
         <h1 className="font-display text-7xl font-bold text-foreground">404</h1>
         <h2 className="mt-4 text-xl font-semibold">Página no encontrada</h2>
         <p className="mt-2 text-sm text-muted-foreground">Esta ruta no existe en Medizen.</p>
-        <a
-          href="/"
+        <Link
+          to="/"
+          preload="intent"
           className="mt-6 inline-flex items-center justify-center rounded-2xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90 transition-opacity"
         >
           Volver al inicio
-        </a>
+        </Link>
       </div>
     </div>
   );
@@ -43,9 +45,11 @@ function ErrorComponent({ error, reset }: { error: any; reset: () => void }) {
       <div className="max-w-2xl text-center bg-card p-8 rounded-3xl border border-destructive/20 shadow-xl">
         <h1 className="text-xl font-bold text-destructive">Algo salió mal</h1>
         <p className="mt-2 text-sm text-muted-foreground">Error detectado en la aplicación:</p>
-        
+
         <div className="mt-4 p-4 bg-muted rounded-2xl text-left font-mono text-xs overflow-auto max-h-[300px] border border-border/60">
-          <p className="font-bold text-foreground mb-1">{error?.message || "Se produjo un error inesperado en la aplicación."}</p>
+          <p className="font-bold text-foreground mb-1">
+            {error?.message || "Se produjo un error inesperado en la aplicación."}
+          </p>
           {import.meta.env.DEV && error?.stack && (
             <pre className="text-muted-foreground whitespace-pre-wrap">{error.stack}</pre>
           )}
@@ -77,7 +81,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" },
+      {
+        name: "viewport",
+        content:
+          "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover",
+      },
       { title: "Medizen — Suite Clínica Inteligente" },
       {
         name: "description",
@@ -120,8 +128,7 @@ function RootComponent() {
 
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
       const isLocalhost =
-        window.location.hostname === "localhost" ||
-        window.location.hostname === "127.0.0.1";
+        window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
 
       if (import.meta.env.DEV || isLocalhost) {
         navigator.serviceWorker.getRegistrations().then((regs) => {

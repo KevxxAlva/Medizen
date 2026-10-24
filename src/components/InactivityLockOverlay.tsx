@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useEffectEvent } from "react";
 import { Lock, ShieldAlert, LogOut, ArrowRight, Delete } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,8 +13,12 @@ interface InactivityLockOverlayProps {
   clinicName?: string;
 }
 
-export function InactivityLockOverlay({
-  isLocked,
+export function InactivityLockOverlay(props: InactivityLockOverlayProps) {
+  if (!props.isLocked) return null;
+  return <InactivityLockOverlayModal key="locked" {...props} />;
+}
+
+function InactivityLockOverlayModal({
   onUnlock,
   doctorName = "Doctor(a)",
   clinicName = "Medizen Suite",
@@ -24,67 +28,66 @@ export function InactivityLockOverlay({
   const [errorMsg, setErrorMsg] = useState("");
   const navigate = useNavigate();
 
-  // Reset states when lock status changes
-  useEffect(() => {
-    if (isLocked) {
-      setPin("");
+  const submitPin = useCallback(
+    async (pinToSubmit: string) => {
+      const success = await onUnlock(pinToSubmit);
+      if (!success) {
+        setShake(true);
+        setErrorMsg("PIN incorrecto o bloqueado temporalmente. Intente nuevamente.");
+        toast.error("PIN incorrecto.");
+        setTimeout(() => {
+          setShake(false);
+          setPin("");
+        }, 500);
+      } else {
+        toast.success("Sesión clínica restaurada.");
+      }
+    },
+    [onUnlock],
+  );
+
+  const handleDigitPress = useCallback(
+    (digit: string) => {
+      if (pin.length >= 4) return;
+      const newPin = pin + digit;
+      setPin(newPin);
       setErrorMsg("");
+
+      if (newPin.length === 4) {
+        // Auto-submit on 4th digit
+        void submitPin(newPin);
+      }
+    },
+    [pin, submitPin],
+  );
+
+  const handleBackspace = useCallback(() => {
+    setPin((prev) => prev.slice(0, -1));
+    setErrorMsg("");
+  }, []);
+
+  const onKeyDown = useEffectEvent((e: KeyboardEvent) => {
+    if (e.key >= "0" && e.key <= "9") {
+      if (pin.length < 4) {
+        handleDigitPress(e.key);
+      }
+    } else if (e.key === "Backspace") {
+      handleBackspace();
+    } else if (e.key === "Escape") {
+      setPin("");
     }
-  }, [isLocked]);
+  });
 
   // Support direct keyboard input
   useEffect(() => {
-    if (!isLocked) return;
-
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key >= "0" && e.key <= "9") {
-        if (pin.length < 4) {
-          handleDigitPress(e.key);
-        }
-      } else if (e.key === "Backspace") {
-        handleBackspace();
-      } else if (e.key === "Escape") {
-        setPin("");
-      }
+      onKeyDown(e);
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isLocked, pin]);
-
-  if (!isLocked) return null;
-
-  const handleDigitPress = (digit: string) => {
-    if (pin.length >= 4) return;
-    const newPin = pin + digit;
-    setPin(newPin);
-    setErrorMsg("");
-
-    if (newPin.length === 4) {
-      // Auto-submit on 4th digit
-      void submitPin(newPin);
-    }
-  };
-
-  const handleBackspace = () => {
-    setPin((prev) => prev.slice(0, -1));
-    setErrorMsg("");
-  };
-
-  const submitPin = async (pinToSubmit: string) => {
-    const success = await onUnlock(pinToSubmit);
-    if (!success) {
-      setShake(true);
-      setErrorMsg("PIN incorrecto o bloqueado temporalmente. Intente nuevamente.");
-      toast.error("PIN incorrecto.");
-      setTimeout(() => {
-        setShake(false);
-        setPin("");
-      }, 500);
-    } else {
-      toast.success("Sesión clínica restaurada.");
-    }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- onKeyDown is a React 19.2 useEffectEvent
+  }, []);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -93,10 +96,10 @@ export function InactivityLockOverlay({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/85 backdrop-blur-2xl p-4 animate-in fade-in duration-300">
-      <div 
+      <div
         className={cn(
           "w-full max-w-sm rounded-[2.5rem] border border-border/80 bg-card/95 p-6 sm:p-8 shadow-2xl flex flex-col items-center text-center space-y-5 transition-transform",
-          shake && "animate-shake"
+          shake && "animate-shake",
         )}
       >
         {/* Lock Shield Icon */}
@@ -111,9 +114,7 @@ export function InactivityLockOverlay({
 
         {/* Lock Title */}
         <div className="space-y-1">
-          <h2 className="text-xl font-bold tracking-tight text-foreground">
-            Sesión Protegida
-          </h2>
+          <h2 className="text-xl font-bold tracking-tight text-foreground">Sesión Protegida</h2>
           <p className="text-xs text-muted-foreground font-medium">
             {clinicName} · {doctorName}
           </p>
@@ -130,10 +131,10 @@ export function InactivityLockOverlay({
               <div
                 key={index}
                 className={cn(
-                  "h-4 w-4 rounded-full border-2 transition-all duration-200",
+                  "h-4 w-4 rounded-full border-2 transition-colors duration-200",
                   isFilled
                     ? "scale-110 border-primary bg-primary shadow-sm shadow-primary/50"
-                    : "border-border/80 bg-muted/50"
+                    : "border-border/80 bg-muted/50",
                 )}
               />
             );
@@ -141,9 +142,7 @@ export function InactivityLockOverlay({
         </div>
 
         {errorMsg && (
-          <p className="text-xs font-semibold text-rose-500 animate-in fade-in">
-            {errorMsg}
-          </p>
+          <p className="text-xs font-semibold text-rose-500 animate-in fade-in">{errorMsg}</p>
         )}
 
         {/* Numeric Keypad */}
@@ -153,7 +152,7 @@ export function InactivityLockOverlay({
               key={digit}
               type="button"
               onClick={() => handleDigitPress(digit)}
-              className="h-12 rounded-2xl bg-muted/60 text-foreground font-bold text-lg hover:bg-primary hover:text-primary-foreground active:scale-95 transition-all shadow-2xs cursor-pointer"
+              className="h-12 rounded-2xl bg-muted/60 text-foreground font-bold text-lg hover:bg-primary hover:text-primary-foreground active:scale-95 transition-colors shadow-2xs cursor-pointer"
             >
               {digit}
             </button>
@@ -161,14 +160,14 @@ export function InactivityLockOverlay({
           <button
             type="button"
             onClick={() => setPin("")}
-            className="h-12 rounded-2xl bg-muted/30 text-muted-foreground font-bold text-xs hover:bg-muted/80 active:scale-95 transition-all cursor-pointer"
+            className="h-12 rounded-2xl bg-muted/30 text-muted-foreground font-bold text-xs hover:bg-muted/80 active:scale-95 transition-colors cursor-pointer"
           >
             Limpiar
           </button>
           <button
             type="button"
             onClick={() => handleDigitPress("0")}
-            className="h-12 rounded-2xl bg-muted/60 text-foreground font-bold text-lg hover:bg-primary hover:text-primary-foreground active:scale-95 transition-all shadow-2xs cursor-pointer"
+            className="h-12 rounded-2xl bg-muted/60 text-foreground font-bold text-lg hover:bg-primary hover:text-primary-foreground active:scale-95 transition-colors shadow-2xs cursor-pointer"
           >
             0
           </button>
@@ -176,7 +175,7 @@ export function InactivityLockOverlay({
             type="button"
             onClick={handleBackspace}
             aria-label="Borrar dígito"
-            className="h-12 rounded-2xl bg-muted/30 text-muted-foreground flex items-center justify-center hover:bg-muted/80 active:scale-95 transition-all cursor-pointer"
+            className="h-12 rounded-2xl bg-muted/30 text-muted-foreground flex items-center justify-center hover:bg-muted/80 active:scale-95 transition-colors cursor-pointer"
           >
             <Delete className="h-5 w-5" />
           </button>

@@ -1,4 +1,5 @@
 "use client";
+import { APP_LOCALE, APP_TIME_ZONE } from "@/lib/constants/locale";
 
 import * as React from "react";
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
@@ -154,7 +155,7 @@ function CalendarDayButton({
       ref={ref}
       variant="ghost"
       size="icon"
-      data-day={day.date.toLocaleDateString()}
+      data-day={day.date.toLocaleDateString(APP_LOCALE, { timeZone: APP_TIME_ZONE })}
       data-selected-single={
         modifiers.selected &&
         !modifiers.range_start &&

@@ -137,7 +137,7 @@ export function DynamicSpecialtyFields({
       {/* Sections */}
       {config.sections.map((section, idx) => (
         <div
-          key={section.title || idx}
+          key={section.title}
           className="rounded-2xl p-4 bg-muted/20 border border-border/40 space-y-4"
         >
           <div>

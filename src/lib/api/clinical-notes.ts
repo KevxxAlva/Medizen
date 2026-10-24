@@ -244,18 +244,18 @@ export async function uploadClinicalAttachments(
   patientId: string,
   files: File[],
 ): Promise<ClinicalAttachment[]> {
-  const out: ClinicalAttachment[] = [];
-  for (const file of files) {
-    const safe = file.name.replace(/[^\w.\-]+/g, "_");
-    const path = `${patientId}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${safe}`;
-    const { error } = await supabase.storage.from(CLINICAL_BUCKET).upload(path, file, {
-      contentType: file.type || "application/octet-stream",
-      upsert: false,
-    });
-    if (error) throw error;
-    out.push({ path, name: file.name, type: file.type, size: file.size });
-  }
-  return out;
+  return Promise.all(
+    files.map(async (file) => {
+      const safe = file.name.replace(/[^\w.\-]+/g, "_");
+      const path = `${patientId}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${safe}`;
+      const { error } = await supabase.storage.from(CLINICAL_BUCKET).upload(path, file, {
+        contentType: file.type || "application/octet-stream",
+        upsert: false,
+      });
+      if (error) throw error;
+      return { path, name: file.name, type: file.type, size: file.size };
+    }),
+  );
 }
 
 export async function getAttachmentUrl(path: string): Promise<string> {

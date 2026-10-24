@@ -6,6 +6,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { TableRowActions } from "@/components/ui/table-row-actions";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { useAccounts, useCreateAccount, useUpdateAccount, useDeleteAccount, type FinancialAccount as Account } from "@/lib/api/accounts";
 import { toast } from "sonner";
 
@@ -50,19 +52,10 @@ export function AccountsPage() {
     }
   };
 
-  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const accData = {
-      name: fd.get("name") as string,
-      type: fd.get("type") as string,
-      balance: parseFloat(fd.get("balance") as string),
-      status: fd.get("status") as "Active" | "Inactive",
-    };
-    
+  const handleSave = async (accData: { name: string; type: string; balance: number; status: "Active" | "Inactive"; id?: string }) => {
     try {
-      if (editing) {
-        await updateAcc.mutateAsync({ ...accData, id: editing.id });
+      if (accData.id) {
+        await updateAcc.mutateAsync(accData as Account);
         toast.success("Cuenta actualizada");
       } else {
         await createAcc.mutateAsync(accData);
@@ -87,7 +80,7 @@ export function AccountsPage() {
       {/* TOP HEADER */}
       <header className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <button type="button" onClick={() => window.history.back()} className="text-muted-foreground hover:text-foreground" title="Volver"><ChevronLeft className="h-5 w-5" /></button>
+          <button type="button" onClick={() => window.history.back()} className="text-muted-foreground hover:text-foreground" title="Volver" aria-label="Volver"><ChevronLeft className="h-5 w-5" /></button>
           <h1 className="text-xl font-bold text-foreground">Cuentas</h1>
         </div>
         <div className="flex-1 max-w-xl mx-auto w-full sm:w-auto">
@@ -97,9 +90,10 @@ export function AccountsPage() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Buscar cuentas..."
+              aria-label="Buscar cuentas"
               className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground text-foreground"
             />
-            {q && <button onClick={() => setQ("")} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
+            {q && <button type="button" aria-label="Limpiar búsqueda" onClick={() => setQ("")} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
           </div>
         </div>
         <div className="flex items-center gap-4 hidden md:flex">
@@ -113,70 +107,13 @@ export function AccountsPage() {
           <Wallet className="h-4 w-4" /> {filtered.length} cuentas
         </div>
         <div className="flex items-center gap-3">
-          <Popover>
-            <PopoverTrigger asChild>
-              <button
-                type="button"
-                className={cn(
-                  "flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-bold text-foreground border border-border/40 rounded-xl hover:bg-muted transition-colors",
-                  (filterType !== "all" || filterStatus !== "all") && "bg-primary/10 border-primary text-primary"
-                )}
-              >
-                <Filter className="h-3.5 w-3.5" />
-                {filterType !== "all" || filterStatus !== "all" ? "Filtrado" : "Filtros"}
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-60 rounded-2xl glass-card border-0 shadow-2xl p-4" align="end">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <h4 className="font-bold text-xs uppercase tracking-wider text-muted-foreground">Tipo de Cuenta</h4>
-                  <select
-                    value={filterType}
-                    onChange={(e) => {
-                      setFilterType(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    className="w-full h-9 px-3 rounded-xl bg-background border border-input text-xs font-semibold outline-none"
-                  >
-                    <option value="all">Todos los tipos</option>
-                    <option value="Bank">Banco</option>
-                    <option value="Cash">Efectivo (Cash)</option>
-                    <option value="Digital">Digital / Crypto</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <h4 className="font-bold text-xs uppercase tracking-wider text-muted-foreground">Estado</h4>
-                  <select
-                    value={filterStatus}
-                    onChange={(e) => {
-                      setFilterStatus(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    className="w-full h-9 px-3 rounded-xl bg-background border border-input text-xs font-semibold outline-none"
-                  >
-                    <option value="all">Todos los estados</option>
-                    <option value="Active">Activa</option>
-                    <option value="Inactive">Inactiva</option>
-                  </select>
-                </div>
-                {(filterType !== "all" || filterStatus !== "all") && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setFilterType("all");
-                      setFilterStatus("all");
-                      setCurrentPage(1);
-                    }}
-                    className="w-full rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground"
-                  >
-                    Limpiar filtros
-                  </Button>
-                )}
-              </div>
-            </PopoverContent>
-          </Popover>
+          <AccountsFilterPopover
+            filterType={filterType}
+            setFilterType={(v) => { setFilterType(v); setCurrentPage(1); }}
+            filterStatus={filterStatus}
+            setFilterStatus={(v) => { setFilterStatus(v); setCurrentPage(1); }}
+            onReset={() => { setFilterType("all"); setFilterStatus("all"); setCurrentPage(1); }}
+          />
           <button onClick={() => { setEditing(null); setFormOpen(true); }} className="flex items-center gap-2 bg-primary text-primary-foreground px-4 sm:px-5 py-2.5 rounded-xl text-xs font-bold shadow-md hover:bg-[#3451d6] transition">
             <Plus className="h-3.5 w-3.5" /> Añadir Cuenta
           </button>
@@ -188,7 +125,7 @@ export function AccountsPage() {
         <table className="w-full text-left border-collapse min-w-[650px]">
           <thead>
             <tr className="bg-muted text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-              <th className="p-4 w-12 rounded-tl-xl"><input type="checkbox" className="rounded border-gray-300" /></th>
+              <th className="p-4 w-12 rounded-tl-xl"><input type="checkbox" aria-label="Seleccionar todas las cuentas" className="rounded border-gray-300" /></th>
               <th className="p-4">Nombre de Cuenta <span className="ml-1">↕</span></th>
               <th className="p-4">ID de Cuenta <span className="ml-1">↕</span></th>
               <th className="p-4">Tipo <span className="ml-1">↕</span></th>
@@ -203,7 +140,7 @@ export function AccountsPage() {
             ) : (
               paginated.map((a) => (
                 <tr key={a.id} className="border-b border-border/40 hover:bg-muted/50 transition group">
-                  <td className="p-4"><input type="checkbox" className="rounded border-gray-300" /></td>
+                  <td className="p-4"><input type="checkbox" aria-label={`Seleccionar cuenta ${a.name}`} className="rounded border-gray-300" /></td>
                   <td className="p-4 font-bold text-foreground">{a.name}</td>
                   <td className="p-4 text-muted-foreground font-medium">{a.id}</td>
                   <td className="p-4 text-muted-foreground font-medium">{a.type}</td>
@@ -220,12 +157,12 @@ export function AccountsPage() {
                       {a.status === "Active" ? "Activa" : "Inactiva"}
                     </span>
                   </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-3 text-muted-foreground">
-                      <button onClick={() => { setEditing(a); setFormOpen(true); }} className="hover:text-foreground"><Pencil className="h-4 w-4" /></button>
-                      <button onClick={() => handleDelete(a.id)} className="hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
-                    </div>
-                  </td>
+                  <TableRowActions
+                    editLabel={`Editar cuenta ${a.name}`}
+                    deleteLabel={`Eliminar cuenta ${a.name}`}
+                    onEdit={() => { setEditing(a); setFormOpen(true); }}
+                    onDelete={() => handleDelete(a.id)}
+                  />
                 </tr>
               ))
             )}
@@ -233,60 +170,167 @@ export function AccountsPage() {
         </table>
       </div>
 
-      {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between pt-4 border-t border-border/40">
-          <p className="text-xs text-muted-foreground font-medium">
-            Mostrando <span className="font-bold text-foreground">{(currentPage - 1) * itemsPerPage + 1} - {Math.min(filtered.length, currentPage * itemsPerPage)}</span> de <span className="font-bold text-foreground">{filtered.length}</span> cuentas
-          </p>
-          <div className="flex gap-1">
-            <button disabled={currentPage === 1} onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))} className="h-8 w-8 flex items-center justify-center rounded-lg border border-border/40 text-muted-foreground hover:bg-muted disabled:opacity-50"><ChevronLeft className="h-4 w-4" /></button>
-            <button disabled={currentPage === totalPages} onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))} className="h-8 w-8 flex items-center justify-center rounded-lg border border-border/40 text-muted-foreground hover:bg-muted disabled:opacity-50"><ChevronRight className="h-4 w-4" /></button>
-          </div>
-        </div>
-      )}
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={filtered.length}
+        itemsPerPage={itemsPerPage}
+        entityLabel="cuentas"
+        onPageChange={setCurrentPage}
+      />
 
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>{editing ? "Editar Cuenta" : "Añadir Nueva Cuenta"}</DialogTitle>
-            <DialogDescription>Completa los detalles para la cuenta financiera.</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSave} className="space-y-4 pt-4">
+      <AccountFormDialog
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        editing={editing}
+        onSave={handleSave}
+        isPending={createAcc.isPending || updateAcc.isPending}
+      />
+    </div>
+  );
+}
+
+interface AccountFormDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  editing: Account | null;
+  onSave: (data: { name: string; type: string; balance: number; status: "Active" | "Inactive"; id?: string }) => Promise<void>;
+  isPending: boolean;
+}
+
+function AccountFormDialog({ open, onOpenChange, editing, onSave, isPending }: AccountFormDialogProps) {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (isPending) return;
+    const fd = new FormData(e.currentTarget);
+    const accData = {
+      name: fd.get("name") as string,
+      type: fd.get("type") as string,
+      balance: parseFloat(fd.get("balance") as string),
+      status: fd.get("status") as "Active" | "Inactive",
+      id: editing?.id,
+    };
+    await onSave(accData);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>{editing ? "Editar Cuenta" : "Añadir Nueva Cuenta"}</DialogTitle>
+          <DialogDescription>Completa los detalles para la cuenta financiera.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+          <div className="space-y-2">
+            <Label htmlFor="name" className="text-xs font-bold text-foreground">NOMBRE DE LA CUENTA *</Label>
+            <Input id="name" name="name" defaultValue={editing?.name} required className="bg-muted border-gray-200" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-xs font-bold text-foreground">NOMBRE DE LA CUENTA *</Label>
-              <Input id="name" name="name" defaultValue={editing?.name} required className="bg-muted border-gray-200" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="type" className="text-xs font-bold text-foreground">TIPO</Label>
-                <select id="type" name="type" defaultValue={editing?.type || "Bank"} className="w-full h-10 px-3 py-2 rounded-md bg-muted border border-gray-200 text-sm outline-none">
-                  <option value="Bank">Banco</option>
-                  <option value="Cash">Efectivo (Cash)</option>
-                  <option value="Digital">Digital / Crypto</option>
-                </select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="balance" className="text-xs font-bold text-foreground">BALANCE ($) *</Label>
-                <Input id="balance" name="balance" type="number" step="0.01" defaultValue={editing?.balance || 0} required className="bg-muted border-gray-200" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="status" className="text-xs font-bold text-foreground">ESTADO</Label>
-              <select id="status" name="status" defaultValue={editing?.status || "Active"} className="w-full h-10 px-3 py-2 rounded-md bg-muted border border-gray-200 text-sm outline-none">
-                <option value="Active">Activa</option>
-                <option value="Inactive">Inactiva</option>
+              <Label htmlFor="type" className="text-xs font-bold text-foreground">TIPO</Label>
+              <select id="type" name="type" defaultValue={editing?.type || "Bank"} className="w-full h-10 px-3 py-2 rounded-md bg-muted border border-gray-200 text-sm outline-none">
+                <option value="Bank">Banco</option>
+                <option value="Cash">Efectivo (Cash)</option>
+                <option value="Digital">Digital / Crypto</option>
               </select>
             </div>
-            <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => setFormOpen(false)} className="rounded-xl border-gray-200 text-muted-foreground">Cancelar</Button>
-              <Button type="submit" className="rounded-xl bg-primary hover:bg-[#3b55d9] text-primary-foreground">
-                {createAcc.isPending || updateAcc.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                {editing ? "Guardar Cambios" : "Crear Cuenta"}
-              </Button>
+            <div className="space-y-2">
+              <Label htmlFor="balance" className="text-xs font-bold text-foreground">BALANCE ($) *</Label>
+              <Input id="balance" name="balance" type="number" step="0.01" defaultValue={editing?.balance || 0} required className="bg-muted border-gray-200" />
             </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="status" className="text-xs font-bold text-foreground">ESTADO</Label>
+            <select id="status" name="status" defaultValue={editing?.status || "Active"} className="w-full h-10 px-3 py-2 rounded-md bg-muted border border-gray-200 text-sm outline-none">
+              <option value="Active">Activa</option>
+              <option value="Inactive">Inactiva</option>
+            </select>
+          </div>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl border-gray-200 text-muted-foreground">Cancelar</Button>
+            <Button type="submit" className="rounded-xl bg-primary hover:bg-[#3b55d9] text-primary-foreground">
+              {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {editing ? "Guardar Cambios" : "Crear Cuenta"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+interface AccountsFilterPopoverProps {
+  filterType: string;
+  setFilterType: (val: string) => void;
+  filterStatus: string;
+  setFilterStatus: (val: string) => void;
+  onReset: () => void;
+}
+
+function AccountsFilterPopover({
+  filterType,
+  setFilterType,
+  filterStatus,
+  setFilterStatus,
+  onReset,
+}: AccountsFilterPopoverProps) {
+  const isFiltered = filterType !== "all" || filterStatus !== "all";
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            "flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-bold text-foreground border border-border/40 rounded-xl hover:bg-muted transition-colors",
+            isFiltered && "bg-primary/10 border-primary text-primary"
+          )}
+        >
+          <Filter className="h-3.5 w-3.5" />
+          {isFiltered ? "Filtrado" : "Filtros"}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-60 rounded-2xl glass-card border-0 shadow-2xl p-4" align="end">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-muted-foreground">Tipo de Cuenta</h4>
+            <select
+              aria-label="Filtrar por tipo de cuenta"
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="w-full h-9 px-3 rounded-xl bg-background border border-input text-xs font-semibold outline-none"
+            >
+              <option value="all">Todos los tipos</option>
+              <option value="Bank">Banco</option>
+              <option value="Cash">Efectivo (Cash)</option>
+              <option value="Digital">Digital / Crypto</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-muted-foreground">Estado</h4>
+            <select
+              aria-label="Filtrar por estado"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="w-full h-9 px-3 rounded-xl bg-background border border-input text-xs font-semibold outline-none"
+            >
+              <option value="all">Todos los estados</option>
+              <option value="Active">Activa</option>
+              <option value="Inactive">Inactiva</option>
+            </select>
+          </div>
+          {isFiltered && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onReset}
+              className="w-full rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground"
+            >
+              Limpiar filtros
+            </Button>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }

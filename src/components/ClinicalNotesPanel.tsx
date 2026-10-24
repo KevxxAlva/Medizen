@@ -1,3 +1,4 @@
+import { APP_TIME_ZONE } from "@/lib/constants/locale";
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Search, Trash2, FileText, Loader2, X, Paperclip, Download, ChevronLeft, ChevronRight, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -143,9 +144,9 @@ export function ClinicalNotesPanel({ patientId }: { patientId: string }) {
           {files.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {files.map((f, i) => (
-                <span key={i} className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[11px]">
+                <span key={`${f.name}-${f.size}-${f.lastModified}`} className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[11px]">
                   <Paperclip className="h-3 w-3" /> <span className="truncate max-w-[140px]">{f.name}</span>
-                  <button onClick={() => setFiles((p) => p.filter((_, idx) => idx !== i))}><X className="h-3 w-3" /></button>
+                  <button type="button" aria-label="Eliminar archivo adjunto" onClick={() => setFiles((p) => p.filter((_, idx) => idx !== i))}><X className="h-3 w-3" /></button>
                 </span>
               ))}
             </div>
@@ -156,8 +157,8 @@ export function ClinicalNotesPanel({ patientId }: { patientId: string }) {
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex flex-1 min-w-[180px] items-center gap-2 rounded-xl bg-muted/60 px-3 py-2">
           <Search className="h-3.5 w-3.5 text-muted-foreground" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar en notas…" className="w-full bg-transparent text-xs outline-none placeholder:text-muted-foreground" />
-          {q && <button onClick={() => setQ("")}><X className="h-3.5 w-3.5 text-muted-foreground" /></button>}
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar en notas…" aria-label="Buscar en notas" className="w-full bg-transparent text-xs outline-none placeholder:text-muted-foreground" />
+          {q && <button type="button" aria-label="Limpiar búsqueda" onClick={() => setQ("")}><X className="h-3.5 w-3.5 text-muted-foreground" /></button>}
         </div>
         <div className="flex items-center gap-1.5">
           <span className="text-[11px] text-muted-foreground">Desde</span>
@@ -179,7 +180,7 @@ export function ClinicalNotesPanel({ patientId }: { patientId: string }) {
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                    {new Date(n.note_date).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}
+                    {new Date(n.note_date).toLocaleDateString("es-ES", { timeZone: APP_TIME_ZONE, day: "2-digit", month: "short", year: "numeric" })}
                   </p>
                   <p className="text-sm font-semibold leading-tight">{n.title}</p>
                 </div>

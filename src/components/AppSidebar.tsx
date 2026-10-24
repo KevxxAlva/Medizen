@@ -64,7 +64,7 @@ function SidebarBody({ onNavigate, isCollapsed }: { onNavigate?: () => void, isC
         {/* Logo Area */}
         <div className={cn("pt-6 pb-4", isCollapsed ? "px-2" : "px-6")}>
           <div className={cn("flex items-center mb-6", isCollapsed ? "justify-center" : "gap-3")}>
-            <MedizenLogo className="h-8 w-8 flex-shrink-0 transition-all duration-300" />
+            <MedizenLogo className="h-8 w-8 flex-shrink-0 transition-transform duration-300" />
             {!isCollapsed && (
               <span
                 className="font-display font-bold text-xl tracking-tight text-foreground truncate bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70"
@@ -83,10 +83,10 @@ function SidebarBody({ onNavigate, isCollapsed }: { onNavigate?: () => void, isC
 
             if (m.category) {
               if (isCollapsed) {
-                return <div key={`cat-${i}`} className="mt-4 mb-1 border-t border-border/40" />;
+                return <div key={`cat-${m.category}`} className="mt-4 mb-1 border-t border-border/40" />;
               }
               return (
-                <div key={`cat-${i}`} className="mt-4 mb-1 px-3">
+                <div key={`cat-${m.category}`} className="mt-4 mb-1 px-3">
                   <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider truncate">
                     {m.category}
                   </span>
@@ -107,7 +107,7 @@ function SidebarBody({ onNavigate, isCollapsed }: { onNavigate?: () => void, isC
                   else if (onNavigate) onNavigate();
                 }}
                 className={cn(
-                  "flex items-center rounded-xl transition-all duration-200 group text-sm font-bold",
+                  "flex items-center rounded-xl transition-colors duration-200 group text-sm font-bold",
                   isCollapsed ? "justify-center h-10 w-10 mx-auto" : "gap-3 px-3 py-2.5",
                   active
                     ? "bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-lg shadow-primary/25 border border-primary/20"
@@ -148,7 +148,7 @@ function SidebarBody({ onNavigate, isCollapsed }: { onNavigate?: () => void, isC
                   <button
                     onClick={handleLogout}
                     className={cn(
-                      "flex items-center rounded-xl transition-all duration-200 group text-xs font-bold text-muted-foreground hover:text-destructive hover:bg-destructive/10",
+                      "flex items-center rounded-xl transition-colors duration-200 group text-xs font-bold text-muted-foreground hover:text-destructive hover:bg-destructive/10",
                       isCollapsed ? "justify-center h-8 w-8" : "gap-2 px-2 py-1.5"
                     )}
                   >
@@ -189,9 +189,11 @@ export function AppSidebar({
       {mobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden flex animate-in fade-in duration-200">
           {/* Backdrop */}
-          <div 
-            className="fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity" 
-            onClick={onMobileClose} 
+          <button
+            type="button"
+            aria-label="Cerrar menú móvil"
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity border-none cursor-default"
+            onClick={onMobileClose}
           />
           {/* Sliding Drawer */}
           <div className="relative w-[280px] max-w-[85vw] h-full bg-card shadow-2xl z-50 flex flex-col animate-in slide-in-from-left duration-300">
@@ -209,11 +211,13 @@ export function AppSidebar({
 
       {/* Desktop Sidebar */}
       <aside className={cn(
-        "fixed left-0 top-0 bottom-0 z-30 hidden flex-col bg-card md:flex shadow-[4px_0_24px_rgba(0,0,0,0.02)] transition-all duration-300",
+        "fixed left-0 top-0 bottom-0 z-30 hidden flex-col bg-card md:flex shadow-[4px_0_24px_rgba(0,0,0,0.02)] transition-[width] duration-300",
         isCollapsed ? "w-[80px]" : "w-[260px]"
       )}>
         {/* Collapse Button */}
-        <button 
+        <button
+          type="button"
+          aria-label={isCollapsed ? "Expandir barra lateral" : "Colapsar barra lateral"}
           onClick={onToggle}
           className="absolute -right-3 top-8 h-6 w-6 bg-card border border-border/40 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground shadow-sm z-40 transition-transform hover:scale-110"
         >

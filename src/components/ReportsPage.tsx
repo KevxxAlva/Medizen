@@ -1,3 +1,4 @@
+import { APP_TIME_ZONE } from "@/lib/constants/locale";
 import { useMemo, useState } from "react";
 import { FileBarChart, Download, Calendar as CalIcon, Users, CalendarClock, TrendingUp, CheckCircle2, Megaphone, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -41,8 +42,8 @@ const MONTHS_ES = [
 ];
 
 export function ReportsPage() {
-  const [from, setFrom] = useState(daysAgoISO(90));
-  const [to, setTo] = useState(todayISO());
+  const [from, setFrom] = useState(() => daysAgoISO(90));
+  const [to, setTo] = useState(() => todayISO());
 
   const { data: newPatientsCount = 0 } = usePatientsCountByDateRange(from, to);
   const { data: appointments = [] } = useAppointments({ from, to });
@@ -324,200 +325,231 @@ export function ReportsPage() {
           <TabsTrigger value="marketing" className="rounded-xl font-medium text-xs">Canales de Marketing</TabsTrigger>
         </TabsList>
 
-        {/* TAB 1: OVERVIEW */}
-        <TabsContent value="overview" className="space-y-6 mt-0 outline-none">
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            {kpis.map((k) => {
-              const Icon = k.icon;
+        <ReportsOverviewTab kpis={kpis} upcoming={upcoming} doctorMap={doctorMap} />
+        <ReportsFinancialTab monthlyData={monthlyData} maxAmount={maxAmount} />
+        <ReportsMarketingTab marketingData={marketingData} />
+      </Tabs>
+    </div>
+  );
+}
+
+function ReportsOverviewTab({
+  kpis,
+  upcoming,
+  doctorMap,
+}: {
+  kpis: any[];
+  upcoming: any[];
+  doctorMap: Map<string, string>;
+}) {
+  return (
+    <TabsContent value="overview" className="space-y-6 mt-0 outline-none">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {kpis.map((k) => {
+          const Icon = k.icon;
+          return (
+            <div key={k.label} className="bg-card border border-border/40 rounded-[2rem] p-5 shadow-sm">
+              <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${k.tone}`}>
+                <Icon className="h-5 w-5" />
+              </div>
+              <p className="mt-4 text-xs text-muted-foreground">{k.label}</p>
+              <p className="text-2xl font-semibold tracking-tight mt-1">{k.value}</p>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="bg-card border border-border/40 rounded-[2rem] p-6 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Planificación</p>
+            <h3 className="mt-1 text-base font-semibold flex items-center gap-2">
+              <CalendarClock className="h-5 w-5 text-primary" /> Próximas citas ({upcoming.length})
+            </h3>
+          </div>
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-border/40">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
+              <tr>
+                <th className="px-4 py-2.5">Fecha / Hora</th>
+                <th className="px-4 py-2.5">Paciente</th>
+                <th className="px-4 py-2.5">Médico</th>
+                <th className="px-4 py-2.5">Motivo</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/60">
+              {upcoming.slice(0, 10).map((a) => {
+                const dt = new Date(a.scheduled_at);
+                const pad = (n: number) => String(n).padStart(2, "0");
+                return (
+                  <tr key={a.id} className="hover:bg-muted/50/50">
+                    <td className="px-4 py-3 text-xs">
+                      {dt.toLocaleDateString("es-ES", { timeZone: APP_TIME_ZONE, day: "2-digit", month: "short" })} · {pad(dt.getHours())}:{pad(dt.getMinutes())}
+                    </td>
+                    <td className="px-4 py-3 font-semibold">{a.patient_name}</td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">{doctorMap.get(a.doctor_id) ?? "—"}</td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">{a.reason ?? "—"}</td>
+                  </tr>
+                );
+              })}
+              {upcoming.length === 0 && (
+                <tr><td colSpan={4} className="px-4 py-6 text-center text-xs text-muted-foreground">No hay citas próximas programadas.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </TabsContent>
+  );
+}
+
+function ReportsFinancialTab({
+  monthlyData,
+  maxAmount,
+}: {
+  monthlyData: any[];
+  maxAmount: number;
+}) {
+  return (
+    <TabsContent value="financial" className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-0 outline-none">
+      <div className="lg:col-span-2 bg-card border border-border/40 rounded-[2rem] p-6 shadow-sm flex flex-col justify-between">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Histórico de Ingresos</p>
+          <h3 className="mt-1 text-base font-semibold flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-primary" /> Evolución de Facturación (Últimos 12 meses)
+          </h3>
+        </div>
+
+        {monthlyData.length === 0 ? (
+          <p className="text-xs text-muted-foreground text-center py-20">No hay transacciones registradas.</p>
+        ) : (
+          <div className="flex h-56 items-end gap-3 pt-6 border-b border-border/40 mt-4">
+            {monthlyData.map((d) => {
+              const pct = (d.amount / maxAmount) * 100;
+              const [yr, mn] = d.month.split("-");
+              const label = `${MONTHS_ES[parseInt(mn) - 1].slice(0,3)} '${yr.slice(2)}`;
               return (
-                <div key={k.label} className="bg-card border border-border/40 rounded-[2rem] p-5 shadow-sm">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${k.tone}`}>
-                    <Icon className="h-5 w-5" />
+                <div key={d.month} className="flex-1 flex flex-col items-center gap-2 group h-full justify-end">
+                  <div className="text-[9px] font-bold text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                    ${d.amount.toLocaleString("es-ES")}
                   </div>
-                  <p className="mt-4 text-xs text-muted-foreground">{k.label}</p>
-                  <p className="text-2xl font-semibold tracking-tight mt-1">{k.value}</p>
+                  <div
+                    style={{ height: `${pct}%` }}
+                    className="w-full bg-primary rounded-t-lg transition-[height] duration-500 hover:opacity-85 shadow-sm shadow-[#4361ee]/15"
+                  />
+                  <div className="text-[10px] text-muted-foreground font-semibold truncate w-full text-center">
+                    {label}
+                  </div>
                 </div>
               );
             })}
           </div>
+        )}
+      </div>
 
-          <div className="bg-card border border-border/40 rounded-[2rem] p-6 shadow-sm border border-border/40">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Planificación</p>
-                <h3 className="mt-1 text-base font-semibold flex items-center gap-2">
-                  <CalendarClock className="h-5 w-5 text-primary" /> Próximas citas ({upcoming.length})
-                </h3>
-              </div>
-            </div>
-            <div className="overflow-hidden rounded-2xl border border-border/40">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
-                  <tr>
-                    <th className="px-4 py-2.5">Fecha / Hora</th>
-                    <th className="px-4 py-2.5">Paciente</th>
-                    <th className="px-4 py-2.5">Médico</th>
-                    <th className="px-4 py-2.5">Motivo</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/60">
-                  {upcoming.slice(0, 10).map((a) => {
-                    const dt = new Date(a.scheduled_at);
-                    const pad = (n: number) => String(n).padStart(2, "0");
-                    return (
-                      <tr key={a.id} className="hover:bg-muted/50/50">
-                        <td className="px-4 py-3 text-xs">
-                          {dt.toLocaleDateString("es-ES", { day: "2-digit", month: "short" })} · {pad(dt.getHours())}:{pad(dt.getMinutes())}
-                        </td>
-                        <td className="px-4 py-3 font-semibold">{a.patient_name}</td>
-                        <td className="px-4 py-3 text-xs text-muted-foreground">{doctorMap.get(a.doctor_id) ?? "—"}</td>
-                        <td className="px-4 py-3 text-xs text-muted-foreground">{a.reason ?? "—"}</td>
-                      </tr>
-                    );
-                  })}
-                  {upcoming.length === 0 && (
-                    <tr><td colSpan={4} className="px-4 py-6 text-center text-xs text-muted-foreground">No hay citas próximas programadas.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </TabsContent>
-
-        {/* TAB 2: FINANCIAL */}
-        <TabsContent value="financial" className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-0 outline-none">
-          <div className="lg:col-span-2 bg-card border border-border/40 rounded-[2rem] p-6 shadow-sm border border-border/40 flex flex-col justify-between">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Histórico de Ingresos</p>
-              <h3 className="mt-1 text-base font-semibold flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-primary" /> Evolución de Facturación (Últimos 12 meses)
-              </h3>
-            </div>
-
-            {monthlyData.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-20">No hay transacciones registradas.</p>
-            ) : (
-              <div className="flex h-56 items-end gap-3 pt-6 border-b border-border/40 mt-4">
-                {monthlyData.map((d) => {
-                  const pct = (d.amount / maxAmount) * 100;
-                  const [yr, mn] = d.month.split("-");
-                  const label = `${MONTHS_ES[parseInt(mn) - 1].slice(0,3)} '${yr.slice(2)}`;
-                  return (
-                    <div key={d.month} className="flex-1 flex flex-col items-center gap-2 group h-full justify-end">
-                      <div className="text-[9px] font-bold text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                        ${d.amount.toLocaleString("es-ES")}
-                      </div>
-                      <div
-                        style={{ height: `${pct}%` }}
-                        className="w-full bg-primary rounded-t-lg transition-all duration-500 hover:opacity-85 shadow-sm shadow-[#4361ee]/15"
-                      />
-                      <div className="text-[10px] text-muted-foreground font-semibold truncate w-full text-center">
-                        {label}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          <div className="lg:col-span-1 bg-card border border-border/40 rounded-[2rem] p-6 shadow-sm border border-border/40">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-primary mb-4 flex items-center gap-1">
-              <DollarSign className="h-4 w-4" /> Desglose Mensual
-            </h3>
-            <div className="overflow-hidden rounded-2xl border border-border/40">
-              <table className="w-full text-xs">
-                <thead className="bg-muted/50 text-left uppercase tracking-wider text-muted-foreground">
-                  <tr>
-                    <th className="px-3 py-2">Mes / Año</th>
-                    <th className="px-3 py-2 text-right">Monto ($)</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/60">
-                  {monthlyData.slice().reverse().map((d) => {
-                    const [yr, mn] = d.month.split("-");
-                    return (
-                      <tr key={d.month} className="hover:bg-muted/50/20">
-                        <td className="px-3 py-2.5 font-medium">{MONTHS_ES[parseInt(mn) - 1]} {yr}</td>
-                        <td className="px-3 py-2.5 text-right font-bold text-primary">${d.amount.toLocaleString("es-ES")}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </TabsContent>
-
-        {/* TAB 3: MARKETING */}
-        <TabsContent value="marketing" className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-0 outline-none">
-          <div className="lg:col-span-2 bg-card border border-border/40 rounded-[2rem] p-6 shadow-sm border border-border/40">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Marketing</p>
-              <h3 className="mt-1 text-base font-semibold flex items-center gap-2">
-                <Megaphone className="h-5 w-5 text-primary" /> Adquisición de Pacientes
-              </h3>
-            </div>
-
-            <div className="space-y-4 mt-6">
-              {marketingData.map((d, idx) => {
-                const colors = [
-                  "bg-primary",
-                  "bg-blue-400",
-                  "bg-emerald-500",
-                  "bg-sky-600",
-                  "bg-amber-600",
-                ];
-                const colorClass = colors[idx % colors.length];
+      <div className="lg:col-span-1 bg-card border border-border/40 rounded-[2rem] p-6 shadow-sm">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-primary mb-4 flex items-center gap-1">
+          <DollarSign className="h-4 w-4" /> Desglose Mensual
+        </h3>
+        <div className="overflow-hidden rounded-2xl border border-border/40">
+          <table className="w-full text-xs">
+            <thead className="bg-muted/50 text-left uppercase tracking-wider text-muted-foreground">
+              <tr>
+                <th className="px-3 py-2">Mes / Año</th>
+                <th className="px-3 py-2 text-right">Monto ($)</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/60">
+              {monthlyData.slice().reverse().map((d) => {
+                const [yr, mn] = d.month.split("-");
                 return (
-                  <div key={d.channel} className="space-y-1">
-                    <div className="flex justify-between text-xs font-semibold">
-                      <span>{d.channel}</span>
-                      <span className="text-muted-foreground">{d.count} consultas ({d.percentage}%)</span>
-                    </div>
-                    <div className="w-full bg-muted/50 h-2.5 rounded-full overflow-hidden">
-                      <div
-                        style={{ width: `${d.percentage}%` }}
-                        className={cn("h-full rounded-full transition-all duration-500", colorClass)}
-                      />
-                    </div>
-                  </div>
+                  <tr key={d.month} className="hover:bg-muted/50/20">
+                    <td className="px-3 py-2.5 font-medium">{MONTHS_ES[parseInt(mn) - 1]} {yr}</td>
+                    <td className="px-3 py-2.5 text-right font-bold text-primary">${d.amount.toLocaleString("es-ES")}</td>
+                  </tr>
                 );
               })}
-              {marketingData.length === 0 && (
-                <p className="text-xs text-muted-foreground text-center py-12">No hay datos de canales de marketing disponibles.</p>
-              )}
-            </div>
-          </div>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </TabsContent>
+  );
+}
 
-          <div className="lg:col-span-1 bg-card border border-border/40 rounded-[2rem] p-6 shadow-sm border border-border/40">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-primary mb-4 flex items-center gap-1">
-              <Megaphone className="h-4 w-4" /> Tabla de Impacto
-            </h3>
-            <div className="overflow-hidden rounded-2xl border border-border/40">
-              <table className="w-full text-xs">
-                <thead className="bg-muted/50 text-left uppercase tracking-wider text-muted-foreground">
-                  <tr>
-                    <th className="px-3 py-2">Canal</th>
-                    <th className="px-3 py-2 text-center">Consultas</th>
-                    <th className="px-3 py-2 text-right">Porcentaje</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/60">
-                  {marketingData.map((d) => (
-                    <tr key={d.channel} className="hover:bg-muted/50/20">
-                      <td className="px-3 py-2.5 font-medium">{d.channel}</td>
-                      <td className="px-3 py-2.5 text-center font-bold">{d.count}</td>
-                      <td className="px-3 py-2.5 text-right font-bold text-primary">{d.percentage}%</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>
+function ReportsMarketingTab({
+  marketingData,
+}: {
+  marketingData: any[];
+}) {
+  return (
+    <TabsContent value="marketing" className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-0 outline-none">
+      <div className="lg:col-span-2 bg-card border border-border/40 rounded-[2rem] p-6 shadow-sm">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Marketing</p>
+          <h3 className="mt-1 text-base font-semibold flex items-center gap-2">
+            <Megaphone className="h-5 w-5 text-primary" /> Adquisición de Pacientes
+          </h3>
+        </div>
+
+        <div className="space-y-4 mt-6">
+          {marketingData.map((d, idx) => {
+            const colors = [
+              "bg-primary",
+              "bg-blue-400",
+              "bg-emerald-500",
+              "bg-sky-600",
+              "bg-amber-600",
+            ];
+            const colorClass = colors[idx % colors.length];
+            return (
+              <div key={d.channel} className="space-y-1">
+                <div className="flex justify-between text-xs font-semibold">
+                  <span>{d.channel}</span>
+                  <span className="text-muted-foreground">{d.count} consultas ({d.percentage}%)</span>
+                </div>
+                <div className="w-full bg-muted/50 h-2.5 rounded-full overflow-hidden">
+                  <div
+                    style={{ width: `${d.percentage}%` }}
+                    className={cn("h-full rounded-full transition-[width] duration-500", colorClass)}
+                  />
+                </div>
+              </div>
+            );
+          })}
+          {marketingData.length === 0 && (
+            <p className="text-xs text-muted-foreground text-center py-12">No hay datos de canales de marketing disponibles.</p>
+          )}
+        </div>
+      </div>
+
+      <div className="lg:col-span-1 bg-card border border-border/40 rounded-[2rem] p-6 shadow-sm">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-primary mb-4 flex items-center gap-1">
+          <Megaphone className="h-4 w-4" /> Tabla de Impacto
+        </h3>
+        <div className="overflow-hidden rounded-2xl border border-border/40">
+          <table className="w-full text-xs">
+            <thead className="bg-muted/50 text-left uppercase tracking-wider text-muted-foreground">
+              <tr>
+                <th className="px-3 py-2">Canal</th>
+                <th className="px-3 py-2 text-center">Consultas</th>
+                <th className="px-3 py-2 text-right">Porcentaje</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/60">
+              {marketingData.map((d) => (
+                <tr key={d.channel} className="hover:bg-muted/50/20">
+                  <td className="px-3 py-2.5 font-medium">{d.channel}</td>
+                  <td className="px-3 py-2.5 text-center font-bold">{d.count}</td>
+                  <td className="px-3 py-2.5 text-right font-bold text-primary">{d.percentage}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </TabsContent>
   );
 }
 

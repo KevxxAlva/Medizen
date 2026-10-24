@@ -104,7 +104,7 @@ export function ObstetricCalculatorCard({
             </div>
             <div className="h-3 w-full rounded-full bg-muted/80 overflow-hidden p-0.5 border border-border/40">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-sky-400 via-indigo-500 to-pink-500 transition-all duration-500"
+                className="h-full rounded-full bg-gradient-to-r from-sky-400 via-indigo-500 to-pink-500 transition-[width] duration-500"
                 style={{ width: `${Math.min(100, Math.max(5, calc.progressPercentage || 0))}%` }}
               />
             </div>

@@ -5,7 +5,6 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { CommandMenu } from "@/components/CommandMenu";
 import { BottomNavBar } from "@/components/BottomNavBar";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
-import { AnimatePresence, motion } from "framer-motion";
 import { useLocation } from "@tanstack/react-router";
 import { Menu, Lock } from "lucide-react";
 import { useClinicInfo } from "@/lib/api/clinic";
@@ -25,15 +24,19 @@ export const Route = createFileRoute("/_authenticated")({
     if (typeof window === "undefined") {
       return { user: null };
     }
+    let sessionUser = null;
     try {
       const { data } = await supabase.auth.getSession();
-      if (!data.session?.user) {
-        throw redirect({ to: "/auth" });
-      }
-      return { user: data.session.user };
-    } catch (e) {
+      sessionUser = data.session?.user ?? null;
+    } catch {
+      // If reading session fails, sessionUser remains null
+    }
+
+    if (!sessionUser) {
       throw redirect({ to: "/auth" });
     }
+
+    return { user: sessionUser };
   },
   component: AuthenticatedLayout,
 });
@@ -90,7 +93,7 @@ function AuthenticatedLayout() {
             <Menu className="h-5 w-5" />
           </button>
           <div className="flex items-center gap-2.5">
-            <MedizenLogo className="h-7 w-7 flex-shrink-0 transition-all duration-300" />
+            <MedizenLogo className="h-7 w-7 flex-shrink-0 transition-transform duration-300" />
             <span className="font-display font-bold text-base tracking-tight text-foreground truncate max-w-[170px]">
               {clinic?.name || "Medizen"}
             </span>
@@ -123,11 +126,14 @@ function AuthenticatedLayout() {
 
       {/* Floating Desktop Quick Lock & Security Indicator (Hidden on Mobile) */}
       {hasPinConfigured && (
-        <aside aria-label="Seguridad y accesos rápidos" className="hidden md:flex fixed top-4 right-6 z-30 items-center gap-2">
+        <aside
+          aria-label="Seguridad y accesos rápidos"
+          className="hidden md:flex fixed top-4 right-6 z-30 items-center gap-2"
+        >
           <button
             type="button"
             onClick={lockScreen}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-card/85 backdrop-blur-md border border-border/60 text-xs font-semibold text-muted-foreground hover:text-foreground hover:border-primary/40 shadow-xs transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-card/85 backdrop-blur-md border border-border/60 text-xs font-semibold text-muted-foreground hover:text-foreground hover:border-primary/40 shadow-xs transition-colors cursor-pointer"
             title="Bloquear sesión clínica inmediatamente"
           >
             <Lock className="h-3.5 w-3.5 text-primary" />
@@ -136,14 +142,16 @@ function AuthenticatedLayout() {
         </aside>
       )}
 
-      <AppSidebar 
-        isCollapsed={isCollapsed} 
-        onToggle={() => setIsCollapsed(!isCollapsed)} 
+      <AppSidebar
+        isCollapsed={isCollapsed}
+        onToggle={() => setIsCollapsed(!isCollapsed)}
         mobileOpen={mobileMenuOpen}
         onMobileClose={() => setMobileMenuOpen(false)}
       />
 
-      <main className={`px-3 sm:px-4 md:px-6 pt-3 sm:pt-4 md:pt-6 pb-6 h-full flex-1 transition-all duration-300 ${isCollapsed ? "md:ml-[80px]" : "md:ml-[260px]"}`}>
+      <main
+        className={`px-3 sm:px-4 md:px-6 pt-3 sm:pt-4 md:pt-6 pb-6 h-full flex-1 transition-[margin] duration-300 ${isCollapsed ? "md:ml-[80px]" : "md:ml-[260px]"}`}
+      >
         <div
           key={location.pathname}
           className="max-w-7xl mx-auto w-full animate-in fade-in duration-150"

@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { UserRound, Plus, Shield, Stethoscope, Trash2, Loader2, ShieldOff, Search, X, Filter, ChevronLeft, ChevronRight, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -20,10 +21,10 @@ import { useAuthSession, requireAdminAccess } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/doctores")({
-  head: () => ({ meta: [{ title: "Personal — Medizen" }] }),
   beforeLoad: async () => {
     await requireAdminAccess();
   },
+  head: () => ({ meta: [{ title: "Personal — Medizen" }] }),
   component: DoctoresAdmin,
 });
 
@@ -108,7 +109,7 @@ function DoctoresAdmin() {
       {/* TOP HEADER */}
       <header className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <button className="text-muted-foreground hover:text-foreground"><ChevronLeft className="h-5 w-5" /></button>
+          <button type="button" aria-label="Volver" className="text-muted-foreground hover:text-foreground"><ChevronLeft className="h-5 w-5" /></button>
           <h1 className="text-xl font-bold text-foreground">Personal</h1>
         </div>
         <div className="flex-1 max-w-xl mx-auto w-full sm:w-auto">
@@ -118,9 +119,10 @@ function DoctoresAdmin() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Buscar personal..."
+              aria-label="Buscar personal"
               className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground text-foreground"
             />
-            {q && <button onClick={() => setQ("")} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
+            {q && <button type="button" aria-label="Limpiar búsqueda" onClick={() => setQ("")} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
           </div>
         </div>
         <div className="flex items-center gap-4 hidden md:flex">
@@ -147,7 +149,7 @@ function DoctoresAdmin() {
         <table className="w-full text-left border-collapse min-w-[650px]">
           <thead>
             <tr className="bg-muted text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-              <th className="p-4 w-12 rounded-tl-xl"><input type="checkbox" className="rounded border-gray-300" /></th>
+              <th className="p-4 w-12 rounded-tl-xl"><input type="checkbox" aria-label="Seleccionar todo el personal" className="rounded border-gray-300" /></th>
               <th className="p-4">Nombre <span className="ml-1">↕</span></th>
               <th className="p-4">Correo <span className="ml-1">↕</span></th>
               <th className="p-4">Especialidad <span className="ml-1">↕</span></th>
@@ -167,7 +169,7 @@ function DoctoresAdmin() {
                 const isMe = p.id === me?.id;
                 return (
                   <tr key={p.id} className="border-b border-border/40 hover:bg-muted/50 transition group">
-                    <td className="p-4"><input type="checkbox" className="rounded border-gray-300" /></td>
+                    <td className="p-4"><input type="checkbox" aria-label={`Seleccionar miembro ${p.full_name || p.email}`} className="rounded border-gray-300" /></td>
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-foreground text-[10px] font-bold">
@@ -233,17 +235,14 @@ function DoctoresAdmin() {
         </table>
       </div>
 
-      {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between pt-4 border-t border-border/40">
-          <p className="text-xs text-muted-foreground font-medium">
-            Mostrando <span className="font-bold text-foreground">{(currentPage - 1) * itemsPerPage + 1} - {Math.min(filtered.length, currentPage * itemsPerPage)}</span> de <span className="font-bold text-foreground">{filtered.length}</span> miembros
-          </p>
-          <div className="flex gap-1">
-            <button disabled={currentPage === 1} onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))} className="h-8 w-8 flex items-center justify-center rounded-lg border border-border/40 text-muted-foreground hover:bg-muted disabled:opacity-50"><ChevronLeft className="h-4 w-4" /></button>
-            <button disabled={currentPage === totalPages} onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))} className="h-8 w-8 flex items-center justify-center rounded-lg border border-border/40 text-muted-foreground hover:bg-muted disabled:opacity-50"><ChevronRight className="h-4 w-4" /></button>
-          </div>
-        </div>
-      )}
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={filtered.length}
+        itemsPerPage={itemsPerPage}
+        entityLabel="miembros"
+        onPageChange={setCurrentPage}
+      />
 
       <Dialog open={openCreate} onOpenChange={setOpenCreate}>
         <DialogContent className="rounded-3xl sm:max-w-md">
