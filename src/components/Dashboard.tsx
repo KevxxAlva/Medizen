@@ -167,7 +167,7 @@ export function Dashboard() {
         </div>
 
         {/* RIGHT COLUMN (Sidebar Profile & Calendar) */}
-        <div className="xl:col-span-4 flex flex-col gap-6">
+        <div className="xl:col-span-4 flex flex-col gap-6 self-start xl:sticky xl:top-6">
           <DashboardProfileCard
             displayName={displayName}
             profile={profile}

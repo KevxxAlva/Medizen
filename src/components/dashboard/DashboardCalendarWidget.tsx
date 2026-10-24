@@ -53,7 +53,7 @@ export function DashboardCalendarWidget({ appointments, today }: DashboardCalend
   return (
     <div
       id="calendar-widget"
-      className="glass-card rounded-[2rem] overflow-hidden shadow-lg shadow-black/5 flex-1 flex flex-col"
+      className="glass-card rounded-[2rem] overflow-hidden shadow-lg shadow-black/5 flex flex-col"
     >
       {/* Calendar Header */}
       <div className="flex justify-between items-center bg-gradient-to-r from-primary to-primary/90 text-primary-foreground px-6 py-4 border-b border-border">
@@ -119,7 +119,7 @@ export function DashboardCalendarWidget({ appointments, today }: DashboardCalend
       </div>
 
       {/* Timeline for Selected Date */}
-      <div className="px-6 py-4 flex-1 flex flex-col">
+      <div className="px-6 py-4 flex flex-col">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
             <span>
@@ -138,7 +138,7 @@ export function DashboardCalendarWidget({ appointments, today }: DashboardCalend
           </span>
         </div>
 
-        <div className="flex flex-col flex-1">
+        <div className="flex flex-col space-y-1">
           {selectedDateAppointments.length > 0 ? (
             <>
               {selectedDateAppointments
