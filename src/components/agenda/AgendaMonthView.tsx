@@ -50,10 +50,19 @@ export function AgendaMonthView({
               !searchQuery ||
               (a.patient_name &&
                 a.patient_name.toLowerCase().includes(searchQuery.toLowerCase()));
-            const matchesStatus =
-              statusFilter === "todas"
-                ? a.status !== "cancelada"
-                : a.status === statusFilter;
+            const statusLower = (a.status || "").toLowerCase();
+            let matchesStatus = true;
+            if (statusFilter === "todas") {
+              matchesStatus = statusLower !== "cancelada";
+            } else if (statusFilter === "pendiente") {
+              matchesStatus = ["pendiente", "programada", "confirmada"].includes(statusLower);
+            } else if (statusFilter === "completada") {
+              matchesStatus = statusLower === "completada";
+            } else if (statusFilter === "cancelada") {
+              matchesStatus = statusLower === "cancelada";
+            } else {
+              matchesStatus = statusLower === statusFilter.toLowerCase();
+            }
             return (
               dateOnly(safeIso) === formatToYMD(d) && matchesSearch && matchesStatus
             );

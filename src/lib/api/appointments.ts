@@ -44,6 +44,7 @@ export interface AppointmentFilters {
   to?: string;
   status?: string;
   limit?: number;
+  ascending?: boolean;
 }
 
 export function useAppointments(filters?: AppointmentFilters) {
@@ -51,60 +52,84 @@ export function useAppointments(filters?: AppointmentFilters) {
   return useQuery({
     queryKey,
     queryFn: async (): Promise<AppointmentWithPatient[]> => {
-      let query = supabase
-        .from("citas")
-        .select(`
-          id_cita, 
-          id_paciente, 
-          id_medico, 
-          fecha_hora, 
-          estado, 
-          motivo, 
-          pacientes(nombre, apellido), 
-          consultas(id_consulta)
-        `)
-        .order("fecha_hora", { ascending: false });
+      const ascending = filters?.ascending ?? true;
+      const PAGE_SIZE = 1000;
+      let allResults: any[] = [];
+      let page = 0;
 
-      if (filters?.from) {
-        query = query.gte("fecha_hora", filters.from);
-      }
-      if (filters?.to) {
-        query = query.lte("fecha_hora", filters.to + "T23:59:59.999Z");
-      }
-      if (filters?.status) {
-        query = query.eq("estado", filters.status);
-      }
-      if (filters?.limit) {
-        query = query.limit(filters.limit);
+      while (true) {
+        let query = supabase
+          .from("citas")
+          .select(`
+            id_cita, 
+            id_paciente, 
+            id_medico, 
+            fecha_hora, 
+            estado, 
+            motivo, 
+            pacientes(nombre, apellido), 
+            consultas(id_consulta)
+          `)
+          .order("fecha_hora", { ascending });
+
+        if (filters?.from) {
+          query = query.gte("fecha_hora", filters.from);
+        }
+        if (filters?.to) {
+          query = query.lte("fecha_hora", filters.to + "T23:59:59.999Z");
+        }
+        if (filters?.status) {
+          query = query.eq("estado", filters.status);
+        }
+        if (filters?.limit) {
+          query = query.limit(filters.limit);
+        } else {
+          query = query.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        
+        const rows = data ?? [];
+        allResults.push(...rows);
+
+        if (filters?.limit || rows.length < PAGE_SIZE) {
+          break;
+        }
+        page++;
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      
-      const results = data ?? [];
+      const results = allResults;
       const patientIds = [...new Set(results.map((a: any) => a.id_paciente).filter(Boolean))];
       const invoiceByPatientAndDate = new Map<string, any>();
 
       if (patientIds.length > 0) {
-        let fQuery = supabase
-          .from("facturas")
-          .select("id_factura, id_paciente, total_general, estado_pago, fecha_emision, pagos(metodo_pago, referencia)")
-          .in("id_paciente", patientIds)
-          .order("id_factura", { ascending: false });
+        // Chunk patientIds in batches of 50 to avoid URL length overflow
+        const CHUNK_SIZE = 50;
+        for (let i = 0; i < patientIds.length; i += CHUNK_SIZE) {
+          const chunk = patientIds.slice(i, i + CHUNK_SIZE);
+          let fQuery = supabase
+            .from("facturas")
+            .select("id_factura, id_paciente, total_general, estado_pago, fecha_emision, pagos(metodo_pago, referencia)")
+            .in("id_paciente", chunk)
+            .order("id_factura", { ascending: false });
 
-        if (filters?.from) {
-          fQuery = fQuery.gte("fecha_emision", filters.from);
-        }
-        if (filters?.to) {
-          fQuery = fQuery.lte("fecha_emision", filters.to + "T23:59:59.999Z");
-        }
+          if (filters?.from) {
+            fQuery = fQuery.gte("fecha_emision", filters.from);
+          }
+          if (filters?.to) {
+            fQuery = fQuery.lte("fecha_emision", filters.to + "T23:59:59.999Z");
+          }
 
-        const { data: fData } = await fQuery;
-        for (const fac of fData || []) {
-          const dStr = (fac.fecha_emision || "").split("T")[0];
-          const key = `${fac.id_paciente}_${dStr}`;
-          if (!invoiceByPatientAndDate.has(key)) {
-            invoiceByPatientAndDate.set(key, fac);
+          const { data: fData, error: fError } = await fQuery;
+          if (!fError && fData) {
+            for (const fac of fData) {
+              const dStr = (fac.fecha_emision || "").split("T")[0];
+              const key = `${fac.id_paciente}_${dStr}`;
+              if (!invoiceByPatientAndDate.has(key)) {
+                invoiceByPatientAndDate.set(key, fac);
+              }
+            }
           }
         }
       }

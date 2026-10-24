@@ -1,9 +1,16 @@
-export function dateOnly(iso: string) {
-  return iso.slice(0, 10);
+export function dateOnly(iso: string | null | undefined): string {
+  if (!iso) return "";
+  return iso.trim().replace(" ", "T").slice(0, 10);
 }
 
-export function timeOnly(iso: string) {
-  const d = new Date(iso);
+export function timeOnly(iso: string | null | undefined): string {
+  if (!iso) return "--:--";
+  const clean = iso.trim().replace(" ", "T");
+  if (clean.length >= 16 && !clean.includes("Z")) {
+    return clean.slice(11, 16);
+  }
+  const d = new Date(clean);
+  if (isNaN(d.getTime())) return "--:--";
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }

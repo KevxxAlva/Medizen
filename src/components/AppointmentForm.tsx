@@ -23,15 +23,19 @@ export function AppointmentForm({
   appointment,
   defaultPatientId,
   defaultDate,
+  initialDate,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   appointment?: Appointment | null;
   defaultPatientId?: string;
   defaultDate?: string;
+  initialDate?: string;
 }) {
   const { data: doctors = [] } = useDoctors();
   const { data: services = [] } = useServices();
+
+  const effectiveDefaultDate = defaultDate || initialDate;
 
   const {
     isEdit,
@@ -60,7 +64,7 @@ export function AppointmentForm({
     open,
     appointment,
     defaultPatientId,
-    defaultDate,
+    defaultDate: effectiveDefaultDate,
     doctors,
     onOpenChange,
   });

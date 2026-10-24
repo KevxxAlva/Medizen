@@ -118,8 +118,13 @@ export function AgendaWeekDayGrid({
 
           {/* Day Columns */}
           {daysToRender.map((d, colIndex) => {
-            const isToday = formatToYMD(d) === todayStr;
+            const dateStr = formatToYMD(d);
+            const isToday = dateStr === todayStr;
             const actualDayIndex = d.getDay() === 0 ? 6 : d.getDay() - 1; // 0=Mon
+            const dayEvents = gridEvents.filter((ev) =>
+              ev.dateStr ? ev.dateStr === dateStr : ev.dayIndex === actualDayIndex,
+            );
+
             return (
               <div
                 key={colIndex}
@@ -130,37 +135,35 @@ export function AgendaWeekDayGrid({
               >
                 <button
                   type="button"
-                  aria-label={`Crear cita para ${formatToYMD(d)}`}
-                  onClick={() => onNewAppointmentAtDate(formatToYMD(d))}
+                  aria-label={`Crear cita para ${dateStr}`}
+                  onClick={() => onNewAppointmentAtDate(dateStr)}
                   className="absolute inset-0 w-full h-full cursor-pointer hover:bg-muted/30 transition-colors z-0"
                 />
                 {/* Render Events for this day */}
-                {gridEvents
-                  .filter((ev) => ev.dayIndex === actualDayIndex)
-                  .map((ev) => {
-                    const pxPerHour = compactMode ? 48 : 96;
-                    const topPx = ev.topHours * pxPerHour;
-                    const heightPx = ev.durationHours * pxPerHour;
+                {dayEvents.map((ev) => {
+                  const pxPerHour = compactMode ? 48 : 96;
+                  const topPx = ev.topHours * pxPerHour;
+                  const heightPx = Math.max(compactMode ? 36 : 48, ev.durationHours * pxPerHour);
 
-                    return (
-                      <Popover key={ev.id}>
-                        <PopoverTrigger asChild>
-                          <div
-                            onClick={(e) => e.stopPropagation()}
-                            className={cn(
-                              "absolute rounded-[1rem] p-3 text-xs font-bold cursor-pointer transition-transform hover:scale-[1.02] hover:!z-50 overflow-hidden shadow-sm border border-l-4",
-                              ev.theme.bg,
-                              ev.theme.border,
-                              ev.theme.text,
-                            )}
-                            style={{
-                              top: `${topPx}px`,
-                              height: `${heightPx}px`,
-                              left: `${(ev.overlapIndex || 0) * 16 + 4}px`,
-                              right: `4px`,
-                              zIndex: 10 + (ev.overlapIndex || 0),
-                            }}
-                          >
+                  return (
+                    <Popover key={ev.id}>
+                      <PopoverTrigger asChild>
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className={cn(
+                            "absolute rounded-[1rem] p-3 text-xs font-bold cursor-pointer transition-transform hover:scale-[1.02] hover:!z-50 overflow-hidden shadow-sm border border-l-4",
+                            ev.theme.bg,
+                            ev.theme.border,
+                            ev.theme.text,
+                          )}
+                          style={{
+                            top: `${topPx}px`,
+                            height: `${heightPx}px`,
+                            left: `${(ev.overlapIndex || 0) * 16 + 4}px`,
+                            right: `4px`,
+                            zIndex: 10 + (ev.overlapIndex || 0),
+                          }}
+                        >
                             <p className="truncate font-extrabold">{ev.patient_name}</p>
                             <p className="text-[10px] opacity-80 font-medium tracking-wide mt-0.5 flex gap-1">
                               {timeOnly(ev.scheduled_at.replace(" ", "T"))} -{" "}

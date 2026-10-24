@@ -37,14 +37,26 @@ export function AgendaPage() {
   const [statusFilter, setStatusFilter] = useState("todas");
   const [showAllSidebarApps, setShowAllSidebarApps] = useState(false);
 
+  const weekDays = useMemo(() => getWeekDays(currentDate), [currentDate]);
+  const monthDays = useMemo(() => getCalendarMonthDays(currentDate), [currentDate]);
+  const todayStr = useMemo(() => formatToYMD(new Date()), []);
+
+  const dateRange = useMemo(() => {
+    const firstWeekDay = formatToYMD(weekDays[0]);
+    const lastWeekDay = formatToYMD(weekDays[6]);
+    const firstMonthDay = formatToYMD(monthDays[0]);
+    const lastMonthDay = formatToYMD(monthDays[monthDays.length - 1]);
+
+    const from = firstWeekDay < firstMonthDay ? firstWeekDay : firstMonthDay;
+    const to = lastWeekDay > lastMonthDay ? lastWeekDay : lastMonthDay;
+
+    return { from, to };
+  }, [weekDays, monthDays]);
+
   // Queries
   const { data: appointments = [] } = useAppointments({
-    from: new Date(currentDate.getFullYear(), currentDate.getMonth() - 2, 1)
-      .toISOString()
-      .slice(0, 10),
-    to: new Date(currentDate.getFullYear(), currentDate.getMonth() + 3, 0)
-      .toISOString()
-      .slice(0, 10),
+    from: dateRange.from,
+    to: dateRange.to,
   });
   const { data: doctors = [] } = useDoctors();
   const del = useDeleteAppointment();
@@ -76,10 +88,6 @@ export function AgendaPage() {
       toast.error(err?.message || "Error al exportar citas", { id: "agenda_pdf" });
     }
   };
-
-  const weekDays = useMemo(() => getWeekDays(currentDate), [currentDate]);
-  const monthDays = useMemo(() => getCalendarMonthDays(currentDate), [currentDate]);
-  const todayStr = useMemo(() => formatToYMD(new Date()), []);
 
   const deleteApp = async (id: string) => {
     try {
@@ -200,7 +208,7 @@ export function AgendaPage() {
           key={`${editingApp?.id || "new"}-${defaultFormDate || ""}`}
           open={formOpen}
           onOpenChange={setFormOpen}
-          initialDate={defaultFormDate}
+          defaultDate={defaultFormDate}
           appointment={editingApp}
         />
       )}
