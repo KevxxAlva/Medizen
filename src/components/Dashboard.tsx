@@ -132,7 +132,12 @@ export function Dashboard() {
   }, [todaysAppointments, recentPatients]);
 
   const displayName = profile?.full_name?.trim() || user?.email?.split("@")[0] || "Usuario";
-  const roleDisplay = roles.includes("admin") ? "Administrador" : "Médico";
+  const rawRole = (profile?.role || roles[0] || "").toLowerCase();
+  const roleDisplay = rawRole.startsWith("admin")
+    ? "Administrador"
+    : rawRole.startsWith("recep")
+    ? "Recepcionista"
+    : "Médico";
 
   if (statsLoading && !stats) {
     return (

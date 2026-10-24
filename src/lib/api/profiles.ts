@@ -11,6 +11,7 @@ export interface Profile {
   university?: string | null;
   mpps?: string | null;
   cmc?: string | null;
+  role?: string | null;
 }
 
 export interface ProfileWithRoles extends Profile {
@@ -21,6 +22,7 @@ const mapProfile = (u: any): Profile => {
   // Try to find if this user is a doctor
   const isDoctor = !!u.medicos;
   const docInfo = isDoctor ? (Array.isArray(u.medicos) ? u.medicos[0] : u.medicos) : null;
+  const roleName = Array.isArray(u.roles) ? u.roles[0]?.nombre_rol : u.roles?.nombre_rol;
 
   return {
     id: u.auth_id || u.id_usuario?.toString(),
@@ -31,6 +33,7 @@ const mapProfile = (u: any): Profile => {
     mpps: docInfo?.numero_licencia || null,
     university: docInfo?.universidad || null,
     cmc: docInfo?.cmc || null,
+    role: roleName || null,
   };
 };
 

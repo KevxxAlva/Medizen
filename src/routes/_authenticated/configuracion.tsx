@@ -177,14 +177,26 @@ function UserProfileSection({
             <h3 className="font-bold text-lg text-foreground">{profileName || "Usuario FemeSalud"}</h3>
             <p className="text-xs text-muted-foreground font-medium">{user?.email}</p>
             <div className="flex items-center gap-2 justify-center sm:justify-start mt-2">
-              {roles.map((r) => (
-                <span
-                  key={r}
-                  className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-[#e8f0fe] text-primary uppercase flex items-center gap-1"
-                >
-                  <Shield className="h-3 w-3" /> {r === "admin" ? "Administrador" : "Médico"}
-                </span>
-              ))}
+              {roles.map((r) => {
+                const isRAdmin = r.toLowerCase().startsWith("admin");
+                const isRRecep = r.toLowerCase().startsWith("recep");
+                return (
+                  <span
+                    key={r}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase flex items-center gap-1",
+                      isRAdmin
+                        ? "bg-purple-50 text-purple-600 border border-purple-100"
+                        : isRRecep
+                        ? "bg-blue-50 text-blue-600 border border-blue-100"
+                        : "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                    )}
+                  >
+                    <Shield className="h-3 w-3" />
+                    {isRAdmin ? "Administrador" : isRRecep ? "Recepcionista" : "Médico"}
+                  </span>
+                );
+              })}
             </div>
           </div>
         </div>

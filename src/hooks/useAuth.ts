@@ -4,7 +4,7 @@ import { redirect } from "@tanstack/react-router";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-export type AppRole = "admin" | "doctor";
+export type AppRole = "admin" | "doctor" | "recepcionista" | "medico";
 
 export interface AuthState {
   session: Session | null;
