@@ -297,7 +297,7 @@ export function ReportsPage() {
         </Button>
       </header>
 
-      <div className="bg-card border border-border/40 rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-5 shadow-sm">
+      <div className="bg-card border border-border rounded-3xl p-4 sm:p-5 shadow-xs">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
             <CalIcon className="h-3.5 w-3.5" /> Rango de fechas
@@ -348,7 +348,7 @@ function ReportsOverviewTab({
         {kpis.map((k) => {
           const Icon = k.icon;
           return (
-            <div key={k.label} className="bg-card border border-border/40 rounded-[2rem] p-5 shadow-sm">
+            <div key={k.label} className="bg-card border border-border rounded-3xl p-5 shadow-xs">
               <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${k.tone}`}>
                 <Icon className="h-5 w-5" />
               </div>
@@ -359,7 +359,7 @@ function ReportsOverviewTab({
         })}
       </div>
 
-      <div className="bg-card border border-border/40 rounded-[2rem] p-6 shadow-sm">
+      <div className="bg-card border border-border rounded-3xl p-6 shadow-xs">
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Planificación</p>
@@ -368,7 +368,7 @@ function ReportsOverviewTab({
             </h3>
           </div>
         </div>
-        <div className="overflow-hidden rounded-2xl border border-border/40">
+        <div className="overflow-hidden rounded-2xl border border-border">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
               <tr>
@@ -448,11 +448,11 @@ function ReportsFinancialTab({
         )}
       </div>
 
-      <div className="lg:col-span-1 bg-card border border-border/40 rounded-[2rem] p-6 shadow-sm">
+      <div className="lg:col-span-1 bg-card border border-border rounded-3xl p-6 shadow-xs">
         <h3 className="text-xs font-bold uppercase tracking-wider text-primary mb-4 flex items-center gap-1">
           <DollarSign className="h-4 w-4" /> Desglose Mensual
         </h3>
-        <div className="overflow-hidden rounded-2xl border border-border/40">
+        <div className="overflow-hidden rounded-2xl border border-border">
           <table className="w-full text-xs">
             <thead className="bg-muted/50 text-left uppercase tracking-wider text-muted-foreground">
               <tr>
@@ -485,7 +485,7 @@ function ReportsMarketingTab({
 }) {
   return (
     <TabsContent value="marketing" className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-0 outline-none">
-      <div className="lg:col-span-2 bg-card border border-border/40 rounded-[2rem] p-6 shadow-sm">
+      <div className="lg:col-span-2 bg-card border border-border rounded-3xl p-6 shadow-xs">
         <div>
           <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Marketing</p>
           <h3 className="mt-1 text-base font-semibold flex items-center gap-2">

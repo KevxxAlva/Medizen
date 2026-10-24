@@ -56,7 +56,7 @@ export function DashboardCalendarWidget({ appointments, today }: DashboardCalend
       className="glass-card rounded-[2rem] overflow-hidden shadow-lg shadow-black/5 flex-1 flex flex-col"
     >
       {/* Calendar Header */}
-      <div className="flex justify-between items-center bg-gradient-to-r from-primary to-primary/90 text-primary-foreground px-6 py-4 border-b border-primary/20">
+      <div className="flex justify-between items-center bg-gradient-to-r from-primary to-primary/90 text-primary-foreground px-6 py-4 border-b border-border">
         <span className="text-xs font-bold uppercase tracking-widest">Mi Calendario</span>
         <div className="flex items-center gap-1.5">
           <button
@@ -65,14 +65,14 @@ export function DashboardCalendarWidget({ appointments, today }: DashboardCalend
               prev.setDate(prev.getDate() - 7);
               setSelectedDate(prev);
             }}
-            className="p-1 hover:bg-black/20 rounded-lg transition cursor-pointer"
+            className="p-1 hover:bg-black/20 rounded-lg transition border border-white/10 cursor-pointer"
             title="Semana anterior"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
           <button
             onClick={() => setSelectedDate(new Date())}
-            className="bg-black/10 px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-black/20 transition capitalize cursor-pointer"
+            className="bg-black/20 px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-black/30 transition capitalize border border-white/10 cursor-pointer"
           >
             {selectedDate.toLocaleString("es-ES", { month: "long" })} {selectedDate.getFullYear()}
           </button>
@@ -82,7 +82,7 @@ export function DashboardCalendarWidget({ appointments, today }: DashboardCalend
               next.setDate(next.getDate() + 7);
               setSelectedDate(next);
             }}
-            className="p-1 hover:bg-black/20 rounded-lg transition cursor-pointer"
+            className="p-1 hover:bg-black/20 rounded-lg transition border border-white/10 cursor-pointer"
             title="Semana siguiente"
           >
             <ChevronRight className="h-4 w-4" />
@@ -91,7 +91,7 @@ export function DashboardCalendarWidget({ appointments, today }: DashboardCalend
       </div>
 
       {/* Calendar Grid (Interactive Row of Days) */}
-      <div className="bg-muted px-4 py-4 border-b border-border/40">
+      <div className="bg-card px-4 py-3.5 border-b border-border">
         <div className="flex justify-between items-center gap-1">
           {currentWeek.map((d) => (
             <button
@@ -155,7 +155,7 @@ export function DashboardCalendarWidget({ appointments, today }: DashboardCalend
                   return (
                     <div
                       key={app.id}
-                      className="relative flex flex-col pt-2 pb-4 border-b border-dashed border-border/40 last:border-0 hover:bg-muted/30 transition-colors -mx-4 px-4 rounded-xl"
+                      className="relative flex flex-col pt-2 pb-4 border-b border-border last:border-0 hover:bg-muted/30 transition-colors -mx-4 px-4 rounded-xl"
                     >
                       <div className="flex items-center gap-3 text-xs font-bold">
                         <span className="w-14 text-left text-muted-foreground font-medium">

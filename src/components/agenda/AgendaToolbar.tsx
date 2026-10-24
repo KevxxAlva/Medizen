@@ -36,14 +36,14 @@ export function AgendaToolbar({
       <div className="flex items-center gap-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 text-xs font-bold text-foreground border border-border/40 rounded-xl px-4 py-2 hover:bg-muted focus:outline-none">
+            <button className="flex items-center gap-2 text-xs font-bold text-foreground border border-border rounded-xl px-4 py-2 hover:bg-muted focus:outline-none">
               <Filter className="h-4 w-4 text-muted-foreground" /> Filtro
               {statusFilter !== "todas" && (
                 <span className="bg-primary w-2 h-2 rounded-full absolute top-1 right-1"></span>
               )}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56 rounded-xl">
+          <DropdownMenuContent align="start" className="w-56 rounded-xl border border-border">
             <DropdownMenuItem
               onClick={() => onStatusFilterChange("todas")}
               className="text-xs font-bold cursor-pointer"
@@ -73,7 +73,7 @@ export function AgendaToolbar({
         <button
           type="button"
           onClick={onDownloadAgenda}
-          className="flex items-center gap-2 text-xs font-bold text-foreground border border-border/40 rounded-xl px-4 py-2 hover:bg-muted cursor-pointer"
+          className="flex items-center gap-2 text-xs font-bold text-foreground border border-border rounded-xl px-4 py-2 hover:bg-muted cursor-pointer"
         >
           <Download className="h-4 w-4 text-muted-foreground" /> Descargar Datos
         </button>
@@ -106,24 +106,24 @@ export function AgendaToolbar({
               type="button"
               aria-label="Abrir buscador de citas"
               onClick={() => onSearchOpenChange(true)}
-              className="h-9 w-9 shrink-0 flex items-center justify-center border border-border/40 rounded-full text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+              className="h-9 w-9 shrink-0 flex items-center justify-center border border-border rounded-full text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
             >
               <Search className="h-4 w-4" />
             </button>
           )}
         </div>
         <Link to="/support">
-          <button className="flex items-center gap-2 text-xs font-bold text-foreground border border-border/40 rounded-xl px-4 py-2 hover:bg-muted">
+          <button className="flex items-center gap-2 text-xs font-bold text-foreground border border-border rounded-xl px-4 py-2 hover:bg-muted">
             <LifeBuoy className="h-4 w-4 text-muted-foreground" /> Soporte
           </button>
         </Link>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 text-xs font-bold text-foreground border border-border/40 rounded-xl px-4 py-2 hover:bg-muted focus:outline-none focus:ring-0">
+            <button className="flex items-center gap-2 text-xs font-bold text-foreground border border-border rounded-xl px-4 py-2 hover:bg-muted focus:outline-none focus:ring-0">
               <Grid className="h-4 w-4 text-muted-foreground" /> Diseño
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 rounded-xl">
+          <DropdownMenuContent align="end" className="w-48 rounded-xl border border-border">
             <DropdownMenuItem
               onClick={() => onCompactModeChange(false)}
               className="text-xs font-bold cursor-pointer"

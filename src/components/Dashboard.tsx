@@ -136,14 +136,14 @@ export function Dashboard() {
 
   if (statsLoading && !stats) {
     return (
-      <div className="min-h-full bg-muted/50 rounded-[2rem] p-4 md:p-8">
+      <div className="min-h-full bg-card/40 border border-border rounded-3xl p-4 md:p-8">
         <DashboardSkeleton />
       </div>
     );
   }
 
   return (
-    <div className="min-h-full bg-muted/50 rounded-[2rem] p-4 md:p-8 font-sans text-foreground">
+    <div className="min-h-full bg-card/40 border border-border rounded-3xl p-4 md:p-8 font-sans text-foreground">
       <DashboardHeader notifications={notifications} />
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">

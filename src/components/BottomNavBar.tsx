@@ -13,7 +13,7 @@ export function BottomNavBar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around bg-card border-t border-border/40 md:hidden pb-safe">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around bg-card border-t border-border md:hidden pb-safe">
       {NAV_ITEMS.map((item) => {
         const active = pathname === item.url || (item.url !== "/" && pathname.startsWith(item.url));
         const Icon = item.icon;

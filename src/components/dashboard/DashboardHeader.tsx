@@ -29,7 +29,7 @@ export function DashboardHeader({ notifications }: DashboardHeaderProps) {
         id="search-bar"
         type="button"
         onClick={handleOpenSearch}
-        className="relative w-full max-w-sm flex items-center justify-between bg-card rounded-full px-4 py-2.5 shadow-sm text-left hover:bg-muted/40 transition-colors cursor-pointer group focus:outline-none focus:ring-2 focus:ring-primary/20"
+        className="relative w-full max-w-sm flex items-center justify-between bg-card border border-border rounded-full px-4 py-2.5 shadow-sm text-left hover:border-primary/40 hover:bg-muted/40 transition-colors cursor-pointer group focus:outline-none focus:ring-2 focus:ring-primary/20"
       >
         <div className="flex items-center gap-2.5 min-w-0">
           <Search className="h-4 w-4 text-muted-foreground shrink-0 group-hover:text-primary transition-colors" />
@@ -51,7 +51,7 @@ export function DashboardHeader({ notifications }: DashboardHeaderProps) {
             <button
               type="button"
               aria-label="Notificaciones"
-              className="flex items-center justify-center h-10 w-10 bg-card rounded-full shadow-sm text-primary relative transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+              className="flex items-center justify-center h-10 w-10 bg-card border border-border rounded-full shadow-sm text-primary relative transition hover:bg-muted hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
             >
               <Bell className="h-5 w-5 fill-current" />
               {notifications.length > 0 && (
@@ -61,7 +61,7 @@ export function DashboardHeader({ notifications }: DashboardHeaderProps) {
           </PopoverTrigger>
           <PopoverContent
             align="end"
-            className="w-80 p-0 rounded-[1.5rem] shadow-xl overflow-hidden overscroll-contain border-border/40 font-sans"
+            className="w-80 p-0 rounded-2xl shadow-xl overflow-hidden overscroll-contain border border-border font-sans"
           >
             <div className="px-4 py-3 bg-primary text-primary-foreground flex justify-between items-center">
               <span className="font-bold text-xs uppercase tracking-wider">Notificaciones</span>
@@ -106,7 +106,7 @@ export function DashboardHeader({ notifications }: DashboardHeaderProps) {
         <Link
           to="/configuracion"
           aria-label="Configuración"
-          className="flex items-center justify-center h-10 w-10 bg-card rounded-full shadow-sm text-muted-foreground transition hover:bg-muted/50 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex items-center justify-center h-10 w-10 bg-card border border-border rounded-full shadow-sm text-muted-foreground transition hover:bg-muted/50 hover:text-primary hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Settings className="h-5 w-5" />
         </Link>

@@ -261,7 +261,7 @@ export const LiveClockBadge = memo(function LiveClockBadge() {
 
   return (
     <div
-      className="flex items-center gap-2.5 bg-card rounded-full px-3.5 py-2 shadow-sm border border-border/40 text-foreground transition-colors hover:border-primary/30 select-none"
+      className="flex items-center gap-2.5 bg-card rounded-full px-3.5 py-2 shadow-sm border border-border text-foreground transition-colors hover:border-primary/40 select-none"
       title={currentTime.toLocaleDateString("es-VE", {
         timeZone: APP_TIME_ZONE,
         weekday: "long",

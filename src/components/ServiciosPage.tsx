@@ -65,7 +65,7 @@ export function ServiciosPage() {
   };
 
   return (
-    <div className="bg-card rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-6 shadow-sm min-h-[calc(100vh-8rem)] font-sans flex flex-col">
+    <div className="bg-card border border-border rounded-3xl p-4 sm:p-6 shadow-xs min-h-[calc(100vh-8rem)] font-sans flex flex-col">
       {/* TOP HEADER */}
       <header className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
@@ -80,7 +80,7 @@ export function ServiciosPage() {
           </div>
         </div>
         <div className="flex-1 max-w-xl mx-auto w-full sm:w-auto">
-          <div className="flex items-center gap-2 rounded-full bg-muted border border-border/50 px-4 py-2.5 w-full">
+          <div className="flex items-center gap-2 rounded-full bg-muted border border-border px-4 py-2.5 w-full">
             <Search className="h-4 w-4 text-muted-foreground" />
             <input
               value={q}
@@ -172,10 +172,10 @@ export function ServiciosPage() {
       </div>
 
       {/* TABLE */}
-      <div className="flex-1 overflow-x-auto">
+      <div className="flex-1 overflow-x-auto border border-border rounded-2xl bg-card overflow-hidden shadow-xs">
         <table className="w-full text-left border-collapse min-w-[650px]">
           <thead>
-            <tr className="bg-muted text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+            <tr className="bg-muted/70 text-[10px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border">
               <th className="p-4 rounded-tl-xl">Nombre del Servicio</th>
               <th className="p-4">Especialidad</th>
               <th className="p-4">Código Médico</th>
@@ -195,7 +195,7 @@ export function ServiciosPage() {
                 const badge = getSpecialtyBadgeStyle(espName);
 
                 return (
-                  <tr key={s.id_servicio} className="border-b border-border/40 hover:bg-muted/50 transition group">
+                  <tr key={s.id_servicio} className="border-b border-border last:border-0 hover:bg-muted/30 transition group">
                     <td className="p-4 font-bold text-foreground">
                       {s.nombre_servicio}
                     </td>

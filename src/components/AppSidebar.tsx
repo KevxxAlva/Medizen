@@ -1,13 +1,12 @@
-import { useState } from "react";
 import { Link, useRouterState, useRouter } from "@tanstack/react-router";
 import {
   LayoutGrid, Calendar, UserRound, Stethoscope, Users,
   Wallet, ReceiptText, CreditCard,
   Box, RotateCw, Headphones, Settings,
-  Menu, X, LogOut, ChevronLeft
+  LogOut, ChevronLeft, ChevronRight, X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAuthSession, useIsAdmin } from "@/hooks/useAuth";
+import { useIsAdmin } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useClinicInfo } from "@/lib/api/clinic";
@@ -15,7 +14,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { ThemeCustomizer } from "@/components/ThemeCustomizer";
 import { MedizenLogo } from "@/components/MedizenLogo";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ChevronRight } from "lucide-react";
+
 type ModuleDef = {
   category?: string;
   title?: string;
@@ -44,7 +43,7 @@ const navigation: ModuleDef[] = [
   { title: "Configuración", url: "/configuracion", icon: Settings },
 ];
 
-function SidebarBody({ onNavigate, isCollapsed }: { onNavigate?: () => void, isCollapsed?: boolean }) {
+function SidebarBody({ onNavigate, isCollapsed }: { onNavigate?: () => void; isCollapsed?: boolean }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAdmin = useIsAdmin();
   const router = useRouter();
@@ -59,37 +58,42 @@ function SidebarBody({ onNavigate, isCollapsed }: { onNavigate?: () => void, isC
   };
 
   return (
-    <TooltipProvider delayDuration={0}>
-      <div className="flex flex-col h-full bg-card text-foreground border-r border-border/40 overflow-hidden">
-        {/* Logo Area */}
-        <div className={cn("pt-6 pb-4", isCollapsed ? "px-2" : "px-6")}>
-          <div className={cn("flex items-center mb-6", isCollapsed ? "justify-center" : "gap-3")}>
-            <MedizenLogo className="h-8 w-8 flex-shrink-0 transition-transform duration-300" />
-            {!isCollapsed && (
-              <span
-                className="font-display font-bold text-xl tracking-tight text-foreground truncate bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70"
-                title={clinic?.name || "Medizen"}
-              >
-                {clinic?.name || "Medizen"}
-              </span>
-            )}
-          </div>
+    <TooltipProvider delayDuration={150}>
+      <div className="flex flex-col h-full bg-sidebar text-sidebar-foreground overflow-hidden">
+        {/* Logo Area (Header with crisp bottom divider line matching react.doctor) */}
+        <div className={cn("h-16 flex items-center border-b border-sidebar-border shrink-0", isCollapsed ? "justify-center px-2" : "px-6 gap-3")}>
+          <MedizenLogo className="h-8 w-8 flex-shrink-0 transition-transform duration-300" />
+          {!isCollapsed && (
+            <span
+              className="font-display font-bold text-xl tracking-tight text-sidebar-foreground truncate"
+              title={clinic?.name || "Medizen"}
+            >
+              {clinic?.name || "Medizen"}
+            </span>
+          )}
         </div>
 
         {/* Navigation List */}
-        <nav className="flex-1 w-full overflow-y-auto overscroll-contain no-scrollbar px-4 pb-6 flex flex-col gap-1">
-          {navigation.map((m, i) => {
+        <nav className="flex-1 w-full overflow-y-auto overscroll-contain no-scrollbar px-3 pt-3 pb-4 flex flex-col gap-1">
+          {navigation.map((m) => {
             if (m.adminOnly && !isAdmin) return null;
 
             if (m.category) {
               if (isCollapsed) {
-                return <div key={`cat-${m.category}`} className="mt-4 mb-1 border-t border-border/40" />;
+                return (
+                  <div
+                    key={`cat-${m.category}`}
+                    className="my-2.5 mx-2 border-t border-sidebar-border"
+                    title={m.category}
+                  />
+                );
               }
               return (
-                <div key={`cat-${m.category}`} className="mt-4 mb-1 px-3">
+                <div key={`cat-${m.category}`} className="mt-5 mb-1.5 px-3 flex items-center gap-2">
                   <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider truncate">
                     {m.category}
                   </span>
+                  <div className="flex-1 border-t border-sidebar-border" />
                 </div>
               );
             }
@@ -107,19 +111,19 @@ function SidebarBody({ onNavigate, isCollapsed }: { onNavigate?: () => void, isC
                   else if (onNavigate) onNavigate();
                 }}
                 className={cn(
-                  "flex items-center rounded-xl transition-colors duration-200 group text-sm font-bold",
+                  "flex items-center rounded-xl transition-colors duration-150 group text-sm font-semibold",
                   isCollapsed ? "justify-center h-10 w-10 mx-auto" : "gap-3 px-3 py-2.5",
                   active
-                    ? "bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-lg shadow-primary/25 border border-primary/20"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
                 )}
               >
                 <Icon
                   className={cn(
                     "h-4 w-4 flex-shrink-0",
-                    active ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
+                    active ? "text-primary-foreground" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
                   )}
-                  strokeWidth={2.5}
+                  strokeWidth={2.2}
                 />
                 {!isCollapsed && <span className="truncate">{m.title}</span>}
               </Link>
@@ -131,7 +135,7 @@ function SidebarBody({ onNavigate, isCollapsed }: { onNavigate?: () => void, isC
                   <TooltipTrigger asChild>
                     {linkContent}
                   </TooltipTrigger>
-                  <TooltipContent side="right" className="font-bold">
+                  <TooltipContent side="right" sideOffset={10} className="font-semibold">
                     {m.title}
                   </TooltipContent>
                 </Tooltip>
@@ -139,35 +143,36 @@ function SidebarBody({ onNavigate, isCollapsed }: { onNavigate?: () => void, isC
             }
             return linkContent;
           })}
+        </nav>
 
-          <div className={cn("mt-auto pt-2 flex flex-col gap-2", isCollapsed ? "items-center px-1" : "px-2")}>
-            <div className={cn("flex items-center w-full", isCollapsed ? "flex-col gap-2" : "justify-between gap-1")}>
-              {/* Logout */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={handleLogout}
-                    aria-label="Cerrar sesión"
-                    className={cn(
-                      "flex items-center rounded-xl transition-colors duration-200 group text-xs font-bold text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer",
-                      isCollapsed ? "justify-center h-8 w-8" : "gap-2 px-2 py-1.5"
-                    )}
-                  >
-                    <LogOut className="h-4 w-4 text-muted-foreground group-hover:text-destructive flex-shrink-0" strokeWidth={2.5} />
-                    {!isCollapsed && <span>Cerrar sesión</span>}
-                  </button>
-                </TooltipTrigger>
-                {isCollapsed && <TooltipContent side="right" className="font-bold">Cerrar Sesión</TooltipContent>}
-              </Tooltip>
+        {/* Footer Area with crisp top divider line */}
+        <div className={cn("mt-auto pt-3 pb-3 border-t border-sidebar-border flex flex-col gap-2 shrink-0", isCollapsed ? "items-center px-1" : "px-4")}>
+          <div className={cn("flex items-center w-full", isCollapsed ? "flex-col gap-2" : "justify-between gap-1")}>
+            {/* Logout */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={handleLogout}
+                  aria-label="Cerrar sesión"
+                  className={cn(
+                    "flex items-center rounded-xl transition-colors duration-150 group text-xs font-semibold text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer",
+                    isCollapsed ? "justify-center h-8 w-8" : "gap-2 px-2 py-1.5"
+                  )}
+                >
+                  <LogOut className="h-4 w-4 text-muted-foreground group-hover:text-destructive flex-shrink-0" strokeWidth={2.2} />
+                  {!isCollapsed && <span>Cerrar sesión</span>}
+                </button>
+              </TooltipTrigger>
+              {isCollapsed && <TooltipContent side="right" sideOffset={10} className="font-semibold">Cerrar Sesión</TooltipContent>}
+            </Tooltip>
 
-              {/* Theme & Palette Controls */}
-              <div className={cn("flex items-center gap-1.5 shrink-0", isCollapsed && "flex-col")}>
-                <ThemeCustomizer />
-                <ThemeToggle />
-              </div>
+            {/* Theme & Palette Controls */}
+            <div className={cn("flex items-center gap-1.5 shrink-0", isCollapsed && "flex-col")}>
+              <ThemeCustomizer />
+              <ThemeToggle />
             </div>
           </div>
-        </nav>
+        </div>
       </div>
     </TooltipProvider>
   );
@@ -180,9 +185,9 @@ export function AppSidebar({
   onMobileClose
 }: { 
   isCollapsed?: boolean; 
-  onToggle?: () => void;
-  mobileOpen?: boolean;
-  onMobileClose?: () => void;
+  onToggle?: () => void; 
+  mobileOpen?: boolean; 
+  onMobileClose?: () => void; 
 }) {
   return (
     <>
@@ -197,7 +202,7 @@ export function AppSidebar({
             onClick={onMobileClose}
           />
           {/* Sliding Drawer */}
-          <div className="relative w-[280px] max-w-[85vw] h-full bg-card shadow-2xl z-50 flex flex-col overscroll-contain animate-in slide-in-from-left duration-300">
+          <div className="relative w-[280px] max-w-[85vw] h-full bg-sidebar border-r border-sidebar-border shadow-2xl z-50 flex flex-col overscroll-contain animate-in slide-in-from-left duration-300">
             <button
               onClick={onMobileClose}
               className="absolute right-3 top-5 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors z-50 cursor-pointer"
@@ -210,22 +215,22 @@ export function AppSidebar({
         </div>
       )}
 
-      {/* Desktop Sidebar */}
+      {/* Desktop Sidebar with crisp right border line matching react.doctor */}
       <aside className={cn(
-        "fixed left-0 top-0 bottom-0 z-30 hidden flex-col bg-card md:flex shadow-[4px_0_24px_rgba(0,0,0,0.02)] transition-[width] duration-300",
+        "fixed left-0 top-0 bottom-0 z-30 hidden flex-col bg-sidebar border-r border-sidebar-border md:flex transition-[width] duration-300",
         isCollapsed ? "w-[80px]" : "w-[260px]"
       )}>
-        {/* Collapse Button */}
+        {/* Collapse Button placed cleanly at the intersection of the header line and right border */}
         <button
           type="button"
           aria-label={isCollapsed ? "Expandir barra lateral" : "Colapsar barra lateral"}
           onClick={onToggle}
-          className="absolute -right-3 top-8 h-6 w-6 bg-card border border-border/40 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground shadow-sm z-40 transition-transform hover:scale-110 cursor-pointer"
+          className="absolute -right-3 top-5 h-6 w-6 bg-sidebar border border-sidebar-border rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground shadow-xs z-40 transition hover:scale-110 cursor-pointer"
         >
           {isCollapsed ? (
-            <ChevronRight className="h-3 w-3" strokeWidth={3} />
+            <ChevronRight className="h-3 w-3" strokeWidth={2.5} />
           ) : (
-            <ChevronLeft className="h-3 w-3" strokeWidth={3} />
+            <ChevronLeft className="h-3 w-3" strokeWidth={2.5} />
           )}
         </button>
         <SidebarBody isCollapsed={isCollapsed} />

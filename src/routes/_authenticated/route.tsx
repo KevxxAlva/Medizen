@@ -82,8 +82,8 @@ function AuthenticatedLayout() {
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0 flex flex-col">
-      {/* Mobile Top Header (md:hidden) */}
-      <header className="sticky top-0 z-40 md:hidden flex items-center justify-between px-3 sm:px-4 h-14 bg-card/95 backdrop-blur-md border-b border-border/40 shadow-xs">
+      {/* Mobile Top Header (md:hidden) with crisp bottom divider matching react.doctor */}
+      <header className="sticky top-0 z-40 md:hidden flex items-center justify-between px-3 sm:px-4 h-16 bg-card/95 backdrop-blur-md border-b border-border shadow-xs">
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => setMobileMenuOpen(true)}
@@ -135,7 +135,7 @@ function AuthenticatedLayout() {
             type="button"
             onClick={lockScreen}
             aria-label="Bloquear sesión clínica inmediatamente"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-card/85 backdrop-blur-md border border-border/60 text-xs font-semibold text-muted-foreground hover:text-foreground hover:border-primary/40 shadow-xs transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-card/85 backdrop-blur-md border border-border text-xs font-semibold text-muted-foreground hover:text-foreground hover:border-primary/40 shadow-xs transition-colors cursor-pointer"
             title="Bloquear sesión clínica inmediatamente"
           >
             <Lock className="h-3.5 w-3.5 text-primary" />

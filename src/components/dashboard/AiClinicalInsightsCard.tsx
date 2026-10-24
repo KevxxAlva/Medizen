@@ -146,7 +146,7 @@ export function AiClinicalInsightsCard() {
   };
 
   return (
-    <div className="glass-card rounded-[2rem] p-5 shadow-lg shadow-black/5 flex flex-col border border-border/50 relative overflow-hidden">
+    <div className="glass-card rounded-[2rem] p-5 shadow-lg shadow-black/5 flex flex-col border border-border relative overflow-hidden">
       {/* Background glow */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
 

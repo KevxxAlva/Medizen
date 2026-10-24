@@ -38,11 +38,11 @@ export function AgendaWeekDayGrid({
       {/* Days Header */}
       <div
         className={cn(
-          "sticky top-0 z-20 flex bg-card border-b border-border/40",
+          "sticky top-0 z-20 flex bg-card border-b border-border",
           calendarView !== "Diaria" ? "min-w-[640px] sm:min-w-full" : "min-w-full",
         )}
       >
-        <div className="w-16 shrink-0 border-r border-border/40 bg-card flex items-center justify-center">
+        <div className="w-16 shrink-0 border-r border-border bg-card flex items-center justify-center">
           <span className="text-[10px] font-bold text-muted-foreground">GMT-4</span>
         </div>
         <div
@@ -54,7 +54,7 @@ export function AgendaWeekDayGrid({
           {daysToRender.map((d) => (
             <div
               key={formatToYMD(d)}
-              className="text-center py-3 border-r border-border/40 last:border-0"
+              className="text-center py-3 border-r border-border last:border-0"
             >
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                 {WEEKDAYS_SHORT[d.getDay() === 0 ? 6 : d.getDay() - 1]} {d.getDate()}
@@ -72,7 +72,7 @@ export function AgendaWeekDayGrid({
         )}
       >
         {/* Y-Axis Hours */}
-        <div className="w-16 shrink-0 border-r border-border/40 bg-card relative z-10">
+        <div className="w-16 shrink-0 border-r border-border bg-card relative z-10">
           {HOURS.map((h, i) => (
             <div
               key={h}
@@ -110,7 +110,7 @@ export function AgendaWeekDayGrid({
                 className={cn(
                   "w-full",
                   compactMode ? "h-12" : "h-24",
-                  i > 0 && "border-t border-border/40",
+                  i > 0 && "border-t border-border",
                 )}
               />
             ))}
@@ -124,7 +124,7 @@ export function AgendaWeekDayGrid({
               <div
                 key={colIndex}
                 className={cn(
-                  "border-r border-border/40 last:border-0 relative h-full min-h-[800px]",
+                  "border-r border-border last:border-0 relative h-full min-h-[800px]",
                   isToday && "bg-muted/50",
                 )}
               >

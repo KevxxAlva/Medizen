@@ -112,7 +112,7 @@ export function AgendaPage() {
 
   return (
     <>
-      <div className="bg-card rounded-[2rem] p-6 shadow-sm min-h-[calc(100vh-8rem)] font-sans text-foreground flex flex-col">
+      <div className="bg-card border border-border rounded-3xl p-4 sm:p-6 shadow-xs min-h-[calc(100vh-8rem)] font-sans text-foreground flex flex-col">
         {/* HEADER */}
         <AgendaHeader onNewAppointment={() => handleOpenNewAppointment()} />
 
@@ -150,7 +150,7 @@ export function AgendaPage() {
           />
 
           {/* MAIN WEEK GRID */}
-          <section className="flex-1 border border-border/40 rounded-3xl flex flex-col overflow-hidden shadow-sm relative">
+          <section className="flex-1 border border-border rounded-2xl flex flex-col overflow-hidden shadow-xs relative">
             <AgendaCalendarNav
               currentDate={currentDate}
               onCurrentDateChange={setCurrentDate}

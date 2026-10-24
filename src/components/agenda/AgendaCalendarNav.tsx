@@ -20,7 +20,7 @@ export function AgendaCalendarNav({
   onStatusFilterChange,
 }: AgendaCalendarNavProps) {
   return (
-    <div className="flex flex-wrap items-center justify-between p-4 border-b border-border/40 bg-card z-20 relative">
+    <div className="flex flex-wrap items-center justify-between p-4 border-b border-border bg-card z-20 relative">
       <div className="flex items-center gap-4">
         <h2 className="text-base font-bold text-foreground">
           {MONTHS_ES[currentDate.getMonth()]} {currentDate.getFullYear()}
