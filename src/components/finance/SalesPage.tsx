@@ -87,17 +87,61 @@ export function SalesPage() {
         
       if (invError) throw invError;
 
-      const { error: payError } = await supabase
+      const { data: existP } = await supabase
         .from("pagos")
-        .insert({
-          id_factura: id,
-          monto: invoice.total_general,
-          metodo_pago: paymentMethod || "Efectivo",
-          referencia: paymentReference || null,
-          fecha_pago: new Date().toISOString(),
-        });
+        .select("id_pago")
+        .eq("id_factura", id)
+        .maybeSingle();
 
-      if (payError) throw payError;
+      if (existP) {
+        const { error: payError } = await supabase
+          .from("pagos")
+          .update({
+            monto_pagado: invoice.total_general,
+            metodo_pago: paymentMethod || "Efectivo",
+            referencia: paymentReference || null,
+            fecha_pago: new Date().toISOString(),
+          })
+          .eq("id_pago", existP.id_pago);
+
+        if (payError) throw payError;
+      } else {
+        const { error: payError } = await supabase
+          .from("pagos")
+          .insert({
+            id_factura: id,
+            monto_pagado: invoice.total_general,
+            metodo_pago: paymentMethod || "Efectivo",
+            referencia: paymentReference || null,
+            fecha_pago: new Date().toISOString(),
+          });
+
+        if (payError) throw payError;
+      }
+
+      // Update financial account balance if method is mapped
+      if (paymentMethod) {
+        const { data: pm } = await supabase
+          .from("payment_methods")
+          .select("account_id")
+          .ilike("name", paymentMethod)
+          .maybeSingle();
+
+        if (pm?.account_id) {
+          const { data: acc } = await supabase
+            .from("financial_accounts")
+            .select("balance")
+            .eq("id", pm.account_id)
+            .maybeSingle();
+
+          if (acc) {
+            await supabase
+              .from("financial_accounts")
+              .update({ balance: (acc.balance || 0) + (invoice.total_general || 0) })
+              .eq("id", pm.account_id);
+          }
+        }
+      }
 
       await logAuditAction("UPDATE", "INVOICE", id.toString(), {
         status,
@@ -109,6 +153,7 @@ export function SalesPage() {
       queryClient.invalidateQueries({ queryKey: ["facturas"] });
       queryClient.invalidateQueries({ queryKey: ["monthly_payments"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard_stats"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_accounts"] });
       toast.success("Pago confirmado y registrado exitosamente");
       setConfirmOpen(false);
     },
