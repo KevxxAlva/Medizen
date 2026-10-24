@@ -25,7 +25,8 @@ export function useDashboardStats() {
       const [{ data: citasData }, { data: labsData }, { data: invoicesData }] = await Promise.all([
         supabase
           .from("citas")
-          .select("fecha_hora, estado")
+          .select("fecha_hora, estado, motivo")
+          .or("motivo.is.null,motivo.not.ilike.%[TEST-LOAD]%")
           .gte("fecha_hora", `${sevenDaysAgo}T00:00:00.000Z`),
         supabase
           .from("examenes_laboratorio")

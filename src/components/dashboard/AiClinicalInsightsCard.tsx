@@ -20,6 +20,7 @@ export function AiClinicalInsightsCard() {
         supabase
           .from("citas")
           .select("fecha_hora, estado, motivo")
+          .or("motivo.is.null,motivo.not.ilike.%[TEST-LOAD]%")
           .gte("fecha_hora", startOfLastMonth),
         supabase
           .from("facturas")
