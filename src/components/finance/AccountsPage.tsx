@@ -89,9 +89,9 @@ export function AccountsPage() {
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar cuentas..."
+              placeholder="Buscar cuentas…"
               aria-label="Buscar cuentas"
-              className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground text-foreground"
+              className="w-full bg-transparent text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/40 rounded-lg px-1 placeholder:text-muted-foreground text-foreground"
             />
             {q && <button type="button" aria-label="Limpiar búsqueda" onClick={() => setQ("")} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
           </div>

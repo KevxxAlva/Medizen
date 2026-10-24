@@ -95,9 +95,9 @@ export function AgendaToolbar({
                 onBlur={() => {
                   if (!searchQuery) onSearchOpenChange(false);
                 }}
-                placeholder="Buscar paciente..."
+                placeholder="Buscar paciente…"
                 aria-label="Buscar paciente"
-                className="w-full h-9 pl-9 pr-3 text-xs border border-[#4361ee] rounded-full focus:outline-none focus:ring-1 focus:ring-[#4361ee]"
+                className="w-full h-9 pl-9 pr-3 text-xs border border-primary rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
               <Search className="h-4 w-4 text-primary absolute left-3 top-2.5" />
             </div>
@@ -106,7 +106,7 @@ export function AgendaToolbar({
               type="button"
               aria-label="Abrir buscador de citas"
               onClick={() => onSearchOpenChange(true)}
-              className="h-9 w-9 shrink-0 flex items-center justify-center border border-border/40 rounded-full text-muted-foreground hover:bg-muted focus:outline-none"
+              className="h-9 w-9 shrink-0 flex items-center justify-center border border-border/40 rounded-full text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
             >
               <Search className="h-4 w-4" />
             </button>

@@ -45,7 +45,7 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={toggleTheme}
-      className="relative flex items-center justify-center h-8 w-8 bg-card border border-border/60 rounded-xl shadow-2xs hover:bg-muted focus:outline-none cursor-pointer shrink-0 transition-colors"
+      className="relative flex items-center justify-center h-8 w-8 bg-card border border-border/60 rounded-xl shadow-2xs hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer shrink-0 transition-colors"
       title={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
       aria-label="Alternar Tema (Claro / Oscuro)"
     >

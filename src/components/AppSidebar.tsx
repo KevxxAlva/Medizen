@@ -77,7 +77,7 @@ function SidebarBody({ onNavigate, isCollapsed }: { onNavigate?: () => void, isC
         </div>
 
         {/* Navigation List */}
-        <nav className="flex-1 w-full overflow-y-auto no-scrollbar px-4 pb-6 flex flex-col gap-1">
+        <nav className="flex-1 w-full overflow-y-auto overscroll-contain no-scrollbar px-4 pb-6 flex flex-col gap-1">
           {navigation.map((m, i) => {
             if (m.adminOnly && !isAdmin) return null;
 
@@ -147,8 +147,9 @@ function SidebarBody({ onNavigate, isCollapsed }: { onNavigate?: () => void, isC
                 <TooltipTrigger asChild>
                   <button
                     onClick={handleLogout}
+                    aria-label="Cerrar sesión"
                     className={cn(
-                      "flex items-center rounded-xl transition-colors duration-200 group text-xs font-bold text-muted-foreground hover:text-destructive hover:bg-destructive/10",
+                      "flex items-center rounded-xl transition-colors duration-200 group text-xs font-bold text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer",
                       isCollapsed ? "justify-center h-8 w-8" : "gap-2 px-2 py-1.5"
                     )}
                   >
@@ -196,10 +197,10 @@ export function AppSidebar({
             onClick={onMobileClose}
           />
           {/* Sliding Drawer */}
-          <div className="relative w-[280px] max-w-[85vw] h-full bg-card shadow-2xl z-50 flex flex-col animate-in slide-in-from-left duration-300">
+          <div className="relative w-[280px] max-w-[85vw] h-full bg-card shadow-2xl z-50 flex flex-col overscroll-contain animate-in slide-in-from-left duration-300">
             <button
               onClick={onMobileClose}
-              className="absolute right-3 top-5 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors z-50"
+              className="absolute right-3 top-5 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors z-50 cursor-pointer"
               aria-label="Cerrar menú"
             >
               <X className="h-5 w-5" />
@@ -219,7 +220,7 @@ export function AppSidebar({
           type="button"
           aria-label={isCollapsed ? "Expandir barra lateral" : "Colapsar barra lateral"}
           onClick={onToggle}
-          className="absolute -right-3 top-8 h-6 w-6 bg-card border border-border/40 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground shadow-sm z-40 transition-transform hover:scale-110"
+          className="absolute -right-3 top-8 h-6 w-6 bg-card border border-border/40 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground shadow-sm z-40 transition-transform hover:scale-110 cursor-pointer"
         >
           {isCollapsed ? (
             <ChevronRight className="h-3 w-3" strokeWidth={3} />

@@ -106,6 +106,7 @@ function AuthenticatedLayout() {
             <button
               type="button"
               onClick={lockScreen}
+              aria-label="Bloquear pantalla"
               className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
               title="Bloquear pantalla (Privacidad médica)"
             >
@@ -133,6 +134,7 @@ function AuthenticatedLayout() {
           <button
             type="button"
             onClick={lockScreen}
+            aria-label="Bloquear sesión clínica inmediatamente"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-card/85 backdrop-blur-md border border-border/60 text-xs font-semibold text-muted-foreground hover:text-foreground hover:border-primary/40 shadow-xs transition-colors cursor-pointer"
             title="Bloquear sesión clínica inmediatamente"
           >
@@ -150,6 +152,7 @@ function AuthenticatedLayout() {
       />
 
       <main
+        id="main-content"
         className={`px-3 sm:px-4 md:px-6 pt-3 sm:pt-4 md:pt-6 pb-6 h-full flex-1 transition-[margin] duration-300 ${isCollapsed ? "md:ml-[80px]" : "md:ml-[260px]"}`}
       >
         <div

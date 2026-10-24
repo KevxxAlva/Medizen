@@ -91,13 +91,14 @@ export function ThemeCustomizer() {
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="flex items-center justify-center h-8 w-8 bg-card border border-border/60 rounded-xl shadow-2xs text-muted-foreground hover:text-foreground transition hover:bg-muted focus:outline-none cursor-pointer shrink-0"
+          aria-label="Personalizar color del sistema y logo"
+          className="flex items-center justify-center h-8 w-8 bg-card border border-border/60 rounded-xl shadow-2xs text-muted-foreground hover:text-foreground transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer shrink-0"
           title="Personalizar color del sistema y logo"
         >
           <Palette className="h-3.5 w-3.5 text-primary" />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-56 p-3 rounded-2xl border-border/60 shadow-xl bg-card/95 backdrop-blur-xl">
+      <PopoverContent align="end" className="w-56 p-3 rounded-2xl border-border/60 shadow-xl bg-card/95 backdrop-blur-xl overscroll-contain">
         <div className="space-y-2">
           <div className="flex items-center gap-1.5 pb-2 border-b border-border/40">
             <Sparkles className="h-3.5 w-3.5 text-primary" />

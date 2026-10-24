@@ -46,7 +46,7 @@ export function AppointmentPatientSelect({ value, onChange }: AppointmentPatient
         <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-2xl border-border/40 shadow-lg" align="start">
           <Command shouldFilter={false}>
             <CommandInput
-              placeholder="Buscar paciente por nombre, cédula o historia..."
+              placeholder="Buscar paciente por nombre, cédula o historia…"
               value={searchTerm}
               onValueChange={setSearchTerm}
               className="text-xs h-9"

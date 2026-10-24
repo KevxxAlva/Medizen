@@ -142,7 +142,13 @@ function InactivityLockOverlayModal({
         </div>
 
         {errorMsg && (
-          <p className="text-xs font-semibold text-rose-500 animate-in fade-in">{errorMsg}</p>
+          <p
+            role="alert"
+            aria-live="polite"
+            className="text-xs font-semibold text-rose-500 animate-in fade-in"
+          >
+            {errorMsg}
+          </p>
         )}
 
         {/* Numeric Keypad */}

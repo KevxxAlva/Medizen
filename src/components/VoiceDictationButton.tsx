@@ -52,7 +52,7 @@ export function VoiceDictationButton({
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
                 </span>
                 <Radio className="h-4 w-4 animate-spin text-rose-500" />
-                {size !== "icon" && <span>Escuchando...</span>}
+                {size !== "icon" && <span>Escuchando…</span>}
               </span>
             ) : (
               <span className="flex items-center gap-1.5">

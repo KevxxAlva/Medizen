@@ -83,8 +83,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       {
         name: "viewport",
-        content:
-          "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover",
+        content: "width=device-width, initial-scale=1.0, viewport-fit=cover",
       },
       { title: "Medizen — Suite Clínica Inteligente" },
       {
@@ -161,6 +160,12 @@ function RootComponent() {
         />
       </head>
       <body>
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-xl focus:shadow-md focus:outline-none"
+        >
+          Saltar al contenido principal
+        </a>
         <ThemeProvider defaultTheme="system" storageKey="theme">
           <QueryClientProvider client={queryClient}>
             <Outlet />

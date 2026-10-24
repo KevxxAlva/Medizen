@@ -95,7 +95,7 @@ export function ConsultationAnamnesisTab({
           <Label htmlFor="c-channel">Canal de contacto</Label>
           <Select value={contactChannel} onValueChange={setContactChannel}>
             <SelectTrigger className="rounded-2xl">
-              <SelectValue placeholder="Seleccionar canal..." />
+              <SelectValue placeholder="Seleccionar canal…" />
             </SelectTrigger>
             <SelectContent className="rounded-2xl">
               {contactChannels.map((c) => (
@@ -153,7 +153,7 @@ export function ConsultationAnamnesisTab({
           id="c-subjective"
           value={subjectiveExam}
           onChange={(e) => setSubjectiveExam(e.target.value)}
-          placeholder="Descripción subjetiva y antecedentes inmediatos expresados por la paciente..."
+          placeholder="Descripción subjetiva y antecedentes inmediatos expresados por la paciente…"
           className="rounded-2xl min-h-[140px]"
         />
       </div>

@@ -34,7 +34,7 @@ export function DashboardHeader({ notifications }: DashboardHeaderProps) {
         <div className="flex items-center gap-2.5 min-w-0">
           <Search className="h-4 w-4 text-muted-foreground shrink-0 group-hover:text-primary transition-colors" />
           <span className="text-sm text-muted-foreground truncate">
-            Buscar pacientes, citas o acciones...
+            Buscar pacientes, citas o acciones…
           </span>
         </div>
         <kbd className="hidden sm:inline-flex items-center text-[10px] font-bold text-muted-foreground bg-muted/80 px-2 py-0.5 rounded-full border border-border/50 shrink-0">
@@ -51,7 +51,7 @@ export function DashboardHeader({ notifications }: DashboardHeaderProps) {
             <button
               type="button"
               aria-label="Notificaciones"
-              className="flex items-center justify-center h-10 w-10 bg-card rounded-full shadow-sm text-primary relative transition hover:bg-muted focus:outline-none"
+              className="flex items-center justify-center h-10 w-10 bg-card rounded-full shadow-sm text-primary relative transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
             >
               <Bell className="h-5 w-5 fill-current" />
               {notifications.length > 0 && (
@@ -61,7 +61,7 @@ export function DashboardHeader({ notifications }: DashboardHeaderProps) {
           </PopoverTrigger>
           <PopoverContent
             align="end"
-            className="w-80 p-0 rounded-[1.5rem] shadow-xl overflow-hidden border-border/40 font-sans"
+            className="w-80 p-0 rounded-[1.5rem] shadow-xl overflow-hidden overscroll-contain border-border/40 font-sans"
           >
             <div className="px-4 py-3 bg-primary text-primary-foreground flex justify-between items-center">
               <span className="font-bold text-xs uppercase tracking-wider">Notificaciones</span>
@@ -69,7 +69,7 @@ export function DashboardHeader({ notifications }: DashboardHeaderProps) {
                 {notifications.length} nuevas
               </span>
             </div>
-            <div className="max-h-[300px] overflow-y-auto p-2 bg-card">
+            <div className="max-h-[300px] overflow-y-auto overscroll-contain p-2 bg-card">
               {notifications.length > 0 ? (
                 notifications.map((n) => {
                   const Icon = n.icon;
@@ -105,7 +105,8 @@ export function DashboardHeader({ notifications }: DashboardHeaderProps) {
 
         <Link
           to="/configuracion"
-          className="flex items-center justify-center h-10 w-10 bg-card rounded-full shadow-sm text-muted-foreground transition hover:bg-muted/50 hover:text-primary focus:outline-none"
+          aria-label="Configuración"
+          className="flex items-center justify-center h-10 w-10 bg-card rounded-full shadow-sm text-muted-foreground transition hover:bg-muted/50 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Settings className="h-5 w-5" />
         </Link>

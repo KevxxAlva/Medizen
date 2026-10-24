@@ -143,9 +143,9 @@ export function PatientsPage() {
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar paciente..."
+              placeholder="Buscar paciente…"
               aria-label="Buscar paciente"
-              className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground text-foreground"
+              className="w-full bg-transparent text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/40 rounded-lg px-1 placeholder:text-muted-foreground text-foreground"
             />
             {q && (
               <button

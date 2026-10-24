@@ -181,7 +181,7 @@ function PatientBasicInfoFields({
           <Label>Grupo Sanguíneo</Label>
           <Select value={blood_type} onValueChange={setBloodType}>
             <SelectTrigger className="rounded-xl">
-              <SelectValue placeholder="Seleccione..." />
+              <SelectValue placeholder="Seleccione…" />
             </SelectTrigger>
             <SelectContent className="rounded-2xl">
               <SelectItem value="O+">O Positivo (O+)</SelectItem>
@@ -199,7 +199,7 @@ function PatientBasicInfoFields({
           <Label>Estado Civil</Label>
           <Select value={marital_status} onValueChange={setMaritalStatus}>
             <SelectTrigger className="rounded-xl">
-              <SelectValue placeholder="Seleccione..." />
+              <SelectValue placeholder="Seleccione…" />
             </SelectTrigger>
             <SelectContent className="rounded-2xl">
               <SelectItem value="Soltera">Soltera</SelectItem>
@@ -270,7 +270,7 @@ function PatientDemographicsFields({
             id="education"
             value={education_level}
             onChange={(e) => setEducationLevel(e.target.value)}
-            placeholder="Ej. Universitaria, Bachiller..."
+            placeholder="Ej. Universitaria, Bachiller…"
             className="rounded-xl"
           />
         </div>
@@ -280,7 +280,7 @@ function PatientDemographicsFields({
             id="occupation"
             value={occupation}
             onChange={(e) => setOccupation(e.target.value)}
-            placeholder="Ej. Educadora, Comerciante..."
+            placeholder="Ej. Educadora, Comerciante…"
             className="rounded-xl"
           />
         </div>
@@ -339,7 +339,7 @@ function PatientDemographicsFields({
           id="address"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
-          placeholder="Sector, calle, casa/apartamento..."
+          placeholder="Sector, calle, casa/apartamento…"
           className="rounded-xl min-h-[70px]"
         />
       </div>
@@ -394,7 +394,7 @@ function PatientAdministrativeFields({
             id="insurance"
             value={insurance_provider}
             onChange={(e) => setInsuranceProvider(e.target.value)}
-            placeholder="Ej. Mercantil, Sanitas, Particular..."
+            placeholder="Ej. Mercantil, Sanitas, Particular…"
             className="rounded-xl"
           />
         </div>
@@ -429,7 +429,7 @@ function PatientAdministrativeFields({
         <Label>Médico asignado</Label>
         <Select value={assigned_doctor_id} onValueChange={setDoctor}>
           <SelectTrigger className="rounded-xl">
-            <SelectValue placeholder="Seleccione médico..." />
+            <SelectValue placeholder="Seleccione médico…" />
           </SelectTrigger>
           <SelectContent className="rounded-2xl">
             {doctors.map((d) => (
@@ -448,7 +448,7 @@ function PatientAdministrativeFields({
             id="reason"
             value={consultation_reason}
             onChange={(e) => setConsultationReason(e.target.value)}
-            placeholder="Razón por la cual asiste la paciente a consulta..."
+            placeholder="Razón por la cual asiste la paciente a consulta…"
             className="rounded-xl min-h-[70px]"
           />
         </div>
@@ -458,7 +458,7 @@ function PatientAdministrativeFields({
             id="illness"
             value={current_illness}
             onChange={(e) => setCurrentIllness(e.target.value)}
-            placeholder="Evolución clínica, síntomas y cronología..."
+            placeholder="Evolución clínica, síntomas y cronología…"
             className="rounded-xl min-h-[70px]"
           />
         </div>
@@ -470,7 +470,7 @@ function PatientAdministrativeFields({
           id="notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Observaciones adicionales, antecedentes relevantes..."
+          placeholder="Observaciones adicionales, antecedentes relevantes…"
           className="rounded-xl min-h-[60px]"
         />
       </div>
@@ -617,7 +617,7 @@ export function PatientPersonalTab({
             id="base"
             value={persBase}
             onChange={(e) => setPersBase(e.target.value)}
-            placeholder="Ej. Asma, Diabetes, Hipertensión..."
+            placeholder="Ej. Asma, Diabetes, Hipertensión…"
             className="rounded-xl min-h-[70px]"
           />
         </div>
@@ -627,7 +627,7 @@ export function PatientPersonalTab({
             id="allergies"
             value={persAllergies}
             onChange={(e) => setPersAllergies(e.target.value)}
-            placeholder="Alergias conocidas (Ej. Penicilina, AINEs)..."
+            placeholder="Alergias conocidas (Ej. Penicilina, AINEs)…"
             className="rounded-xl min-h-[70px]"
           />
         </div>
@@ -637,7 +637,7 @@ export function PatientPersonalTab({
             id="medications"
             value={persMedications}
             onChange={(e) => setPersMedications(e.target.value)}
-            placeholder="Fármacos y dosis de uso diario (Ej. Losartán 50mg OD)..."
+            placeholder="Fármacos y dosis de uso diario (Ej. Losartán 50mg OD)…"
             className="rounded-xl min-h-[70px]"
           />
         </div>
@@ -647,7 +647,7 @@ export function PatientPersonalTab({
             id="surgical"
             value={persSurgical}
             onChange={(e) => setPersSurgical(e.target.value)}
-            placeholder="Intervenciones previas y año..."
+            placeholder="Intervenciones previas y año…"
             className="rounded-xl min-h-[70px]"
           />
         </div>
@@ -659,7 +659,7 @@ export function PatientPersonalTab({
             id="transfusions"
             value={persTransfusions}
             onChange={(e) => setPersTransfusions(e.target.value)}
-            placeholder="Ej. Niega transfusiones / Esquema de vacunación completo..."
+            placeholder="Ej. Niega transfusiones / Esquema de vacunación completo…"
             className="rounded-xl"
           />
         </div>
@@ -718,7 +718,7 @@ export function PatientGynTab({
             id="cycle"
             value={gynCycle}
             onChange={(e) => setGynCycle(e.target.value)}
-            placeholder="Ej. 28/05 o Menopausia..."
+            placeholder="Ej. 28/05 o Menopausia…"
             className="rounded-xl"
           />
         </div>
@@ -768,7 +768,7 @@ export function PatientGynTab({
             id="cytology"
             value={gynCytology}
             onChange={(e) => setGynCytology(e.target.value)}
-            placeholder="Resultados previos, fecha de última toma..."
+            placeholder="Resultados previos, fecha de última toma…"
             className="rounded-xl min-h-[80px]"
           />
         </div>
@@ -778,7 +778,7 @@ export function PatientGynTab({
             id="contraceptives"
             value={gynContraceptives}
             onChange={(e) => setGynContraceptives(e.target.value)}
-            placeholder="Ej. ACO, T de cobre, implante..."
+            placeholder="Ej. ACO, T de cobre, implante…"
             className="rounded-xl"
           />
         </div>
@@ -951,7 +951,7 @@ export function PatientObsTab({
             id="obs_vaccines"
             value={obsVaccines}
             onChange={(e) => setObsVaccines(e.target.value)}
-            placeholder="Ej. Antitetánica..."
+            placeholder="Ej. Antitetánica…"
             className="rounded-xl"
           />
         </div>
@@ -963,7 +963,7 @@ export function PatientObsTab({
           id="complications"
           value={obsComplications}
           onChange={(e) => setObsComplications(e.target.value)}
-          placeholder="Ej. Preeclampsia, diabetes gestacional..."
+          placeholder="Ej. Preeclampsia, diabetes gestacional…"
           className="rounded-xl min-h-[60px]"
         />
       </div>

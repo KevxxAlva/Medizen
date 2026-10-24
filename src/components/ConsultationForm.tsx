@@ -127,7 +127,7 @@ function ConsultationDoctorSpecialtyBar({
           onValueChange={handleDoctorChange}
         >
           <SelectTrigger className="h-8 text-xs rounded-xl bg-background border-border/50 font-bold w-full sm:w-auto sm:min-w-[200px]">
-            <SelectValue placeholder="Seleccione médico..." />
+            <SelectValue placeholder="Seleccione médico…" />
           </SelectTrigger>
           <SelectContent className="rounded-xl max-h-[300px]">
             {doctors.map((d) => (
@@ -143,7 +143,7 @@ function ConsultationDoctorSpecialtyBar({
         <span className="text-xs font-bold text-muted-foreground">Especialidad:</span>
         <Select value={selectedSpecialty} onValueChange={(val) => setSelectedSpecialty(val)}>
           <SelectTrigger className="h-8 text-xs rounded-xl bg-background border-primary/40 font-bold text-primary w-full sm:w-auto sm:min-w-[220px]">
-            <SelectValue placeholder="Seleccione especialidad..." />
+            <SelectValue placeholder="Seleccione especialidad…" />
           </SelectTrigger>
           <SelectContent className="rounded-xl max-h-[300px]">
             {AVAILABLE_SPECIALTIES.map((spec) => (
@@ -252,7 +252,7 @@ function ConsultationFormActionFooter({
         >
           {busy ? (
             <span className="flex items-center gap-1.5">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Guardando...
+              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Guardando…
             </span>
           ) : isEdit ? (
             "Guardar Cambios"
@@ -344,7 +344,7 @@ function ConsultationFormContent({
             <Wand2 className="h-4 w-4 text-primary" />
             <Select onValueChange={state.applyClinicalTemplate}>
               <SelectTrigger className="w-[210px] h-9 text-xs rounded-xl bg-background border-border/60 font-medium shadow-none">
-                <SelectValue placeholder="Plantillas rápidas..." />
+                <SelectValue placeholder="Plantillas rápidas…" />
               </SelectTrigger>
               <SelectContent className="rounded-xl max-h-[300px]">
                 {state.currentSpecialtyTemplates.map((t) => (

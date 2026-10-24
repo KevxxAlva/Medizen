@@ -58,7 +58,7 @@ export function ConsultationPlanTab({
           id="c-diagnosis"
           value={diagnosis}
           onChange={(e) => setDiagnosis(e.target.value)}
-          placeholder="Diagnóstico clínico presuntivo o definitivo..."
+          placeholder="Diagnóstico clínico presuntivo o definitivo…"
           required
           className="rounded-2xl min-h-[90px]"
         />
@@ -77,7 +77,7 @@ export function ConsultationPlanTab({
           </div>
           <Select onValueChange={applyPrescriptionTemplate}>
             <SelectTrigger className="w-[200px] h-7 text-xs rounded-xl bg-muted/50 border-0 font-medium">
-              <SelectValue placeholder="Recetas rápidas..." />
+              <SelectValue placeholder="Recetas rápidas…" />
             </SelectTrigger>
             <SelectContent className="rounded-xl max-h-[300px]">
               {currentSpecialtyPrescriptions.map((t) => (
@@ -92,7 +92,7 @@ export function ConsultationPlanTab({
           id="c-indications"
           value={indications}
           onChange={(e) => setIndications(e.target.value)}
-          placeholder="Tratamientos médicos recetados, dosis, administración..."
+          placeholder="Tratamientos médicos recetados, dosis, administración…"
           className="rounded-2xl min-h-[90px]"
         />
       </div>
@@ -111,7 +111,7 @@ export function ConsultationPlanTab({
           id="c-exams"
           value={complementaryExams}
           onChange={(e) => setComplementaryExams(e.target.value)}
-          placeholder="Ecografías, perfil de laboratorios, citología..."
+          placeholder="Ecografías, perfil de laboratorios, citología…"
           className="rounded-2xl min-h-[90px]"
         />
       </div>
@@ -131,7 +131,7 @@ export function ConsultationPlanTab({
             id="c-plan"
             value={plan}
             onChange={(e) => setPlan(e.target.value)}
-            placeholder="Recomendaciones generales, pautas de alarma..."
+            placeholder="Recomendaciones generales, pautas de alarma…"
             className="rounded-2xl min-h-[90px]"
           />
         </div>

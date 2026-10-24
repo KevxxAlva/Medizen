@@ -56,6 +56,7 @@
 }
 
 :root {
+  color-scheme: light;
   --radius: 1rem;
   --background: oklch(0.995 0.002 200); /* pristine white with very faint cool teal tint */
   --foreground: oklch(0.20 0.04 220); /* very dark navy instead of pure black */
@@ -110,6 +111,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: oklch(0.15 0.03 220); /* Deep navy dark mode */
   --foreground: oklch(0.98 0.01 200);
   
@@ -159,8 +161,22 @@
     border-color: var(--color-border);
   }
 
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  @media (pointer: fine) {
+    html {
+      overscroll-behavior: none;
+    }
+  }
+
   html, body {
     font-family: var(--font-sans);
+  }
+
+  button, a, input, select, textarea {
+    touch-action: manipulation;
   }
 
   body {
@@ -172,10 +188,30 @@
     background-attachment: fixed;
   }
 
-  h1, h2, h3, h4, h5 {
+  h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
     letter-spacing: -0.02em;
+    text-wrap: balance;
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 @utility glass-card {
@@ -194,4 +230,3 @@
 .animate-shake {
   animation: shake 0.4s ease-in-out;
 }
-

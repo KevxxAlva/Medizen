@@ -35,19 +35,19 @@ function DashboardScheduledEventsCard({ stats }: { stats: any }) {
 
         <div className="flex flex-col gap-4 flex-1">
           <div>
-            <div className="text-xl font-bold text-foreground font-display">
+            <div className="text-xl font-bold text-foreground font-display tabular-nums">
               {consultationsCount}
             </div>
             <div className="text-[10px] font-bold text-muted-foreground uppercase">Consultas</div>
           </div>
           <div>
-            <div className="text-xl font-bold text-foreground font-display">{labsCount}</div>
+            <div className="text-xl font-bold text-foreground font-display tabular-nums">{labsCount}</div>
             <div className="text-[10px] font-bold text-muted-foreground uppercase">
               Análisis de Lab.
             </div>
           </div>
           <div>
-            <div className="text-xl font-bold text-foreground font-display">{invoicesCount}</div>
+            <div className="text-xl font-bold text-foreground font-display tabular-nums">{invoicesCount}</div>
             <div className="text-[10px] font-bold text-muted-foreground uppercase">Facturas</div>
           </div>
         </div>

@@ -96,7 +96,7 @@ export function ServiceForm({ open, onOpenChange, service }: ServiceFormProps) {
             </Label>
             <Select value={selectedEspId} onValueChange={setSelectedEspId}>
               <SelectTrigger className="w-full rounded-xl bg-muted border-border/60 text-sm">
-                <SelectValue placeholder="Seleccione especialidad..." />
+                <SelectValue placeholder="Seleccione especialidad…" />
               </SelectTrigger>
               <SelectContent className="rounded-xl max-h-[250px]">
                 <SelectItem value="none" className="font-semibold text-muted-foreground">
@@ -165,7 +165,7 @@ export function ServiceForm({ open, onOpenChange, service }: ServiceFormProps) {
             </Label>
             <Textarea
               id="descripcion"
-              placeholder="Descripción detallada del servicio..."
+              placeholder="Descripción detallada del servicio…"
               {...register("descripcion")}
               className="bg-muted border-gray-200 text-sm focus-visible:ring-blue-500 resize-none h-24"
             />
@@ -185,7 +185,7 @@ export function ServiceForm({ open, onOpenChange, service }: ServiceFormProps) {
               disabled={isPending}
               className="rounded-xl bg-primary hover:bg-[#3b55d9] text-primary-foreground shadow-md shadow-primary/20"
             >
-              {isPending ? "Guardando..." : service ? "Guardar Cambios" : "Añadir Servicio"}
+              {isPending ? "Guardando…" : service ? "Guardar Cambios" : "Añadir Servicio"}
             </Button>
           </div>
         </form>

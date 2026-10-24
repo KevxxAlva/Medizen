@@ -232,9 +232,9 @@ export function SalesPage() {
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar por paciente o N° Factura (ej: 0001)..."
+              placeholder="Buscar por paciente o N° Factura (ej: 0001)…"
               aria-label="Buscar por paciente o N° Factura"
-              className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground text-foreground"
+              className="w-full bg-transparent text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/40 rounded-lg px-1 placeholder:text-muted-foreground text-foreground"
             />
             {q && <button type="button" aria-label="Limpiar búsqueda" onClick={() => setQ("")} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
           </div>
@@ -636,7 +636,7 @@ function ConfirmPaymentDialog({
             <Label htmlFor="metodo-pago">Método de Pago</Label>
             <Select value={paymentMethod} onValueChange={setPaymentMethod}>
               <SelectTrigger id="metodo-pago" className="rounded-xl bg-background/50">
-                <SelectValue placeholder="Seleccione un método..." />
+                <SelectValue placeholder="Seleccione un método…" />
               </SelectTrigger>
               <SelectContent className="rounded-xl">
                 {methods.filter(m => m.status === "Active").map(m => (

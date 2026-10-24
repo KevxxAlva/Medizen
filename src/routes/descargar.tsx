@@ -217,7 +217,7 @@ function InstallationHero({
             className="w-full sm:w-auto h-12 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/25 gap-2.5 text-base"
           >
             <Download className="h-5 w-5" />
-            {installing ? "Instalando..." : `Instalar ahora en ${platformName}`}
+            {installing ? "Instalando…" : `Instalar ahora en ${platformName}`}
           </Button>
         ) : (
           <Button
@@ -523,6 +523,8 @@ function QrCodeSection({
           <img
             src={qrDataUrl}
             alt="Código QR para descargar Medizen"
+            width={176}
+            height={176}
             className="h-36 w-36 sm:h-44 sm:w-44 object-contain"
           />
         </div>

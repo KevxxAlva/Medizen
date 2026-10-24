@@ -42,12 +42,12 @@ export function DashboardMetricsCards({
               <button
                 type="button"
                 aria-label="Más opciones"
-                className="text-muted-foreground hover:text-foreground focus:outline-none transition-colors"
+                className="text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg cursor-pointer transition-colors"
               >
                 <MoreHorizontal className="h-4 w-4" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 rounded-xl">
+            <DropdownMenuContent align="end" className="w-56 rounded-xl overscroll-contain">
               <DropdownMenuItem asChild className="text-xs font-bold cursor-pointer">
                 <Link to="/pacientes">Ver Todos</Link>
               </DropdownMenuItem>
@@ -70,7 +70,7 @@ export function DashboardMetricsCards({
           </DropdownMenu>
         </div>
         <div className="flex flex-wrap items-baseline gap-x-2 mb-1">
-          <span className="font-display text-4xl font-bold text-foreground tracking-tight">
+          <span className="font-display text-4xl font-bold text-foreground tracking-tight tabular-nums">
             {totalPatients.toLocaleString("es-ES")}
           </span>
           <span className="text-xs font-medium text-muted-foreground whitespace-nowrap mb-1">
@@ -97,12 +97,12 @@ export function DashboardMetricsCards({
               <button
                 type="button"
                 aria-label="Más opciones"
-                className="text-muted-foreground hover:text-foreground focus:outline-none transition-colors"
+                className="text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg cursor-pointer transition-colors"
               >
                 <MoreHorizontal className="h-4 w-4" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 rounded-xl">
+            <DropdownMenuContent align="end" className="w-56 rounded-xl overscroll-contain">
               <DropdownMenuItem asChild className="text-xs font-bold cursor-pointer">
                 <Link to="/agenda">Ir a la Agenda</Link>
               </DropdownMenuItem>
@@ -122,7 +122,7 @@ export function DashboardMetricsCards({
           </DropdownMenu>
         </div>
         <div className="flex flex-wrap items-baseline gap-x-2 mb-1">
-          <span className="font-display text-4xl font-bold text-foreground tracking-tight">
+          <span className="font-display text-4xl font-bold text-foreground tracking-tight tabular-nums">
             {(stats?.onlineWork.total || 0).toLocaleString("es-ES")}
           </span>
           <span className="text-xs font-medium text-muted-foreground whitespace-nowrap mb-1">
@@ -162,12 +162,12 @@ export function DashboardMetricsCards({
               <button
                 type="button"
                 aria-label="Más opciones"
-                className="text-muted-foreground hover:text-foreground focus:outline-none transition-colors"
+                className="text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg cursor-pointer transition-colors"
               >
                 <MoreHorizontal className="h-4 w-4" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 rounded-xl">
+            <DropdownMenuContent align="end" className="w-56 rounded-xl overscroll-contain">
               <DropdownMenuItem asChild className="text-xs font-bold cursor-pointer">
                 <Link to="/facturacion">Ver Facturación</Link>
               </DropdownMenuItem>
@@ -189,7 +189,7 @@ export function DashboardMetricsCards({
         <div className="flex flex-wrap items-baseline gap-x-2 mb-1">
           <span
             className={cn(
-              "font-display font-bold text-foreground tracking-tight",
+              "font-display font-bold text-foreground tracking-tight tabular-nums",
               monthlyData.total >= 100000
                 ? "text-2xl sm:text-3xl"
                 : monthlyData.total >= 10000

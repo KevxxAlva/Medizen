@@ -128,7 +128,7 @@ export function InstallAppModal({ open, onOpenChange }: InstallAppModalProps) {
                 className="flex-1 h-11 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md shadow-primary/25 gap-2 text-sm"
               >
                 <Download className="h-4 w-4" />
-                {installing ? "Instalando..." : "Instalar en 1 Clic en este equipo"}
+                {installing ? "Instalando…" : "Instalar en 1 Clic en este equipo"}
               </Button>
               <Button
                 variant="outline"
@@ -266,6 +266,8 @@ export function InstallAppModal({ open, onOpenChange }: InstallAppModalProps) {
                 <img
                   src={qrDataUrl}
                   alt="Código QR de instalación de Medizen"
+                  width={112}
+                  height={112}
                   className="h-28 w-28 object-contain"
                 />
               </div>

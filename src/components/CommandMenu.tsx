@@ -58,7 +58,7 @@ export function CommandMenu() {
           />
           <Command
             shouldFilter={false} // ¡Desactiva el algoritmo fuzzy de cmdk para eliminar el bloqueo de 408ms!
-            className="w-full max-w-lg bg-card rounded-2xl shadow-2xl border border-border/50 overflow-hidden flex flex-col animate-in fade-in-0 zoom-in-95 duration-150"
+            className="w-full max-w-lg bg-card rounded-2xl shadow-2xl border border-border/50 overflow-hidden overscroll-contain flex flex-col animate-in fade-in-0 zoom-in-95 duration-150"
             label="Global Command Menu"
           >
             <div className="flex items-center px-4 py-3 border-b border-border/30 gap-3">
@@ -67,14 +67,15 @@ export function CommandMenu() {
                 value={search}
                 onValueChange={setSearch}
                 className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground text-foreground text-base"
-                placeholder="Buscar pacientes por nombre o cédula..."
+                placeholder="Buscar pacientes por nombre o cédula…"
                 autoFocus
               />
               {search ? (
                 <button
                   type="button"
                   onClick={() => setSearch("")}
-                  className="text-muted-foreground hover:text-foreground p-1"
+                  aria-label="Borrar texto"
+                  className="text-muted-foreground hover:text-foreground p-1 cursor-pointer"
                   title="Borrar texto"
                 >
                   <X className="w-4 h-4" />
@@ -86,7 +87,7 @@ export function CommandMenu() {
               )}
             </div>
 
-            <Command.List className="max-h-[340px] overflow-y-auto p-2 scrollbar-thin">
+            <Command.List className="max-h-[340px] overflow-y-auto overscroll-contain p-2 scrollbar-thin">
               {!q && (
                 <CommandQuickActions
                   onNewAppointment={() => {

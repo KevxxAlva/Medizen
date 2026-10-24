@@ -85,9 +85,9 @@ export function ServiciosPage() {
             <input
               value={q}
               onChange={(e) => { setQ(e.target.value); setCurrentPage(1); }}
-              placeholder="Buscar por servicio, código o especialidad..."
+              placeholder="Buscar por servicio, código o especialidad…"
               aria-label="Buscar por servicio, código o especialidad"
-              className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground text-foreground"
+              className="w-full bg-transparent text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/40 rounded-lg px-1 placeholder:text-muted-foreground text-foreground"
             />
             {q && <button type="button" aria-label="Limpiar búsqueda" onClick={() => setQ("")} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
           </div>

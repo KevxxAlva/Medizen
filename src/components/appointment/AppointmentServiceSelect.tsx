@@ -69,7 +69,7 @@ export function AppointmentServiceSelect({
     <div className="grid gap-2">
       <Label>Servicio Médico</Label>
       <Select value={value} onValueChange={handleChange}>
-        <SelectTrigger><SelectValue placeholder="Selecciona servicio médico..." /></SelectTrigger>
+        <SelectTrigger><SelectValue placeholder="Selecciona servicio médico…" /></SelectTrigger>
         <SelectContent className="max-h-[300px]">
           <SelectItem value="none">Ninguno (Consulta General)</SelectItem>
 
