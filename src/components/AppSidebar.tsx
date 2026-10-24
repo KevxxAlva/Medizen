@@ -51,6 +51,7 @@ function SidebarBody({ onNavigate, isCollapsed }: { onNavigate?: () => void; isC
   const { data: clinic } = useClinicInfo();
 
   const handleLogout = async () => {
+    if (onNavigate) onNavigate();
     await qc.cancelQueries();
     qc.clear();
     await supabase.auth.signOut();
@@ -146,7 +147,10 @@ function SidebarBody({ onNavigate, isCollapsed }: { onNavigate?: () => void; isC
         </nav>
 
         {/* Footer Area with crisp top divider line */}
-        <div className={cn("mt-auto pt-3 pb-3 border-t border-sidebar-border flex flex-col gap-2 shrink-0", isCollapsed ? "items-center px-1" : "px-4")}>
+        <div className={cn(
+          "mt-auto pt-3 pb-[max(env(safe-area-inset-bottom),1rem)] border-t border-sidebar-border flex flex-col gap-2 shrink-0 bg-sidebar",
+          isCollapsed ? "items-center px-1 pb-3" : "px-4"
+        )}>
           <div className={cn("flex items-center w-full", isCollapsed ? "flex-col gap-2" : "justify-between gap-1")}>
             {/* Logout */}
             <Tooltip>
@@ -155,11 +159,11 @@ function SidebarBody({ onNavigate, isCollapsed }: { onNavigate?: () => void; isC
                   onClick={handleLogout}
                   aria-label="Cerrar sesión"
                   className={cn(
-                    "flex items-center rounded-xl transition-colors duration-150 group text-xs font-semibold text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer",
-                    isCollapsed ? "justify-center h-8 w-8" : "gap-2 px-2 py-1.5"
+                    "flex items-center rounded-xl transition-colors duration-150 group text-xs font-semibold text-destructive hover:bg-destructive/10 cursor-pointer",
+                    isCollapsed ? "justify-center h-8 w-8" : "gap-2 px-2.5 py-1.5 bg-destructive/10 text-destructive"
                   )}
                 >
-                  <LogOut className="h-4 w-4 text-muted-foreground group-hover:text-destructive flex-shrink-0" strokeWidth={2.2} />
+                  <LogOut className="h-4 w-4 text-destructive flex-shrink-0" strokeWidth={2.2} />
                   {!isCollapsed && <span>Cerrar sesión</span>}
                 </button>
               </TooltipTrigger>
@@ -193,19 +197,19 @@ export function AppSidebar({
     <>
       {/* Mobile Drawer */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 md:hidden flex animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[70] md:hidden flex animate-in fade-in duration-200">
           {/* Backdrop */}
           <button
             type="button"
             aria-label="Cerrar menú móvil"
-            className="fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity border-none cursor-default"
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity border-none cursor-default z-[71]"
             onClick={onMobileClose}
           />
           {/* Sliding Drawer */}
-          <div className="relative w-[280px] max-w-[85vw] h-full bg-sidebar border-r border-sidebar-border shadow-2xl z-50 flex flex-col overscroll-contain animate-in slide-in-from-left duration-300">
+          <div className="relative w-[280px] max-w-[85vw] h-[100dvh] max-h-[100dvh] bg-sidebar border-r border-sidebar-border shadow-2xl z-[72] flex flex-col overscroll-contain animate-in slide-in-from-left duration-300">
             <button
               onClick={onMobileClose}
-              className="absolute right-3 top-5 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors z-50 cursor-pointer"
+              className="absolute right-3 top-5 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors z-[73] cursor-pointer"
               aria-label="Cerrar menú"
             >
               <X className="h-5 w-5" />

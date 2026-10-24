@@ -1,9 +1,10 @@
 import { APP_LOCALE, APP_TIME_ZONE } from "@/lib/constants/locale";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { 
   Settings, User as UserIcon, Building, Save, Loader2, Shield, Search, ClipboardList, 
-  FileText, Lock, KeyRound, ShieldCheck, CheckCircle2, AlertCircle, Eye, EyeOff, Trash2, Check, Palette 
+  FileText, Lock, KeyRound, ShieldCheck, CheckCircle2, AlertCircle, Eye, EyeOff, Trash2, Check, Palette, LogOut 
 } from "lucide-react";
 import { COLOR_THEMES, type ColorTheme, updateFaviconColor } from "@/components/ThemeCustomizer";
 import { useAuthSession, useIsAdmin, useRoles } from "@/hooks/useAuth";
@@ -116,6 +117,8 @@ function UserProfileSection({
   user: any;
 }) {
   const updateProfile = useUpdateProfile();
+  const router = useRouter();
+  const qc = useQueryClient();
   const [profileName, setProfileName] = useState("");
   const [profileSpecialty, setProfileSpecialty] = useState("");
   const [profileUniversity, setProfileUniversity] = useState("");
@@ -261,7 +264,22 @@ function UserProfileSection({
           </div>
         </div>
 
-        <div className="flex justify-end pt-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-border/40">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={async () => {
+              await qc.cancelQueries();
+              qc.clear();
+              await supabase.auth.signOut();
+              router.navigate({ to: "/auth", replace: true });
+            }}
+            className="rounded-xl border-destructive/30 text-destructive hover:bg-destructive/10 h-11 px-4 flex items-center gap-2 font-bold text-xs sm:text-sm cursor-pointer"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Cerrar sesión</span>
+          </Button>
+
           <Button
             type="submit"
             disabled={isProfileLoading}

@@ -14,7 +14,7 @@ export interface Profile {
 }
 
 export interface ProfileWithRoles extends Profile {
-  roles: ("admin" | "doctor" | "recepcionista")[];
+  roles: ("admin" | "doctor" | "recepcionista" | "medico")[];
 }
 
 const mapProfile = (u: any): Profile => {
@@ -103,8 +103,10 @@ export function useAllProfilesWithRoles() {
 export function useToggleRole() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ userId, role, enable }: { userId: string; role: "admin" | "doctor"; enable: boolean }) => {
-      const targetRoleName = enable ? role : role === "admin" ? "doctor" : "recepcionista";
+    mutationFn: async ({ userId, role, enable }: { userId: string; role: "admin" | "doctor" | "recepcionista"; enable: boolean }) => {
+      const targetRoleName = enable
+        ? (role === "admin" ? "Admin" : role === "recepcionista" ? "Recepcionista" : "Medico")
+        : (role === "admin" ? "Medico" : "Recepcionista");
 
       // Find or create role in public.roles
       let roleId: number | null = null;

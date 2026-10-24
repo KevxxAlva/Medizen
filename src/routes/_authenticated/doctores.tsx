@@ -42,7 +42,7 @@ function DoctoresAdmin() {
   const [toDelete, setToDelete] = useState<ProfileWithRoles | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const [form, setForm] = useState({ email: "", password: "", full_name: "", specialty: "", role: "doctor" as "admin" | "doctor" });
+  const [form, setForm] = useState({ email: "", password: "", full_name: "", specialty: "", role: "doctor" as "admin" | "doctor" | "recepcionista" });
 
   const [q, setQ] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -81,10 +81,18 @@ function DoctoresAdmin() {
   };
 
   const handleToggleDoctor = async (p: ProfileWithRoles) => {
-    const isDoctor = p.roles.includes("doctor");
+    const isDoctor = p.roles.includes("doctor") || p.roles.includes("medico");
     try {
       await toggle.mutateAsync({ userId: p.id, role: "doctor", enable: !isDoctor });
       toast.success(isDoctor ? "Doctor removido" : "Promovido a doctor");
+    } catch (err) { toast.error(err instanceof Error ? err.message : "Error"); }
+  };
+
+  const handleToggleRecep = async (p: ProfileWithRoles) => {
+    const isRecep = p.roles.includes("recepcionista");
+    try {
+      await toggle.mutateAsync({ userId: p.id, role: "recepcionista", enable: !isRecep });
+      toast.success(isRecep ? "Recepción removida" : "Promovido a recepción");
     } catch (err) { toast.error(err instanceof Error ? err.message : "Error"); }
   };
 
@@ -165,7 +173,8 @@ function DoctoresAdmin() {
             ) : (
               paginated.map((p) => {
                 const isAdmin = p.roles.includes("admin");
-                const isDoctor = p.roles.includes("doctor");
+                const isDoctor = p.roles.includes("doctor") || p.roles.includes("medico");
+                const isRecep = p.roles.includes("recepcionista");
                 const isMe = p.id === me?.id;
                 return (
                   <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition group">
@@ -186,14 +195,22 @@ function DoctoresAdmin() {
                     </td>
                     <td className="p-4">
                       <div className="flex flex-wrap gap-1">
-                        {p.roles.map((r) => (
-                          <span key={r} className={cn(
-                            "text-[9px] font-bold px-2 py-1 rounded-full uppercase tracking-wider flex items-center gap-1",
-                            r === "admin" ? "bg-purple-50 text-purple-600 border border-purple-100" : "bg-green-50 text-green-600 border border-green-100"
-                          )}>
-                            {r === "admin" ? <Shield className="h-2.5 w-2.5" /> : <Stethoscope className="h-2.5 w-2.5" />} {r}
-                          </span>
-                        ))}
+                        {p.roles.map((r) => {
+                          const isRAdmin = r === "admin";
+                          const isRRecep = r === "recepcionista";
+                          return (
+                            <span key={r} className={cn(
+                              "text-[9px] font-bold px-2 py-1 rounded-full uppercase tracking-wider flex items-center gap-1",
+                              isRAdmin
+                                ? "bg-purple-50 text-purple-600 border border-purple-100"
+                                : isRRecep
+                                ? "bg-blue-50 text-blue-600 border border-blue-100"
+                                : "bg-green-50 text-green-600 border border-green-100"
+                            )}>
+                              {isRAdmin ? <Shield className="h-2.5 w-2.5" /> : isRRecep ? <UserRound className="h-2.5 w-2.5" /> : <Stethoscope className="h-2.5 w-2.5" />} {isRRecep ? "Recepción" : r === "medico" ? "Médico" : r}
+                            </span>
+                          );
+                        })}
                         {p.roles.length === 0 && <span className="text-[9px] bg-muted text-gray-400 px-2 py-1 rounded-full border border-gray-100">Ninguno</span>}
                       </div>
                     </td>
@@ -215,6 +232,15 @@ function DoctoresAdmin() {
                           title={isDoctor ? "Quitar Doctor" : "Hacer Doctor"}
                         >
                           {isDoctor ? <ShieldOff className="h-4 w-4" /> : <Stethoscope className="h-4 w-4" />}
+                        </button>
+                        <div className="h-3 w-px bg-gray-200"></div>
+                        <button
+                          onClick={() => handleToggleRecep(p)}
+                          disabled={toggle.isPending}
+                          className="hover:text-blue-600 disabled:opacity-30 flex flex-col items-center gap-1"
+                          title={isRecep ? "Quitar Recepción" : "Hacer Recepción"}
+                        >
+                          {isRecep ? <ShieldOff className="h-4 w-4" /> : <UserRound className="h-4 w-4" />}
                         </button>
                         <div className="h-3 w-px bg-gray-200"></div>
                         <button 
@@ -248,7 +274,7 @@ function DoctoresAdmin() {
         <DialogContent className="rounded-3xl sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Nuevo usuario</DialogTitle>
-            <DialogDescription>Crea una cuenta para un doctor o administrador.</DialogDescription>
+            <DialogDescription>Crea una cuenta para un doctor, recepcionista o administrador.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreate} className="grid gap-4 py-2">
             <div className="grid gap-2">
@@ -265,10 +291,16 @@ function DoctoresAdmin() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-2">
-                <Label htmlFor="sp">Especialidad</Label>
-                <Select value={form.specialty} onValueChange={(v) => setForm({ ...form, specialty: v })}>
+                <Label htmlFor="sp" className={cn(form.role !== "doctor" && "text-muted-foreground")}>
+                  Especialidad {form.role !== "doctor" && "(No aplica)"}
+                </Label>
+                <Select 
+                  value={form.specialty} 
+                  onValueChange={(v) => setForm({ ...form, specialty: v })}
+                  disabled={form.role !== "doctor"}
+                >
                   <SelectTrigger id="sp" className="text-xs">
-                    <SelectValue placeholder="Seleccione especialidad" />
+                    <SelectValue placeholder={form.role === "doctor" ? "Seleccione especialidad" : "No aplica"} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Ginecología y Obstetricia" className="text-xs">Ginecología y Obstetricia</SelectItem>
@@ -287,10 +319,11 @@ function DoctoresAdmin() {
               </div>
               <div className="grid gap-2">
                 <Label>Rol</Label>
-                <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as "admin" | "doctor" })}>
+                <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as "admin" | "doctor" | "recepcionista" })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="doctor">Doctor</SelectItem>
+                    <SelectItem value="recepcionista">Recepción</SelectItem>
                     <SelectItem value="admin">Administrador</SelectItem>
                   </SelectContent>
                 </Select>

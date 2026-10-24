@@ -7,7 +7,7 @@ const CreateUserSchema = z.object({
   password: z.string().min(8).max(72),
   full_name: z.string().min(1).max(120),
   specialty: z.string().max(120).optional().nullable(),
-  role: z.enum(["admin", "doctor"]),
+  role: z.enum(["admin", "doctor", "recepcionista"]),
 });
 
 const DeleteUserSchema = z.object({
@@ -30,7 +30,7 @@ async function ensureAdmin(userId: string, supabaseClient: any) {
 
 export const adminCreateUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => CreateUserSchema.parse(input))
+  .validator((input: unknown) => CreateUserSchema.parse(input))
   .handler(async ({ data, context }) => {
     await ensureAdmin(context.userId, context.supabase);
 
@@ -48,7 +48,7 @@ export const adminCreateUser = createServerFn({ method: "POST" })
 
 export const adminDeleteUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => DeleteUserSchema.parse(input))
+  .validator((input: unknown) => DeleteUserSchema.parse(input))
   .handler(async ({ data, context }) => {
     if (data.user_id === context.userId) throw new Error("No puedes eliminarte a ti mismo");
     await ensureAdmin(context.userId, context.supabase);
