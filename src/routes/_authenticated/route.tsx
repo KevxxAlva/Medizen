@@ -81,7 +81,7 @@ function AuthenticatedLayout() {
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-muted pb-20 md:pb-0 flex flex-col">
+    <div className="min-h-screen bg-background pb-20 md:pb-0 flex flex-col">
       {/* Mobile Top Header (md:hidden) */}
       <header className="sticky top-0 z-40 md:hidden flex items-center justify-between px-3 sm:px-4 h-14 bg-card/95 backdrop-blur-md border-b border-border/40 shadow-xs">
         <div className="flex items-center gap-2.5">
