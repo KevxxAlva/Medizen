@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthSession } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { logAuditAction } from "@/lib/api/audit";
 
@@ -49,10 +50,12 @@ export interface AppointmentFilters {
   includeTestLoad?: boolean;
 }
 
-export function useAppointments(filters?: AppointmentFilters) {
-  const queryKey = filters ? ["appointments", filters] : ["appointments"];
+export function useAppointments(filters?: AppointmentFilters, options?: { enabled?: boolean }) {
+  const { user } = useAuthSession();
+  const queryKey = filters ? ["appointments", filters, user?.id] : ["appointments", user?.id];
   return useQuery({
     queryKey,
+    enabled: (options?.enabled ?? true) && !!user,
     queryFn: async (): Promise<AppointmentWithPatient[]> => {
       const ascending = filters?.ascending ?? true;
       const PAGE_SIZE = 1000;

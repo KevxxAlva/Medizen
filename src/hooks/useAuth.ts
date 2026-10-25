@@ -64,6 +64,15 @@ function ensureAuthSubscription() {
   });
 }
 
+export function setAuthSessionManually(session: Session | null) {
+  sharedAuthState = {
+    session,
+    user: session?.user ?? null,
+    loading: false,
+  };
+  authListeners.forEach((fn) => fn(sharedAuthState));
+}
+
 export function useAuthSession(): AuthState {
   const [state, setState] = useState<AuthState>(() => sharedAuthState);
 

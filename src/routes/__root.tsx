@@ -8,6 +8,7 @@ import {
   Link,
 } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -130,6 +131,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+        queryClient.invalidateQueries();
+      } else if (event === "SIGNED_OUT") {
+        queryClient.clear();
+      }
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [queryClient]);
 
   useEffect(() => {
     applySavedThemeColor();

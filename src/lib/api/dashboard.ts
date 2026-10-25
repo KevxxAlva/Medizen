@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthSession } from "@/hooks/useAuth";
 
 // Helper to get dates for the last 7 days (including today)
 const getLast7Days = () => {
@@ -12,9 +13,11 @@ const getLast7Days = () => {
   return dates;
 };
 
-export function useDashboardStats() {
+export function useDashboardStats(options?: { enabled?: boolean }) {
+  const { user } = useAuthSession();
   return useQuery({
-    queryKey: ["dashboard_stats"],
+    queryKey: ["dashboard_stats", user?.id],
+    enabled: (options?.enabled ?? true) && !!user,
     queryFn: async () => {
       const dates = getLast7Days();
       const todayStr = dates[6];
@@ -144,9 +147,11 @@ export function useDashboardStats() {
   });
 }
 
-export function useMonthlyPayments() {
+export function useMonthlyPayments(options?: { enabled?: boolean }) {
+  const { user } = useAuthSession();
   return useQuery({
-    queryKey: ["monthly_payments"],
+    queryKey: ["monthly_payments", user?.id],
+    enabled: (options?.enabled ?? true) && !!user,
     queryFn: async () => {
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
@@ -201,9 +206,11 @@ export interface DailyGoal {
   current_value: number;
 }
 
-export function useDailyGoals(dateStr: string) {
+export function useDailyGoals(dateStr: string, options?: { enabled?: boolean }) {
+  const { user } = useAuthSession();
   return useQuery({
-    queryKey: ["daily_goals", dateStr],
+    queryKey: ["daily_goals", dateStr, user?.id],
+    enabled: (options?.enabled ?? true) && !!user,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("daily_goals")
@@ -249,9 +256,11 @@ export function useIncrementDailyGoal() {
   });
 }
 
-export function useDashboardTrends() {
+export function useDashboardTrends(options?: { enabled?: boolean }) {
+  const { user } = useAuthSession();
   return useQuery({
-    queryKey: ["dashboard_trends"],
+    queryKey: ["dashboard_trends", user?.id],
+    enabled: (options?.enabled ?? true) && !!user,
     queryFn: async () => {
       const sixMonthsAgo = new Date();
       sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
@@ -292,9 +301,11 @@ export function useDashboardTrends() {
   });
 }
 
-export function useTopTreatments() {
+export function useTopTreatments(options?: { enabled?: boolean }) {
+  const { user } = useAuthSession();
   return useQuery({
-    queryKey: ["dashboard_top_treatments"],
+    queryKey: ["dashboard_top_treatments", user?.id],
+    enabled: (options?.enabled ?? true) && !!user,
     queryFn: async () => {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);

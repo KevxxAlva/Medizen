@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { setAuthSessionManually } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { MedizenLogo } from "@/components/MedizenLogo";
 import { 
@@ -58,6 +60,7 @@ const slides = [
 
 function useAuthPageLogic() {
   const router = useRouter();
+  const qc = useQueryClient();
   const [mode, setMode] = useState<"login" | "quick-login" | "bootstrap" | "recovery" | "reset-password">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -134,6 +137,11 @@ function useAuthPageLogic() {
         }
       } catch {}
 
+      if (data.session) {
+        setAuthSessionManually(data.session);
+      }
+      await qc.invalidateQueries();
+
       toast.success("¡Bienvenido/a de nuevo!");
       router.navigate({ to: "/" });
     } finally {
@@ -150,6 +158,8 @@ function useAuthPageLogic() {
       if (isValid) {
         const { data } = await supabase.auth.getSession();
         if (data.session && data.session.user.id === selectedAccount.userId) {
+          setAuthSessionManually(data.session);
+          await qc.invalidateQueries();
           toast.success(`Sesión restaurada como ${selectedAccount.fullName}`);
           router.navigate({ to: "/" });
           return;
@@ -244,6 +254,8 @@ function useAuthPageLogic() {
       if (error) return toast.error(error.message);
 
       if (data.session) {
+        setAuthSessionManually(data.session);
+        await qc.invalidateQueries();
         toast.success("¡Administrador creado con éxito!");
         router.navigate({ to: "/" });
       } else {

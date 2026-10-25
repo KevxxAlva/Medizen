@@ -29,7 +29,7 @@ import { DashboardProfileCard } from "@/components/dashboard/DashboardProfileCar
 import { DashboardCalendarWidget } from "@/components/dashboard/DashboardCalendarWidget";
 
 export function Dashboard() {
-  const { user } = useAuthSession();
+  const { user, loading: authLoading } = useAuthSession();
   const { data: roles = [] } = useRoles();
   const { data: profile } = useMyProfile(user?.id);
   const { data: doctors = [] } = useDoctors();
@@ -116,6 +116,7 @@ export function Dashboard() {
         icon: CalendarClock,
         color: "text-primary",
         bg: "bg-primary/10",
+        href: "/agenda",
       });
     }
     if (recentPatients.length > 0) {
@@ -126,6 +127,7 @@ export function Dashboard() {
         icon: Users,
         color: "text-emerald-500",
         bg: "bg-emerald-50",
+        href: "/pacientes",
       });
     }
     return list;
@@ -139,7 +141,7 @@ export function Dashboard() {
     ? "Recepcionista"
     : "Médico";
 
-  if (statsLoading && !stats) {
+  if ((authLoading && !user) || (statsLoading && !stats)) {
     return (
       <div className="min-h-full bg-card/40 border border-border rounded-3xl p-4 md:p-8">
         <DashboardSkeleton />

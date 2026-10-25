@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthSession } from "@/hooks/useAuth";
 
 export interface Profile {
   id: string;
@@ -60,9 +61,11 @@ export function useMyProfile(userId: string | undefined) {
 }
 
 // Doctors picker
-export function useDoctors() {
+export function useDoctors(options?: { enabled?: boolean }) {
+  const { user } = useAuthSession();
   return useQuery({
-    queryKey: ["doctors"],
+    queryKey: ["doctors", user?.id],
+    enabled: (options?.enabled ?? true) && !!user,
     queryFn: async (): Promise<Profile[]> => {
       const { data, error } = await supabase
         .from("medicos")

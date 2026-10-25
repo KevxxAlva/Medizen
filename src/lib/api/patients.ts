@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { logAuditAction } from "@/lib/api/audit";
+import { useAuthSession } from "@/hooks/useAuth";
 
 export type PatientStatus = "activo" | "en_tratamiento" | "alta" | "nuevo";
 
@@ -173,9 +174,11 @@ export function usePatientsGrowth() {
   });
 }
 
-export function usePatientsCountByDateRange(from?: string, to?: string) {
+export function usePatientsCountByDateRange(from?: string, to?: string, options?: { enabled?: boolean }) {
+  const { user } = useAuthSession();
   return useQuery({
-    queryKey: ["patients_count_range", from, to],
+    queryKey: ["patients_count_range", from, to, user?.id],
+    enabled: (options?.enabled ?? true) && !!user,
     queryFn: async (): Promise<number> => {
       let query = supabase
         .from("pacientes")
@@ -193,9 +196,11 @@ export function usePatientsCountByDateRange(from?: string, to?: string) {
   });
 }
 
-export function useRecentPatients(limit: number = 5) {
+export function useRecentPatients(limit: number = 5, options?: { enabled?: boolean }) {
+  const { user } = useAuthSession();
   return useQuery({
-    queryKey: ["patients_recent", limit],
+    queryKey: ["patients_recent", limit, user?.id],
+    enabled: (options?.enabled ?? true) && !!user,
     queryFn: async (): Promise<Patient[]> => {
       const { data, error } = await supabase
         .from("pacientes")
