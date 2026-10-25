@@ -1,6 +1,6 @@
 import { APP_TIME_ZONE } from "@/lib/constants/locale";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { 
   ArrowLeft, FileDown, FileText, Printer, Loader2, User, 
   Baby, Stethoscope, Clock, StickyNote, AlertCircle, Sparkles, 
