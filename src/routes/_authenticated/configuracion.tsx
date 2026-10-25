@@ -155,8 +155,10 @@ function UserProfileSection({
 
   const initials = (name: string) => {
     return (name || "?")
-      .split(" ")
+      .trim()
+      .split(/\s+/)
       .map((n) => n[0])
+      .filter(Boolean)
       .slice(0, 2)
       .join("")
       .toUpperCase();
@@ -410,32 +412,46 @@ function AuditLogSection() {
               </tr>
             </thead>
             <tbody>
-              {logs.map((log) => (
-                <tr key={log.id} className="border-b border-border/20 hover:bg-muted/30">
-                  <td className="p-3 whitespace-nowrap text-xs text-muted-foreground">
-                    {new Date(log.created_at).toLocaleString(APP_LOCALE, { timeZone: APP_TIME_ZONE })}
-                  </td>
-                  <td className="p-3 font-medium text-foreground">
-                    {log.user_email || log.user_id.slice(0, 8)}
-                  </td>
-                  <td className="p-3">
-                    <span className={cn(
-                      "px-2 py-0.5 rounded text-[10px] font-bold uppercase",
-                      log.action === "DELETE" ? "bg-red-500/10 text-red-500" :
-                      log.action === "INSERT" ? "bg-green-500/10 text-green-500" :
-                      "bg-blue-500/10 text-blue-500"
-                    )}>
-                      {log.action}
-                    </span>
-                  </td>
-                  <td className="p-3 text-muted-foreground capitalize">
-                    {log.entity_name}
-                  </td>
-                  <td className="p-3 text-xs max-w-xs truncate text-muted-foreground font-mono">
-                    {log.details ? JSON.stringify(log.details) : "-"}
-                  </td>
-                </tr>
-              ))}
+              {logs.map((log) => {
+                const actionName = (log as any).action_type || (log as any).action || "INFO";
+                const isDelete = actionName === "DELETE";
+                const isInsert = actionName === "INSERT";
+                const formattedDate = log.created_at
+                  ? new Date(log.created_at).toLocaleString(APP_LOCALE, { timeZone: APP_TIME_ZONE })
+                  : "-";
+                const userDisplay =
+                  (log as any).perfiles?.full_name ||
+                  (log as any).perfiles?.email ||
+                  (log as any).user_email ||
+                  (log.user_id ? String(log.user_id).slice(0, 8) : "Sistema");
+
+                return (
+                  <tr key={log.id} className="border-b border-border/20 hover:bg-muted/30">
+                    <td className="p-3 whitespace-nowrap text-xs text-muted-foreground">
+                      {formattedDate}
+                    </td>
+                    <td className="p-3 font-medium text-foreground">
+                      {userDisplay}
+                    </td>
+                    <td className="p-3">
+                      <span className={cn(
+                        "px-2 py-0.5 rounded text-[10px] font-bold uppercase",
+                        isDelete ? "bg-red-500/10 text-red-500" :
+                        isInsert ? "bg-green-500/10 text-green-500" :
+                        "bg-blue-500/10 text-blue-500"
+                      )}>
+                        {actionName}
+                      </span>
+                    </td>
+                    <td className="p-3 text-muted-foreground capitalize">
+                      {(log as any).entity_type || (log as any).entity_name || "-"}
+                    </td>
+                    <td className="p-3 text-xs max-w-xs truncate text-muted-foreground font-mono">
+                      {log.details ? JSON.stringify(log.details) : "-"}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
