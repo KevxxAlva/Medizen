@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { redirect } from "@tanstack/react-router";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { clearPersistentQueryCache } from "@/lib/cache/persistentQueryCache";
 
 export type AppRole = "admin" | "doctor" | "recepcionista" | "medico";
 
@@ -54,7 +55,10 @@ function ensureAuthSubscription() {
     authListeners.forEach((fn) => fn(sharedAuthState));
   });
 
-  supabase.auth.onAuthStateChange((_e, session) => {
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === "SIGNED_OUT") {
+      clearPersistentQueryCache();
+    }
     sharedAuthState = {
       session,
       user: session?.user ?? null,

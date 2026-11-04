@@ -2,6 +2,12 @@ import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+// Tablas de solo escritura/auditoría que no deben disparar recargas globales en la UI
+const IGNORED_REALTIME_TABLES = new Set<string>([
+  "auditoria_logs",
+  "audit_logs",
+]);
+
 // Mapping between DB tables and their corresponding React Query keys.
 const TABLE_TO_QUERY_KEYS: Record<string, string[][]> = {
   pacientes: [
@@ -66,6 +72,14 @@ const TABLE_TO_QUERY_KEYS: Record<string, string[][]> = {
     ["stocks"],
     ["ai_clinical_insights"],
   ],
+  inventario: [
+    ["inventory_stocks"],
+    ["stocks"],
+  ],
+  movimientos_inventario: [
+    ["inventory_stocks"],
+    ["stocks"],
+  ],
   financial_accounts: [
     ["financial_accounts"],
     ["accounts"],
@@ -87,41 +101,61 @@ const TABLE_TO_QUERY_KEYS: Record<string, string[][]> = {
   ],
 };
 
+const REALTIME_DEBOUNCE_MS = 350;
+
 export function useRealtimeSync() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    const pendingKeys = new Map<string, string[]>();
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const flushInvalidations = () => {
+      debounceTimer = null;
+      if (pendingKeys.size === 0) return;
+      const keysToInvalidate = Array.from(pendingKeys.values());
+      pendingKeys.clear();
+
+      for (const key of keysToInvalidate) {
+        queryClient.invalidateQueries({ queryKey: key });
+      }
+    };
+
+    const queueInvalidation = (key: string[]) => {
+      const hash = JSON.stringify(key);
+      pendingKeys.set(hash, key);
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(flushInvalidations, REALTIME_DEBOUNCE_MS);
+    };
+
     // Escuchar cambios globales en toda la base de datos (schema 'public')
     const channel = supabase
-      .channel('schema-db-changes')
+      .channel("schema-db-changes")
       .on(
-        'postgres_changes',
-        { event: '*', schema: 'public' },
+        "postgres_changes",
+        { event: "*", schema: "public" },
         (payload) => {
           const table = payload.table;
+          if (!table || IGNORED_REALTIME_TABLES.has(table)) {
+            return;
+          }
 
-          // Encontrar las keys a invalidar según la tabla modificada
           const queryKeys = TABLE_TO_QUERY_KEYS[table];
-
           if (queryKeys && queryKeys.length > 0) {
-            queryKeys.forEach((key) => {
-              // Invalidar el query en react-query para que haga refetch automáticamente en background
-              queryClient.invalidateQueries({ queryKey: key });
-            });
+            queryKeys.forEach((key) => queueInvalidation(key));
           } else {
-             // Fallback si no está explícitamente definida: invalidar el nombre de la tabla
-             queryClient.invalidateQueries({ queryKey: [table] });
+            queueInvalidation([table]);
           }
         }
       )
       .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          console.log('[Realtime] Conectado a Supabase exitosamente.');
+        if (status === "SUBSCRIBED") {
+          console.log("[Realtime] Conectado a Supabase con Debounce de Caché L1/L2 activo.");
         }
       });
 
-    // Cleanup: desuscribirse cuando se desmonte el layout para no duplicar escuchas
     return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
       supabase.removeChannel(channel);
     };
   }, [queryClient]);

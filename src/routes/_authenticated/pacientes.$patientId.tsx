@@ -122,6 +122,8 @@ function PatientDetailHeader({
   onOpenReposo,
   onOpenAtencion,
   onOpenJustificativo,
+  onOpenLaboratorio,
+  onOpenEcografia,
 }: {
   viewing: any;
   onEditOpen: () => void;
@@ -129,6 +131,8 @@ function PatientDetailHeader({
   onOpenReposo: (p: any) => void;
   onOpenAtencion: (p: any) => void;
   onOpenJustificativo: (p: any) => void;
+  onOpenLaboratorio: (p: any) => void;
+  onOpenEcografia: (p: any) => void;
 }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
@@ -197,6 +201,18 @@ function PatientDetailHeader({
             >
               <Printer className="h-4 w-4 text-amber-500" /> Justificativo Médico
             </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onOpenLaboratorio(viewing)}
+              className="rounded-xl cursor-pointer text-xs font-semibold flex items-center gap-2 px-3 py-2.5 hover:bg-muted/80 transition-colors"
+            >
+              <Printer className="h-4 w-4 text-fuchsia-500" /> Orden de Laboratorio (Perfiles)
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onOpenEcografia(viewing)}
+              className="rounded-xl cursor-pointer text-xs font-semibold flex items-center gap-2 px-3 py-2.5 hover:bg-muted/80 transition-colors"
+            >
+              <Printer className="h-4 w-4 text-indigo-500" /> Informe Ecográfico (PDF)
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -208,6 +224,8 @@ function usePatientReportsState(doctors: any[] | undefined, myProfile: any) {
   const [openReposo, setOpenReposo] = useState(false);
   const [openAtencion, setOpenAtencion] = useState(false);
   const [openJustificativo, setOpenJustificativo] = useState(false);
+  const [openLaboratorio, setOpenLaboratorio] = useState(false);
+  const [openEcografia, setOpenEcografia] = useState(false);
 
   const [reposoDays, setReposoDays] = useState("3");
   const [reposoStart, setReposoStart] = useState("");
@@ -310,6 +328,60 @@ function usePatientReportsState(doctors: any[] | undefined, myProfile: any) {
     setOpenJustificativo(false);
   };
 
+  const handleOpenLaboratorioDialog = (p: any) => {
+    prefillDoctorFields(p);
+    setOpenLaboratorio(true);
+  };
+
+  const handleOpenEcografiaDialog = (p: any) => {
+    prefillDoctorFields(p);
+    setOpenEcografia(true);
+  };
+
+  const handleExportLaboratorio = async (
+    p: any,
+    data: { profileTitle: string; examsList: string; clinicalIndication: string }
+  ) => {
+    const { generateLaboratorioPDF } = await import("@/lib/utils/reportsPdf");
+    await generateLaboratorioPDF({
+      patientName: p.full_name,
+      patientId: p.document_id || "",
+      profileTitle: data.profileTitle,
+      examsList: data.examsList,
+      clinicalIndication: data.clinicalIndication,
+      doctorName: doctorName || "Médico Tratante",
+      doctorUniversity: doctorUni,
+      doctorMpps,
+      doctorCmc,
+    });
+    setOpenLaboratorio(false);
+  };
+
+  const handleExportEcografia = async (
+    p: any,
+    data: {
+      ecoType: string;
+      gestationalAge: string;
+      fhr: string;
+      efw: string;
+      placenta: string;
+      findings: string;
+      conclusion: string;
+    }
+  ) => {
+    const { generateEcografiaPDF } = await import("@/lib/utils/reportsPdf");
+    await generateEcografiaPDF({
+      patientName: p.full_name,
+      patientId: p.document_id || "",
+      ...data,
+      doctorName: doctorName || "Médico Tratante",
+      doctorUniversity: doctorUni,
+      doctorMpps,
+      doctorCmc,
+    });
+    setOpenEcografia(false);
+  };
+
   return {
     openReposo,
     setOpenReposo,
@@ -341,6 +413,16 @@ function usePatientReportsState(doctors: any[] | undefined, myProfile: any) {
     setJustificativoReason,
     handleOpenJustificativoDialog,
     handleExportJustificativo,
+
+    openLaboratorio,
+    setOpenLaboratorio,
+    handleOpenLaboratorioDialog,
+    handleExportLaboratorio,
+
+    openEcografia,
+    setOpenEcografia,
+    handleOpenEcografiaDialog,
+    handleExportEcografia,
 
     doctorName,
     setDoctorName,
@@ -486,6 +568,8 @@ function PatientDetailView({
           onOpenReposo={reports.handleOpenReposoDialog}
           onOpenAtencion={reports.handleOpenAtencionDialog}
           onOpenJustificativo={reports.handleOpenJustificativoDialog}
+          onOpenLaboratorio={reports.handleOpenLaboratorioDialog}
+          onOpenEcografia={reports.handleOpenEcografiaDialog}
         />
 
         <PatientClinicalBanner
@@ -523,6 +607,12 @@ function PatientDetailView({
           justificativoReason={reports.justificativoReason}
           setJustificativoReason={reports.setJustificativoReason}
           onExportJustificativo={reports.handleExportJustificativo}
+          openLaboratorio={reports.openLaboratorio}
+          setOpenLaboratorio={reports.setOpenLaboratorio}
+          onExportLaboratorio={(data) => reports.handleExportLaboratorio(viewing, data)}
+          openEcografia={reports.openEcografia}
+          setOpenEcografia={reports.setOpenEcografia}
+          onExportEcografia={(data) => reports.handleExportEcografia(viewing, data)}
           doctorName={reports.doctorName}
           setDoctorName={reports.setDoctorName}
           doctorUni={reports.doctorUni}

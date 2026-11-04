@@ -339,3 +339,234 @@ export const generateJustificativoPDF = async ({
     toast.error(err instanceof Error ? err.message : "Error al exportar justificativo");
   }
 };
+
+
+export const generateLaboratorioPDF = async ({
+  patientName,
+  patientId,
+  profileTitle,
+  examsList,
+  clinicalIndication,
+  doctorName,
+  doctorUniversity,
+  doctorMpps,
+  doctorCmc,
+}: {
+  patientName: string;
+  patientId: string;
+  profileTitle: string;
+  examsList: string;
+  clinicalIndication?: string;
+  doctorName: string;
+  doctorUniversity: string;
+  doctorMpps: string;
+  doctorCmc: string;
+}) => {
+  try {
+    const { jsPDF } = await import("jspdf");
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    const config = await getClinicPdfConfig();
+    drawPdfWatermark(doc, config, pageWidth, pageHeight);
+    drawPdfHeader(doc, config, pageWidth);
+
+    const today = new Date();
+    const topDay = String(today.getDate()).padStart(2, "0");
+    const topMonth = String(today.getMonth() + 1).padStart(2, "0");
+    const topYear = String(today.getFullYear());
+    doc.setFont(config.customFontFamily, "normal");
+    doc.setFontSize(10.5);
+    doc.text(`Valle de la Pascua,   ${topDay}   /   ${topMonth}   /   ${topYear}`, pageWidth - 70, 155, { align: "right" });
+
+    doc.setFont(config.customFontFamily, "bold");
+    doc.setFontSize(13);
+    doc.text("ORDEN DE EXÁMENES DE LABORATORIO Y PARACLÍNICOS", pageWidth / 2, 190, { align: "center" });
+    const titleWidth = doc.getTextWidth("ORDEN DE EXÁMENES DE LABORATORIO Y PARACLÍNICOS");
+    doc.setDrawColor(0);
+    doc.setLineWidth(0.5);
+    doc.line(pageWidth / 2 - titleWidth / 2, 193, pageWidth / 2 + titleWidth / 2, 193);
+
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(203, 213, 225);
+    doc.roundedRect(70, 210, pageWidth - 140, 48, 6, 6, "FD");
+
+    doc.setFont(config.customFontFamily, "bold");
+    doc.setFontSize(10.5);
+    doc.text(`PACIENTE: ${patientName}`, 84, 230);
+    doc.text(`C.I.: ${patientId || "—"}`, pageWidth - 200, 230);
+    doc.setFont(config.customFontFamily, "normal");
+    doc.setFontSize(10);
+    doc.text(`PERFIL SOLICITADO: ${profileTitle || "Laboratorio General"}`, 84, 248);
+
+    let y = 285;
+    doc.setFont(config.customFontFamily, "bold");
+    doc.setFontSize(11);
+    doc.text("ESTUDIOS Y DETERMINACIONES SOLICITADAS:", 70, y);
+    y += 18;
+
+    doc.setFont(config.customFontFamily, "normal");
+    doc.setFontSize(10.5);
+    const lines = doc.splitTextToSize(examsList || "", pageWidth - 150);
+    for (const line of lines) {
+      if (y > pageHeight - 180) break;
+      doc.text(`•  ${line.replace(/^[•\-*]\s*/, "")}`, 80, y);
+      y += 18;
+    }
+
+    if (clinicalIndication && clinicalIndication.trim()) {
+      y += 12;
+      doc.setFont(config.customFontFamily, "bold");
+      doc.setFontSize(10.5);
+      doc.text("INDICACIÓN CLÍNICA / PREPARACIÓN:", 70, y);
+      y += 16;
+      doc.setFont(config.customFontFamily, "normal");
+      const indLines = doc.splitTextToSize(clinicalIndication, pageWidth - 140);
+      doc.text(indLines, 70, y);
+      y += indLines.length * 15;
+    }
+
+    const sigY = Math.max(y + 60, 560);
+    doc.setDrawColor(120);
+    doc.setLineWidth(0.5);
+    doc.setLineDashPattern([2, 2], 0);
+    doc.line(pageWidth / 2 - 100, sigY, pageWidth / 2 + 100, sigY);
+    doc.setLineDashPattern([], 0);
+
+    doc.setFont(config.customFontFamily, "bold");
+    doc.setFontSize(11.5);
+    doc.text(doctorName, pageWidth / 2, sigY + 16, { align: "center" });
+    doc.setFont(config.customFontFamily, "normal");
+    doc.setFontSize(10.5);
+    doc.text("Médico Especialista", pageWidth / 2, sigY + 29, { align: "center" });
+    if (doctorUniversity) doc.text(doctorUniversity, pageWidth / 2, sigY + 42, { align: "center" });
+    doc.text(`MPPS ${doctorMpps || "______"}   CMC ${doctorCmc || "______"}`, pageWidth / 2, sigY + 55, { align: "center" });
+
+    drawPdfFooter(doc, config, pageWidth, pageHeight);
+    doc.save(`Orden_Laboratorio_${patientName.replace(/\s+/g, "_")}.pdf`);
+    toast.success("Orden de laboratorio en PDF descargada");
+  } catch (err) {
+    toast.error(err instanceof Error ? err.message : "Error al exportar orden de laboratorio");
+  }
+};
+
+export const generateEcografiaPDF = async ({
+  patientName,
+  patientId,
+  ecoType,
+  gestationalAge,
+  fhr,
+  efw,
+  placenta,
+  findings,
+  conclusion,
+  doctorName,
+  doctorUniversity,
+  doctorMpps,
+  doctorCmc,
+}: {
+  patientName: string;
+  patientId: string;
+  ecoType: string;
+  gestationalAge?: string;
+  fhr?: string;
+  efw?: string;
+  placenta?: string;
+  findings: string;
+  conclusion: string;
+  doctorName: string;
+  doctorUniversity: string;
+  doctorMpps: string;
+  doctorCmc: string;
+}) => {
+  try {
+    const { jsPDF } = await import("jspdf");
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    const config = await getClinicPdfConfig();
+    drawPdfWatermark(doc, config, pageWidth, pageHeight);
+    drawPdfHeader(doc, config, pageWidth);
+
+    const today = new Date();
+    const topDay = String(today.getDate()).padStart(2, "0");
+    const topMonth = String(today.getMonth() + 1).padStart(2, "0");
+    const topYear = String(today.getFullYear());
+    doc.setFont(config.customFontFamily, "normal");
+    doc.setFontSize(10.5);
+    doc.text(`Valle de la Pascua,   ${topDay}   /   ${topMonth}   /   ${topYear}`, pageWidth - 70, 155, { align: "right" });
+
+    doc.setFont(config.customFontFamily, "bold");
+    doc.setFontSize(13);
+    const title = `INFORME ECOGRÁFICO — ${(ecoType || "ECOGRAFÍA OBSTÉTRICA / PÉLVICA").toUpperCase()}`;
+    doc.text(title, pageWidth / 2, 188, { align: "center" });
+
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(203, 213, 225);
+    doc.roundedRect(70, 205, pageWidth - 140, 58, 6, 6, "FD");
+
+    doc.setFont(config.customFontFamily, "bold");
+    doc.setFontSize(10);
+    doc.text(`PACIENTE: ${patientName}`, 84, 224);
+    doc.text(`C.I.: ${patientId || "—"}`, pageWidth - 200, 224);
+
+    doc.setFont(config.customFontFamily, "normal");
+    doc.setFontSize(9.5);
+    doc.text(
+      `Edad Gestacional / Ciclo: ${gestationalAge || "N/A"}   |   FCF: ${fhr || "N/A"} lpm   |   Peso Fetal Est.: ${efw || "N/A"} g   |   Placenta/L.A.: ${placenta || "Normal"}`,
+      84,
+      246
+    );
+
+    let y = 285;
+    doc.setFont(config.customFontFamily, "bold");
+    doc.setFontSize(11);
+    doc.text("HALLAZGOS ECOGRÁFICOS Y BIOMETRÍA:", 70, y);
+    y += 18;
+
+    doc.setFont(config.customFontFamily, "normal");
+    doc.setFontSize(10.5);
+    const findingLines = doc.splitTextToSize(findings || "", pageWidth - 140);
+    doc.text(findingLines, 70, y);
+    y += findingLines.length * 16 + 20;
+
+    doc.setFont(config.customFontFamily, "bold");
+    doc.setFontSize(11);
+    doc.text("CONCLUSIÓN DIAGNÓSTICA ECOGRÁFICA:", 70, y);
+    y += 18;
+
+    doc.setFillColor(240, 253, 244);
+    doc.setDrawColor(134, 239, 172);
+    const concLines = doc.splitTextToSize(conclusion || "", pageWidth - 164);
+    const boxH = Math.max(concLines.length * 16 + 18, 36);
+    doc.roundedRect(70, y - 12, pageWidth - 140, boxH, 5, 5, "FD");
+    doc.setFont(config.customFontFamily, "bold");
+    doc.setFontSize(10.5);
+    doc.text(concLines, 82, y + 4);
+    y += boxH + 40;
+
+    const sigY = Math.max(y + 30, 580);
+    doc.setDrawColor(120);
+    doc.setLineWidth(0.5);
+    doc.setLineDashPattern([2, 2], 0);
+    doc.line(pageWidth / 2 - 100, sigY, pageWidth / 2 + 100, sigY);
+    doc.setLineDashPattern([], 0);
+
+    doc.setFont(config.customFontFamily, "bold");
+    doc.setFontSize(11.5);
+    doc.text(doctorName, pageWidth / 2, sigY + 16, { align: "center" });
+    doc.setFont(config.customFontFamily, "normal");
+    doc.setFontSize(10.5);
+    doc.text("Médico Especialista / Ecografista", pageWidth / 2, sigY + 29, { align: "center" });
+    if (doctorUniversity) doc.text(doctorUniversity, pageWidth / 2, sigY + 42, { align: "center" });
+    doc.text(`MPPS ${doctorMpps || "______"}   CMC ${doctorCmc || "______"}`, pageWidth / 2, sigY + 55, { align: "center" });
+
+    drawPdfFooter(doc, config, pageWidth, pageHeight);
+    doc.save(`Informe_Ecografico_${patientName.replace(/\s+/g, "_")}.pdf`);
+    toast.success("Informe ecográfico en PDF descargado");
+  } catch (err) {
+    toast.error(err instanceof Error ? err.message : "Error al exportar informe ecográfico");
+  }
+};

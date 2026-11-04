@@ -1,4 +1,4 @@
-import { Clock, MoreHorizontal, Network, Stethoscope, Users } from "lucide-react";
+import { Clock, MoreHorizontal, Network, Stethoscope, Users, MessageCircle } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   DropdownMenu,
@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import type { AppointmentWithPatient } from "@/lib/api/appointments";
+import { getStoredExchangeRate, formatBs } from "@/hooks/useExchangeRate";
 import { formatToYMD, timeOnly, WEEKDAYS_SHORT, HOURS } from "./agenda-helpers";
 
 interface AgendaWeekDayGridProps {
@@ -251,18 +252,62 @@ export function AgendaWeekDayGrid({
                               <Users className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                               <div className="flex-1">
                                 <p className="font-bold text-foreground text-xs">
-                                  Añadir Invitados
+                                  Motivo / Servicio
                                 </p>
-                                <div className="flex items-center gap-1 mt-1">
-                                  <div className="h-4 w-4 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[9px] font-bold">
-                                    {ev.patient_name?.[0]?.toUpperCase() || "P"}
-                                  </div>
-                                  <p className="text-[9px] text-muted-foreground font-bold">
-                                    1 Asiste, 1 Esperando
+                                <div className="flex items-center justify-between gap-1 mt-1">
+                                  <p className="text-[11px] text-muted-foreground font-semibold truncate">
+                                    {ev.reason || "Consulta Médica"}
                                   </p>
+                                  {Number(ev.price) > 0 && (
+                                    <span className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400">
+                                      ${Number(ev.price).toFixed(2)} ({formatBs(Number(ev.price), getStoredExchangeRate())})
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                             </div>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const bcvRate = getStoredExchangeRate();
+                                const priceUsd = Number(ev.price) || 35;
+                                const dateFormatted = new Date(
+                                  ev.scheduled_at.replace(" ", "T")
+                                ).toLocaleDateString("es-VE", {
+                                  weekday: "long",
+                                  day: "2-digit",
+                                  month: "long",
+                                });
+                                const timeFormatted = timeOnly(ev.scheduled_at.replace(" ", "T"));
+                                const message = [
+                                  `🏥 *Clínica FemeSalud (Medizen)*`,
+                                  `Hola *${ev.patient_name || "Paciente"}*, te recordamos tu cita médica:`,
+                                  `📅 *Fecha:* ${dateFormatted}`,
+                                  `⏰ *Hora:* ${timeFormatted}`,
+                                  `🩺 *Servicio:* ${ev.reason || "Consulta Médica"}`,
+                                  `💵 *Honorarios:* $${priceUsd.toFixed(2)} USD (${formatBs(priceUsd, bcvRate)} a tasa BCV)`,
+                                  `💳 *Métodos de pago disponibles:* Pago Móvil, Transferencia, Efectivo Bs., Divisas ($/€), Binance Pay (USDT) y Cashea.`,
+                                  `Por favor responde *CONFIRMAR* para asegurar tu turno.`,
+                                ].join("\n");
+                                const phoneClean = String(ev.patient_phone || "").replace(/\D/g, "");
+                                const waPhone = phoneClean
+                                  ? phoneClean.startsWith("0")
+                                    ? `58${phoneClean.slice(1)}`
+                                    : phoneClean.startsWith("58")
+                                    ? phoneClean
+                                    : `58${phoneClean}`
+                                  : "";
+                                const url = waPhone
+                                  ? `https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`
+                                  : `https://wa.me/?text=${encodeURIComponent(message)}`;
+                                window.open(url, "_blank", "noopener,noreferrer");
+                              }}
+                              className="w-full py-2 px-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer"
+                            >
+                              <MessageCircle className="h-3.5 w-3.5" />
+                              Recordatorio + Tasa BCV (WhatsApp)
+                            </button>
                           </div>
                           <div className="p-3 border-t border-border/40 flex justify-end gap-2 bg-muted/50 rounded-b-2xl">
                             <button
