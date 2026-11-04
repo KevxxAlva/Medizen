@@ -143,7 +143,7 @@ Se recomienda un diseño limpio (fondo blanco o azul institucional oscuro), tipo
   * **Calculadora Obstétrica en Vivo (Regla de Naegele):** Cálculo instantáneo de edad gestacional (`sem + días`) y FPP al ingresar o editar la FUM.
   * **Exportación PDF Bajo Demanda (*Code-Splitting*):** Generación de Historia Clínica Completa y Récipes en PDF (`jsPDF`) con envío directo a WhatsApp.
   * **Personalización Dinámica sin Desfase de Hidratación (`ThemeCustomizer` y `MedizenLogo`):** Cinco paletas clínicas sincronizadas con `--primary` desde la carga inicial SSR.
-  * **Finanzas Bimonetarias (BCV) y Kárdex de Inventario:** Facturación en USD/VES vinculada a `servicios.costo_base` y control de insumos médicos.
+  * **Finanzas Multimoneda (USD BCV / EUR BCV / USDT), Tesorería Venezolana, Métodos de Pago, Cashea y Kárdex de Inventario:** Cuentas financieras (`/cuentas`) vinculadas con los 6 métodos de pago de Venezuela (**Efectivo en Bolívares, Pago Móvil, Transferencia Bancaria, Binance Pay USDT, Divisas USD/EUR y Cashea**), copia en 1 clic de datos bancarios (bancos SUDEBAN, RIF/CI, teléfono, cuenta de 20 dígitos, Binance ID), **Calculadora Profesional Cashea** (inicial 40%/50%/60% + 3 cuotas sin interés cada 14 días), tarjetas KPI interactivas, calculadora cuatridivisa en vivo y control de insumos médicos.
 
 ---
 
@@ -198,7 +198,7 @@ Para evitar contratiempos o bloqueos nerviosos, sigan este guión cronometrado p
 | **0:45 - 1:45** | En el Dashboard, presionar `Ctrl + K`, buscar una paciente y mostrar el `PatientClinicalBanner` y las 8 pestañas. | *"El buscador universal abre el expediente `HC-XXXXX` en menos de 300 ms. En el banner superior vemos alertas críticas (tipo de sangre, alergias, seguro, contacto de emergencia) y debajo las 8 pestañas clínicas, incluyendo medicación habitual, transfusiones, Timeline y estudios adjuntos."* |
 | **1:45 - 3:00** | Ir a la pestaña *Obstétrico* o *Editar Expediente*, cambiar la FUM y mostrar el cálculo automático de EG y FPP. | *"Al ingresar la Fecha de Última Menstruación (FUM), el algoritmo aplica en vivo la Regla de Naegele y calcula instantáneamente las semanas y días de edad gestacional y la Fecha Probable de Parto sin usar calculadoras manuales."* |
 | **3:00 - 4:00** | Hacer clic en *"Exportar Documentos"* -> *"Historia Clínica (PDF)"* y luego generar un *"Récipe PDF"* / WhatsApp. | *"Mediante carga diferida de jsPDF, compilamos en memoria tanto la Historia Clínica Completa como el récipe médico vectorizado con membrete oficial, listo para imprimir o enviar por WhatsApp a la paciente."* |
-| **4:00 - 5:00** | Mostrar la Agenda en tiempo real, la tasa BCV en Finanzas y el Kárdex de Inventario. | *"Finalmente, la agenda sincroniza estados por WebSockets, el módulo financiero concilia pagos en dólares y bolívares a tasa BCV, y el módulo de Activos Físicos controla el kárdex de insumos médicos de la clínica."* |
+| **4:00 - 5:00** | Mostrar la Agenda en tiempo real, las Cuentas de Tesorería (`/cuentas`), los 6 Métodos de Pago de Venezuela (`/metodos-pago`), la Calculadora Cashea en Ventas (`/facturacion`) y el Kárdex de Inventario. | *"Finalmente, la agenda sincroniza estados por WebSockets, el módulo financiero vincula las cuentas de tesorería con los 6 métodos de pago venezolanos (Efectivo Bs., Pago Móvil, Transferencia, Binance USDT, Divisas y Cashea con calculadora de inicial + 3 cuotas sin interés) a tasas en vivo (Dólar BCV, Euro BCV y USDT), y Activos Físicos controla el kárdex de insumos médicos."* |
 
 ---
 

@@ -443,21 +443,39 @@ export function EditPaymentDialog({
                     <SelectValue placeholder="Seleccione método de pago..." />
                   </SelectTrigger>
                   <SelectContent className="rounded-2xl">
-                    <SelectItem value="Efectivo">Efectivo</SelectItem>
-                    <SelectItem value="Pago Móvil">Pago Móvil</SelectItem>
-                    <SelectItem value="Transferencia">Transferencia</SelectItem>
-                    <SelectItem value="Divisas">Divisas (Dólares)</SelectItem>
+                    <SelectItem value="Pago Móvil">Pago Móvil (Bs. BCV)</SelectItem>
+                    <SelectItem value="Transferencia">Transferencia Bancaria (Bs.)</SelectItem>
+                    <SelectItem value="Binance">Binance Pay (USDT)</SelectItem>
+                    <SelectItem value="Divisas">Divisas (Efectivo $ / €)</SelectItem>
+                    <SelectItem value="Efectivo">Efectivo (Bolívares)</SelectItem>
+                    <SelectItem value="Cashea">Cashea (Inicial + 3 Cuotas)</SelectItem>
                     <SelectItem value="Punto de Venta">Punto de Venta / Tarjeta</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              {newPaymentMethod && newPaymentMethod !== "Efectivo" && newPaymentMethod !== "Divisas" && (
+              {newPaymentMethod && newPaymentMethod !== "Efectivo" && (
                 <div className="grid gap-1.5 animate-fade-in">
-                  <Label htmlFor="payment-ref-val">Referencia de Pago</Label>
+                  <Label htmlFor="payment-ref-val">
+                    {newPaymentMethod === "Cashea"
+                      ? "N° de Orden Cashea y Detalle de Inicial"
+                      : newPaymentMethod === "Binance"
+                      ? "Order ID de Binance Pay (USDT)"
+                      : newPaymentMethod === "Divisas"
+                      ? "Seriales de Billetes / Denominación (Opcional)"
+                      : "Referencia de Pago (Últimos 4 a 6 dígitos)"}
+                  </Label>
                   <Input
                     id="payment-ref-val"
-                    placeholder="Ej. Código de transferencia o pago móvil..."
+                    placeholder={
+                      newPaymentMethod === "Cashea"
+                        ? "Ej. Orden #CSH-1029 | Inicial 50% vía Pago Móvil"
+                        : newPaymentMethod === "Binance"
+                        ? "Ej. Order ID 2839481920"
+                        : newPaymentMethod === "Divisas"
+                        ? "Ej. 2 billetes de $20 (Seriales AB123...)"
+                        : "Ej. Código de transferencia o pago móvil..."
+                    }
                     value={newPaymentReference}
                     onChange={(e) => setNewPaymentReference(e.target.value)}
                     className="rounded-xl"

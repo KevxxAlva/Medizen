@@ -47,7 +47,18 @@ import { Button } from "@/components/ui/button";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { logAuditAction } from "@/lib/api/audit";
-import { usePaymentMethods } from "@/lib/api/paymentMethods";
+import {
+  usePaymentMethods,
+  VE_PAYMENT_PRESETS,
+  inferCategoryFromMethod,
+  getDefaultDetailsForCategory,
+  formatPaymentMethodCopyText,
+  type PaymentMethod,
+} from "@/lib/api/paymentMethods";
+import {
+  getCategoryIcon,
+  getCategoryBadgeStyle,
+} from "@/components/finance/PaymentMethodsPage";
 import {
   useExchangeRate,
   formatBs,
@@ -66,12 +77,15 @@ export type Invoice = {
   monto_paciente: number;
   total_general: number;
   estado_pago: string;
+  metodo_pago?: string | null;
+  referencia?: string | null;
 };
 
 export function SalesPage() {
   const [q, setQ] = useState("");
   const [filterMonth, setFilterMonth] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [filterMethod, setFilterMethod] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -109,24 +123,30 @@ export function SalesPage() {
           monto_paciente,
           total_general,
           estado_pago,
-          pacientes (nombre, apellido)
+          pacientes (nombre, apellido),
+          pagos (id_pago, metodo_pago, referencia, monto_pagado, fecha_pago)
         `)
         .order("fecha_emision", { ascending: false });
 
       if (error) throw error;
 
-      return data.map((f: any) => ({
-        id_factura: f.id_factura,
-        id_paciente: f.id_paciente,
-        paciente_nombre: f.pacientes
-          ? `${f.pacientes.nombre} ${f.pacientes.apellido}`
-          : "Paciente Desconocido",
-        fecha_emision: f.fecha_emision,
-        subtotal: f.subtotal,
-        monto_paciente: f.monto_paciente,
-        total_general: f.total_general,
-        estado_pago: f.estado_pago || "Pendiente",
-      })) as Invoice[];
+      return data.map((f: any) => {
+        const pago = Array.isArray(f.pagos) ? f.pagos[0] : f.pagos;
+        return {
+          id_factura: f.id_factura,
+          id_paciente: f.id_paciente,
+          paciente_nombre: f.pacientes
+            ? `${f.pacientes.nombre} ${f.pacientes.apellido}`
+            : "Paciente Desconocido",
+          fecha_emision: f.fecha_emision,
+          subtotal: f.subtotal,
+          monto_paciente: f.monto_paciente,
+          total_general: f.total_general,
+          estado_pago: f.estado_pago || "Pendiente",
+          metodo_pago: pago?.metodo_pago || null,
+          referencia: pago?.referencia || null,
+        };
+      }) as Invoice[];
     },
   });
 
@@ -137,19 +157,25 @@ export function SalesPage() {
       id,
       status,
       invoice,
+      finalMethod,
       finalReference,
+      creditedUsdAmount,
       usedRate,
       usedRateType,
     }: {
       id: number;
       status: string;
       invoice: Invoice;
+      finalMethod?: string;
       finalReference?: string;
+      creditedUsdAmount?: number;
       usedRate?: number;
       usedRateType?: RateType;
     }) => {
       const effectiveRate = usedRate || rate;
       const effectiveType = usedRateType || activeType;
+      const methodToSave = finalMethod || paymentMethod || "Pago Móvil";
+      const amountToCredit = creditedUsdAmount ?? invoice.total_general;
 
       const { error: invError } = await supabase
         .from("facturas")
@@ -171,7 +197,7 @@ export function SalesPage() {
           .from("pagos")
           .update({
             monto_pagado: invoice.total_general,
-            metodo_pago: paymentMethod || "Efectivo",
+            metodo_pago: methodToSave,
             referencia: refToSave,
             fecha_pago: new Date().toISOString(),
           })
@@ -182,7 +208,7 @@ export function SalesPage() {
         const { error: payError } = await supabase.from("pagos").insert({
           id_factura: id,
           monto_pagado: invoice.total_general,
-          metodo_pago: paymentMethod || "Efectivo",
+          metodo_pago: methodToSave,
           referencia: refToSave,
           fecha_pago: new Date().toISOString(),
         });
@@ -190,28 +216,58 @@ export function SalesPage() {
         if (payError) throw payError;
       }
 
-      if (paymentMethod) {
-        const { data: pm } = await supabase
+      // Función auxiliar para abonar el saldo a la cuenta vinculada o a la cuenta por categoría en Venezuela
+      const creditAccountForMethod = async (targetMethodName: string, usdAmount: number) => {
+        if (!usdAmount || usdAmount <= 0) return;
+        const { data: allMethods } = await supabase
           .from("payment_methods")
-          .select("account_id")
-          .ilike("name", paymentMethod)
-          .maybeSingle();
+          .select("name, category, account_id");
+        const { data: allAccounts } = await supabase
+          .from("financial_accounts")
+          .select("id, name, type, balance");
 
-        if (pm?.account_id) {
-          const { data: acc } = await supabase
-            .from("financial_accounts")
-            .select("balance")
-            .eq("id", pm.account_id)
-            .maybeSingle();
+        if (!allAccounts || allAccounts.length === 0) return;
 
-          if (acc) {
-            await supabase
-              .from("financial_accounts")
-              .update({ balance: (acc.balance || 0) + (invoice.total_general || 0) })
-              .eq("id", pm.account_id);
-          }
+        const targetCat = inferCategoryFromMethod(targetMethodName, targetMethodName);
+        const matchedPm = (allMethods || []).find(
+          (m: any) =>
+            m.name?.toLowerCase() === targetMethodName.toLowerCase() ||
+            inferCategoryFromMethod(m.name || "", m.category || "") === targetCat
+        );
+
+        let targetAcc = matchedPm?.account_id
+          ? allAccounts.find((a: any) => a.id === matchedPm.account_id)
+          : undefined;
+
+        if (!targetAcc) {
+          // Fallback inteligente según el tipo de cuenta en Venezuela
+          targetAcc = allAccounts.find((a: any) => {
+            const combined = `${a.type || ""} ${a.name || ""}`.toLowerCase();
+            if (targetCat === "Pago Móvil" || targetCat === "Transferencia" || targetCat === "Punto de Venta") {
+              return combined.includes("bank") || combined.includes("banca") || combined.includes("banco");
+            }
+            if (targetCat === "Divisas" || targetCat === "Efectivo") {
+              return combined.includes("cash") || combined.includes("caja") || combined.includes("efectivo");
+            }
+            if (targetCat === "Binance") {
+              return combined.includes("binance") || combined.includes("usdt") || combined.includes("digital");
+            }
+            if (targetCat === "Cashea") {
+              return combined.includes("cashea") || combined.includes("digital");
+            }
+            return false;
+          });
         }
-      }
+
+        if (targetAcc) {
+          await supabase
+            .from("financial_accounts")
+            .update({ balance: Number(((Number(targetAcc.balance) || 0) + usdAmount).toFixed(2)) })
+            .eq("id", targetAcc.id);
+        }
+      };
+
+      await creditAccountForMethod(paymentMethod || methodToSave, amountToCredit);
 
       await logAuditAction("UPDATE", "INVOICE", id.toString(), {
         status,
@@ -219,12 +275,13 @@ export function SalesPage() {
         tipo_tasa: effectiveType.toUpperCase(),
         tasa_aplicada: effectiveRate,
         monto_bs: Number((invoice.total_general * effectiveRate).toFixed(2)),
-        metodo_pago: paymentMethod,
+        metodo_pago: methodToSave,
         referencia: refToSave,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["facturas"] });
+      queryClient.invalidateQueries({ queryKey: ["appointments"] });
       queryClient.invalidateQueries({ queryKey: ["monthly_payments"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard_stats"] });
       queryClient.invalidateQueries({ queryKey: ["financial_accounts"] });
@@ -370,9 +427,14 @@ export function SalesPage() {
           return false;
         }
       }
+      if (filterMethod !== "all") {
+        if (!f.metodo_pago) return false;
+        const cat = inferCategoryFromMethod(f.metodo_pago, f.metodo_pago);
+        if (cat !== filterMethod) return false;
+      }
       return true;
     });
-  }, [periodInvoices, filterStatus]);
+  }, [periodInvoices, filterStatus, filterMethod]);
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginated = filtered.slice(
@@ -479,6 +541,11 @@ export function SalesPage() {
               Filtro: {filterStatus}
             </span>
           )}
+          {filterMethod !== "all" && (
+            <span className="ml-1 text-[11px] bg-primary/10 text-primary px-2.5 py-0.5 rounded-full font-bold">
+              Método: {filterMethod}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-3">
           <SalesFilterPopover
@@ -492,9 +559,15 @@ export function SalesPage() {
               setFilterStatus(val);
               setCurrentPage(1);
             }}
+            filterMethod={filterMethod}
+            setFilterMethod={(val) => {
+              setFilterMethod(val);
+              setCurrentPage(1);
+            }}
             onReset={() => {
               setFilterMonth("");
               setFilterStatus("all");
+              setFilterMethod("all");
               setCurrentPage(1);
             }}
           />
@@ -542,13 +615,15 @@ export function SalesPage() {
         paymentReference={paymentReference}
         setPaymentReference={setPaymentReference}
         isPending={updatePaymentStatus.isPending}
-        onConfirm={(finalReference, usedRate, usedRateType) => {
+        onConfirm={(finalReference, usedRate, usedRateType, finalMethod, creditedUsdAmount) => {
           if (!selectedInvoice) return;
           updatePaymentStatus.mutate({
             id: selectedInvoice.id_factura,
             status: "pagado",
             invoice: selectedInvoice,
+            finalMethod,
             finalReference,
+            creditedUsdAmount,
             usedRate,
             usedRateType,
           });
@@ -1049,15 +1124,19 @@ function SalesFilterPopover({
   setFilterMonth,
   filterStatus,
   setFilterStatus,
+  filterMethod,
+  setFilterMethod,
   onReset,
 }: {
   filterMonth: string;
   setFilterMonth: (val: string) => void;
   filterStatus: string;
   setFilterStatus: (val: string) => void;
+  filterMethod: string;
+  setFilterMethod: (val: string) => void;
   onReset: () => void;
 }) {
-  const isFiltered = filterMonth !== "" || filterStatus !== "all";
+  const isFiltered = filterMonth !== "" || filterStatus !== "all" || filterMethod !== "all";
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -1100,6 +1179,25 @@ function SalesFilterPopover({
               <option value="pagado">Pagado</option>
               <option value="pendiente">Pendiente</option>
               <option value="cancelado">Cancelado</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
+              Método de Pago
+            </h4>
+            <select
+              aria-label="Filtrar por método de pago"
+              value={filterMethod}
+              onChange={(e) => setFilterMethod(e.target.value)}
+              className="w-full h-9 px-3 rounded-xl bg-background border border-input text-xs font-semibold outline-none"
+            >
+              <option value="all">Todos los métodos</option>
+              <option value="Pago Móvil">Pago Móvil</option>
+              <option value="Transferencia">Transferencia</option>
+              <option value="Binance">Binance (USDT)</option>
+              <option value="Divisas">Divisas ($ / €)</option>
+              <option value="Efectivo">Efectivo (Bs.)</option>
+              <option value="Cashea">Cashea</option>
             </select>
           </div>
           {isFiltered && (
@@ -1151,7 +1249,7 @@ function SalesTable({
 
   return (
     <div className="flex-1 overflow-x-auto border border-border rounded-2xl bg-card overflow-hidden shadow-xs">
-      <table className="w-full text-left border-collapse min-w-[780px]">
+      <table className="w-full text-left border-collapse min-w-[820px]">
         <thead>
           <tr className="bg-muted/70 text-[10px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border">
             <th className="p-4 w-12 rounded-tl-xl">
@@ -1167,7 +1265,7 @@ function SalesTable({
             <th className="p-4">
               Total ($ / € / Bs. {RATE_LABELS[activeType].short})
             </th>
-            <th className="p-4">Estado</th>
+            <th className="p-4">Estado y Método de Pago</th>
             <th className="p-4 rounded-tr-xl">Acciones</th>
           </tr>
         </thead>
@@ -1179,125 +1277,157 @@ function SalesTable({
               </td>
             </tr>
           ) : (
-            paginated.map((f) => (
-              <tr
-                key={f.id_factura}
-                className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors group"
-              >
-                <td className="p-4">
-                  <input
-                    type="checkbox"
-                    aria-label={`Seleccionar factura INV-${f.id_factura.toString().padStart(4, "0")}`}
-                    className="rounded border-gray-300"
-                  />
-                </td>
-                <td className="p-4 font-bold text-primary">
-                  INV-{f.id_factura.toString().padStart(4, "0")}
-                </td>
-                <td className="p-4 font-semibold text-foreground">{f.paciente_nombre}</td>
-                <td className="p-4 text-muted-foreground text-xs font-medium">
-                  {new Date(f.fecha_emision).toLocaleDateString(APP_LOCALE, {
-                    timeZone: APP_TIME_ZONE,
-                  })}
-                </td>
-                <td className="p-4">
-                  <div className="flex items-center gap-2">
-                    <div>
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="font-bold text-foreground">
-                          ${f.total_general.toFixed(2)}
-                        </span>
-                        <span className="text-[11px] font-semibold text-muted-foreground">
-                          · {formatEurFromUsd(f.total_general, rates)}
+            paginated.map((f) => {
+              const methodCat = f.metodo_pago
+                ? inferCategoryFromMethod(f.metodo_pago, f.metodo_pago)
+                : null;
+              const MethodIcon = methodCat ? getCategoryIcon(methodCat) : null;
+
+              return (
+                <tr
+                  key={f.id_factura}
+                  className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors group"
+                >
+                  <td className="p-4">
+                    <input
+                      type="checkbox"
+                      aria-label={`Seleccionar factura INV-${f.id_factura.toString().padStart(4, "0")}`}
+                      className="rounded border-gray-300"
+                    />
+                  </td>
+                  <td className="p-4 font-bold text-primary">
+                    INV-{f.id_factura.toString().padStart(4, "0")}
+                  </td>
+                  <td className="p-4 font-semibold text-foreground">{f.paciente_nombre}</td>
+                  <td className="p-4 text-muted-foreground text-xs font-medium">
+                    {new Date(f.fecha_emision).toLocaleDateString(APP_LOCALE, {
+                      timeZone: APP_TIME_ZONE,
+                    })}
+                  </td>
+                  <td className="p-4">
+                    <div className="flex items-center gap-2">
+                      <div>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="font-bold text-foreground">
+                            ${f.total_general.toFixed(2)}
+                          </span>
+                          <span className="text-[11px] font-semibold text-muted-foreground">
+                            · {formatEurFromUsd(f.total_general, rates)}
+                          </span>
+                        </div>
+                        <span className="text-[11px] font-semibold text-primary block">
+                          {formatBs(f.total_general, rate)}
                         </span>
                       </div>
-                      <span className="text-[11px] font-semibold text-primary block">
-                        {formatBs(f.total_general, rate)}
-                      </span>
+                      <button
+                        type="button"
+                        onClick={() => copyBsAmount(f)}
+                        title="Copiar monto en Bolívares"
+                        aria-label="Copiar monto en Bolívares"
+                        className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary transition-all cursor-pointer"
+                      >
+                        {copiedId === f.id_factura ? (
+                          <Check className="h-3.5 w-3.5 text-emerald-500" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
+                        )}
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => copyBsAmount(f)}
-                      title="Copiar monto en Bolívares"
-                      aria-label="Copiar monto en Bolívares"
-                      className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary transition-all cursor-pointer"
-                    >
-                      {copiedId === f.id_factura ? (
-                        <Check className="h-3.5 w-3.5 text-emerald-500" />
-                      ) : (
-                        <Copy className="h-3.5 w-3.5" />
-                      )}
-                    </button>
-                  </div>
-                </td>
-                <td className="p-4">
-                  <span
-                    className={cn(
-                      "text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider",
-                      (f.estado_pago || "").toLowerCase() === "pagado" ||
-                        (f.estado_pago || "").toLowerCase() === "pagada"
-                        ? "bg-green-50 text-green-600 border border-green-100 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30"
-                        : (f.estado_pago || "").toLowerCase() === "cancelado" ||
-                          (f.estado_pago || "").toLowerCase() === "cancelada"
-                        ? "bg-red-50 text-red-600 border border-red-100 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/30"
-                        : "bg-amber-50 text-amber-600 border border-amber-100 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30"
-                    )}
-                  >
-                    {f.estado_pago}
-                  </span>
-                </td>
-                <td className="p-4 text-muted-foreground">
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => generateIndividualInvoice(f, rate)}
-                      className="hover:text-primary cursor-pointer transition-colors"
-                      title="Descargar Comprobante PDF (USD / Bs.)"
-                    >
-                      <Download className="h-4 w-4" />
-                    </button>
-                    {(f.estado_pago || "").toLowerCase() !== "pagado" &&
-                      (f.estado_pago || "").toLowerCase() !== "pagada" && (
-                        <button
-                          type="button"
-                          onClick={() => onConfirm(f)}
-                          className="flex items-center gap-1 text-[11px] font-bold bg-primary/10 text-primary hover:bg-primary/20 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
-                          title="Confirmar Pago"
+                  </td>
+                  <td className="p-4">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span
+                          className={cn(
+                            "text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider w-fit",
+                            (f.estado_pago || "").toLowerCase() === "pagado" ||
+                              (f.estado_pago || "").toLowerCase() === "pagada"
+                              ? "bg-green-50 text-green-600 border border-green-100 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30"
+                              : (f.estado_pago || "").toLowerCase() === "cancelado" ||
+                                (f.estado_pago || "").toLowerCase() === "cancelada"
+                              ? "bg-red-50 text-red-600 border border-red-100 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/30"
+                              : "bg-amber-50 text-amber-600 border border-amber-100 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30"
+                          )}
                         >
-                          <CreditCard className="h-3.5 w-3.5" />
-                          Cobrar
-                        </button>
+                          {f.estado_pago}
+                        </span>
+
+                        {f.metodo_pago && methodCat && MethodIcon && (
+                          <span
+                            className={cn(
+                              "inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border",
+                              getCategoryBadgeStyle(methodCat)
+                            )}
+                          >
+                            <MethodIcon className="h-3 w-3 shrink-0" />
+                            {f.metodo_pago}
+                          </span>
+                        )}
+                      </div>
+
+                      {f.referencia && (
+                        <span
+                          className="text-[10px] text-muted-foreground font-medium truncate max-w-[230px]"
+                          title={f.referencia}
+                        >
+                          Ref: {f.referencia}
+                        </span>
                       )}
-                    <button
-                      type="button"
-                      onClick={() => onEdit(f)}
-                      className="hover:text-foreground cursor-pointer"
-                      title="Editar Factura"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label={`Eliminar factura INV-${f.id_factura.toString().padStart(4, "0")}`}
-                      className="hover:text-destructive cursor-pointer"
-                      onClick={() => {
-                        if (
-                          window.confirm(
-                            `¿Estás segura de que deseas eliminar la factura INV-${f.id_factura
-                              .toString()
-                              .padStart(4, "0")}?`
-                          )
-                        ) {
-                          onDelete(f.id_factura);
-                        }
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))
+                    </div>
+                  </td>
+                  <td className="p-4 text-muted-foreground">
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => generateIndividualInvoice(f, rate)}
+                        className="hover:text-primary cursor-pointer transition-colors"
+                        title="Descargar Comprobante PDF (USD / Bs.)"
+                      >
+                        <Download className="h-4 w-4" />
+                      </button>
+                      {(f.estado_pago || "").toLowerCase() !== "pagado" &&
+                        (f.estado_pago || "").toLowerCase() !== "pagada" && (
+                          <button
+                            type="button"
+                            onClick={() => onConfirm(f)}
+                            className="flex items-center gap-1 text-[11px] font-bold bg-primary/10 text-primary hover:bg-primary/20 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                            title="Confirmar Pago"
+                          >
+                            <CreditCard className="h-3.5 w-3.5" />
+                            Cobrar
+                          </button>
+                        )}
+                      <button
+                        type="button"
+                        onClick={() => onEdit(f)}
+                        className="hover:text-foreground cursor-pointer"
+                        title="Editar Factura"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`Eliminar factura INV-${f.id_factura.toString().padStart(4, "0")}`}
+                        className="hover:text-destructive cursor-pointer"
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              `¿Estás segura de que deseas eliminar la factura INV-${f.id_factura
+                                .toString()
+                                .padStart(4, "0")}?`
+                            )
+                          ) {
+                            onDelete(f.id_factura);
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>
@@ -1467,26 +1597,95 @@ function ConfirmPaymentDialog({
   invoice: Invoice | null;
   rates: ExchangeRates;
   defaultRateType: RateType;
-  methods: any[];
+  methods: PaymentMethod[];
   paymentMethod: string;
   setPaymentMethod: (val: string) => void;
   paymentReference: string;
   setPaymentReference: (val: string) => void;
   isPending: boolean;
-  onConfirm: (finalReference?: string, usedRate?: number, usedRateType?: RateType) => void;
+  onConfirm: (
+    finalReference?: string,
+    usedRate?: number,
+    usedRateType?: RateType,
+    finalMethod?: string,
+    creditedUsdAmount?: number
+  ) => void;
 }) {
   const [dialogRateType, setDialogRateType] = useState<RateType>(defaultRateType);
   const [isSplitPayment, setIsSplitPayment] = useState(false);
   const [usdCashReceived, setUsdCashReceived] = useState("");
   const [copiedBs, setCopiedBs] = useState(false);
+  const [copiedDetails, setCopiedDetails] = useState(false);
+
+  // Estados específicos para Cashea (Compra ahora y paga después)
+  const [casheaInitialPct, setCasheaInitialPct] = useState<number>(50);
+  const [casheaInitialMethod, setCasheaInitialMethod] = useState<string>("Pago Móvil");
+  const [casheaOrderNumber, setCasheaOrderNumber] = useState<string>("");
+
+  // Construimos la lista unificada de métodos de pago (activos de BD + los 6 oficiales de Venezuela)
+  const availableMethods = useMemo<PaymentMethod[]>(() => {
+    const activeDb = methods.filter((m) => m.status === "Active");
+    const existingCats = new Set(
+      activeDb.map((m) => inferCategoryFromMethod(m.name, m.category))
+    );
+    const fallbacks: PaymentMethod[] = VE_PAYMENT_PRESETS.filter(
+      (p) => !existingCats.has(p.category)
+    ).map((p) => ({
+      id: `preset-${p.category}`,
+      name: p.name,
+      category: p.category,
+      status: "Active" as const,
+      details: p.details,
+    }));
+    return [...activeDb, ...fallbacks];
+  }, [methods]);
+
+  const selectedMethodObj = useMemo(() => {
+    return (
+      availableMethods.find((m) => m.name === paymentMethod) ||
+      availableMethods.find((m) => m.category === paymentMethod) ||
+      availableMethods[0]
+    );
+  }, [availableMethods, paymentMethod]);
+
+  const selectedCategory = selectedMethodObj
+    ? inferCategoryFromMethod(selectedMethodObj.name, selectedMethodObj.category)
+    : "Pago Móvil";
+
+  const selectedDetails =
+    selectedMethodObj?.details ||
+    getDefaultDetailsForCategory(selectedCategory, selectedMethodObj?.name || "");
 
   const activeRate = rates[dialogRateType] || rates.bcv;
   const totalUsd = Number(invoice?.total_general) || 0;
   const totalBs = totalUsd * activeRate;
 
+  // Cálculos de Pago Mixto
   const usdPart = Math.min(Math.max(parseFloat(usdCashReceived) || 0, 0), totalUsd);
   const remainingUsd = Math.max(totalUsd - usdPart, 0);
   const remainingBs = remainingUsd * activeRate;
+
+  // Cálculos de Cashea
+  const casheaInitialUsd = Number(((totalUsd * casheaInitialPct) / 100).toFixed(2));
+  const casheaInitialBs = casheaInitialUsd * activeRate;
+  const casheaFinancedUsd = Math.max(Number((totalUsd - casheaInitialUsd).toFixed(2)), 0);
+  const casheaInstallmentUsd = Number((casheaFinancedUsd / 3).toFixed(2));
+
+  const handleSelectMethod = (m: PaymentMethod) => {
+    setPaymentMethod(m.name);
+    const cat = inferCategoryFromMethod(m.name, m.category);
+    const det = m.details || getDefaultDetailsForCategory(cat, m.name);
+    if (det.defaultRateType) {
+      setDialogRateType(det.defaultRateType);
+    } else if (cat === "Binance") {
+      setDialogRateType("usdt");
+    } else {
+      setDialogRateType("bcv");
+    }
+    if (cat === "Cashea" && det.casheaDefaultInitialPct) {
+      setCasheaInitialPct(det.casheaDefaultInitialPct);
+    }
+  };
 
   const handleCopyBs = (amountToCopy: number) => {
     const formatted = amountToCopy.toLocaleString("es-VE", {
@@ -1499,10 +1698,54 @@ function ConfirmPaymentDialog({
     setTimeout(() => setCopiedBs(false), 1800);
   };
 
+  const handleCopyClinicPaymentData = () => {
+    if (!selectedMethodObj) return;
+    const amountForCopy = selectedCategory === "Cashea" ? casheaInitialUsd : totalUsd;
+    const text = formatPaymentMethodCopyText(selectedMethodObj, amountForCopy, activeRate);
+    navigator.clipboard.writeText(text);
+    setCopiedDetails(true);
+    toast.success("Datos de cobro y monto copiados para el paciente");
+    setTimeout(() => setCopiedDetails(false), 1800);
+  };
+
   const handleSubmitConfirm = () => {
+    const chosenMethodName =
+      paymentMethod || selectedMethodObj?.name || "Pago Móvil";
+
+    if (
+      selectedDetails.requiresReference &&
+      selectedCategory !== "Efectivo" &&
+      selectedCategory !== "Divisas" &&
+      !paymentReference.trim() &&
+      !casheaOrderNumber.trim()
+    ) {
+      toast.error(
+        `Por favor ingresa el número de referencia u orden para ${chosenMethodName}`
+      );
+      return;
+    }
+
     let composedRef = paymentReference.trim();
+    let finalMethodLabel = chosenMethodName;
     const rateNote = `Tasa ${RATE_LABELS[dialogRateType].short}: ${activeRate.toFixed(2)} Bs`;
-    if (isSplitPayment && usdPart > 0) {
+
+    if (selectedCategory === "Cashea") {
+      finalMethodLabel = `Cashea (Inicial ${casheaInitialPct}% · ${casheaInitialMethod})`;
+      const casheaBreakdown = [
+        casheaOrderNumber.trim() ? `Orden #${casheaOrderNumber.trim()}` : null,
+        `Inicial ${casheaInitialPct}%: $${casheaInitialUsd.toFixed(2)} (${formatBs(
+          casheaInitialUsd,
+          activeRate
+        )} vía ${casheaInitialMethod})`,
+        `Financiado: $${casheaFinancedUsd.toFixed(2)} (3 cuotas de $${casheaInstallmentUsd.toFixed(
+          2
+        )})`,
+        composedRef ? `Ref Inicial: ${composedRef}` : null,
+      ]
+        .filter(Boolean)
+        .join(" | ");
+      composedRef = casheaBreakdown;
+    } else if (isSplitPayment && usdPart > 0) {
       const splitSummary = `Mixto: $${usdPart.toFixed(2)} + ${formatBs(
         remainingUsd,
         activeRate
@@ -1511,25 +1754,42 @@ function ConfirmPaymentDialog({
     } else if (dialogRateType !== "bcv") {
       composedRef = composedRef ? `${composedRef} | ${rateNote}` : rateNote;
     }
-    onConfirm(composedRef, activeRate, dialogRateType);
+
+    onConfirm(composedRef, activeRate, dialogRateType, finalMethodLabel, totalUsd);
   };
+
+  const hasReceiverDetails = Boolean(
+    selectedDetails.bank ||
+      selectedDetails.phone ||
+      selectedDetails.accountNumber ||
+      selectedDetails.binanceId ||
+      selectedDetails.documentId
+  );
 
   return (
     <Dialog
       open={open}
       onOpenChange={(val) => {
         if (val) {
-          setDialogRateType(defaultRateType);
+          const initialMethod = availableMethods[0];
+          if (!paymentMethod && initialMethod) {
+            handleSelectMethod(initialMethod);
+          } else {
+            setDialogRateType(defaultRateType);
+          }
         } else {
           setIsSplitPayment(false);
           setUsdCashReceived("");
+          setCasheaOrderNumber("");
         }
         onOpenChange(val);
       }}
     >
-      <DialogContent className="sm:max-w-[480px] rounded-[2rem] p-6 border-0 shadow-2xl glass-card">
+      <DialogContent className="sm:max-w-[540px] max-h-[92vh] overflow-y-auto rounded-[2rem] p-5 sm:p-6 border-0 shadow-2xl glass-card">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Confirmar Cobro Multimoneda</DialogTitle>
+          <DialogTitle className="text-xl font-bold">
+            Confirmar Cobro (Venezuela)
+          </DialogTitle>
           <DialogDescription>
             Factura INV-{invoice?.id_factura?.toString().padStart(4, "0")} ·{" "}
             <span className="font-semibold text-foreground">{invoice?.paciente_nombre}</span>
@@ -1559,15 +1819,16 @@ function ConfirmPaymentDialog({
         </div>
 
         {/* RESUMEN MULTIMONEDA USD ↔ EUR ↔ USDT ↔ BS */}
-        <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 space-y-2.5">
+        <div className="bg-primary/5 border border-primary/20 rounded-2xl p-3.5 space-y-2">
           <div className="flex items-center justify-between gap-3">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-                Total en Divisas
+                Total Factura
               </span>
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-black text-foreground">
-                  ${totalUsd.toFixed(2)} <span className="text-xs font-bold text-muted-foreground">USD</span>
+                  ${totalUsd.toFixed(2)}{" "}
+                  <span className="text-xs font-bold text-muted-foreground">USD</span>
                 </span>
                 <span className="text-xs font-bold text-muted-foreground">
                   · {formatEurFromUsd(totalUsd, rates)} EUR
@@ -1593,113 +1854,304 @@ function ConfirmPaymentDialog({
               </div>
             </div>
           </div>
-          <div className="flex items-center justify-between text-[11px] text-muted-foreground border-t border-primary/10 pt-2">
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground border-t border-primary/10 pt-1.5">
             <span>BCV ($): {formatBs(totalUsd, rates.bcv)}</span>
             <span>EUR (€): {formatBs(totalUsd, rates.eur)}</span>
-            <span>USDT: {formatBs(totalUsd, rates.usdt)}</span>
+            <span>USDT: {totalUsd.toFixed(2)} USDT</span>
           </div>
         </div>
 
-        <div className="space-y-4 py-1">
-          <div className="grid gap-2">
-            <Label htmlFor="metodo-pago">Método de Pago Principal</Label>
-            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-              <SelectTrigger id="metodo-pago" className="rounded-xl bg-background/50">
-                <SelectValue placeholder="Seleccione un método…" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                {methods
-                  .filter((m) => m.status === "Active")
-                  .map((m) => (
-                    <SelectItem key={m.id} value={m.name}>
-                      {m.name}
-                    </SelectItem>
-                  ))}
-                {methods.length === 0 && (
-                  <>
-                    <SelectItem value="Pago Móvil (Bs.)">Pago Móvil (Bs.)</SelectItem>
-                    <SelectItem value="Efectivo USD">Efectivo USD ($)</SelectItem>
-                    <SelectItem value="Efectivo Euros (€)">Efectivo Euros (€)</SelectItem>
-                    <SelectItem value="Binance / USDT">Binance / USDT</SelectItem>
-                    <SelectItem value="Zelle">Zelle ($)</SelectItem>
-                    <SelectItem value="Punto de Venta (Bs.)">Punto de Venta (Bs.)</SelectItem>
-                  </>
-                )}
-              </SelectContent>
-            </Select>
+        <div className="space-y-3.5 py-1">
+          {/* SELECTOR VISUAL DE MÉTODOS DE PAGO DE VENEZUELA */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Selecciona Método de Pago
+            </Label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {availableMethods.map((m) => {
+                const cat = inferCategoryFromMethod(m.name, m.category);
+                const Icon = getCategoryIcon(cat);
+                const isSelected =
+                  (paymentMethod || selectedMethodObj?.name) === m.name;
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => handleSelectMethod(m)}
+                    className={cn(
+                      "flex items-center gap-2.5 p-2.5 rounded-xl border text-left transition-all cursor-pointer",
+                      isSelected
+                        ? "border-primary bg-primary/10 text-foreground shadow-xs ring-1 ring-primary/30"
+                        : "border-border/70 bg-muted/20 text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "h-7 w-7 rounded-lg border flex items-center justify-center shrink-0",
+                        getCategoryBadgeStyle(cat)
+                      )}
+                    >
+                      <Icon className="h-3.5 w-3.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-foreground truncate">
+                        {m.name}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground truncate">
+                        {cat === "Cashea"
+                          ? "Inicial + 3 cuotas"
+                          : cat === "Binance"
+                          ? "USDT · Binance Pay"
+                          : cat === "Divisas"
+                          ? "Efectivo $ / €"
+                          : "Bolívares (BCV)"}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          {/* CALCULADORA DE PAGO MIXTO (USD + BOLÍVARES) */}
-          <div className="rounded-2xl border border-border/60 bg-muted/20 p-3.5 space-y-3">
-            <div className="flex items-center justify-between">
-              <label
-                htmlFor="split-payment-toggle"
-                className="text-xs font-bold text-foreground flex items-center gap-1.5 cursor-pointer"
+          {/* BARRA DE DATOS RECEPTORES DE LA CLÍNICA PARA COPIAR AL PACIENTE */}
+          {hasReceiverDetails && (
+            <div className="rounded-xl border border-border/80 bg-muted/30 px-3.5 py-2.5 flex items-center justify-between gap-2 text-xs">
+              <div className="truncate space-y-0.5">
+                <p className="font-bold text-foreground truncate">
+                  Datos de Cobro ({selectedMethodObj?.name}):
+                </p>
+                <p className="text-[11px] text-muted-foreground truncate">
+                  {[
+                    selectedDetails.bank,
+                    selectedDetails.phone ? `Tel: ${selectedDetails.phone}` : null,
+                    selectedDetails.accountNumber
+                      ? `Cta: ${selectedDetails.accountNumber}`
+                      : null,
+                    selectedDetails.binanceId
+                      ? `Binance: ${selectedDetails.binanceId}`
+                      : null,
+                    selectedDetails.documentId,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleCopyClinicPaymentData}
+                className="rounded-xl h-8 px-2.5 text-[11px] font-bold gap-1 shrink-0 cursor-pointer"
               >
-                <ArrowRightLeft className="h-3.5 w-3.5 text-primary" />
-                ¿Pago Mixto (Parte en Divisas + Resto en Bs.)?
-              </label>
-              <input
-                id="split-payment-toggle"
-                type="checkbox"
-                checked={isSplitPayment}
-                onChange={(e) => setIsSplitPayment(e.target.checked)}
-                className="rounded border-border h-4 w-4 accent-primary cursor-pointer"
-              />
+                {copiedDetails ? (
+                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
+                Copiar Datos
+              </Button>
             </div>
+          )}
 
-            {isSplitPayment && (
-              <div className="grid grid-cols-2 gap-3 pt-1 animate-fade-in">
-                <div>
-                  <Label htmlFor="usd-received" className="text-[11px] text-muted-foreground">
-                    Recibido en Divisas ($ / USDT)
-                  </Label>
-                  <Input
-                    id="usd-received"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max={totalUsd}
-                    placeholder="Ej. 20"
-                    value={usdCashReceived}
-                    onChange={(e) => setUsdCashReceived(e.target.value)}
-                    className="rounded-xl h-9 text-xs font-bold mt-1 bg-background"
-                  />
-                </div>
-                <div className="bg-background/80 border border-border/60 rounded-xl p-2 flex flex-col justify-center">
-                  <span className="text-[10px] font-bold uppercase text-muted-foreground">
-                    Restante en Bs. (${remainingUsd.toFixed(2)})
+          {/* MODO ESPECIAL: CALCULADORA PROFESIONAL CASHEA */}
+          {selectedCategory === "Cashea" ? (
+            <div className="rounded-2xl border border-fuchsia-500/30 bg-fuchsia-500/5 p-3.5 space-y-3 animate-fade-in">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-extrabold text-fuchsia-600 dark:text-fuchsia-400 uppercase tracking-wider">
+                  Plan Cashea — Inicial en Clínica + 3 Cuotas
+                </span>
+                <span className="text-[10px] font-bold bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-400 px-2 py-0.5 rounded-full">
+                  Sin Interés
+                </span>
+              </div>
+
+              {/* Selector de Nivel / % de Inicial */}
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { pct: 60, label: "Nivel 1 (60%)" },
+                  { pct: 50, label: "Nivel 2 (50%)" },
+                  { pct: 40, label: "Nivel 3+ (40%)" },
+                ].map((lvl) => (
+                  <button
+                    key={lvl.pct}
+                    type="button"
+                    onClick={() => setCasheaInitialPct(lvl.pct)}
+                    className={cn(
+                      "py-1.5 px-2 rounded-xl border text-xs font-bold transition cursor-pointer",
+                      casheaInitialPct === lvl.pct
+                        ? "border-fuchsia-500 bg-fuchsia-500 text-white shadow-2xs"
+                        : "border-border bg-background/80 text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {lvl.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Desglose Inicial Hoy vs Cuotas */}
+              <div className="grid grid-cols-2 gap-2.5">
+                <div className="rounded-xl bg-background/90 border border-border/70 p-2.5">
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground block">
+                    Inicial a Cobrar Hoy ({casheaInitialPct}%)
                   </span>
+                  <p className="text-base font-black text-foreground mt-0.5">
+                    ${casheaInitialUsd.toFixed(2)} USD
+                  </p>
                   <div className="flex items-center justify-between mt-0.5">
-                    <span className="text-xs font-extrabold text-primary">
-                      {formatBs(remainingUsd, activeRate)}
+                    <span className="text-[11px] font-extrabold text-primary">
+                      {formatBs(casheaInitialUsd, activeRate)}
                     </span>
                     <button
                       type="button"
-                      onClick={() => handleCopyBs(remainingBs)}
-                      className="text-primary hover:underline text-[10px] font-bold cursor-pointer"
+                      onClick={() => handleCopyBs(casheaInitialBs)}
+                      className="text-[10px] font-bold text-primary hover:underline cursor-pointer"
                     >
-                      Copiar
+                      Copiar Bs
                     </button>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
 
-          {paymentMethod &&
-            methods.find((m) => m.name === paymentMethod)?.category !== "Cash" && (
-              <div className="grid gap-2">
-                <Label htmlFor="referencia">N° de Referencia / Comprobante</Label>
-                <Input
-                  id="referencia"
-                  placeholder="Ej. 4 últimos dígitos de Pago Móvil, Binance o Zelle"
-                  value={paymentReference}
-                  onChange={(e) => setPaymentReference(e.target.value)}
-                  className="rounded-xl bg-background/50"
+                <div className="rounded-xl bg-background/90 border border-border/70 p-2.5">
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground block">
+                    Financiado Cashea ({100 - casheaInitialPct}%)
+                  </span>
+                  <p className="text-base font-black text-foreground mt-0.5">
+                    ${casheaFinancedUsd.toFixed(2)} USD
+                  </p>
+                  <span className="text-[11px] font-semibold text-muted-foreground block mt-0.5">
+                    3 cuotas de ${casheaInstallmentUsd.toFixed(2)} c/14 días
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div className="space-y-1">
+                  <Label className="text-[11px] font-bold">
+                    ¿Cómo pagó la Inicial hoy?
+                  </Label>
+                  <select
+                    aria-label="Método de pago de la inicial Cashea"
+                    value={casheaInitialMethod}
+                    onChange={(e) => setCasheaInitialMethod(e.target.value)}
+                    className="w-full h-9 px-3 rounded-xl bg-background border border-border text-xs font-semibold outline-none"
+                  >
+                    <option value="Pago Móvil">Pago Móvil (Bs. BCV)</option>
+                    <option value="Divisas ($)">Divisas (Efectivo $)</option>
+                    <option value="Transferencia">Transferencia (Bs.)</option>
+                    <option value="Binance (USDT)">Binance (USDT)</option>
+                    <option value="Efectivo (Bs.)">Efectivo (Bs.)</option>
+                    <option value="Punto de Venta">Punto de Venta</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-[11px] font-bold">
+                    N° Orden Cashea *
+                  </Label>
+                  <Input
+                    placeholder="Ej. Orden #CSH-94821"
+                    value={casheaOrderNumber}
+                    onChange={(e) => setCasheaOrderNumber(e.target.value)}
+                    className="rounded-xl h-9 text-xs bg-background"
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* CALCULADORA DE PAGO MIXTO (USD + BOLÍVARES) */
+            <div className="rounded-2xl border border-border/60 bg-muted/20 p-3.5 space-y-3">
+              <div className="flex items-center justify-between">
+                <label
+                  htmlFor="split-payment-toggle"
+                  className="text-xs font-bold text-foreground flex items-center gap-1.5 cursor-pointer"
+                >
+                  <ArrowRightLeft className="h-3.5 w-3.5 text-primary" />
+                  ¿Pago Mixto (Parte en Divisas + Resto en Bs.)?
+                </label>
+                <input
+                  id="split-payment-toggle"
+                  type="checkbox"
+                  checked={isSplitPayment}
+                  onChange={(e) => setIsSplitPayment(e.target.checked)}
+                  className="rounded border-border h-4 w-4 accent-primary cursor-pointer"
                 />
               </div>
-            )}
+
+              {isSplitPayment && (
+                <div className="grid grid-cols-2 gap-3 pt-1 animate-fade-in">
+                  <div>
+                    <Label htmlFor="usd-received" className="text-[11px] text-muted-foreground">
+                      Recibido en Divisas ($ / USDT)
+                    </Label>
+                    <Input
+                      id="usd-received"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max={totalUsd}
+                      placeholder="Ej. 20"
+                      value={usdCashReceived}
+                      onChange={(e) => setUsdCashReceived(e.target.value)}
+                      className="rounded-xl h-9 text-xs font-bold mt-1 bg-background"
+                    />
+                  </div>
+                  <div className="bg-background/80 border border-border/60 rounded-xl p-2 flex flex-col justify-center">
+                    <span className="text-[10px] font-bold uppercase text-muted-foreground">
+                      Restante en Bs. (${remainingUsd.toFixed(2)})
+                    </span>
+                    <div className="flex items-center justify-between mt-0.5">
+                      <span className="text-xs font-extrabold text-primary">
+                        {formatBs(remainingUsd, activeRate)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyBs(remainingBs)}
+                        className="text-primary hover:underline text-[10px] font-bold cursor-pointer"
+                      >
+                        Copiar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* CAMPO DE REFERENCIA CONTEXTUAL SEGÚN MÉTODO DE PAGO */}
+          <div className="grid gap-1.5">
+            <Label htmlFor="referencia" className="text-xs font-bold">
+              {selectedCategory === "Pago Móvil"
+                ? "N° de Referencia Pago Móvil (Últimos 4 a 6 dígitos) *"
+                : selectedCategory === "Transferencia"
+                ? "N° de Referencia de Transferencia Bancaria *"
+                : selectedCategory === "Binance"
+                ? "Order ID de Binance Pay / Comprobante USDT *"
+                : selectedCategory === "Cashea"
+                ? "Referencia del Pago de la Inicial (Opcional si fue Efectivo/Divisas)"
+                : selectedCategory === "Divisas"
+                ? "Seriales de Billetes / Denominación / Vuelto (Opcional)"
+                : "Nota de Caja / Referencia (Opcional)"}
+            </Label>
+            <Input
+              id="referencia"
+              placeholder={
+                selectedCategory === "Pago Móvil"
+                  ? "Ej. 849201 (últimos dígitos de la operación)"
+                  : selectedCategory === "Transferencia"
+                  ? "Ej. Ref. 0092837412 Banesco"
+                  : selectedCategory === "Binance"
+                  ? "Ej. Order ID 29384756102938 (USDT)"
+                  : selectedCategory === "Divisas"
+                  ? "Ej. 2 billetes de $20 (Seriales PK29381, JB10293) + 1 de $10"
+                  : selectedCategory === "Cashea"
+                  ? "Ej. Ref Pago Móvil de la inicial: 4921"
+                  : "Ej. Recibido en caja principal sin vuelto"
+              }
+              value={paymentReference}
+              onChange={(e) => setPaymentReference(e.target.value)}
+              className="rounded-xl bg-background/50 text-xs"
+            />
+          </div>
         </div>
 
         <DialogFooter>

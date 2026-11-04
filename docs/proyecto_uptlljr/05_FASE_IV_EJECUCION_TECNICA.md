@@ -24,7 +24,7 @@ El sistema fue concebido bajo estándares de ingeniería de software contemporá
 | **RF-02** | Funcional | Historia Médica Integral y Gineco-Obstétrica | Registro estructurado en 8 pestañas clínicas (*Identificación, Antecedentes, Ginecológico, Obstétrico, Consultas, Timeline, Notas y Estudios, Recetas*), fórmula G-P-A-C-E, cálculo automático en vivo de edad gestacional y FPP por Regla de Naegele a partir de la FUM, y carga de estudios diagnósticos en `archivos_pacientes`. |
 | **RF-03** | Funcional | Agenda y Citas en Tiempo Real | Calendario interactivo (día, semana, mes) en la tabla `citas` con cambios de estado sincronizados instantáneamente entre recepción y consultorio mediante Supabase Realtime (`useRealtimeSync`) y vinculación automática con el catálogo `servicios.costo_base`. |
 | **RF-04** | Funcional | Diseñador y Emisión de Récipes y Reportes PDF | Compilación bajo demanda (*code-splitting* dinámico con `jsPDF`) de récipes médicos oficiales, presupuestos e historias clínicas completas en formato PDF de alta resolución y envío directo a WhatsApp. |
-| **RF-05** | Funcional | Facturación Bimonetaria, Finanzas e Inventario | Registro de cobros en divisas (USD) y bolívares (VES) sincronizados con tasa BCV oficial o manual, gestión de `cuentas_financieras` y `metodos_pago`, y control de kárdex de insumos médicos (`inventario` y `movimientos_inventario`) con alertas de stock mínimo. |
+| **RF-05** | Funcional | Facturación Multimoneda, Tesorería Venezolana y Cashea | Gestión integrada de cuentas de tesorería (`/cuentas`), catálogo de métodos de pago venezolanos (`/metodos-pago`) y facturación (`/facturacion`) con soporte nativo para los 6 métodos de pago en Venezuela (**Efectivo en Bolívares, Pago Móvil, Transferencia Bancaria, Binance Pay USDT, Divisas en Efectivo USD/EUR y Cashea**). Incluye **Calculadora Profesional Cashea** (inicial configurable 40%/50%/60% + 3 cuotas sin interés cada 14 días, método de cobro de la inicial y N.º de orden), copia en 1 clic de datos receptores de la clínica (18 bancos SUDEBAN, RIF/CI, teléfono, cuenta de 20 dígitos, Binance ID), acreditación automática de saldos por cuenta, tasas en vivo (**Dólar BCV**, **Euro BCV** y **USDT Binance P2P**), calculadora cuatridivisa (`USD ↔ Bs. ↔ EUR ↔ USDT`), recibos PDF con método/referencia y kárdex de insumos (`inventario` y `movimientos_inventario`). |
 | **RF-06** | Funcional | Bóveda Criptográfica Local, Bloqueo e Inactividad | Cifrado de sesión con derivación `PBKDF2` (100.000 iteraciones SHA-256) y `AES-GCM` (256 bits), validación de PIN con sal criptográfica, protección anti-fuerza bruta (bloqueo temporal tras 5 intentos fallidos), bloqueo automático por inactividad (`InactivityLockOverlay`) y bitácora en `auditoria_logs`. |
 | **RNF-01** | No Funcional | Seguridad y Confidencialidad (RLS) | Cumplimiento del secreto médico mediante políticas *Row Level Security* (RLS) en el kernel de PostgreSQL, control de acceso por roles (`admin`, `doctor`, `recepcionista` / `asistente`) y cifrado TLS 1.3. |
 | **RNF-02** | No Funcional | Usabilidad *Mobile-First* y Capacidad PWA | Interfaz táctil adaptativa con navegación optimizada para tabletas y teléfonos móviles, Service Worker (`sw.js`) con caché inteligente y persistencia de identidad visual (`ThemeCustomizer` e isotipo `MedizenLogo` sincronizado con `--primary` desde SSR). |
@@ -49,8 +49,8 @@ El sistema fue concebido bajo estándares de ingeniería de software contemporá
 4. **Prescripción Farmacológica y Exportación Documental (PDF)**:
    * Se registran los fármacos prescritos e indicaciones terapéuticas.
    * Mediante carga dinámica bajo demanda (*lazy loading* de `jsPDF`), el sistema compila en memoria tanto el récipe médico oficial con membrete y QR como el reporte integral de historia clínica, permitiendo su impresión inmediata o envío directo al WhatsApp de la paciente.
-5. **Conciliación Financiera Bimonetaria y Kárdex de Inventario**:
-   * Se emite la factura en `facturas` y se registran los abonos o pagos totales en `pagos`, operando en dólares (USD) o bolívares (VES) con conversión automática según la tasa BCV sincronizada.
+5. **Conciliación Financiera Multimoneda (USD BCV / EUR BCV / USDT / Bs.) y Kárdex de Inventario**:
+   * Se emite la factura en `facturas` y se registran los abonos, pagos totales o **cobros mixtos** en `pagos`, integrando el módulo de **Cuentas y Tesorería (`/cuentas`)** con el catálogo de **Métodos de Pago Venezolanos (`/metodos-pago`)** para **Efectivo en Bolívares, Pago Móvil, Transferencia Bancaria, Binance Pay (USDT), Divisas en Efectivo (USD/EUR) y Cashea**. El sistema opera simultáneamente con las tasas oficiales del **Banco Central de Venezuela (Dólar BCV y Euro BCV)** y el mercado cripto (**USDT Binance P2P**) sincronizadas en vivo mediante el hook `useExchangeRate`, incorpora una **Calculadora Profesional Cashea** (inicial configurable del 40%, 50% o 60% + 3 cuotas sin interés cada 14 días, método de pago de la inicial y N.º de orden), copia en 1 clic de datos bancarios de la clínica (código SUDEBAN, RIF/CI, teléfono, cuenta de 20 dígitos, Binance ID), acreditación automática en la cuenta financiera vinculada (`financial_accounts`), tarjetas KPI interactivas y calculadora cuatridivisa en tiempo real (`USD ↔ Bs. ↔ EUR ↔ USDT`).
    * De forma complementaria, el personal autorizado gestiona el stock de insumos médicos en `inventario` y audita cada entrada o salida clínica mediante el kárdex de `movimientos_inventario`.
 
 ---
@@ -72,7 +72,7 @@ flowchart LR
         CU3["Registrar Consulta, FUM/FPP y Estudios Adjuntos"]
         CU4["Gestionar Agenda de Citas en Tiempo Real"]
         CU5["Emitir Récipes e Historias Clínicas en PDF"]
-        CU6["Procesar Facturación Bimonetaria (USD/VES BCV)"]
+        CU6["Procesar Facturación Multimoneda (USD/EUR/USDT/VES)"]
         CU7["Controlar Kárdex de Inventario y Auditoría"]
     end
 
@@ -115,13 +115,13 @@ flowchart TD
         Multiesp --> Diagnostico
     end
 
-    subgraph Fase3["Fase 3: Prescripción, Entrega y Facturación Bimonetaria"]
+    subgraph Fase3["Fase 3: Prescripción, Entrega y Facturación Multimoneda"]
         Diagnostico --> RedactarRecipe[Ingreso de prescripciones médicas e indicaciones]
         RedactarRecipe --> GenerarPDF["Compilación bajo demanda de Récipe / Historia en PDF (jsPDF)"]
         GenerarPDF --> EnviarWhatsApp{"¿Canal de Entrega?"}
         EnviarWhatsApp -->|Digital| EnvioDigital[Apertura de WhatsApp con prescripción e indicaciones]
         EnviarWhatsApp -->|Físico| Impresion[Impresión física de récipe y resumen clínico]
-        EnvioDigital --> RegistrarCobro[Registro de cobro USD/VES con tasa BCV y kárdex de insumos]
+        EnvioDigital --> RegistrarCobro["Registro de cobro multimoneda (USD/EUR/USDT/Bs.) y kárdex de insumos"]
         Impresion --> RegistrarCobro
         RegistrarCobro --> Fin([Fin de la Atención y Registro en Auditoría])
     end
@@ -181,7 +181,7 @@ erDiagram
 
     PACIENTES {
         uuid id_paciente PK
-        varchar documento_identidad UQ
+        varchar documento_identidad
         varchar nombre
         varchar apellido
         date fecha_nacimiento
@@ -592,9 +592,9 @@ Para dar cumplimiento estricto al secreto médico, la confidencialidad de la inf
    * **Carga Diferida (*Code-Splitting*) de Generadores PDF**: Las utilidades de exportación documental (`generateHistoriaClinicaPDF`, `generatePatientConsultationPDF` y `generateRecipePDF`) se importan dinámicamente mediante `await import(...)` únicamente cuando el médico solicita el documento, reduciendo drásticamente el tamaño del paquete inicial de JavaScript.
    * **Esqueletos de Carga de Alta Fidelidad (`PatientProfileSkeleton`)**: Durante la hidratación inicial del expediente clínico se presenta una estructura esqueletal idéntica al diseño final, evitando saltos visuales (*Cumulative Layout Shift* - CLS = 0).
 
-6. **Personalización Dinámica de Identidad Visual y Branding Clínico sin Desfase de Hidratación**:
-   * **Arquitectura de Paletas Temáticas (`ThemeCustomizer`)**: Permite alternar entre cinco paletas clínicas (*Azul Medizen, Verde Esmeralda, Púrpura Real, Teal Quirúrgico y Rosa Obstétrico*), inyectadas de forma síncrona en `<head>` antes del primer pintado del navegador.
-   * **Isotipo Reactivo SVG (`MedizenLogo`)**: El componente vectorial utiliza directamente `var(--primary, #2563EB)` en sus trazos y gradientes SVG con `suppressHydrationWarning`, garantizando que el logo de la barra lateral conserve el color institucional personalizado desde el primer milisegundo tras refrescar la página.
+6. **Personalización Dinámica de Identidad Visual y Motor Financiero Multimoneda en Vivo**:
+   * **Arquitectura de Paletas Temáticas (`ThemeCustomizer`) e Isotipo Reactivo (`MedizenLogo`)**: Permite alternar entre cinco paletas clínicas (*Azul Medizen, Verde Esmeralda, Púrpura Real, Teal Quirúrgico y Rosa Obstétrico*), inyectadas de forma síncrona en `<head>` junto con `var(--primary, #2563EB)` en el SVG institucional para evitar desfases de hidratación.
+   * **Motor Multimoneda, Tesorería Venezolana, Métodos de Pago y Calculadora Cashea (`useExchangeRate.ts`, `paymentMethods.ts`, `accounts.ts`, `SalesPage.tsx`)**: Sincroniza automáticamente las cotizaciones oficiales del **Dólar BCV (`USD`)** y **Euro BCV (`EUR`)** (`ve.dolarapi.com/v1/cotizaciones`), así como la tasa en vivo de **USDT en Binance P2P (`USDT/VES`)** (`criptoya.com/api/binancep2p/USDT/VES/0.1`). Gestiona el catálogo de los **6 métodos de pago profesionales de Venezuela** (**Efectivo en Bolívares, Pago Móvil, Transferencia Bancaria, Binance Pay USDT, Divisas USD/EUR y Cashea**) vinculados a las cuentas financieras de tesorería (`/cuentas` con desvinculación segura de claves foráneas `account_id`), copia en 1 clic de datos bancarios receptores (18 bancos SUDEBAN, RIF/CI, teléfono, cuenta de 20 dígitos, Binance ID), **Calculadora Profesional Cashea** (inicial 40%/50%/60% + 3 cuotas sin interés cada 14 días, método de pago de la inicial y N.º de orden), acreditación automática de balances, calculadora cuatridivisa bidireccional (`$ USD ↔ Bs. ↔ € EUR ↔ USDT`), tarjetas KPI interactivas, liquidación de pagos mixtos y reportes PDF multimoneda con detalle de método y referencia (`generateIndividualInvoice.ts` y `generateSalesReport.ts`).
 
 ---
 
@@ -615,7 +615,7 @@ Para asegurar que el sistema cumple con los más altos estándares de calidad, c
 | **CP-06** | Estudios y Timeline | Carga de archivo en `Notas y Estudios` y revisión de `Timeline`. | Almacenamiento en `archivos_pacientes` (Supabase Storage) y orden cronológico de eventos. | Archivo adjunto descargable y línea de tiempo actualizada. | **APROBADO** |
 | **CP-07** | Agenda Realtime | Cambio de estado de cita y asignación de servicio clínico. | Actualización vía WebSockets (< 500 ms) y vinculación automática de `servicios.costo_base`. | Estado sincronizado en vivo y factura creada con monto real. | **APROBADO** |
 | **CP-08** | Récipes e Historia PDF | Clic en 'Exportar Documentos' (Historia Clínica PDF / Récipe PDF) y envío a WhatsApp. | Carga dinámica de `jsPDF`, compilación de PDF nítido y apertura de enlace de WhatsApp. | Documentos PDF generados bajo demanda y enviados con éxito. | **APROBADO** |
-| **CP-09** | Finanzas BCV e Inventario | Registro de cobro mixto USD/VES con tasa BCV y movimiento de stock en inventario. | Conversión multimoneda exacta en `pagos` y actualización de kárdex en `movimientos_inventario`. | Balance contable y stock de insumos actualizados sin discrepancias. | **APROBADO** |
+| **CP-09** | Finanzas Multimoneda, Tesorería VE, Cashea e Inventario | Sincronización de tasas BCV ($/€) y USDT (Binance P2P), cobro con los 6 métodos de Venezuela (Efectivo Bs., Pago Móvil, Transferencia, Binance, Divisas y Cashea con inicial + 3 cuotas), vinculación en `/cuentas` y movimiento de stock. | Conversión multimoneda exacta (`USD`, `EUR`, `USDT`, `VES`), cálculo automático de inicial/cuotas Cashea, copia en 1 clic de datos bancarios, acreditación en cuenta vinculada, recibos PDF con método/referencia y kárdex actualizado. | Tasas oficiales verificadas en vivo, balance de cuentas de tesorería, cuotas Cashea y stock actualizados sin discrepancias. | **APROBADO** |
 | **CP-10** | Branding / Temas | Selección de paleta temática y recarga completa del navegador (`F5`). | Persistencia del tema y del color del isotipo `MedizenLogo` (`--primary`) sin volver al azul por defecto. | Hidratación SSR/CSR limpia con color personalizado preservado. | **APROBADO** |
 
 *Nota.* Elaboración propia (2026). El 100% de los casos de prueba ejecutados resultaron satisfactorios.

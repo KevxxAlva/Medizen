@@ -12,6 +12,8 @@ type InvoiceForReport = {
   fecha_emision: string;
   total_general: number;
   estado_pago: string;
+  metodo_pago?: string | null;
+  referencia?: string | null;
 };
 
 export const generateSalesReport = async (
@@ -62,7 +64,7 @@ export const generateSalesReport = async (
   } else {
     doc.setFontSize(9.5);
     doc.text(
-      `Fecha: ${new Date().toLocaleDateString()}  —  ${ratesSubtitle}`,
+      `Fecha: ${new Date().toLocaleDateString("es-VE")}  —  ${ratesSubtitle}`,
       pageWidth / 2,
       186,
       { align: "center" }
@@ -82,7 +84,8 @@ export const generateSalesReport = async (
     return [
       `INV-${(f.id_factura || 0).toString().padStart(4, "0")}`,
       f.paciente_nombre || "N/A",
-      f.fecha_emision ? new Date(f.fecha_emision).toLocaleDateString() : "",
+      f.fecha_emision ? new Date(f.fecha_emision).toLocaleDateString("es-VE") : "",
+      f.metodo_pago || "—",
       `$${amount.toFixed(2)}`,
       formatEurFromUsd(amount, rates),
       formatBs(amount, rate),
@@ -93,18 +96,27 @@ export const generateSalesReport = async (
   autoTable(doc, {
     startY: 205,
     head: [
-      ["ID Factura", "Paciente", "Fecha", "USD ($)", "EUR (€)", "Equiv. (Bs.)", "Estado"],
+      [
+        "ID Factura",
+        "Paciente",
+        "Fecha",
+        "Método de Pago",
+        "USD ($)",
+        "EUR (€)",
+        "Equiv. (Bs.)",
+        "Estado",
+      ],
     ],
     body:
       tableData.length > 0
         ? tableData
-        : [["—", "Sin movimientos registrados", "—", "$0.00", "€0,00", "Bs. 0,00", "—"]],
+        : [["—", "Sin movimientos registrados", "—", "—", "$0.00", "€0,00", "Bs. 0,00", "—"]],
     theme: "striped",
-    styles: { font: config.customFontFamily, fontSize: 9, cellPadding: 5 },
+    styles: { font: config.customFontFamily, fontSize: 8.5, cellPadding: 4.5 },
     headStyles: { fillColor: [139, 92, 175], textColor: 255, font: config.customFontFamily },
-    margin: { left: 40, right: 40 },
+    margin: { left: 36, right: 36 },
     didParseCell: function (data) {
-      if (data.section === "body" && data.column.index === 6) {
+      if (data.section === "body" && data.column.index === 7) {
         const estado = ((data.cell.raw as string) || "").toLowerCase();
         if (estado === "pagado") {
           data.cell.styles.textColor = [22, 163, 74];
