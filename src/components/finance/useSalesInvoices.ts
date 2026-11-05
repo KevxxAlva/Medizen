@@ -64,8 +64,12 @@ async function creditAccountForMethod(targetMethodName: string, usdAmount: numbe
 export function useSalesInvoices() {
   const queryClient = useQueryClient();
 
-  const { data: facturas = [], isLoading } = useQuery({
+  const { data: facturas = [], isLoading, isFetching, refetch } = useQuery({
     queryKey: ["facturas"],
+    staleTime: 0, // Inmediato: siempre evaluar datos frescos
+    refetchOnMount: "always", // Cada vez que el usuario abre Ventas, consultar de inmediato a Supabase
+    refetchOnWindowFocus: true, // Si regresa a la pestaña o ventana, refresca
+    refetchInterval: 5000, // Sincronización en tiempo real cada 5 segundos
     queryFn: async () => {
       const { data, error } = await supabase
         .from("facturas")
@@ -80,11 +84,11 @@ export function useSalesInvoices() {
           pacientes (nombre, apellido),
           pagos (id_pago, metodo_pago, referencia, monto_pagado, fecha_pago)
         `)
-        .order("fecha_emision", { ascending: false });
+        .order("id_factura", { ascending: false });
 
       if (error) throw error;
 
-      return data.map((f: any) => {
+      const mapped = (data || []).map((f: any) => {
         const pago = Array.isArray(f.pagos) ? f.pagos[0] : f.pagos;
         return {
           id_factura: f.id_factura,
@@ -101,6 +105,9 @@ export function useSalesInvoices() {
           referencia: pago?.referencia || null,
         };
       }) as Invoice[];
+
+      // Garantizar orden descendente: las facturas más recientes arriba siempre
+      return mapped.sort((a, b) => (b.id_factura || 0) - (a.id_factura || 0));
     },
   });
 
@@ -195,10 +202,21 @@ export function useSalesInvoices() {
   return {
     facturas,
     isLoading,
+    isFetching,
+    refetch,
     updatePaymentStatus,
     deleteInvoice,
   };
 }
+
+export type InvoiceSortField =
+  | "id_factura"
+  | "fecha_emision"
+  | "paciente_nombre"
+  | "total_general"
+  | "estado_pago";
+
+export type SortDirection = "asc" | "desc";
 
 export function useSalesFilteredStats({
   facturas,
@@ -206,15 +224,19 @@ export function useSalesFilteredStats({
   filterMonth,
   filterStatus,
   filterMethod,
+  sortField = "id_factura",
+  sortDirection = "desc",
 }: {
   facturas: Invoice[];
   q: string;
   filterMonth: string;
   filterStatus: string;
   filterMethod: string;
+  sortField?: InvoiceSortField;
+  sortDirection?: SortDirection;
 }) {
   const filtered = useMemo(() => {
-    return facturas.filter((f) => {
+    const list = facturas.filter((f) => {
       if (q) {
         const term = q.toLowerCase();
         const numStr = `inv-${f.id_factura.toString().padStart(4, "0")}`;
@@ -241,7 +263,29 @@ export function useSalesFilteredStats({
       }
       return true;
     });
-  }, [facturas, q, filterMonth, filterStatus, filterMethod]);
+
+    return list.sort((a, b) => {
+      let comparison = 0;
+      if (sortField === "id_factura") {
+        comparison = (a.id_factura || 0) - (b.id_factura || 0);
+      } else if (sortField === "fecha_emision") {
+        const timeA = new Date(a.fecha_emision).getTime() || 0;
+        const timeB = new Date(b.fecha_emision).getTime() || 0;
+        comparison = timeA - timeB;
+        if (comparison === 0) {
+          comparison = (a.id_factura || 0) - (b.id_factura || 0);
+        }
+      } else if (sortField === "paciente_nombre") {
+        comparison = (a.paciente_nombre || "").localeCompare(b.paciente_nombre || "");
+      } else if (sortField === "total_general") {
+        comparison = (Number(a.total_general) || 0) - (Number(b.total_general) || 0);
+      } else if (sortField === "estado_pago") {
+        comparison = (a.estado_pago || "").localeCompare(b.estado_pago || "");
+      }
+
+      return sortDirection === "desc" ? -comparison : comparison;
+    });
+  }, [facturas, q, filterMonth, filterStatus, filterMethod, sortField, sortDirection]);
 
   const kpiStats = useMemo(() => {
     let paidTotal = 0;

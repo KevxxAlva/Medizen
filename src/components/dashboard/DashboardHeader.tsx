@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "@tanstack/react-router";
-import { Search, Bell, Settings } from "lucide-react";
+import { Search, Bell, Settings, Calculator } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { LiveClockBadge } from "./DashboardCharts";
+import { useExchangeRate } from "@/hooks/useExchangeRate";
+import { BcvCalculatorDialog } from "./BcvCalculatorDialog";
 
 export interface DashboardNotification {
   id: string;
@@ -22,6 +24,8 @@ export interface DashboardHeaderProps {
 export function DashboardHeader({ notifications }: DashboardHeaderProps) {
   const [open, setOpen] = useState(false);
   const [readKeys, setReadKeys] = useState<string[]>([]);
+  const [calcOpen, setCalcOpen] = useState(false);
+  const { rate, rates } = useExchangeRate();
 
   useEffect(() => {
     try {
@@ -83,7 +87,22 @@ export function DashboardHeader({ notifications }: DashboardHeaderProps) {
         </kbd>
       </button>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+        {/* Conversor BCV Directo */}
+        <button
+          type="button"
+          onClick={() => setCalcOpen(true)}
+          className="flex items-center gap-2 h-10 px-3 sm:px-3.5 bg-card hover:bg-muted/50 border border-border hover:border-primary/40 rounded-full shadow-sm text-xs font-bold text-foreground transition-all cursor-pointer group"
+          title="Abrir Calculadora y Conversor BCV"
+        >
+          <Calculator className="h-4 w-4 text-primary group-hover:scale-110 transition-transform" />
+          <span className="hidden sm:inline">Conversor</span>
+          <span>BCV</span>
+          <span className="text-[11px] font-semibold text-muted-foreground tabular-nums">
+            Bs. {rate.toFixed(2)}
+          </span>
+        </button>
+
         {/* Reloj en Tiempo Real aislado para evitar re-renders del Dashboard */}
         <LiveClockBadge />
 
@@ -178,6 +197,12 @@ export function DashboardHeader({ notifications }: DashboardHeaderProps) {
           <Settings className="h-5 w-5" />
         </Link>
       </div>
+
+      <BcvCalculatorDialog
+        open={calcOpen}
+        onOpenChange={setCalcOpen}
+        rates={rates}
+      />
     </header>
   );
 }

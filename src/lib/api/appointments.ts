@@ -270,6 +270,7 @@ export function useUpdateAppointment() {
       // 2. Handle Facturas and Pagos
       if (patch.price !== undefined || patch.payment_method !== undefined || patch.status !== undefined || patch.scheduled_at !== undefined) {
         let facturaId: number | undefined;
+        const statusLower = (patch.status || existingCita?.estado || "").toLowerCase();
         const targetPatientId = patch.patient_id ? parseInt(patch.patient_id) : (existingCita?.id_paciente || 0);
         const oldCitaDate = (existingCita?.fecha_hora || "").split('T')[0];
         const newCitaDate = (patch.scheduled_at || existingCita?.fecha_hora || new Date().toISOString()).split('T')[0];
@@ -294,11 +295,24 @@ export function useUpdateAppointment() {
         let matchedServiceId: number | null = null;
         const reasonToSearch = patch.reason || existingCita?.motivo;
         if (reasonToSearch) {
-          const { data: serv } = await supabase
+          const cleanReason = reasonToSearch.trim();
+          let { data: serv } = await supabase
             .from("servicios")
             .select("id_servicio, costo_base")
-            .ilike("nombre_servicio", reasonToSearch.trim())
+            .ilike("nombre_servicio", `%${cleanReason}%`)
+            .limit(1)
             .maybeSingle();
+
+          if (!serv) {
+            const { data: fallbackServ } = await supabase
+              .from("servicios")
+              .select("id_servicio, costo_base")
+              .ilike("nombre_servicio", "%consulta%")
+              .limit(1)
+              .maybeSingle();
+            serv = fallbackServ;
+          }
+
           if (serv) {
             matchedServiceId = serv.id_servicio;
             if (targetPrice <= 0 && serv.costo_base) {
@@ -307,7 +321,10 @@ export function useUpdateAppointment() {
           }
         }
 
-        const statusLower = (patch.status || "").toLowerCase();
+        if (targetPrice <= 0 && statusLower === "completada") {
+          targetPrice = 35;
+        }
+
         const existingPaid = ["pagada", "pagado", "paid"].includes((existF?.estado_pago || "").toLowerCase());
         let fEstado = (patch.payment_method || existingPaid) ? 'Pagada' : 'Pendiente';
         if (statusLower === 'cancelada') fEstado = 'Cancelada';
@@ -333,7 +350,10 @@ export function useUpdateAppointment() {
               subtotal: targetPrice,
               monto_paciente: targetPrice,
               estado_pago: fEstado,
-              fecha_emision: patch.scheduled_at || existingCita?.fecha_hora || new Date().toISOString()
+              fecha_emision:
+                statusLower === "completada"
+                  ? new Date().toISOString()
+                  : patch.scheduled_at || existingCita?.fecha_hora || new Date().toISOString(),
             }).select("id_factura").single();
             if (newFError) throw newFError;
             facturaId = newF?.id_factura;
@@ -426,9 +446,11 @@ export function useUpdateAppointment() {
       return { id };
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["appointments"] });
-      qc.invalidateQueries({ queryKey: ["facturas"] });
-      qc.invalidateQueries({ queryKey: ["financial_accounts"] });
+      qc.invalidateQueries({ queryKey: ["appointments"], refetchType: "all" });
+      qc.invalidateQueries({ queryKey: ["facturas"], refetchType: "all" });
+      qc.invalidateQueries({ queryKey: ["financial_accounts"], refetchType: "all" });
+      qc.invalidateQueries({ queryKey: ["dashboard_stats"], refetchType: "all" });
+      qc.invalidateQueries({ queryKey: ["monthly_payments"], refetchType: "all" });
     },
   });
 }

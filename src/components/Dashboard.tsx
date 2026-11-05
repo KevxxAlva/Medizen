@@ -22,11 +22,13 @@ import { DashboardSkeleton } from "@/components/skeletons/DashboardSkeleton";
 import { AiClinicalInsightsCard } from "@/components/dashboard/AiClinicalInsightsCard";
 import { DashboardHeader, DashboardNotification } from "@/components/dashboard/DashboardHeader";
 import { DashboardHero } from "@/components/dashboard/DashboardHero";
+import { DashboardDailyTreasuryCard } from "@/components/dashboard/DashboardDailyTreasuryCard";
 import { DashboardMetricsCards } from "@/components/dashboard/DashboardMetricsCards";
 import { DashboardGoalsAndEvents } from "@/components/dashboard/DashboardGoalsAndEvents";
 import { DashboardTrendsAndTreatments } from "@/components/dashboard/DashboardTrendsAndTreatments";
 import { DashboardProfileCard } from "@/components/dashboard/DashboardProfileCard";
 import { DashboardCalendarWidget } from "@/components/dashboard/DashboardCalendarWidget";
+import { useSalesInvoices } from "@/components/finance/useSalesInvoices";
 
 export function Dashboard() {
   const { user, loading: authLoading } = useAuthSession();
@@ -40,6 +42,7 @@ export function Dashboard() {
   const { data: clinic } = useClinicInfo();
   const { data: trends = [] } = useDashboardTrends();
   const { data: topTreatments = [] } = useTopTreatments();
+  const { facturas = [], isLoading: facturasLoading } = useSalesInvoices();
 
   const startOfLastMonthStr = useMemo(() => {
     const now = new Date();
@@ -182,6 +185,7 @@ export function Dashboard() {
             clinic={clinic}
           />
           <DashboardCalendarWidget appointments={appointments} today={today} />
+          <DashboardDailyTreasuryCard invoices={facturas} isLoading={facturasLoading} />
         </div>
       </div>
     </div>

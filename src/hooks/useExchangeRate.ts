@@ -35,8 +35,13 @@ export function formatBs(amountUsd: number, rate: number): string {
 }
 
 export function formatEurFromUsd(amountUsd: number, rates: ExchangeRates): string {
-  const eurToUsdRatio = rates.eur > 0 && rates.bcv > 0 ? rates.bcv / rates.eur : 0.9;
-  const totalEur = (Number(amountUsd) || 0) * eurToUsdRatio;
+  const bcv = Number(rates.bcv) || 894.89;
+  let eur = Number(rates.eur) || 1006.03;
+  if (eur < 100 && bcv > 100) {
+    eur = bcv * (eur > 0.8 && eur < 1.5 ? eur : 1.124);
+  }
+  const totalBs = (Number(amountUsd) || 0) * bcv;
+  const totalEur = eur > 0 ? totalBs / eur : (Number(amountUsd) || 0) * 0.92;
   return `€${totalEur.toLocaleString("es-ES", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -49,11 +54,16 @@ export function getStoredExchangeRates(): ExchangeRates {
     const raw = localStorage.getItem(STORAGE_KEY_RATES);
     if (raw) {
       const parsed = JSON.parse(raw);
-      return {
-        bcv: Number(parsed.bcv) > 0 ? Number(parsed.bcv) : DEFAULT_RATES.bcv,
-        eur: Number(parsed.eur) > 0 ? Number(parsed.eur) : DEFAULT_RATES.eur,
-        usdt: Number(parsed.usdt) > 0 ? Number(parsed.usdt) : DEFAULT_RATES.usdt,
-      };
+      const bcv = Number(parsed.bcv) > 0 ? Number(parsed.bcv) : DEFAULT_RATES.bcv;
+      let eur = Number(parsed.eur) > 0 ? Number(parsed.eur) : DEFAULT_RATES.eur;
+      const usdt = Number(parsed.usdt) > 0 ? Number(parsed.usdt) : DEFAULT_RATES.usdt;
+
+      // Auto-reparar si EUR fue guardado como ratio (< 100) en lugar de Bolívares por Euro
+      if (eur < 100 && bcv > 100) {
+        eur = Math.round(bcv * (eur > 0.8 && eur < 1.5 ? eur : 1.124) * 100) / 100;
+      }
+
+      return { bcv, eur, usdt };
     }
   } catch {
     // ignore parse errors
@@ -227,10 +237,12 @@ export function useExchangeRate() {
     const isStale =
       !savedUpdated || Date.now() - new Date(savedUpdated).getTime() > sixHoursMs;
 
-    if (!saved || (!manualFlag && isStale)) {
+    const isEurCorrupted = rates.eur < 100 && rates.bcv > 100;
+
+    if (!saved || (!manualFlag && isStale) || isEurCorrupted) {
       syncWithBcv(true);
     }
-  }, [syncWithBcv]);
+  }, [syncWithBcv, rates.eur, rates.bcv]);
 
   const rate = rates[activeType] || rates.bcv;
 

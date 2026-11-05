@@ -13,7 +13,12 @@ import { SalesInvoiceTable } from "./SalesInvoiceTable";
 import { SalesKpiCards } from "./SalesKpiCards";
 import { SalesSecondaryToolbar } from "./SalesSecondaryToolbar";
 import { FinancePageHeader } from "./FinancePageHeader";
-import { useSalesInvoices, useSalesFilteredStats } from "./useSalesInvoices";
+import {
+  useSalesInvoices,
+  useSalesFilteredStats,
+  type InvoiceSortField,
+  type SortDirection,
+} from "./useSalesInvoices";
 
 export type { Invoice };
 
@@ -22,6 +27,8 @@ export function SalesPage() {
   const [filterMonth, setFilterMonth] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterMethod, setFilterMethod] = useState("all");
+  const [sortField, setSortField] = useState<InvoiceSortField>("id_factura");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -48,12 +55,24 @@ export function SalesPage() {
   const { data: methods = [] } = usePaymentMethods();
   const { facturas, isLoading, updatePaymentStatus, deleteInvoice } = useSalesInvoices();
 
+  const handleSort = (field: InvoiceSortField) => {
+    if (sortField === field) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDirection(field === "id_factura" || field === "fecha_emision" ? "desc" : "asc");
+    }
+    setCurrentPage(1);
+  };
+
   const { filtered, kpiStats } = useSalesFilteredStats({
     facturas,
     q,
     filterMonth,
     filterStatus,
     filterMethod,
+    sortField,
+    sortDirection,
   });
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
@@ -199,6 +218,9 @@ export function SalesPage() {
         rate={rate}
         rates={rates}
         activeType={activeType}
+        sortField={sortField}
+        sortDirection={sortDirection}
+        onSort={handleSort}
         onView={handleOpenView}
         onConfirm={handleOpenConfirm}
         onDelete={handleDeleteInvoice}

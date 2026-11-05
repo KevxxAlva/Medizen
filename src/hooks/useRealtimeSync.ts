@@ -20,6 +20,7 @@ const TABLE_TO_QUERY_KEYS: Record<string, string[][]> = {
   ],
   citas: [
     ["appointments"],
+    ["facturas"],
     ["dashboard_stats"],
     ["ai_clinical_insights"],
   ],
@@ -27,6 +28,8 @@ const TABLE_TO_QUERY_KEYS: Record<string, string[][]> = {
     ["consultations"],
     ["consultation"],
     ["patient_consultations"],
+    ["facturas"],
+    ["dashboard_stats"],
     ["ai_clinical_insights"],
   ],
   historias_clinicas: [

@@ -401,7 +401,10 @@ export function useCreateConsultation() {
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: ["consultations"] });
       qc.invalidateQueries({ queryKey: ["consultation", variables.appointment_id] });
-      qc.invalidateQueries({ queryKey: ["appointments"] });
+      qc.invalidateQueries({ queryKey: ["appointments"], refetchType: "all" });
+      qc.invalidateQueries({ queryKey: ["facturas"], refetchType: "all" });
+      qc.invalidateQueries({ queryKey: ["dashboard_stats"], refetchType: "all" });
+      qc.invalidateQueries({ queryKey: ["monthly_payments"], refetchType: "all" });
       qc.invalidateQueries({ queryKey: ["patients"] });
       qc.invalidateQueries({ queryKey: ["clinical-notes"] });
       qc.invalidateQueries({ queryKey: ["inventory_stocks"] });
@@ -561,7 +564,10 @@ export function useUpdateConsultation() {
       if (data?.appointment_id) {
         qc.invalidateQueries({ queryKey: ["consultation", data.appointment_id] });
       }
-      qc.invalidateQueries({ queryKey: ["appointments"] });
+      qc.invalidateQueries({ queryKey: ["appointments"], refetchType: "all" });
+      qc.invalidateQueries({ queryKey: ["facturas"], refetchType: "all" });
+      qc.invalidateQueries({ queryKey: ["dashboard_stats"], refetchType: "all" });
+      qc.invalidateQueries({ queryKey: ["monthly_payments"], refetchType: "all" });
       qc.invalidateQueries({ queryKey: ["patients"] });
       qc.invalidateQueries({ queryKey: ["clinical-notes"] });
     },

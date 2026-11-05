@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useCreateConsultation,
   useUpdateConsultation,
@@ -576,6 +577,7 @@ async function executeConsultationSave(params: {
     patient,
     clinic,
     onOpenChange,
+    queryClient,
   } = params;
 
   if (!appointment) return;
@@ -632,6 +634,22 @@ async function executeConsultationSave(params: {
         id: existingConsultation.id,
         ...payload,
       });
+      if (appointment?.id) {
+        await updateAppointment.mutateAsync({
+          id: appointment.id,
+          status: "completada",
+          price: appointment.price ?? undefined,
+          reason: appointment.reason ?? undefined,
+        });
+      }
+      if (queryClient) {
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["facturas"], refetchType: "all" }),
+          queryClient.invalidateQueries({ queryKey: ["appointments"], refetchType: "all" }),
+          queryClient.invalidateQueries({ queryKey: ["dashboard_stats"], refetchType: "all" }),
+          queryClient.invalidateQueries({ queryKey: ["monthly_payments"], refetchType: "all" }),
+        ]);
+      }
       toast.success("Consulta actualizada con éxito");
     } else {
       await createConsultation.mutateAsync(payload);
@@ -641,6 +659,14 @@ async function executeConsultationSave(params: {
         price: appointment.price ?? undefined,
         reason: appointment.reason ?? undefined,
       });
+      if (queryClient) {
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["facturas"], refetchType: "all" }),
+          queryClient.invalidateQueries({ queryKey: ["appointments"], refetchType: "all" }),
+          queryClient.invalidateQueries({ queryKey: ["dashboard_stats"], refetchType: "all" }),
+          queryClient.invalidateQueries({ queryKey: ["monthly_payments"], refetchType: "all" }),
+        ]);
+      }
       toast.success("Consulta registrada con éxito");
     }
 
@@ -742,6 +768,7 @@ export function useConsultationFormState(
   existingConsultation?: Consultation | null,
   onOpenChange?: (v: boolean) => void,
 ) {
+  const queryClient = useQueryClient();
   const createConsultation = useCreateConsultation();
   const updateConsultation = useUpdateConsultation();
   const updateAppointment = useUpdateAppointment();
@@ -827,6 +854,7 @@ export function useConsultationFormState(
       patient,
       clinic,
       onOpenChange,
+      queryClient,
     });
   };
 

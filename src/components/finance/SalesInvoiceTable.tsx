@@ -6,11 +6,16 @@ import {
   Copy,
   Check,
   CreditCard,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { inferCategoryFromMethod } from "@/lib/api/paymentMethods";
 import {
   RATE_LABELS,
+  formatBs,
+  formatEurFromUsd,
   type RateType,
   type ExchangeRates,
 } from "@/hooks/useExchangeRate";
@@ -19,31 +24,57 @@ import { generateIndividualInvoice } from "@/lib/utils/generateIndividualInvoice
 import { toast } from "sonner";
 import { APP_LOCALE, APP_TIME_ZONE } from "@/lib/constants/locale";
 import type { Invoice } from "./ViewInvoiceDialog";
+import type { InvoiceSortField, SortDirection } from "./useSalesInvoices";
 
 export interface SalesInvoiceTableProps {
   paginated: Invoice[];
   rate: number;
   rates: ExchangeRates;
   activeType: RateType;
+  sortField?: InvoiceSortField;
+  sortDirection?: SortDirection;
+  onSort?: (field: InvoiceSortField) => void;
   onView: (invoice: Invoice) => void;
   onConfirm: (invoice: Invoice) => void;
   onDelete: (id: number) => void;
 }
 
-function formatBs(usd: number, rateValue: number) {
-  return `Bs. ${(usd * rateValue).toLocaleString("es-VE", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
-
-function formatEurFromUsd(usd: number, rates: ExchangeRates) {
-  const eurRate = rates.eur > 0 ? rates.eur : rates.bcv * 1.08;
-  const inEur = (usd * rates.bcv) / eurRate;
-  return `€${inEur.toLocaleString("es-VE", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+function SortHeaderButton({
+  label,
+  field,
+  sortField,
+  sortDirection,
+  onSort,
+}: {
+  label: string;
+  field: InvoiceSortField;
+  sortField?: InvoiceSortField;
+  sortDirection?: SortDirection;
+  onSort?: (field: InvoiceSortField) => void;
+}) {
+  const isActive = sortField === field;
+  return (
+    <button
+      type="button"
+      onClick={() => onSort?.(field)}
+      className={cn(
+        "inline-flex items-center gap-1.5 font-bold uppercase tracking-wider text-[10px] transition-colors cursor-pointer select-none",
+        isActive ? "text-primary font-black" : "text-muted-foreground hover:text-foreground"
+      )}
+      title={`Ordenar por ${label}`}
+    >
+      <span>{label}</span>
+      {isActive ? (
+        sortDirection === "desc" ? (
+          <ArrowDown className="h-3 w-3 text-primary shrink-0" />
+        ) : (
+          <ArrowUp className="h-3 w-3 text-primary shrink-0" />
+        )
+      ) : (
+        <ArrowUpDown className="h-2.5 w-2.5 opacity-40 hover:opacity-100 shrink-0" />
+      )}
+    </button>
+  );
 }
 
 function InvoiceStatusTag({
@@ -292,6 +323,9 @@ export function SalesInvoiceTable({
   rate,
   rates,
   activeType,
+  sortField = "id_factura",
+  sortDirection = "desc",
+  onSort,
   onView,
   onConfirm,
   onDelete,
@@ -321,13 +355,51 @@ export function SalesInvoiceTable({
                 className="rounded border-gray-300"
               />
             </th>
-            <th className="p-4">Factura N°</th>
-            <th className="p-4">Paciente</th>
-            <th className="p-4">Fecha de Emisión</th>
             <th className="p-4">
-              Total ($ / € / Bs. {RATE_LABELS[activeType].short})
+              <SortHeaderButton
+                label="Factura N°"
+                field="id_factura"
+                sortField={sortField}
+                sortDirection={sortDirection}
+                onSort={onSort}
+              />
             </th>
-            <th className="p-4">Estado y Método de Pago</th>
+            <th className="p-4">
+              <SortHeaderButton
+                label="Paciente"
+                field="paciente_nombre"
+                sortField={sortField}
+                sortDirection={sortDirection}
+                onSort={onSort}
+              />
+            </th>
+            <th className="p-4">
+              <SortHeaderButton
+                label="Fecha de Emisión"
+                field="fecha_emision"
+                sortField={sortField}
+                sortDirection={sortDirection}
+                onSort={onSort}
+              />
+            </th>
+            <th className="p-4">
+              <SortHeaderButton
+                label={`Total ($ / € / Bs. ${RATE_LABELS[activeType].short})`}
+                field="total_general"
+                sortField={sortField}
+                sortDirection={sortDirection}
+                onSort={onSort}
+              />
+            </th>
+            <th className="p-4">
+              <SortHeaderButton
+                label="Estado y Método de Pago"
+                field="estado_pago"
+                sortField={sortField}
+                sortDirection={sortDirection}
+                onSort={onSort}
+              />
+            </th>
             <th className="p-4 rounded-tr-xl">Acciones</th>
           </tr>
         </thead>
