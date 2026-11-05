@@ -1,84 +1,114 @@
-import { APP_TIME_ZONE } from "@/lib/constants/locale";
 import { useMemo, useState } from "react";
-import { FileBarChart, Download, Calendar as CalIcon, Users, CalendarClock, TrendingUp, CheckCircle2, Megaphone, DollarSign } from "lucide-react";
+import { FileBarChart, Download, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePatientsCountByDateRange } from "@/lib/api/patients";
 import { useAppointments } from "@/lib/api/appointments";
 import { useDoctors } from "@/lib/api/profiles";
-import { useClinicInfo } from "@/lib/api/clinic";
 import { useConsultations } from "@/lib/api/consultations";
-import { cn } from "@/lib/utils";
-import { toast } from "sonner";
+import { useExchangeRate } from "@/hooks/useExchangeRate";
+import { useSalesInvoices } from "@/components/finance/useSalesInvoices";
+import { CashCloseDialog } from "@/components/finance/CashCloseDialog";
+import { ReportsDateFilterBar } from "./reports/ReportsDateFilterBar";
+import { ReportsExportHub } from "./reports/ReportsExportHub";
+import { ReportsKpiGrid } from "./reports/ReportsKpiGrid";
+import { ReportsOverviewTab, type DoctorStatItem } from "./reports/tabs/ReportsOverviewTab";
+import { ReportsFinancialTab } from "./reports/tabs/ReportsFinancialTab";
+import { ReportsMarketingTab } from "./reports/tabs/ReportsMarketingTab";
+import {
+  generateExecutiveReport,
+  exportSalesReportByRange,
+  exportAppointmentsReportByRange,
+  exportPatientsReportByRange,
+  exportAppointmentsCsv,
+} from "@/lib/utils/generateExecutiveReport";
 
-const loadLogoBase64 = (url: string): Promise<string> => {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.drawImage(img, 0, 0);
-        resolve(canvas.toDataURL("image/png"));
-      } else {
-        resolve("");
-      }
-    };
-    img.onerror = () => resolve("");
-    img.src = url;
-  });
-};
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
 
-function todayISO() { return new Date().toISOString().slice(0, 10); }
-function daysAgoISO(n: number) { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); }
-
-const MONTHS_ES = [
-  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-];
+function daysAgoISO(n: number) {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d.toISOString().slice(0, 10);
+}
 
 export function ReportsPage() {
-  const [from, setFrom] = useState(() => daysAgoISO(90));
+  const [from, setFrom] = useState(() => daysAgoISO(30));
   const [to, setTo] = useState(() => todayISO());
+  const [selectedDoctorId, setSelectedDoctorId] = useState("all");
+  const [cashCloseOpen, setCashCloseOpen] = useState(false);
 
+  const { rate, rates, isSyncing, syncWithBcv } = useExchangeRate();
+  const { facturas = [] } = useSalesInvoices();
   const { data: newPatientsCount = 0 } = usePatientsCountByDateRange(from, to);
   const { data: appointments = [] } = useAppointments({ from, to });
   const { data: doctors = [] } = useDoctors();
-  const { data: clinic } = useClinicInfo();
   const { data: consultations = [] } = useConsultations({ from, to });
 
-  // Query upcoming appointments separately to keep them lightweight
   const today = todayISO();
-  const { data: upcomingAppointments = [] } = useAppointments({ from: today, status: "programada", limit: 15 });
+  const { data: upcomingAppointments = [] } = useAppointments({
+    from: today,
+    status: "programada",
+    limit: 15,
+  });
 
-  const doctorMap = useMemo(() => new Map(doctors.map((d) => [d.id, d.full_name || d.email])), [doctors]);
+  const doctorMap = useMemo(
+    () => new Map(doctors.map((d) => [d.id, d.full_name || d.email || "Especialista"])),
+    [doctors]
+  );
 
   const filtered = useMemo(() => {
     return appointments.filter((a) => {
       const d = a.scheduled_at.slice(0, 10);
-      return d >= from && d <= to;
+      const inRange = d >= from && d <= to;
+      if (!inRange) return false;
+      if (selectedDoctorId !== "all" && a.doctor_id !== selectedDoctorId) return false;
+      return true;
     });
-  }, [appointments, from, to]);
+  }, [appointments, from, to, selectedDoctorId]);
 
   const stats = useMemo(() => {
     const completed = filtered.filter((a) => a.status === "completada");
     const scheduled = filtered.filter((a) => a.status === "programada");
     const cancelled = filtered.filter((a) => a.status === "cancelada");
     const income = completed.reduce((acc, a) => acc + (Number(a.price) || 0), 0);
-    const newPatients = newPatientsCount;
-    return { total: filtered.length, completed: completed.length, scheduled: scheduled.length, cancelled: cancelled.length, income, newPatients };
+    return {
+      total: filtered.length,
+      completed: completed.length,
+      scheduled: scheduled.length,
+      cancelled: cancelled.length,
+      income,
+      newPatients: newPatientsCount,
+    };
   }, [filtered, newPatientsCount]);
 
+  const doctorStats = useMemo<DoctorStatItem[]>(() => {
+    const byDoc = new Map<string, DoctorStatItem>();
+    filtered.forEach((a) => {
+      const docId = a.doctor_id || "unassigned";
+      const docName = doctorMap.get(docId) || "Dr(a). General";
+      const current = byDoc.get(docId) || {
+        id: docId,
+        name: docName,
+        completedCount: 0,
+        totalCount: 0,
+        revenueUsd: 0,
+      };
+      current.totalCount += 1;
+      if (a.status === "completada") {
+        current.completedCount += 1;
+        current.revenueUsd += Number(a.price) || 0;
+      }
+      byDoc.set(docId, current);
+    });
+    return Array.from(byDoc.values()).sort((a, b) => b.revenueUsd - a.revenueUsd);
+  }, [filtered, doctorMap]);
+
   const upcoming = useMemo(() => {
-    return upcomingAppointments
-      .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
+    return upcomingAppointments.slice().sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
   }, [upcomingAppointments]);
 
-  // Financial statistics by Month/Year
   const monthlyData = useMemo(() => {
     const completed = appointments.filter((a) => a.status === "completada" && a.price);
     const groups: Record<string, number> = {};
@@ -90,14 +120,13 @@ export function ReportsPage() {
     return Object.entries(groups)
       .map(([month, amount]) => ({ month, amount }))
       .sort((a, b) => a.month.localeCompare(b.month))
-      .slice(-12); // Last 12 months
+      .slice(-12);
   }, [appointments]);
 
   const maxAmount = useMemo(() => {
-    return Math.max(...monthlyData.map(d => d.amount), 1);
+    return Math.max(...monthlyData.map((d) => d.amount), 1);
   }, [monthlyData]);
 
-  // Marketing acquisition statistics
   const marketingData = useMemo(() => {
     const counts: Record<string, number> = {};
     let totalConsultations = 0;
@@ -111,447 +140,119 @@ export function ReportsPage() {
       .map(([channel, count]) => ({
         channel,
         count,
-        percentage: totalConsultations > 0 ? ((count / totalConsultations) * 100).toFixed(1) : "0",
+        percentage:
+          totalConsultations > 0 ? ((count / totalConsultations) * 100).toFixed(1) : "0",
       }))
       .sort((a, b) => b.count - a.count);
   }, [consultations]);
 
-  const exportPDF = async () => {
-    try {
-      const [{ jsPDF }, { default: autoTable }] = await Promise.all([
-        import("jspdf"),
-        import("jspdf-autotable"),
-      ]);
-      const doc = new jsPDF({ unit: "pt", format: "a4" });
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
+  const handleExportExecutive = () =>
+    generateExecutiveReport({ from, to, rate, stats, marketingData, monthlyData });
 
-      const logoBase64 = await loadLogoBase64("/logo.png");
-
-      // Font Setup
-      doc.setFont("times", "normal");
-      doc.setFontSize(8.5);
-      doc.setTextColor(60, 60, 60);
-
-      const clinicAddress1 = clinic?.address_line1 || "Calle las Flores entre González Padrón y Shettino, Número 16.";
-      const clinicAddress2 = clinic?.address_line2 || "Valle de la Pascua, Estado Guárico.";
-      const clinicPhone = clinic?.phone || "0412/8299890 0424/4609387";
-      const clinicName = clinic?.name || "Femesalud";
-      const clinicRif = clinic?.rif || "";
-
-      // Top Header
-      doc.text(clinicAddress1, pageWidth / 2, 45, { align: "center" });
-      doc.text(clinicAddress2, pageWidth / 2, 57, { align: "center" });
-      const headerLine3 = clinicRif ? `Teléfono: ${clinicPhone} | RIF: ${clinicRif}` : `Teléfono: ${clinicPhone}`;
-      doc.text(headerLine3, pageWidth / 2, 69, { align: "center" });
-
-      // Consultorio Header
-      doc.setFont("times", "normal");
-      doc.setFontSize(12.5);
-      doc.setTextColor(0);
-      doc.text("Consultorio Ginecológico Obstétrico", pageWidth / 2, 105, { align: "center" });
-      doc.setFont("times", "italic");
-      doc.setFontSize(17.5);
-      doc.text(clinicName, pageWidth / 2, 122, { align: "center" });
-
-      // Date Format: Valle de la Pascua, DD / MM / AAAA
-      const today = new Date();
-      const topDay = String(today.getDate()).padStart(2, "0");
-      const topMonth = String(today.getMonth() + 1).padStart(2, "0");
-      const topYear = String(today.getFullYear());
-      doc.setFont("times", "normal");
-      doc.setFontSize(10.5);
-      doc.text(`Valle de la Pascua,   ${topDay}   /   ${topMonth}   /   ${topYear}`, pageWidth - 40, 155, { align: "right" });
-
-      // Title
-      doc.setFont("times", "bold");
-      doc.setFontSize(13);
-      doc.text("REPORTE ANALÍTICO Y EJECUTIVO", pageWidth / 2, 195, { align: "center" });
-      const titleWidth = doc.getTextWidth("REPORTE ANALÍTICO Y EJECUTIVO");
-      doc.setDrawColor(0);
-      doc.setLineWidth(0.5);
-      doc.line(pageWidth / 2 - titleWidth / 2, 198, pageWidth / 2 + titleWidth / 2, 198);
-
-      // Date range & generation info
-      doc.setFont("times", "normal");
-      doc.setFontSize(10);
-      doc.setTextColor(40, 40, 50);
-      doc.text(`Rango del Reporte: ${from}  a  ${to}`, 40, 225);
-      doc.setFontSize(8.5);
-      doc.setTextColor(120, 120, 130);
-      doc.text(`Generado: ${new Date().toLocaleString("es-ES")}`, 40, 238);
-
-      // Section 1: KPIs
-      doc.setTextColor(40, 40, 50);
-      doc.setFontSize(11);
-      doc.setFont("times", "bold");
-      doc.text("1. Resumen de Indicadores Clave (Período Seleccionado)", 40, 265);
-
-      autoTable(doc, {
-        startY: 272,
-        head: [["Indicador", "Valor Registrado", "Contexto / Tipo"]],
-        body: [
-          ["Ingresos Totales (Citas Completadas)", `$${stats.income.toLocaleString("es-ES")}`, "Financiero"],
-          ["Pacientes Nuevos Registrados", String(stats.newPatients), "Marketing"],
-          ["Citas Totales Agendadas", String(stats.total), "Operativo"],
-          ["Citas Completadas", String(stats.completed), "Operativo"],
-          ["Citas Programadas (Pendientes)", String(stats.scheduled), "Operativo"],
-          ["Citas Canceladas", String(stats.cancelled), "Operativo"],
-        ],
-        theme: "grid",
-        headStyles: { fillColor: [67, 97, 238], textColor: 255, font: "times" },
-        styles: { font: "times", fontSize: 9, cellPadding: 5 },
-        margin: { left: 40, right: 40 },
-      });
-
-      // Section 2: Marketing Channels
-      const yAcq = (doc as any).lastAutoTable.finalY + 20;
-      doc.setFontSize(11);
-      doc.setFont("times", "bold");
-      doc.text("2. Canales de Adquisición de Pacientes (Marketing)", 40, yAcq);
-
-      autoTable(doc, {
-        startY: yAcq + 6,
-        head: [["Canal de Contacto", "Consultas Registradas", "Porcentaje de Impacto"]],
-        body: marketingData.map(d => [d.channel, String(d.count), `${d.percentage}%`]),
-        theme: "grid",
-        headStyles: { fillColor: [67, 97, 238], textColor: 255, font: "times" },
-        styles: { font: "times", fontSize: 9, cellPadding: 5 },
-        margin: { left: 40, right: 40 },
-      });
-
-      // Section 3: Monthly Breakdown
-      const yMonthly = (doc as any).lastAutoTable.finalY + 20;
-      doc.setFontSize(11);
-      doc.setFont("times", "bold");
-      doc.text("3. Desglose Histórico de Ingresos (Últimos 12 Meses)", 40, yMonthly);
-
-      autoTable(doc, {
-        startY: yMonthly + 6,
-        head: [["Mes / Año", "Monto Total Facturado"]],
-        body: monthlyData.map(d => {
-          const [yr, mn] = d.month.split("-");
-          return [`${MONTHS_ES[parseInt(mn) - 1]} ${yr}`, `$${d.amount.toLocaleString("es-ES")}`];
-        }),
-        theme: "grid",
-        headStyles: { fillColor: [67, 97, 238], textColor: 255, font: "times" },
-        styles: { font: "times", fontSize: 9, cellPadding: 5 },
-        margin: { left: 40, right: 40 },
-      });
-
-      // Draw Watermark and Page Footer on all pages
-      const pageCount = doc.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-
-        // Draw Watermark Logo in center
-        try {
-          if (logoBase64) {
-            doc.saveGraphicsState();
-            const gState = new (doc as any).GState({ opacity: 0.03 });
-            doc.setGState(gState);
-            const imgWidth = 450;
-            const imgHeight = 450;
-            const imgX = (pageWidth - imgWidth) / 2;
-            const imgY = (pageHeight - imgHeight) / 2 - 20;
-            doc.addImage(logoBase64, "PNG", imgX, imgY, imgWidth, imgHeight);
-            doc.restoreGraphicsState();
-          }
-        } catch (watermarkErr) {
-          console.error("Error drawing watermark:", watermarkErr);
-        }
-
-        // Footer Text
-        doc.setFont("times", "normal");
-        doc.setFontSize(8);
-        doc.setTextColor(150, 150, 150);
-        doc.text(`FemeSalud — Reporte Ejecutivo de Gestión`, 40, pageHeight - 20);
-        doc.text(`Página ${i} de ${pageCount}`, pageWidth - 40, pageHeight - 20, { align: "right" });
-      }
-
-      doc.save(`femesalud-reporte-ejecutivo-${from}-${to}.pdf`);
-      toast.success("Reporte analítico exportado");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Error al exportar");
-    }
-  };
-
-  const kpis = [
-    { label: "Citas en rango", value: stats.total, icon: CalendarClock, tone: "text-primary bg-primary/10" },
-    { label: "Completadas", value: stats.completed, icon: CheckCircle2, tone: "text-emerald-500 bg-emerald-500/10" },
-    { label: "Pacientes nuevos", value: stats.newPatients, icon: Users, tone: "text-primary bg-primary/10" },
-    { label: "Ingresos", value: `$${stats.income.toLocaleString("es-ES")}`, icon: DollarSign, tone: "text-emerald-500 bg-emerald-500/10" },
-  ];
+  const handleExportSales = () => exportSalesReportByRange(from, to, rate);
+  const handleExportAppointments = () => exportAppointmentsReportByRange(from, to);
+  const handleExportPatients = () => exportPatientsReportByRange(from, to);
+  const handleExportCsv = () => exportAppointmentsCsv(filtered, doctorMap, from, to, rate);
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div className="flex-1">
-          <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Métricas y Resúmenes</p>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <FileBarChart className="h-7 w-7 text-primary" /> Reportes Analíticos
+    <div className="space-y-6 pb-8">
+      <header className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex-1 min-w-[240px]">
+          <p className="text-[11px] font-extrabold text-primary uppercase tracking-wider mb-1">
+            Inteligencia Clínica y Auditoría
+          </p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2.5 text-foreground">
+            <FileBarChart className="h-7 w-7 text-primary shrink-0" />
+            Centro de Reportes y Analítica
           </h1>
         </div>
-        <Button onClick={exportPDF} className="rounded-2xl bg-primary text-primary-foreground hover:bg-[#3451d6] cursor-pointer">
-          <Download className="mr-1 h-4 w-4" /> Exportar Reporte Ejecutivo
-        </Button>
+
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => syncWithBcv(false)}
+            disabled={isSyncing}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl border border-border bg-card text-xs font-bold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            title="Sincronizar tasa oficial BCV"
+          >
+            <span>Tasa BCV:</span>
+            <strong className="text-foreground">Bs. {rate.toFixed(2)}</strong>
+            <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin text-primary" : ""}`} />
+          </button>
+
+          <Button
+            onClick={handleExportExecutive}
+            className="rounded-2xl bg-primary text-primary-foreground hover:opacity-95 font-bold cursor-pointer shadow-xs"
+          >
+            <Download className="mr-1.5 h-4 w-4" /> Exportar Reporte Ejecutivo
+          </Button>
+        </div>
       </header>
 
-      <div className="bg-card border border-border rounded-3xl p-4 sm:p-5 shadow-xs">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground w-full sm:w-auto">
-            <CalIcon className="h-3.5 w-3.5 shrink-0" /> Rango de fechas
-          </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="rounded-xl flex-1 sm:w-[170px]" />
-            <span className="text-muted-foreground text-xs">a</span>
-            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="rounded-xl flex-1 sm:w-[170px]" />
-          </div>
-          <div className="flex gap-1.5 sm:ml-auto">
-            {[
-              { l: "7 días", n: 7 }, { l: "30 días", n: 30 }, { l: "90 días", n: 90 },
-            ].map((p) => (
-              <button key={p.l} onClick={() => { setFrom(daysAgoISO(p.n)); setTo(todayISO()); }}
-                className="rounded-full bg-muted/50 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/50 cursor-pointer transition">
-                {p.l}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+      <ReportsDateFilterBar
+        from={from}
+        to={to}
+        selectedDoctorId={selectedDoctorId}
+        doctors={doctors}
+        onChangeRange={(nextFrom, nextTo) => {
+          setFrom(nextFrom);
+          setTo(nextTo);
+        }}
+        onChangeDoctor={setSelectedDoctorId}
+      />
+
+      <ReportsExportHub
+        from={from}
+        to={to}
+        onExportExecutive={handleExportExecutive}
+        onExportSales={handleExportSales}
+        onExportAppointments={handleExportAppointments}
+        onExportPatients={handleExportPatients}
+        onOpenCashClose={() => setCashCloseOpen(true)}
+        onExportCsv={handleExportCsv}
+      />
+
+      <ReportsKpiGrid stats={stats} rate={rate} />
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1 rounded-2xl">
-          <TabsTrigger value="overview" className="rounded-xl font-medium text-xs">Vista General</TabsTrigger>
-          <TabsTrigger value="financial" className="rounded-xl font-medium text-xs">Resumen Financiero</TabsTrigger>
-          <TabsTrigger value="marketing" className="rounded-xl font-medium text-xs">Canales de Marketing</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 bg-muted/60 p-1.5 rounded-2xl">
+          <TabsTrigger value="overview" className="rounded-xl font-bold text-xs">
+            Operaciones y Médicos
+          </TabsTrigger>
+          <TabsTrigger value="financial" className="rounded-xl font-bold text-xs">
+            Ventas y Evolución BCV
+          </TabsTrigger>
+          <TabsTrigger value="marketing" className="rounded-xl font-bold text-xs">
+            Marketing y Captación
+          </TabsTrigger>
         </TabsList>
 
-        <ReportsOverviewTab kpis={kpis} upcoming={upcoming} doctorMap={doctorMap} />
-        <ReportsFinancialTab monthlyData={monthlyData} maxAmount={maxAmount} />
-        <ReportsMarketingTab marketingData={marketingData} />
+        <ReportsOverviewTab
+          upcoming={upcoming}
+          doctorStats={doctorStats}
+          doctorMap={doctorMap}
+          rate={rate}
+          onExportAppointmentsPdf={handleExportAppointments}
+        />
+        <ReportsFinancialTab
+          monthlyData={monthlyData}
+          maxAmount={maxAmount}
+          rate={rate}
+          onExportSalesPdf={handleExportSales}
+        />
+        <ReportsMarketingTab
+          marketingData={marketingData}
+          onExportPatientsPdf={handleExportPatients}
+        />
       </Tabs>
+
+      <CashCloseDialog
+        open={cashCloseOpen}
+        onOpenChange={setCashCloseOpen}
+        invoices={facturas as any}
+        rate={rate}
+        rates={rates}
+      />
     </div>
   );
 }
-
-function ReportsOverviewTab({
-  kpis,
-  upcoming,
-  doctorMap,
-}: {
-  kpis: any[];
-  upcoming: any[];
-  doctorMap: Map<string, string>;
-}) {
-  return (
-    <TabsContent value="overview" className="space-y-6 mt-0 outline-none">
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {kpis.map((k) => {
-          const Icon = k.icon;
-          return (
-            <div key={k.label} className="bg-card border border-border rounded-3xl p-5 shadow-xs">
-              <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${k.tone}`}>
-                <Icon className="h-5 w-5" />
-              </div>
-              <p className="mt-4 text-xs text-muted-foreground">{k.label}</p>
-              <p className="text-2xl font-semibold tracking-tight mt-1">{k.value}</p>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="bg-card border border-border rounded-3xl p-6 shadow-xs">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Planificación</p>
-            <h3 className="mt-1 text-base font-semibold flex items-center gap-2">
-              <CalendarClock className="h-5 w-5 text-primary" /> Próximas citas ({upcoming.length})
-            </h3>
-          </div>
-        </div>
-        <div className="overflow-x-auto rounded-2xl border border-border">
-          <table className="w-full text-sm min-w-[540px]">
-            <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
-              <tr>
-                <th className="px-4 py-2.5">Fecha / Hora</th>
-                <th className="px-4 py-2.5">Paciente</th>
-                <th className="px-4 py-2.5">Médico</th>
-                <th className="px-4 py-2.5">Motivo</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/60">
-              {upcoming.slice(0, 10).map((a) => {
-                const dt = new Date(a.scheduled_at);
-                const pad = (n: number) => String(n).padStart(2, "0");
-                return (
-                  <tr key={a.id} className="hover:bg-muted/50/50">
-                    <td className="px-4 py-3 text-xs">
-                      {dt.toLocaleDateString("es-ES", { timeZone: APP_TIME_ZONE, day: "2-digit", month: "short" })} · {pad(dt.getHours())}:{pad(dt.getMinutes())}
-                    </td>
-                    <td className="px-4 py-3 font-semibold">{a.patient_name}</td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground">{doctorMap.get(a.doctor_id) ?? "—"}</td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground">{a.reason ?? "—"}</td>
-                  </tr>
-                );
-              })}
-              {upcoming.length === 0 && (
-                <tr><td colSpan={4} className="px-4 py-6 text-center text-xs text-muted-foreground">No hay citas próximas programadas.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </TabsContent>
-  );
-}
-
-function ReportsFinancialTab({
-  monthlyData,
-  maxAmount,
-}: {
-  monthlyData: any[];
-  maxAmount: number;
-}) {
-  return (
-    <TabsContent value="financial" className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-0 outline-none">
-      <div className="lg:col-span-2 bg-card border border-border/40 rounded-[2rem] p-6 shadow-sm flex flex-col justify-between">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Histórico de Ingresos</p>
-          <h3 className="mt-1 text-base font-semibold flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" /> Evolución de Facturación (Últimos 12 meses)
-          </h3>
-        </div>
-
-        {monthlyData.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-20">No hay transacciones registradas.</p>
-        ) : (
-          <div className="flex h-56 items-end gap-3 pt-6 border-b border-border/40 mt-4">
-            {monthlyData.map((d) => {
-              const pct = (d.amount / maxAmount) * 100;
-              const [yr, mn] = d.month.split("-");
-              const label = `${MONTHS_ES[parseInt(mn) - 1].slice(0,3)} '${yr.slice(2)}`;
-              return (
-                <div key={d.month} className="flex-1 flex flex-col items-center gap-2 group h-full justify-end">
-                  <div className="text-[9px] font-bold text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                    ${d.amount.toLocaleString("es-ES")}
-                  </div>
-                  <div
-                    style={{ height: `${pct}%` }}
-                    className="w-full bg-primary rounded-t-lg transition-[height] duration-500 hover:opacity-85 shadow-sm shadow-[#4361ee]/15"
-                  />
-                  <div className="text-[10px] text-muted-foreground font-semibold truncate w-full text-center">
-                    {label}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      <div className="lg:col-span-1 bg-card border border-border rounded-3xl p-6 shadow-xs">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-primary mb-4 flex items-center gap-1">
-          <DollarSign className="h-4 w-4" /> Desglose Mensual
-        </h3>
-        <div className="overflow-hidden rounded-2xl border border-border">
-          <table className="w-full text-xs">
-            <thead className="bg-muted/50 text-left uppercase tracking-wider text-muted-foreground">
-              <tr>
-                <th className="px-3 py-2">Mes / Año</th>
-                <th className="px-3 py-2 text-right">Monto ($)</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/60">
-              {monthlyData.slice().reverse().map((d) => {
-                const [yr, mn] = d.month.split("-");
-                return (
-                  <tr key={d.month} className="hover:bg-muted/50/20">
-                    <td className="px-3 py-2.5 font-medium">{MONTHS_ES[parseInt(mn) - 1]} {yr}</td>
-                    <td className="px-3 py-2.5 text-right font-bold text-primary">${d.amount.toLocaleString("es-ES")}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </TabsContent>
-  );
-}
-
-function ReportsMarketingTab({
-  marketingData,
-}: {
-  marketingData: any[];
-}) {
-  return (
-    <TabsContent value="marketing" className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-0 outline-none">
-      <div className="lg:col-span-2 bg-card border border-border rounded-3xl p-6 shadow-xs">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Marketing</p>
-          <h3 className="mt-1 text-base font-semibold flex items-center gap-2">
-            <Megaphone className="h-5 w-5 text-primary" /> Adquisición de Pacientes
-          </h3>
-        </div>
-
-        <div className="space-y-4 mt-6">
-          {marketingData.map((d, idx) => {
-            const colors = [
-              "bg-primary",
-              "bg-blue-400",
-              "bg-emerald-500",
-              "bg-sky-600",
-              "bg-amber-600",
-            ];
-            const colorClass = colors[idx % colors.length];
-            return (
-              <div key={d.channel} className="space-y-1">
-                <div className="flex justify-between text-xs font-semibold">
-                  <span>{d.channel}</span>
-                  <span className="text-muted-foreground">{d.count} consultas ({d.percentage}%)</span>
-                </div>
-                <div className="w-full bg-muted/50 h-2.5 rounded-full overflow-hidden">
-                  <div
-                    style={{ width: `${d.percentage}%` }}
-                    className={cn("h-full rounded-full transition-[width] duration-500", colorClass)}
-                  />
-                </div>
-              </div>
-            );
-          })}
-          {marketingData.length === 0 && (
-            <p className="text-xs text-muted-foreground text-center py-12">No hay datos de canales de marketing disponibles.</p>
-          )}
-        </div>
-      </div>
-
-      <div className="lg:col-span-1 bg-card border border-border/40 rounded-[2rem] p-6 shadow-sm">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-primary mb-4 flex items-center gap-1">
-          <Megaphone className="h-4 w-4" /> Tabla de Impacto
-        </h3>
-        <div className="overflow-hidden rounded-2xl border border-border/40">
-          <table className="w-full text-xs">
-            <thead className="bg-muted/50 text-left uppercase tracking-wider text-muted-foreground">
-              <tr>
-                <th className="px-3 py-2">Canal</th>
-                <th className="px-3 py-2 text-center">Consultas</th>
-                <th className="px-3 py-2 text-right">Porcentaje</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/60">
-              {marketingData.map((d) => (
-                <tr key={d.channel} className="hover:bg-muted/50/20">
-                  <td className="px-3 py-2.5 font-medium">{d.channel}</td>
-                  <td className="px-3 py-2.5 text-center font-bold">{d.count}</td>
-                  <td className="px-3 py-2.5 text-right font-bold text-primary">{d.percentage}%</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </TabsContent>
-  );
-}
-
