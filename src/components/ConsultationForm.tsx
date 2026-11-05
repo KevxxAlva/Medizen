@@ -75,7 +75,7 @@ export function ConsultationForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl h-[90vh] flex flex-col rounded-[2rem] p-6 text-foreground">
+      <DialogContent className="w-[calc(100vw-1.25rem)] sm:max-w-4xl h-[calc(100dvh-1.5rem)] sm:h-[90vh] flex flex-col rounded-2xl sm:rounded-[2rem] p-3.5 sm:p-6 text-foreground">
         <DialogHeader className="pb-2">
           <DialogTitle className="text-xl font-bold text-foreground">
             {isEdit ? "Editar Consulta Clínica" : "Registrar Nueva Consulta Clínica"}
@@ -202,17 +202,17 @@ function ConsultationFormActionFooter({
   onSaveAction: (action: "save" | "print" | "whatsapp") => void;
 }) {
   return (
-    <DialogFooter className="mt-4 border-t border-border/60 pt-4 flex items-center justify-between">
+    <DialogFooter className="mt-3 sm:mt-4 border-t border-border/60 pt-3 sm:pt-4 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2">
       <Button
         type="button"
         variant="ghost"
         onClick={onCancel}
         disabled={busy}
-        className="rounded-2xl"
+        className="rounded-2xl w-full sm:w-auto"
       >
         Cancelar
       </Button>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-end gap-2 w-full sm:w-auto">
         {indications.trim() && (
           <>
             <Button
@@ -306,7 +306,7 @@ function ConsultationFormContent({
 
       <Tabs defaultValue="anamnesis" className="flex-1 flex flex-col min-h-0">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4">
-          <TabsList className="flex items-center h-10 w-full lg:w-auto bg-muted/60 p-1 rounded-2xl gap-1 overflow-x-auto">
+          <TabsList className="flex items-center justify-start lg:justify-center h-10 w-full lg:w-auto bg-muted/60 p-1 rounded-2xl gap-1 overflow-x-auto">
             <TabsTrigger
               value="anamnesis"
               className="rounded-xl font-semibold text-xs px-3.5 py-1.5 shrink-0 data-[state=active]:shadow-sm"
@@ -357,7 +357,7 @@ function ConsultationFormContent({
           </div>
         </div>
 
-        <ScrollArea className="flex-1 -mx-6 px-6">
+        <ScrollArea className="flex-1 -mx-3 px-3 sm:-mx-6 sm:px-6">
           <div className="py-1">
             <ConsultationAnamnesisTab
               visitType={state.visitType}

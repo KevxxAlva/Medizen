@@ -360,6 +360,83 @@ export function FacturacionTable({
   );
 }
 
+function getPaymentReferenceLabel(method: string): string {
+  switch (method) {
+    case "Cashea":
+      return "N° de Orden Cashea y Detalle de Inicial";
+    case "Binance":
+      return "Order ID de Binance Pay (USDT)";
+    case "Divisas":
+      return "Seriales de Billetes / Denominación (Opcional)";
+    default:
+      return "Referencia de Pago (Últimos 4 a 6 dígitos)";
+  }
+}
+
+function getPaymentReferencePlaceholder(method: string): string {
+  switch (method) {
+    case "Cashea":
+      return "Ej. Orden #CSH-1029 | Inicial 50% vía Pago Móvil";
+    case "Binance":
+      return "Ej. Order ID 2839481920";
+    case "Divisas":
+      return "Ej. 2 billetes de $20 (Seriales AB123...)";
+    default:
+      return "Ej. Código de transferencia o pago móvil...";
+  }
+}
+
+function PaymentDetailsSection({
+  newStatus,
+  newPaymentMethod,
+  setNewPaymentMethod,
+  newPaymentReference,
+  setNewPaymentReference,
+}: {
+  newStatus: string;
+  newPaymentMethod: string;
+  setNewPaymentMethod: (val: string) => void;
+  newPaymentReference: string;
+  setNewPaymentReference: (val: string) => void;
+}) {
+  if (newStatus !== "completada") return null;
+
+  return (
+    <>
+      <div className="grid gap-1.5 animate-fade-in">
+        <Label htmlFor="payment-method-val">Método de Pago</Label>
+        <Select value={newPaymentMethod} onValueChange={setNewPaymentMethod}>
+          <SelectTrigger id="payment-method-val" className="rounded-xl">
+            <SelectValue placeholder="Seleccione método de pago..." />
+          </SelectTrigger>
+          <SelectContent className="rounded-2xl">
+            <SelectItem value="Pago Móvil">Pago Móvil (Bs. BCV)</SelectItem>
+            <SelectItem value="Transferencia">Transferencia Bancaria (Bs.)</SelectItem>
+            <SelectItem value="Binance">Binance Pay (USDT)</SelectItem>
+            <SelectItem value="Divisas">Divisas (Efectivo $ / €)</SelectItem>
+            <SelectItem value="Efectivo">Efectivo (Bolívares)</SelectItem>
+            <SelectItem value="Cashea">Cashea (Inicial + 3 Cuotas)</SelectItem>
+            <SelectItem value="Punto de Venta">Punto de Venta / Tarjeta</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {newPaymentMethod && newPaymentMethod !== "Efectivo" && (
+        <div className="grid gap-1.5 animate-fade-in">
+          <Label htmlFor="payment-ref-val">{getPaymentReferenceLabel(newPaymentMethod)}</Label>
+          <Input
+            id="payment-ref-val"
+            placeholder={getPaymentReferencePlaceholder(newPaymentMethod)}
+            value={newPaymentReference}
+            onChange={(e) => setNewPaymentReference(e.target.value)}
+            className="rounded-xl"
+          />
+        </div>
+      )}
+    </>
+  );
+}
+
 export function EditPaymentDialog({
   open,
   onOpenChange,
@@ -434,56 +511,13 @@ export function EditPaymentDialog({
             </Select>
           </div>
 
-          {newStatus === "completada" && (
-            <>
-              <div className="grid gap-1.5 animate-fade-in">
-                <Label htmlFor="payment-method-val">Método de Pago</Label>
-                <Select value={newPaymentMethod} onValueChange={setNewPaymentMethod}>
-                  <SelectTrigger id="payment-method-val" className="rounded-xl">
-                    <SelectValue placeholder="Seleccione método de pago..." />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-2xl">
-                    <SelectItem value="Pago Móvil">Pago Móvil (Bs. BCV)</SelectItem>
-                    <SelectItem value="Transferencia">Transferencia Bancaria (Bs.)</SelectItem>
-                    <SelectItem value="Binance">Binance Pay (USDT)</SelectItem>
-                    <SelectItem value="Divisas">Divisas (Efectivo $ / €)</SelectItem>
-                    <SelectItem value="Efectivo">Efectivo (Bolívares)</SelectItem>
-                    <SelectItem value="Cashea">Cashea (Inicial + 3 Cuotas)</SelectItem>
-                    <SelectItem value="Punto de Venta">Punto de Venta / Tarjeta</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {newPaymentMethod && newPaymentMethod !== "Efectivo" && (
-                <div className="grid gap-1.5 animate-fade-in">
-                  <Label htmlFor="payment-ref-val">
-                    {newPaymentMethod === "Cashea"
-                      ? "N° de Orden Cashea y Detalle de Inicial"
-                      : newPaymentMethod === "Binance"
-                      ? "Order ID de Binance Pay (USDT)"
-                      : newPaymentMethod === "Divisas"
-                      ? "Seriales de Billetes / Denominación (Opcional)"
-                      : "Referencia de Pago (Últimos 4 a 6 dígitos)"}
-                  </Label>
-                  <Input
-                    id="payment-ref-val"
-                    placeholder={
-                      newPaymentMethod === "Cashea"
-                        ? "Ej. Orden #CSH-1029 | Inicial 50% vía Pago Móvil"
-                        : newPaymentMethod === "Binance"
-                        ? "Ej. Order ID 2839481920"
-                        : newPaymentMethod === "Divisas"
-                        ? "Ej. 2 billetes de $20 (Seriales AB123...)"
-                        : "Ej. Código de transferencia o pago móvil..."
-                    }
-                    value={newPaymentReference}
-                    onChange={(e) => setNewPaymentReference(e.target.value)}
-                    className="rounded-xl"
-                  />
-                </div>
-              )}
-            </>
-          )}
+          <PaymentDetailsSection
+            newStatus={newStatus}
+            newPaymentMethod={newPaymentMethod}
+            setNewPaymentMethod={setNewPaymentMethod}
+            newPaymentReference={newPaymentReference}
+            setNewPaymentReference={setNewPaymentReference}
+          />
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} className="rounded-xl">

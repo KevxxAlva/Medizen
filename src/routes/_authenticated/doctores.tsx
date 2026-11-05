@@ -113,7 +113,7 @@ function DoctoresAdmin() {
   };
 
   return (
-    <div className="bg-card border border-border rounded-3xl p-4 sm:p-6 shadow-xs min-h-[calc(100vh-8rem)] font-sans flex flex-col">
+    <div className="bg-card border border-border rounded-3xl p-3.5 sm:p-6 shadow-xs min-h-[calc(100vh-8rem)] font-sans flex flex-col w-full min-w-0 overflow-hidden">
       {/* TOP HEADER */}
       <header className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
@@ -153,7 +153,7 @@ function DoctoresAdmin() {
       </div>
 
       {/* TABLE */}
-      <div className="flex-1 overflow-x-auto border border-border rounded-2xl bg-card overflow-hidden shadow-xs">
+      <div className="flex-1 w-full min-w-0 overflow-x-auto border border-border rounded-2xl bg-card shadow-xs">
         <table className="w-full text-left border-collapse min-w-[650px]">
           <thead>
             <tr className="bg-muted/70 text-[10px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border">
@@ -171,91 +171,18 @@ function DoctoresAdmin() {
             ) : paginated.length === 0 ? (
               <tr><td colSpan={6} className="p-12 text-center text-muted-foreground font-medium">No se encontró personal.</td></tr>
             ) : (
-              paginated.map((p) => {
-                const isAdmin = p.roles.includes("admin");
-                const isDoctor = p.roles.includes("doctor") || p.roles.includes("medico");
-                const isRecep = p.roles.includes("recepcionista");
-                const isMe = p.id === me?.id;
-                return (
-                  <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition group">
-                    <td className="p-4"><input type="checkbox" aria-label={`Seleccionar miembro ${p.full_name || p.email}`} className="rounded border-gray-300" /></td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-foreground text-[10px] font-bold">
-                          {initials(p.full_name || p.email)}
-                        </div>
-                        <span className="font-bold text-foreground">{p.full_name || "—"} {isMe && <span className="text-[10px] text-gray-400 font-normal ml-1">(tú)</span>}</span>
-                      </div>
-                    </td>
-                    <td className="p-4 text-muted-foreground font-medium">
-                      {p.email}
-                    </td>
-                    <td className="p-4 text-foreground font-bold text-xs">
-                      {p.specialty || "—"}
-                    </td>
-                    <td className="p-4">
-                      <div className="flex flex-wrap gap-1">
-                        {p.roles.map((r) => {
-                          const isRAdmin = r === "admin";
-                          const isRRecep = r === "recepcionista";
-                          return (
-                            <span key={r} className={cn(
-                              "text-[9px] font-bold px-2 py-1 rounded-full uppercase tracking-wider flex items-center gap-1",
-                              isRAdmin
-                                ? "bg-purple-50 text-purple-600 border border-purple-100"
-                                : isRRecep
-                                ? "bg-blue-50 text-blue-600 border border-blue-100"
-                                : "bg-green-50 text-green-600 border border-green-100"
-                            )}>
-                              {isRAdmin ? <Shield className="h-2.5 w-2.5" /> : isRRecep ? <UserRound className="h-2.5 w-2.5" /> : <Stethoscope className="h-2.5 w-2.5" />} {isRRecep ? "Recepción" : r === "medico" ? "Médico" : r}
-                            </span>
-                          );
-                        })}
-                        {p.roles.length === 0 && <span className="text-[9px] bg-muted text-gray-400 px-2 py-1 rounded-full border border-gray-100">Ninguno</span>}
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-3 text-muted-foreground">
-                        <button
-                          onClick={() => handleToggleAdmin(p)}
-                          disabled={isMe || toggle.isPending}
-                          className="hover:text-purple-600 disabled:opacity-30 flex flex-col items-center gap-1"
-                          title={isAdmin ? "Quitar Admin" : "Hacer Admin"}
-                        >
-                          {isAdmin ? <ShieldOff className="h-4 w-4" /> : <Shield className="h-4 w-4" />}
-                        </button>
-                        <div className="h-3 w-px bg-gray-200"></div>
-                        <button
-                          onClick={() => handleToggleDoctor(p)}
-                          disabled={toggle.isPending}
-                          className="hover:text-green-600 disabled:opacity-30 flex flex-col items-center gap-1"
-                          title={isDoctor ? "Quitar Doctor" : "Hacer Doctor"}
-                        >
-                          {isDoctor ? <ShieldOff className="h-4 w-4" /> : <Stethoscope className="h-4 w-4" />}
-                        </button>
-                        <div className="h-3 w-px bg-gray-200"></div>
-                        <button
-                          onClick={() => handleToggleRecep(p)}
-                          disabled={toggle.isPending}
-                          className="hover:text-blue-600 disabled:opacity-30 flex flex-col items-center gap-1"
-                          title={isRecep ? "Quitar Recepción" : "Hacer Recepción"}
-                        >
-                          {isRecep ? <ShieldOff className="h-4 w-4" /> : <UserRound className="h-4 w-4" />}
-                        </button>
-                        <div className="h-3 w-px bg-gray-200"></div>
-                        <button 
-                          onClick={() => setToDelete(p)} 
-                          disabled={isMe}
-                          className="hover:text-destructive disabled:opacity-30"
-                          title="Eliminar Usuario"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
+              paginated.map((p) => (
+                <DoctorTableRow
+                  key={p.id}
+                  profile={p}
+                  isMe={p.id === me?.id}
+                  togglePending={toggle.isPending}
+                  onToggleAdmin={() => handleToggleAdmin(p)}
+                  onToggleDoctor={() => handleToggleDoctor(p)}
+                  onToggleRecep={() => handleToggleRecep(p)}
+                  onDelete={() => setToDelete(p)}
+                />
+              ))
             )}
           </tbody>
         </table>
@@ -270,91 +197,336 @@ function DoctoresAdmin() {
         onPageChange={setCurrentPage}
       />
 
-      <Dialog open={openCreate} onOpenChange={setOpenCreate}>
-        <DialogContent className="rounded-3xl sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Nuevo usuario</DialogTitle>
-            <DialogDescription>Crea una cuenta para un doctor, recepcionista o administrador.</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleCreate} className="grid gap-4 py-2">
-            <div className="grid gap-2">
-              <Label htmlFor="fn">Nombre completo</Label>
-              <Input id="fn" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} required />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="em">Email</Label>
-              <Input id="em" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="pw">Contraseña (mín. 8)</Label>
-              <Input id="pw" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required minLength={8} />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="grid gap-2">
-                <Label htmlFor="sp" className={cn(form.role !== "doctor" && "text-muted-foreground")}>
-                  Especialidad {form.role !== "doctor" && "(No aplica)"}
-                </Label>
-                <Select 
-                  value={form.specialty} 
-                  onValueChange={(v) => setForm({ ...form, specialty: v })}
-                  disabled={form.role !== "doctor"}
-                >
-                  <SelectTrigger id="sp" className="text-xs">
-                    <SelectValue placeholder={form.role === "doctor" ? "Seleccione especialidad" : "No aplica"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Ginecología y Obstetricia" className="text-xs">Ginecología y Obstetricia</SelectItem>
-                    <SelectItem value="Pediatría" className="text-xs">Pediatría</SelectItem>
-                    <SelectItem value="Cardiología" className="text-xs">Cardiología</SelectItem>
-                    <SelectItem value="Dermatología" className="text-xs">Dermatología</SelectItem>
-                    <SelectItem value="Traumatología y Ortopedia" className="text-xs">Traumatología y Ortopedia</SelectItem>
-                    <SelectItem value="Oftalmología" className="text-xs">Oftalmología</SelectItem>
-                    <SelectItem value="Medicina General" className="text-xs">Medicina General</SelectItem>
-                    <SelectItem value="Neurología" className="text-xs">Neurología</SelectItem>
-                    <SelectItem value="Gastroenterología" className="text-xs">Gastroenterología</SelectItem>
-                    <SelectItem value="Urología" className="text-xs">Urología</SelectItem>
-                    <SelectItem value="Otorrinolaringología" className="text-xs">Otorrinolaringología</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label>Rol</Label>
-                <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as "admin" | "doctor" | "recepcionista" })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="doctor">Doctor</SelectItem>
-                    <SelectItem value="recepcionista">Recepción</SelectItem>
-                    <SelectItem value="admin">Administrador</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="ghost" onClick={() => setOpenCreate(false)}>Cancelar</Button>
-              <Button type="submit" disabled={busy} className="bg-gradient-to-r from-mauve to-mauve-soft text-primary-foreground hover:opacity-95">
-                {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Crear
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <CreateUserModal
+        open={openCreate}
+        onOpenChange={setOpenCreate}
+        form={form}
+        setForm={setForm}
+        onSubmit={handleCreate}
+        busy={busy}
+      />
 
-      <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
-        <AlertDialogContent className="rounded-3xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar usuario?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Se eliminará la cuenta de {toDelete?.full_name || toDelete?.email} y todos sus datos. Esta acción no se puede deshacer.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Eliminar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteUserAlert
+        user={toDelete}
+        onOpenChange={(o) => !o && setToDelete(null)}
+        onConfirm={handleDelete}
+      />
     </div>
+  );
+}
+function DoctorTableRow({
+  profile: p,
+  isMe,
+  togglePending,
+  onToggleAdmin,
+  onToggleDoctor,
+  onToggleRecep,
+  onDelete,
+}: {
+  profile: ProfileWithRoles;
+  isMe: boolean;
+  togglePending: boolean;
+  onToggleAdmin: () => void;
+  onToggleDoctor: () => void;
+  onToggleRecep: () => void;
+  onDelete: () => void;
+}) {
+  const isAdmin = p.roles.includes("admin");
+  const isDoctor = p.roles.includes("doctor") || p.roles.includes("medico");
+  const isRecep = p.roles.includes("recepcionista");
+
+  return (
+    <tr className="border-b border-border last:border-0 hover:bg-muted/30 transition group">
+      <td className="p-4">
+        <input
+          type="checkbox"
+          aria-label={`Seleccionar miembro ${p.full_name || p.email}`}
+          className="rounded border-gray-300"
+        />
+      </td>
+      <td className="p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-foreground text-[10px] font-bold">
+            {initials(p.full_name || p.email)}
+          </div>
+          <span className="font-bold text-foreground">
+            {p.full_name || "—"}{" "}
+            {isMe && <span className="text-[10px] text-gray-400 font-normal ml-1">(tú)</span>}
+          </span>
+        </div>
+      </td>
+      <td className="p-4 text-muted-foreground font-medium">{p.email}</td>
+      <td className="p-4 text-foreground font-bold text-xs">{p.specialty || "—"}</td>
+      <td className="p-4">
+        <div className="flex flex-wrap gap-1">
+          {p.roles.map((r) => {
+            const isRAdmin = r === "admin";
+            const isRRecep = r === "recepcionista";
+            return (
+              <span
+                key={r}
+                className={cn(
+                  "text-[9px] font-bold px-2 py-1 rounded-full uppercase tracking-wider flex items-center gap-1",
+                  isRAdmin
+                    ? "bg-purple-50 text-purple-600 border border-purple-100"
+                    : isRRecep
+                    ? "bg-blue-50 text-blue-600 border border-blue-100"
+                    : "bg-green-50 text-green-600 border border-green-100"
+                )}
+              >
+                {isRAdmin ? (
+                  <Shield className="h-2.5 w-2.5" />
+                ) : isRRecep ? (
+                  <UserRound className="h-2.5 w-2.5" />
+                ) : (
+                  <Stethoscope className="h-2.5 w-2.5" />
+                )}{" "}
+                {isRRecep ? "Recepción" : r === "medico" ? "Médico" : r}
+              </span>
+            );
+          })}
+          {p.roles.length === 0 && (
+            <span className="text-[9px] bg-muted text-gray-400 px-2 py-1 rounded-full border border-gray-100">
+              Ninguno
+            </span>
+          )}
+        </div>
+      </td>
+      <td className="p-4">
+        <div className="flex items-center gap-3 text-muted-foreground">
+          <button
+            onClick={onToggleAdmin}
+            disabled={isMe || togglePending}
+            className="hover:text-purple-600 disabled:opacity-30 flex flex-col items-center gap-1 cursor-pointer"
+            title={isAdmin ? "Quitar Admin" : "Hacer Admin"}
+          >
+            {isAdmin ? <ShieldOff className="h-4 w-4" /> : <Shield className="h-4 w-4" />}
+          </button>
+          <div className="h-3 w-px bg-gray-200"></div>
+          <button
+            onClick={onToggleDoctor}
+            disabled={togglePending}
+            className="hover:text-green-600 disabled:opacity-30 flex flex-col items-center gap-1 cursor-pointer"
+            title={isDoctor ? "Quitar Doctor" : "Hacer Doctor"}
+          >
+            {isDoctor ? <ShieldOff className="h-4 w-4" /> : <Stethoscope className="h-4 w-4" />}
+          </button>
+          <div className="h-3 w-px bg-gray-200"></div>
+          <button
+            onClick={onToggleRecep}
+            disabled={togglePending}
+            className="hover:text-blue-600 disabled:opacity-30 flex flex-col items-center gap-1 cursor-pointer"
+            title={isRecep ? "Quitar Recepción" : "Hacer Recepción"}
+          >
+            {isRecep ? <ShieldOff className="h-4 w-4" /> : <UserRound className="h-4 w-4" />}
+          </button>
+          <div className="h-3 w-px bg-gray-200"></div>
+          <button
+            onClick={onDelete}
+            disabled={isMe}
+            className="hover:text-destructive disabled:opacity-30 cursor-pointer"
+            title="Eliminar Usuario"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+function CreateUserModal({
+  open,
+  onOpenChange,
+  form,
+  setForm,
+  onSubmit,
+  busy,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  form: {
+    email: string;
+    password: string;
+    full_name: string;
+    specialty: string;
+    role: "admin" | "doctor" | "recepcionista";
+  };
+  setForm: React.Dispatch<
+    React.SetStateAction<{
+      email: string;
+      password: string;
+      full_name: string;
+      specialty: string;
+      role: "admin" | "doctor" | "recepcionista";
+    }>
+  >;
+  onSubmit: (e: React.FormEvent) => void;
+  busy: boolean;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="rounded-3xl sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Nuevo usuario</DialogTitle>
+          <DialogDescription>
+            Crea una cuenta para un doctor, recepcionista o administrador.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={onSubmit} className="grid gap-4 py-2">
+          <div className="grid gap-2">
+            <Label htmlFor="fn">Nombre completo</Label>
+            <Input
+              id="fn"
+              value={form.full_name}
+              onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+              required
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="em">Email</Label>
+            <Input
+              id="em"
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              required
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="pw">Contraseña (mín. 8)</Label>
+            <Input
+              id="pw"
+              type="password"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              required
+              minLength={8}
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid gap-2">
+              <Label
+                htmlFor="sp"
+                className={cn(form.role !== "doctor" && "text-muted-foreground")}
+              >
+                Especialidad {form.role !== "doctor" && "(No aplica)"}
+              </Label>
+              <Select
+                value={form.specialty}
+                onValueChange={(v) => setForm({ ...form, specialty: v })}
+                disabled={form.role !== "doctor"}
+              >
+                <SelectTrigger id="sp" className="text-xs">
+                  <SelectValue
+                    placeholder={
+                      form.role === "doctor" ? "Seleccione especialidad" : "No aplica"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Ginecología y Obstetricia" className="text-xs">
+                    Ginecología y Obstetricia
+                  </SelectItem>
+                  <SelectItem value="Pediatría" className="text-xs">
+                    Pediatría
+                  </SelectItem>
+                  <SelectItem value="Cardiología" className="text-xs">
+                    Cardiología
+                  </SelectItem>
+                  <SelectItem value="Dermatología" className="text-xs">
+                    Dermatología
+                  </SelectItem>
+                  <SelectItem value="Traumatología y Ortopedia" className="text-xs">
+                    Traumatología y Ortopedia
+                  </SelectItem>
+                  <SelectItem value="Oftalmología" className="text-xs">
+                    Oftalmología
+                  </SelectItem>
+                  <SelectItem value="Medicina General" className="text-xs">
+                    Medicina General
+                  </SelectItem>
+                  <SelectItem value="Neurología" className="text-xs">
+                    Neurología
+                  </SelectItem>
+                  <SelectItem value="Gastroenterología" className="text-xs">
+                    Gastroenterología
+                  </SelectItem>
+                  <SelectItem value="Urología" className="text-xs">
+                    Urología
+                  </SelectItem>
+                  <SelectItem value="Otorrinolaringología" className="text-xs">
+                    Otorrinolaringología
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label>Rol</Label>
+              <Select
+                value={form.role}
+                onValueChange={(v) =>
+                  setForm({ ...form, role: v as "admin" | "doctor" | "recepcionista" })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="doctor">Doctor</SelectItem>
+                  <SelectItem value="recepcionista">Recepción</SelectItem>
+                  <SelectItem value="admin">Administrador</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={busy}
+              className="bg-gradient-to-r from-mauve to-mauve-soft text-primary-foreground hover:opacity-95"
+            >
+              {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Crear
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function DeleteUserAlert({
+  user,
+  onOpenChange,
+  onConfirm,
+}: {
+  user: ProfileWithRoles | null;
+  onOpenChange: (o: boolean) => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <AlertDialog open={!!user} onOpenChange={onOpenChange}>
+      <AlertDialogContent className="rounded-3xl">
+        <AlertDialogHeader>
+          <AlertDialogTitle>¿Eliminar usuario?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Se eliminará la cuenta de {user?.full_name || user?.email} y todos sus datos.
+            Esta acción no se puede deshacer.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={onConfirm}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            Eliminar
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

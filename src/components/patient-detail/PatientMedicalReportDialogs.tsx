@@ -456,10 +456,10 @@ function LaboratorioDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="rounded-3xl sm:max-w-lg bg-card p-6 border border-muted/50 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="rounded-2xl sm:rounded-3xl sm:max-w-lg bg-card p-4 sm:p-6 border border-muted/50 shadow-2xl max-h-[calc(100dvh-1.5rem)] sm:max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-1.5">
-            <Printer className="h-5 w-5 text-primary" /> Orden de Exámenes de Laboratorio
+          <DialogTitle className="flex items-center gap-1.5 text-base sm:text-lg">
+            <Printer className="h-5 w-5 text-primary shrink-0" /> Orden de Exámenes de Laboratorio
           </DialogTitle>
         </DialogHeader>
         <div className="grid gap-3 py-2 text-sm">
@@ -467,7 +467,7 @@ function LaboratorioDialog({
             <Label className="text-xs font-bold uppercase text-muted-foreground">
               Perfiles Rápidos en 1 Clic
             </Label>
-            <div className="grid grid-cols-2 gap-1.5 mt-1.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mt-1.5">
               {LAB_PROFILES.map((p) => (
                 <button
                   key={p.title}
@@ -584,14 +584,14 @@ function EcografiaDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="rounded-3xl sm:max-w-lg bg-card p-6 border border-muted/50 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="rounded-2xl sm:rounded-3xl sm:max-w-lg bg-card p-4 sm:p-6 border border-muted/50 shadow-2xl max-h-[calc(100dvh-1.5rem)] sm:max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-1.5">
-            <Printer className="h-5 w-5 text-primary" /> Informe Ecográfico Estructurado
+          <DialogTitle className="flex items-center gap-1.5 text-base sm:text-lg">
+            <Printer className="h-5 w-5 text-primary shrink-0" /> Informe Ecográfico Estructurado
           </DialogTitle>
         </DialogHeader>
         <div className="grid gap-3 py-2 text-sm">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {ECO_TEMPLATES.map((tpl) => (
               <button
                 key={tpl.type}
@@ -612,7 +612,7 @@ function EcografiaDialog({
             ))}
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div>
               <Label className="text-[11px]">Edad Gestacional / Fase</Label>
               <Input

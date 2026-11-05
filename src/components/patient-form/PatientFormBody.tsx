@@ -34,7 +34,7 @@ export function PatientFormBody({
   return (
     <>
       <Tabs defaultValue="id" className="flex-1 flex flex-col min-h-0">
-        <TabsList className="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full bg-muted/60 p-1.5 rounded-2xl mb-4">
+        <TabsList className="flex items-center justify-start sm:justify-center gap-1.5 overflow-x-auto no-scrollbar w-full bg-muted/60 p-1.5 rounded-2xl mb-4">
           <TabsTrigger
             value="id"
             className="rounded-xl font-medium text-xs px-3 py-1.5 shrink-0 sm:shrink sm:flex-1 whitespace-nowrap"

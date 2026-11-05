@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import { Search, Bell, Settings } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -21,19 +21,25 @@ export interface DashboardHeaderProps {
 
 export function DashboardHeader({ notifications }: DashboardHeaderProps) {
   const [open, setOpen] = useState(false);
-  const [readKeys, setReadKeys] = useState<string[]>(() => {
+  const [readKeys, setReadKeys] = useState<string[]>([]);
+
+  useEffect(() => {
     try {
       const stored = localStorage.getItem("medizen_read_notifications");
-      return stored ? JSON.parse(stored) : [];
+      if (stored) {
+        setReadKeys(JSON.parse(stored));
+      }
     } catch {
-      return [];
+      // ignore storage access error in private browsing/SSR
     }
-  });
+  }, []);
 
   const getNotificationKey = (n: DashboardNotification) => `${n.id}:${n.desc}`;
 
+  const readKeySet = useMemo(() => new Set(readKeys), [readKeys]);
+
   const unreadCount = notifications.filter(
-    (n) => !readKeys.includes(getNotificationKey(n))
+    (n) => !readKeySet.has(getNotificationKey(n))
   ).length;
 
   const handleMarkAllAsRead = () => {

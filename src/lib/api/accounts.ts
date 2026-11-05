@@ -396,26 +396,28 @@ export function useSyncVenezuelanAccountsAndMethods() {
       };
 
       // 1. Asegurar las cuentas clave para Venezuela
-      const bankAcc = await ensureAccount("Bank", "Cuenta Bancaria Nacional (Bs.)", {
-        currency: "VES",
-        notes: "Recibe Pago Móvil, Transferencias y Punto de Venta",
-      });
-      const cashUsdAcc = await ensureAccount("Cash", "Caja Clínica Divisas ($)", {
-        currency: "USD",
-        notes: "Efectivo en Dólares ($) y Euros (€)",
-      });
-      const cashVesAcc = await ensureAccount("CashVES", "Caja Efectivo Bolívares (Bs.)", {
-        currency: "VES",
-        notes: "Efectivo físico en Bolívares",
-      });
-      const binanceAcc = await ensureAccount("Digital", "Billetera Binance Pay (USDT)", {
-        currency: "USDT",
-        notes: "Pagos recibidos en USDT vía Binance Pay",
-      });
-      const casheaAcc = await ensureAccount("Cashea", "Cartera Cashea (Cuotas)", {
-        currency: "USD",
-        notes: "Cuotas financiadas por Cashea pendientes de liquidación",
-      });
+      const [bankAcc, cashUsdAcc, cashVesAcc, binanceAcc, casheaAcc] = await Promise.all([
+        ensureAccount("Bank", "Cuenta Bancaria Nacional (Bs.)", {
+          currency: "VES",
+          notes: "Recibe Pago Móvil, Transferencias y Punto de Venta",
+        }),
+        ensureAccount("Cash", "Caja Clínica Divisas ($)", {
+          currency: "USD",
+          notes: "Efectivo en Dólares ($) y Euros (€)",
+        }),
+        ensureAccount("CashVES", "Caja Efectivo Bolívares (Bs.)", {
+          currency: "VES",
+          notes: "Efectivo físico en Bolívares",
+        }),
+        ensureAccount("Digital", "Billetera Binance Pay (USDT)", {
+          currency: "USDT",
+          notes: "Pagos recibidos en USDT vía Binance Pay",
+        }),
+        ensureAccount("Cashea", "Cartera Cashea (Cuotas)", {
+          currency: "USD",
+          notes: "Cuotas financiadas por Cashea pendientes de liquidación",
+        }),
+      ]);
 
       const categoryToAccountMap: Record<string, string | undefined> = {
         "Pago Móvil": bankAcc?.id,
@@ -436,38 +438,40 @@ export function useSyncVenezuelanAccountsAndMethods() {
         }
       }
 
-      for (const preset of VE_PAYMENT_PRESETS) {
+      const presetSyncPromises = VE_PAYMENT_PRESETS.map(async (preset) => {
         const targetAccId = categoryToAccountMap[preset.category];
         const existingMethod = existingByCat.get(preset.category);
 
         if (!existingMethod) {
-          await supabase.from("payment_methods").insert({
+          return supabase.from("payment_methods").insert({
             name: preset.name,
             category: preset.category,
             account_id: targetAccId || null,
             status: "Active",
           });
         } else if (!existingMethod.account_id && targetAccId) {
-          await supabase
+          return supabase
             .from("payment_methods")
             .update({ account_id: targetAccId })
             .eq("id", existingMethod.id);
         }
-      }
+      });
+      await Promise.all(presetSyncPromises);
 
       // También vincular cualquier otro método existente sin cuenta
-      for (const m of methods) {
-        if (!m.account_id) {
+      const unlinkedSyncPromises = methods
+        .filter((m) => !m.account_id)
+        .map(async (m) => {
           const cat = inferCategoryFromMethod(m.name, m.category);
           const targetAccId = categoryToAccountMap[cat];
           if (targetAccId) {
-            await supabase
+            return supabase
               .from("payment_methods")
               .update({ account_id: targetAccId })
               .eq("id", m.id);
           }
-        }
-      }
+        });
+      await Promise.all(unlinkedSyncPromises);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["financial_accounts"] });

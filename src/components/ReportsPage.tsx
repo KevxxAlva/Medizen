@@ -299,13 +299,15 @@ export function ReportsPage() {
 
       <div className="bg-card border border-border rounded-3xl p-4 sm:p-5 shadow-xs">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-            <CalIcon className="h-3.5 w-3.5" /> Rango de fechas
+          <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground w-full sm:w-auto">
+            <CalIcon className="h-3.5 w-3.5 shrink-0" /> Rango de fechas
           </div>
-          <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="rounded-xl w-[170px]" />
-          <span className="text-muted-foreground text-xs">a</span>
-          <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="rounded-xl w-[170px]" />
-          <div className="flex gap-1.5 ml-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="rounded-xl flex-1 sm:w-[170px]" />
+            <span className="text-muted-foreground text-xs">a</span>
+            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="rounded-xl flex-1 sm:w-[170px]" />
+          </div>
+          <div className="flex gap-1.5 sm:ml-auto">
             {[
               { l: "7 días", n: 7 }, { l: "30 días", n: 30 }, { l: "90 días", n: 90 },
             ].map((p) => (
@@ -368,8 +370,8 @@ function ReportsOverviewTab({
             </h3>
           </div>
         </div>
-        <div className="overflow-hidden rounded-2xl border border-border">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-2xl border border-border">
+          <table className="w-full text-sm min-w-[540px]">
             <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
               <tr>
                 <th className="px-4 py-2.5">Fecha / Hora</th>

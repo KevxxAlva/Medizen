@@ -95,7 +95,7 @@ export function AppointmentForm({
             </Select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="grid gap-2">
               <Label htmlFor="date">Fecha</Label>
               <Input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
@@ -106,7 +106,7 @@ export function AppointmentForm({
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="grid gap-2">
               <Label>Duración (min)</Label>
               <Input type="number" value={duration} onChange={(e) => setDuration(e.target.value)} />

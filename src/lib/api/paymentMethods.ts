@@ -186,9 +186,10 @@ function writeLocalDetails(key: string, details?: PaymentMethodDetails) {
 
 export function inferCategoryFromMethod(name: string, rawCategory?: string): VePaymentCategory {
   const combined = `${name} ${rawCategory || ""}`.toLowerCase();
+  // Cashea tiene prioridad porque los cobros pueden describir la inicial (ej. "Cashea (Inicial 50% · Pago Móvil)")
+  if (combined.includes("cashea")) return "Cashea";
   if (combined.includes("pago móvil") || combined.includes("pago movil")) return "Pago Móvil";
   if (combined.includes("binance") || combined.includes("usdt") || combined.includes("crypto")) return "Binance";
-  if (combined.includes("cashea")) return "Cashea";
   if (combined.includes("divisa") || combined.includes("efectivo usd") || combined.includes("efectivo eur") || combined.includes("dólar") || combined.includes("dolar")) return "Divisas";
   if (combined.includes("transferencia") || combined.includes("bank") || combined.includes("zelle")) return "Transferencia";
   if (combined.includes("punto") || combined.includes("tarjeta") || combined.includes("card")) return "Punto de Venta";
@@ -202,7 +203,7 @@ export function getDefaultDetailsForCategory(category: string, name = ""): Payme
   return preset ? { ...preset.details } : { currency: "VES", defaultRateType: "bcv", requiresReference: true };
 }
 
-function encodeCategoryWithDetails(category: string, details?: PaymentMethodDetails): string {
+export function encodeCategoryWithDetails(category: string, details?: PaymentMethodDetails): string {
   const cleanCat = category.split(CATEGORY_DELIMITER)[0].trim();
   if (!details || Object.keys(details).length === 0) return cleanCat;
   try {
@@ -210,6 +211,19 @@ function encodeCategoryWithDetails(category: string, details?: PaymentMethodDeta
   } catch {
     return cleanCat;
   }
+}
+
+export function decodeCategoryDetails(rawCategory?: string): PaymentMethodDetails {
+  if (!rawCategory) return { currency: "VES", defaultRateType: "bcv", requiresReference: true };
+  const [, encodedJson] = rawCategory.split(CATEGORY_DELIMITER);
+  if (encodedJson) {
+    try {
+      return JSON.parse(encodedJson);
+    } catch {
+      // ignore
+    }
+  }
+  return getDefaultDetailsForCategory(rawCategory);
 }
 
 function decodeMethodRow(row: any): PaymentMethod {
@@ -420,41 +434,44 @@ export function useSeedVenezuelanPaymentMethods() {
 
       if (toInsert.length === 0) return [];
 
-      const created: PaymentMethod[] = [];
-      for (const preset of toInsert) {
-        const encodedCategory = encodeCategoryWithDetails(preset.category, preset.details);
-        writeLocalDetails(preset.name, preset.details);
+      const results = await Promise.all(
+        toInsert.map(async (preset) => {
+          const encodedCategory = encodeCategoryWithDetails(preset.category, preset.details);
+          writeLocalDetails(preset.name, preset.details);
 
-        let res = await supabase
-          .from("payment_methods")
-          .insert({
-            name: preset.name,
-            category: encodedCategory,
-            account_id: null,
-            status: "Active",
-          })
-          .select()
-          .single();
-
-        if (res.error) {
-          res = await supabase
+          let res = await supabase
             .from("payment_methods")
             .insert({
               name: preset.name,
-              category: preset.category,
+              category: encodedCategory,
               account_id: null,
               status: "Active",
             })
             .select()
             .single();
-        }
 
-        if (!res.error && res.data) {
-          writeLocalDetails(res.data.id, preset.details);
-          created.push(decodeMethodRow(res.data));
-        }
-      }
-      return created;
+          if (res.error) {
+            res = await supabase
+              .from("payment_methods")
+              .insert({
+                name: preset.name,
+                category: preset.category,
+                account_id: null,
+                status: "Active",
+              })
+              .select()
+              .single();
+          }
+
+          if (!res.error && res.data) {
+            writeLocalDetails(res.data.id, preset.details);
+            return decodeMethodRow(res.data);
+          }
+          return null;
+        })
+      );
+
+      return results.filter((item): item is PaymentMethod => item !== null);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["payment_methods"] });

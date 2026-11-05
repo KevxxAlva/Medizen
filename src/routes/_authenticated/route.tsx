@@ -81,7 +81,7 @@ function AuthenticatedLayout() {
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-0 flex flex-col">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-background pb-20 md:pb-0 flex flex-col">
       {/* Mobile Top Header (md:hidden) with crisp bottom divider matching react.doctor */}
       <header className="sticky top-0 z-40 md:hidden flex items-center justify-between px-3 sm:px-4 h-16 bg-card/95 backdrop-blur-md border-b border-border shadow-xs">
         <div className="flex items-center gap-2.5">
@@ -153,11 +153,11 @@ function AuthenticatedLayout() {
 
       <main
         id="main-content"
-        className={`px-3 sm:px-4 md:px-6 pt-3 sm:pt-4 md:pt-6 pb-6 h-full flex-1 transition-[margin] duration-300 ${isCollapsed ? "md:ml-[80px]" : "md:ml-[260px]"}`}
+        className={`px-3 sm:px-4 md:px-6 pt-3 sm:pt-4 md:pt-6 pb-6 h-full flex-1 min-w-0 max-w-full transition-[margin] duration-300 ${isCollapsed ? "md:ml-[80px]" : "md:ml-[260px]"}`}
       >
         <div
           key={location.pathname}
-          className="max-w-7xl mx-auto w-full animate-in fade-in duration-150"
+          className="max-w-7xl mx-auto w-full min-w-0 animate-in fade-in duration-150"
         >
           <Outlet />
         </div>

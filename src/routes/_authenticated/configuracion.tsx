@@ -167,7 +167,7 @@ function UserProfileSection({
   const isProfileLoading = loadingProfile || updateProfile.isPending;
 
   return (
-    <div className="bg-card border border-border/40 rounded-[2rem] p-8 shadow-sm relative overflow-hidden">
+    <div className="bg-card border border-border/40 rounded-[2rem] p-4 sm:p-8 shadow-sm relative overflow-hidden">
       <div className="absolute right-0 top-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl -mr-10 -mt-10" />
       
       <form onSubmit={handleSaveProfile} className="space-y-6">
@@ -247,7 +247,7 @@ function UserProfileSection({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="profile-mpps" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                 MPPS
@@ -383,7 +383,7 @@ function AuditLogSection() {
   const { data: logs = [], isLoading } = useAuditLogs(100);
 
   return (
-    <div className="bg-card border border-border/40 rounded-[2rem] p-8 shadow-sm">
+    <div className="bg-card border border-border/40 rounded-[2rem] p-4 sm:p-8 shadow-sm">
       <h2 className="text-xl font-bold text-primary mb-4 flex items-center gap-2">
         <Shield className="h-5 w-5" /> Registro de Actividades
       </h2>
@@ -611,7 +611,7 @@ function SecuritySection() {
   };
 
   return (
-    <div className="bg-card border border-border/40 rounded-[2rem] p-8 shadow-sm relative overflow-hidden space-y-6">
+    <div className="bg-card border border-border/40 rounded-[2rem] p-4 sm:p-8 shadow-sm relative overflow-hidden space-y-6">
       <div className="flex items-center justify-between pb-4 border-b border-border/40 flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">

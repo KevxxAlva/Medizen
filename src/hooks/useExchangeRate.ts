@@ -90,28 +90,28 @@ export function useExchangeRate() {
     }
   }, []);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(STORAGE_KEY_RATES, JSON.stringify(rates));
+      localStorage.setItem("medizen_bcv_rate", String(rates.bcv));
+    }
+  }, [rates]);
+
   const updateRates = useCallback((nextRates: Partial<ExchangeRates>, manual = true) => {
-    setRatesState((prev) => {
-      const merged: ExchangeRates = {
-        bcv:
-          nextRates.bcv && nextRates.bcv > 0
-            ? Math.round(nextRates.bcv * 100) / 100
-            : prev.bcv,
-        eur:
-          nextRates.eur && nextRates.eur > 0
-            ? Math.round(nextRates.eur * 100) / 100
-            : prev.eur,
-        usdt:
-          nextRates.usdt && nextRates.usdt > 0
-            ? Math.round(nextRates.usdt * 100) / 100
-            : prev.usdt,
-      };
-      if (typeof window !== "undefined") {
-        localStorage.setItem(STORAGE_KEY_RATES, JSON.stringify(merged));
-        localStorage.setItem("medizen_bcv_rate", String(merged.bcv));
-      }
-      return merged;
-    });
+    setRatesState((prev) => ({
+      bcv:
+        nextRates.bcv && nextRates.bcv > 0
+          ? Math.round(nextRates.bcv * 100) / 100
+          : prev.bcv,
+      eur:
+        nextRates.eur && nextRates.eur > 0
+          ? Math.round(nextRates.eur * 100) / 100
+          : prev.eur,
+      usdt:
+        nextRates.usdt && nextRates.usdt > 0
+          ? Math.round(nextRates.usdt * 100) / 100
+          : prev.usdt,
+    }));
     const nowIso = new Date().toISOString();
     setUpdatedAt(nowIso);
     setIsManual(manual);

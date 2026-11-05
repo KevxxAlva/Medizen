@@ -49,7 +49,7 @@ export function PatientForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl h-[90vh] flex flex-col rounded-3xl p-6">
+      <DialogContent className="w-[calc(100vw-1.25rem)] sm:max-w-4xl h-[calc(100dvh-1.5rem)] sm:h-[90vh] flex flex-col rounded-2xl sm:rounded-3xl p-4 sm:p-6">
         <DialogHeader className="pb-2">
           <DialogTitle>{isEdit ? "Editar historia clínica" : "Nueva historia clínica"}</DialogTitle>
           <DialogDescription>
