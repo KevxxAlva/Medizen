@@ -71,25 +71,129 @@ export function useSalesInvoices() {
     refetchOnWindowFocus: true, // Si regresa a la pestaña o ventana, refresca
     refetchInterval: 5000, // Sincronización en tiempo real cada 5 segundos
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("facturas")
-        .select(`
-          id_factura, 
-          id_paciente,
-          fecha_emision,
-          subtotal,
-          monto_paciente,
-          total_general,
-          estado_pago,
-          pacientes (nombre, apellido),
-          pagos (id_pago, metodo_pago, referencia, monto_pagado, fecha_pago)
-        `)
-        .order("id_factura", { ascending: false });
+      const [{ data, error }, { data: allServices }, { data: recentCitas }] = await Promise.all([
+        supabase
+          .from("facturas")
+          .select(`
+            id_factura, 
+            id_paciente,
+            fecha_emision,
+            subtotal,
+            monto_paciente,
+            total_general,
+            estado_pago,
+            pacientes (nombre, apellido),
+            pagos (id_pago, metodo_pago, referencia, monto_pagado, fecha_pago),
+            detalles_factura (
+              id_detalle,
+              id_servicio,
+              cantidad,
+              precio_unitario,
+              subtotal,
+              servicios (nombre_servicio)
+            )
+          `)
+          .order("id_factura", { ascending: false }),
+        supabase.from("servicios").select("id_servicio, nombre_servicio, costo_base"),
+        supabase
+          .from("citas")
+          .select("id_cita, id_paciente, id_medico, fecha_hora, motivo, medicos(nombre, apellido, especialidades(nombre))")
+          .or("motivo.is.null,motivo.not.ilike.%[TEST-LOAD]%")
+          .order("fecha_hora", { ascending: false })
+          .limit(500),
+      ]);
 
       if (error) throw error;
 
       const mapped = (data || []).map((f: any) => {
         const pago = Array.isArray(f.pagos) ? f.pagos[0] : f.pagos;
+
+        // 1. Obtener items desde detalles_factura si existen
+        let items: any[] = [];
+        if (Array.isArray(f.detalles_factura) && f.detalles_factura.length > 0) {
+          items = f.detalles_factura.map((d: any) => {
+            const servName =
+              d.servicios?.nombre_servicio ||
+              allServices?.find((s: any) => s.id_servicio === d.id_servicio)?.nombre_servicio ||
+              null;
+            return {
+              id: d.id_detalle,
+              descripcion: servName,
+              cantidad: Number(d.cantidad) || 1,
+              precio_unitario: Number(d.precio_unitario) || Number(d.subtotal) || 0,
+              subtotal: Number(d.subtotal) || Number(d.precio_unitario) || 0,
+            };
+          }).filter((it: any) => Boolean(it.descripcion));
+        }
+
+        // 2. Determinar el concepto principal
+        let concepto: string | null = null;
+        if (items.length > 0) {
+          concepto = items.map((i) => i.descripcion).join(", ");
+        }
+
+        // 3. Si no hay concepto en detalles_factura, buscar en citas del paciente por cercanía temporal
+        if (!concepto && f.id_paciente && recentCitas) {
+          const patientCitas = recentCitas.filter((c: any) => Number(c.id_paciente) === Number(f.id_paciente));
+          if (patientCitas.length > 0) {
+            const fTime = f.fecha_emision ? new Date(f.fecha_emision).getTime() : 0;
+            let bestCita: any = null;
+            let minDiff = Infinity;
+            for (const c of patientCitas) {
+              const cTime = c.fecha_hora ? new Date(c.fecha_hora).getTime() : 0;
+              const diff = Math.abs(cTime - fTime);
+              if (diff < minDiff) {
+                minDiff = diff;
+                bestCita = c;
+              }
+            }
+
+            if (bestCita) {
+              const mot = (bestCita.motivo || "").trim();
+              if (mot && !mot.toLowerCase().includes("[test-load]")) {
+                concepto = mot;
+              } else if (bestCita.medicos?.especialidades?.nombre) {
+                concepto = `Consulta de ${bestCita.medicos.especialidades.nombre}`;
+              } else if (bestCita.medicos?.nombre) {
+                concepto = `Consulta con Dr(a). ${bestCita.medicos.nombre} ${bestCita.medicos.apellido || ""}`.trim();
+              }
+            }
+          }
+        }
+
+        // 4. Si aún no hay concepto, deducir por el monto exacto del servicio en catálogo
+        if (!concepto && allServices && allServices.length > 0) {
+          const matchedByPrice = allServices.find(
+            (s: any) => Math.abs(Number(s.costo_base) - Number(f.total_general)) < 0.01
+          );
+          if (matchedByPrice?.nombre_servicio) {
+            concepto = matchedByPrice.nombre_servicio;
+          }
+        }
+
+        // 5. Fallback a primer servicio disponible en catálogo o nombre descriptivo
+        if (!concepto) {
+          const firstService = allServices?.[0]?.nombre_servicio;
+          concepto = firstService || "Consulta Médica Especializada";
+        }
+
+        if (items.length === 0) {
+          items = [
+            {
+              descripcion: concepto,
+              cantidad: 1,
+              precio_unitario: Number(f.total_general) || 0,
+              subtotal: Number(f.total_general) || 0,
+            },
+          ];
+        } else {
+          // Si algún item tenía descripción vacía o genérica, completarlo con el concepto
+          items = items.map((it) => ({
+            ...it,
+            descripcion: (!it.descripcion || it.descripcion === "Servicio Médico") ? concepto! : it.descripcion,
+          }));
+        }
+
         return {
           id_factura: f.id_factura,
           id_paciente: f.id_paciente,
@@ -103,6 +207,8 @@ export function useSalesInvoices() {
           estado_pago: f.estado_pago || "Pendiente",
           metodo_pago: pago?.metodo_pago || null,
           referencia: pago?.referencia || null,
+          concepto,
+          items,
         };
       }) as Invoice[];
 
@@ -173,9 +279,12 @@ export function useSalesInvoices() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["facturas"] });
-      queryClient.invalidateQueries({ queryKey: ["financial_accounts"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard_stats"] });
+      queryClient.invalidateQueries({ queryKey: ["facturas"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["financial_accounts"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["dashboard_stats"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["monthly_payments"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["dashboard_trends"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["appointments"], refetchType: "all" });
       toast.success("Factura cobrada y conciliada exitosamente");
     },
     onError: () => {

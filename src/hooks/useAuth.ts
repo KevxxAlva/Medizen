@@ -58,6 +58,15 @@ function ensureAuthSubscription() {
   supabase.auth.onAuthStateChange((event, session) => {
     if (event === "SIGNED_OUT") {
       clearPersistentQueryCache();
+      if (typeof window !== "undefined") {
+        try {
+          Object.keys(localStorage).forEach((k) => {
+            if (k.startsWith("medizen_cached_roles")) {
+              localStorage.removeItem(k);
+            }
+          });
+        } catch {}
+      }
     }
     sharedAuthState = {
       session,
@@ -92,16 +101,14 @@ export function useAuthSession(): AuthState {
   return state;
 }
 
-const CACHED_ROLES_KEY = "medizen_cached_roles";
-
 export function useRoles() {
   const { user } = useAuthSession();
   const [cachedRoles, setCachedRoles] = useState<AppRole[] | undefined>(undefined);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && user?.id) {
       try {
-        const raw = localStorage.getItem(CACHED_ROLES_KEY);
+        const raw = localStorage.getItem(`medizen_cached_roles_${user.id}`);
         if (raw) {
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed)) setCachedRoles(parsed as AppRole[]);
@@ -110,25 +117,40 @@ export function useRoles() {
         // ignore storage errors
       }
     }
-  }, []);
+  }, [user?.id]);
 
   return useQuery({
     queryKey: ["user_roles", user?.id],
     enabled: !!user,
     placeholderData: cachedRoles,
     queryFn: async () => {
+      // 1. Check user_metadata first as fast reliable source
+      const metaRole = (user?.user_metadata?.role || "").toLowerCase();
+      let defaultRoles: AppRole[] = [];
+      if (metaRole === "admin" || metaRole === "doctor" || metaRole === "medico" || metaRole === "recepcionista") {
+        defaultRoles = [metaRole as AppRole];
+      }
+
       const { data, error } = await supabase
         .from("usuarios")
         .select("roles(nombre_rol)")
         .eq("auth_id", user!.id)
         .maybeSingle();
-      if (error) throw error;
-      if (!data || !data.roles) return [];
+
+      if (error) {
+        if (defaultRoles.length > 0) return defaultRoles;
+        throw error;
+      }
+
+      if (!data || !data.roles) {
+        return defaultRoles;
+      }
+
       const roleName = Array.isArray(data.roles) ? data.roles[0]?.nombre_rol : (data.roles as any).nombre_rol;
-      const roles: AppRole[] = roleName ? [roleName.toLowerCase() as AppRole] : [];
-      if (typeof window !== "undefined") {
+      const roles: AppRole[] = roleName ? [roleName.toLowerCase() as AppRole] : defaultRoles;
+      if (typeof window !== "undefined" && user?.id) {
         try {
-          localStorage.setItem(CACHED_ROLES_KEY, JSON.stringify(roles));
+          localStorage.setItem(`medizen_cached_roles_${user.id}`, JSON.stringify(roles));
         } catch {
           // ignore
         }

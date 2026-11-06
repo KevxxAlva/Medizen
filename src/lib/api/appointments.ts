@@ -4,6 +4,58 @@ import { useAuthSession } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { logAuditAction } from "@/lib/api/audit";
 
+const APPOINTMENT_PRICE_STORAGE_KEY = "medizen_cita_prices";
+
+export function saveStoredAppointmentPrice(citaId: string | number, price: number) {
+  if (typeof window === "undefined" || !citaId || !(price > 0)) return;
+  try {
+    const raw = window.localStorage.getItem(APPOINTMENT_PRICE_STORAGE_KEY);
+    const map = raw ? JSON.parse(raw) : {};
+    map[String(citaId)] = Number(price);
+    window.localStorage.setItem(APPOINTMENT_PRICE_STORAGE_KEY, JSON.stringify(map));
+  } catch {
+    // ignore storage errors
+  }
+}
+
+export function getStoredAppointmentPrice(citaId: string | number): number | null {
+  if (typeof window === "undefined" || !citaId) return null;
+  try {
+    const raw = window.localStorage.getItem(APPOINTMENT_PRICE_STORAGE_KEY);
+    if (!raw) return null;
+    const map = JSON.parse(raw);
+    const val = Number(map[String(citaId)]);
+    return val > 0 ? val : null;
+  } catch {
+    return null;
+  }
+}
+
+export function resolveServiceFromReason(
+  reason: string | null | undefined,
+  services: { id_servicio: number; nombre_servicio: string | null; costo_base: number | null }[]
+) {
+  if (!reason || !services || services.length === 0) return null;
+  const clean = reason.trim().toLowerCase();
+  if (!clean || clean.includes("[test-load]")) return null;
+
+  // 1. Coincidencia exacta por nombre del servicio
+  const exact = services.find(
+    (s) => (s.nombre_servicio || "").trim().toLowerCase() === clean
+  );
+  if (exact) return exact;
+
+  // 2. Coincidencia parcial (el motivo contiene el nombre del servicio o viceversa)
+  const partial = services.find((s) => {
+    const name = (s.nombre_servicio || "").trim().toLowerCase();
+    return name.length >= 3 && (name.includes(clean) || clean.includes(name));
+  });
+  if (partial) return partial;
+
+  return null;
+}
+
+
 export type AppointmentStatus = "programada" | "completada" | "cancelada" | "no_asistio";
 
 export interface Appointment {
@@ -44,6 +96,7 @@ export interface AppointmentFilters {
   from?: string;
   to?: string;
   status?: string;
+  doctorId?: string;
   limit?: number;
   ascending?: boolean;
   includeInvoices?: boolean;
@@ -56,6 +109,9 @@ export function useAppointments(filters?: AppointmentFilters, options?: { enable
   return useQuery({
     queryKey,
     enabled: (options?.enabled ?? true) && !!user,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
     queryFn: async (): Promise<AppointmentWithPatient[]> => {
       const ascending = filters?.ascending ?? true;
       const PAGE_SIZE = 1000;
@@ -90,6 +146,12 @@ export function useAppointments(filters?: AppointmentFilters, options?: { enable
         if (filters?.status) {
           query = query.eq("estado", filters.status);
         }
+        if (filters?.doctorId) {
+          const parsedDocId = parseInt(filters.doctorId, 10);
+          if (!isNaN(parsedDocId)) {
+            query = query.eq("id_medico", parsedDocId);
+          }
+        }
         if (filters?.limit) {
           query = query.limit(filters.limit);
         } else {
@@ -110,7 +172,12 @@ export function useAppointments(filters?: AppointmentFilters, options?: { enable
 
       const results = allResults;
       const patientIds = [...new Set(results.map((a: any) => a.id_paciente).filter(Boolean))];
-      const invoiceByPatientAndDate = new Map<string, any>();
+      const invoicesByPatient = new Map<number, any[]>();
+
+      const { data: allServices } = await supabase
+        .from("servicios")
+        .select("id_servicio, nombre_servicio, costo_base");
+      const servicesList = allServices || [];
 
       // Only fetch invoices if explicitly requested (e.g. in Facturación), avoids dozens of queries in Agenda
       if (filters?.includeInvoices && patientIds.length > 0) {
@@ -133,21 +200,49 @@ export function useAppointments(filters?: AppointmentFilters, options?: { enable
           const { data: fData, error: fError } = await fQuery;
           if (!fError && fData) {
             for (const fac of fData) {
-              const dStr = (fac.fecha_emision || "").split("T")[0];
-              const key = `${fac.id_paciente}_${dStr}`;
-              if (!invoiceByPatientAndDate.has(key)) {
-                invoiceByPatientAndDate.set(key, fac);
-              }
+              const pId = Number(fac.id_paciente);
+              const list = invoicesByPatient.get(pId) || [];
+              list.push(fac);
+              invoicesByPatient.set(pId, list);
             }
           }
         }
       }
 
+      // Emparejar citas con sus facturas correspondientes de manera 1-a-1
+      const claimedInvoiceIds = new Set<number>();
+
       return results.map((a: any) => {
-        const citaDate = (a.fecha_hora || "").split('T')[0];
-        const f = invoiceByPatientAndDate.get(`${a.id_paciente}_${citaDate}`);
+        const pId = Number(a.id_paciente);
+        const patientInvoices = invoicesByPatient.get(pId) || [];
+        const aTime = a.fecha_hora ? new Date(a.fecha_hora).getTime() : 0;
+
+        let bestF: any = null;
+        let minDiff = Infinity;
+        for (const fac of patientInvoices) {
+          if (claimedInvoiceIds.has(Number(fac.id_factura))) continue;
+          const fTime = fac.fecha_emision ? new Date(fac.fecha_emision).getTime() : 0;
+          const diff = Math.abs(fTime - aTime);
+          if (diff < minDiff && diff <= 12 * 60 * 60 * 1000) {
+            minDiff = diff;
+            bestF = fac;
+          }
+        }
+
+        if (bestF) {
+          claimedInvoiceIds.add(Number(bestF.id_factura));
+        }
+
+        const f = bestF;
         const pago = Array.isArray(f?.pagos) ? f.pagos[0] : f?.pagos;
         const isPaid = ["pagada", "pagado", "paid"].includes((f?.estado_pago || "").toLowerCase());
+
+        const storedPrice = getStoredAppointmentPrice(a.id_cita);
+        const matchedServ = resolveServiceFromReason(a.motivo, servicesList);
+        const fallbackServicePrice = matchedServ?.costo_base ? Number(matchedServ.costo_base) : null;
+        const resolvedPrice = f
+          ? Number(f.total_general)
+          : storedPrice ?? fallbackServicePrice;
         
         return {
           id: a.id_cita.toString(),
@@ -158,7 +253,7 @@ export function useAppointments(filters?: AppointmentFilters, options?: { enable
           status: a.estado?.toLowerCase() || "programada",
           reason: a.motivo,
           notes: null,
-          price: f ? f.total_general : null,
+          price: resolvedPrice,
           payment_method: pago?.metodo_pago || (isPaid ? 'Pagado' : null),
           payment_reference: pago?.referencia || null,
           created_at: a.fecha_hora,
@@ -189,24 +284,46 @@ export function useCreateAppointment() {
         
       if (error) throw error;
 
-      // Handle price / invoice creation from service price or input
-      let finalPrice = Number(input.price) || 0;
-      let matchedServiceId: number | null = null;
-      if (input.reason) {
-        const { data: serv } = await supabase
-          .from("servicios")
-          .select("id_servicio, costo_base")
-          .ilike("nombre_servicio", input.reason.trim())
-          .maybeSingle();
-        if (serv) {
-          matchedServiceId = serv.id_servicio;
-          if (finalPrice <= 0 && serv.costo_base) {
-            finalPrice = Number(serv.costo_base);
-          }
-        }
+      if (citaData?.id_cita && Number(input.price) > 0) {
+        saveStoredAppointmentPrice(citaData.id_cita, Number(input.price));
       }
 
-      if (finalPrice > 0) {
+      // La factura NO se crea al agendar en la agenda; ÚNICAMENTE se crea automáticamente cuando la consulta se completa
+      const statusLower = (input.status || 'Programada').toLowerCase();
+      const isCompleted = statusLower === 'completada' || Boolean(input.payment_method);
+
+      if (isCompleted) {
+        let finalPrice = Number(input.price) || 0;
+        let matchedServiceId: number | null = null;
+
+        const { data: allServices } = await supabase
+          .from("servicios")
+          .select("id_servicio, nombre_servicio, costo_base")
+          .order("id_servicio", { ascending: true });
+        const servicesList = allServices || [];
+
+        const matchedServ = resolveServiceFromReason(input.reason, servicesList);
+        if (matchedServ) {
+          matchedServiceId = matchedServ.id_servicio;
+          if (finalPrice <= 0 && matchedServ.costo_base) {
+            finalPrice = Number(matchedServ.costo_base);
+          }
+        }
+
+        if (!matchedServiceId && servicesList.length > 0) {
+          const defServ = servicesList[0];
+          matchedServiceId = defServ.id_servicio;
+          if (finalPrice <= 0 && defServ.costo_base) {
+            finalPrice = Number(defServ.costo_base);
+          }
+        }
+
+        if (finalPrice <= 0) {
+          finalPrice = 35;
+        }
+
+        const invoiceDate = input.scheduled_at || new Date().toISOString();
+
         const { data: newF } = await supabase
           .from("facturas")
           .insert({
@@ -214,8 +331,8 @@ export function useCreateAppointment() {
             total_general: finalPrice,
             subtotal: finalPrice,
             monto_paciente: finalPrice,
-            estado_pago: 'Pendiente',
-            fecha_emision: input.scheduled_at || new Date().toISOString()
+            estado_pago: input.payment_method ? 'Pagada' : 'Pendiente',
+            fecha_emision: invoiceDate,
           })
           .select("id_factura")
           .single();
@@ -247,10 +364,14 @@ export function useUpdateAppointment() {
     mutationFn: async ({ id, ...patch }: Partial<AppointmentInput> & { id: string }) => {
       const idCita = parseInt(id);
 
+      if (patch.price !== undefined && patch.price !== null && Number(patch.price) > 0) {
+        saveStoredAppointmentPrice(idCita, Number(patch.price));
+      }
+
       // Fetch existing cita to get patient_id, motivo, and fecha_hora for Facturas
       const { data: existingCita } = await supabase
         .from("citas")
-        .select("id_paciente, motivo, fecha_hora")
+        .select("id_paciente, motivo, fecha_hora, estado")
         .eq("id_cita", idCita)
         .single();
 
@@ -272,10 +393,6 @@ export function useUpdateAppointment() {
         let facturaId: number | undefined;
         const statusLower = (patch.status || existingCita?.estado || "").toLowerCase();
         const targetPatientId = patch.patient_id ? parseInt(patch.patient_id) : (existingCita?.id_paciente || 0);
-        const oldCitaDate = (existingCita?.fecha_hora || "").split('T')[0];
-        const newCitaDate = (patch.scheduled_at || existingCita?.fecha_hora || new Date().toISOString()).split('T')[0];
-        const today = new Date().toISOString().split('T')[0];
-
         const { data: patientInvoices } = await supabase
           .from("facturas")
           .select("id_factura, total_general, estado_pago, fecha_emision")
@@ -283,49 +400,39 @@ export function useUpdateAppointment() {
           .order("id_factura", { ascending: false });
 
         const invoicesList = patientInvoices || [];
-        const existF =
-          invoicesList.find(f => oldCitaDate && (f.fecha_emision || "").startsWith(oldCitaDate)) ||
-          invoicesList.find(f => newCitaDate && (f.fecha_emision || "").startsWith(newCitaDate)) ||
-          invoicesList.find(f => (f.fecha_emision || "").startsWith(today)) ||
-          null;
-        
-        let targetPrice = patch.price !== undefined && patch.price !== null ? Number(patch.price) : (existF ? Number(existF.total_general) : 0);
+        const citaTimestamp = patch.scheduled_at || existingCita?.fecha_hora;
+        const existF = citaTimestamp
+          ? invoicesList.find(f => f.fecha_emision === citaTimestamp)
+          : null;
 
-        // Lookup service for price fallback and detalles_factura
-        let matchedServiceId: number | null = null;
+        // Lookup service for exact price and detalles_factura
+        const { data: allServices } = await supabase
+          .from("servicios")
+          .select("id_servicio, nombre_servicio, costo_base")
+          .order("id_servicio", { ascending: true });
+        const servicesList = allServices || [];
+
         const reasonToSearch = patch.reason || existingCita?.motivo;
-        if (reasonToSearch) {
-          const cleanReason = reasonToSearch.trim();
-          let { data: serv } = await supabase
-            .from("servicios")
-            .select("id_servicio, costo_base")
-            .ilike("nombre_servicio", `%${cleanReason}%`)
-            .limit(1)
-            .maybeSingle();
+        const matchedServ = resolveServiceFromReason(reasonToSearch, servicesList);
+        let matchedServiceId: number | null = matchedServ ? matchedServ.id_servicio : null;
+        const serviceBasePrice = matchedServ?.costo_base ? Number(matchedServ.costo_base) : 0;
+        const storedPrice = getStoredAppointmentPrice(idCita) || 0;
+        const explicitPatchPrice = patch.price !== undefined && patch.price !== null && Number(patch.price) > 0
+          ? Number(patch.price)
+          : 0;
 
-          if (!serv) {
-            const { data: fallbackServ } = await supabase
-              .from("servicios")
-              .select("id_servicio, costo_base")
-              .ilike("nombre_servicio", "%consulta%")
-              .limit(1)
-              .maybeSingle();
-            serv = fallbackServ;
-          }
-
-          if (serv) {
-            matchedServiceId = serv.id_servicio;
-            if (targetPrice <= 0 && serv.costo_base) {
-              targetPrice = Number(serv.costo_base);
-            }
-          }
-        }
+        let targetPrice =
+          explicitPatchPrice ||
+          storedPrice ||
+          serviceBasePrice ||
+          (existF && Number(existF.total_general) > 0 ? Number(existF.total_general) : 0);
 
         if (targetPrice <= 0 && statusLower === "completada") {
-          targetPrice = 35;
+          targetPrice = servicesList[0]?.costo_base ? Number(servicesList[0].costo_base) : 35;
         }
 
         const existingPaid = ["pagada", "pagado", "paid"].includes((existF?.estado_pago || "").toLowerCase());
+        // Al completarse la consulta, la factura se mantiene Pendiente hasta que se confirme cómo pagó el paciente
         let fEstado = (patch.payment_method || existingPaid) ? 'Pagada' : 'Pendiente';
         if (statusLower === 'cancelada') fEstado = 'Cancelada';
 
@@ -342,48 +449,54 @@ export function useUpdateAppointment() {
           }
           await supabase.from("facturas").update(facturaUpdate).eq("id_factura", facturaId);
         } else {
-          // Create invoice if price > 0, or payment is attempted, or appointment is completed
-          if (targetPrice > 0 || patch.payment_method || statusLower === 'completada') {
+          // La factura se crea ÚNICAMENTE si la consulta fue completada o si se ingresó un método de cobro
+          const shouldCreateInvoice = statusLower === 'completada' || Boolean(patch.payment_method);
+          if (shouldCreateInvoice) {
+            const invoiceDate = existingCita?.fecha_hora || patch.scheduled_at || new Date().toISOString();
             const { data: newF, error: newFError } = await supabase.from("facturas").insert({
               id_paciente: targetPatientId,
               total_general: targetPrice,
               subtotal: targetPrice,
               monto_paciente: targetPrice,
               estado_pago: fEstado,
-              fecha_emision:
-                statusLower === "completada"
-                  ? new Date().toISOString()
-                  : patch.scheduled_at || existingCita?.fecha_hora || new Date().toISOString(),
+              fecha_emision: invoiceDate,
             }).select("id_factura").single();
             if (newFError) throw newFError;
             facturaId = newF?.id_factura;
           }
         }
 
-        if (facturaId && matchedServiceId && targetPrice > 0) {
-          const { data: existDet } = await supabase
-            .from("detalles_factura")
-            .select("id_detalle")
-            .eq("id_factura", facturaId)
-            .maybeSingle();
-          if (existDet) {
-            await supabase
+        if (facturaId && targetPrice > 0) {
+          if (!matchedServiceId && servicesList.length > 0) {
+            matchedServiceId = servicesList[0].id_servicio;
+          }
+
+          if (matchedServiceId) {
+            const { data: existDet } = await supabase
               .from("detalles_factura")
-              .update({ id_servicio: matchedServiceId, precio_unitario: targetPrice, subtotal: targetPrice })
-              .eq("id_detalle", existDet.id_detalle);
-          } else {
-            await supabase.from("detalles_factura").insert({
-              id_factura: facturaId,
-              id_servicio: matchedServiceId,
-              cantidad: 1,
-              precio_unitario: targetPrice,
-              subtotal: targetPrice,
-            });
+              .select("id_detalle")
+              .eq("id_factura", facturaId)
+              .maybeSingle();
+            if (existDet) {
+              await supabase
+                .from("detalles_factura")
+                .update({ id_servicio: matchedServiceId, precio_unitario: targetPrice, subtotal: targetPrice })
+                .eq("id_detalle", existDet.id_detalle);
+            } else {
+              await supabase.from("detalles_factura").insert({
+                id_factura: facturaId,
+                id_servicio: matchedServiceId,
+                cantidad: 1,
+                precio_unitario: targetPrice,
+                subtotal: targetPrice,
+              });
+            }
           }
         }
 
-        // 3. Handle Pagos
-        if (facturaId && patch.payment_method) {
+        // 3. Handle Pagos únicamente cuando se especifica un método de pago
+        const effectivePaymentMethod = patch.payment_method || null;
+        if (facturaId && effectivePaymentMethod) {
            const { data: existP } = await supabase
              .from("pagos")
              .select("id_pago, monto_pagado, metodo_pago")
@@ -391,13 +504,13 @@ export function useUpdateAppointment() {
              .maybeSingle();
            
            // Fetch the payment method to get its account_id
-           const { data: pm } = await supabase.from("payment_methods").select("account_id").eq("name", patch.payment_method).maybeSingle();
+           const { data: pm } = await supabase.from("payment_methods").select("account_id").eq("name", effectivePaymentMethod).maybeSingle();
            const newAccountId = pm?.account_id;
 
            if (existP) {
               // Revert old account balance if it was a different method or different amount
               let oldAccountId = null;
-              if (existP.metodo_pago !== patch.payment_method && existP.metodo_pago) {
+              if (existP.metodo_pago !== effectivePaymentMethod && existP.metodo_pago) {
                  const { data: oldPm } = await supabase.from("payment_methods").select("account_id").eq("name", existP.metodo_pago).maybeSingle();
                  oldAccountId = oldPm?.account_id;
               } else {
@@ -420,7 +533,7 @@ export function useUpdateAppointment() {
               }
 
               await supabase.from("pagos").update({ 
-                metodo_pago: patch.payment_method, 
+                metodo_pago: effectivePaymentMethod, 
                 referencia: patch.payment_reference || null,
                 monto_pagado: targetPrice
               }).eq("id_pago", existP.id_pago);
@@ -435,7 +548,7 @@ export function useUpdateAppointment() {
 
               await supabase.from("pagos").insert({
                 id_factura: facturaId,
-                metodo_pago: patch.payment_method,
+                metodo_pago: effectivePaymentMethod,
                 referencia: patch.payment_reference || null,
                 monto_pagado: targetPrice
               });

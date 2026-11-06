@@ -282,7 +282,14 @@ function SalesInvoiceTableRow({
       <td className="p-4 font-bold text-primary">
         INV-{f.id_factura.toString().padStart(4, "0")}
       </td>
-      <td className="p-4 font-semibold text-foreground">{f.paciente_nombre}</td>
+      <td className="p-4">
+        <div className="font-semibold text-foreground">{f.paciente_nombre}</div>
+        {f.concepto && (
+          <div className="text-[11px] text-muted-foreground truncate max-w-[200px]" title={f.concepto}>
+            {f.concepto}
+          </div>
+        )}
+      </td>
       <td className="p-4 text-muted-foreground text-xs font-medium">
         {new Date(f.fecha_emision).toLocaleDateString(APP_LOCALE, {
           timeZone: APP_TIME_ZONE,

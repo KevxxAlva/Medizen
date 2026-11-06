@@ -31,9 +31,17 @@ interface ServiceFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   service: Service | null;
+  defaultSpecialtyId?: string | number | null;
+  isDoctorOnly?: boolean;
 }
 
-export function ServiceForm({ open, onOpenChange, service }: ServiceFormProps) {
+export function ServiceForm({
+  open,
+  onOpenChange,
+  service,
+  defaultSpecialtyId,
+  isDoctorOnly,
+}: ServiceFormProps) {
   const {
     register,
     handleSubmit,
@@ -53,8 +61,13 @@ export function ServiceForm({ open, onOpenChange, service }: ServiceFormProps) {
       codigo_medico: service?.codigo_medico ?? "",
       descripcion: service?.descripcion ?? "",
     });
-    setSelectedEspId(service?.id_especialidad ? String(service.id_especialidad) : "none");
-  }, [service, reset, open]);
+    const initialEsp = service?.id_especialidad
+      ? String(service.id_especialidad)
+      : defaultSpecialtyId
+      ? String(defaultSpecialtyId)
+      : "none";
+    setSelectedEspId(initialEsp);
+  }, [service, defaultSpecialtyId, reset, open]);
 
   const onSubmit = (data: ServiceInsert) => {
     const payload = {
@@ -94,21 +107,33 @@ export function ServiceForm({ open, onOpenChange, service }: ServiceFormProps) {
             <Label htmlFor="id_especialidad" className="text-xs font-bold text-foreground">
               ESPECIALIDAD MÉDICA
             </Label>
-            <Select value={selectedEspId} onValueChange={setSelectedEspId}>
-              <SelectTrigger className="w-full rounded-xl bg-muted border-border/60 text-sm">
-                <SelectValue placeholder="Seleccione especialidad…" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl max-h-[250px]">
-                <SelectItem value="none" className="font-semibold text-muted-foreground">
-                  Servicio General / Multidisciplinario
-                </SelectItem>
-                {specialties.map((esp) => (
-                  <SelectItem key={esp.id_especialidad} value={String(esp.id_especialidad)}>
-                    {esp.nombre}
+            {isDoctorOnly && defaultSpecialtyId ? (
+              <div className="flex items-center gap-2.5 p-3 rounded-xl border border-primary/30 bg-primary/[0.07] text-xs font-bold text-foreground">
+                <Stethoscope className="w-4 h-4 text-primary shrink-0" />
+                <span className="truncate">
+                  {specialties.find((e) => String(e.id_especialidad) === String(defaultSpecialtyId))?.nombre || "Tu especialidad"}
+                </span>
+                <span className="ml-auto text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 rounded-full bg-primary/15 text-primary shrink-0">
+                  Tu Rama Médica
+                </span>
+              </div>
+            ) : (
+              <Select value={selectedEspId} onValueChange={setSelectedEspId}>
+                <SelectTrigger className="w-full rounded-xl bg-muted border-border/60 text-sm">
+                  <SelectValue placeholder="Seleccione especialidad…" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl max-h-[250px]">
+                  <SelectItem value="none" className="font-semibold text-muted-foreground">
+                    Servicio General / Multidisciplinario
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  {specialties.map((esp) => (
+                    <SelectItem key={esp.id_especialidad} value={String(esp.id_especialidad)}>
+                      {esp.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="nombre_servicio" className="text-xs font-bold text-foreground">

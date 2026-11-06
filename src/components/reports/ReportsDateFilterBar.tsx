@@ -9,6 +9,8 @@ export interface ReportsDateFilterBarProps {
   doctors: Array<{ id: string; full_name?: string | null; email?: string | null }>;
   onChangeRange: (from: string, to: string) => void;
   onChangeDoctor: (doctorId: string) => void;
+  canViewAllDoctors?: boolean;
+  doctorName?: string | null;
 }
 
 function todayISO() {
@@ -40,6 +42,8 @@ export function ReportsDateFilterBar({
   doctors,
   onChangeRange,
   onChangeDoctor,
+  canViewAllDoctors = true,
+  doctorName,
 }: ReportsDateFilterBarProps) {
   const today = todayISO();
   const thisMonth = currentMonthRange();
@@ -81,14 +85,14 @@ export function ReportsDateFilterBar({
             />
           </div>
 
-          {doctors.length > 0 && (
+          {canViewAllDoctors && doctors.length > 0 ? (
             <div className="flex items-center gap-2">
               <Filter className="h-3.5 w-3.5 text-muted-foreground hidden sm:block" />
               <select
                 value={selectedDoctorId}
                 aria-label="Filtrar por médico"
                 onChange={(e) => onChangeDoctor(e.target.value)}
-                className="h-9 rounded-xl border border-border bg-background px-3 text-xs font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="h-9 rounded-xl border border-border bg-background px-3 text-xs font-bold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
               >
                 <option value="all">Todos los especialistas</option>
                 {doctors.map((doc) => (
@@ -98,6 +102,12 @@ export function ReportsDateFilterBar({
                 ))}
               </select>
             </div>
+          ) : (
+            doctorName && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-primary/20 bg-primary/10 text-primary text-xs font-bold">
+                <span>Mis Reportes: Dr(a). {doctorName}</span>
+              </span>
+            )
           )}
         </div>
 

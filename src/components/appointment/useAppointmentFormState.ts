@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useCreateAppointment, useUpdateAppointment, type Appointment } from "@/lib/api/appointments";
 import { useAuthSession } from "@/hooks/useAuth";
+import { useUserRoleScope } from "@/hooks/useUserRoleScope";
 import type { Profile } from "@/lib/api/profiles";
 import { toast } from "sonner";
 
@@ -38,14 +39,35 @@ export function useAppointmentFormState({
 }: UseAppointmentFormStateProps) {
   const isEdit = !!appointment;
   const { user } = useAuthSession();
+  const { doctorId: authDoctorId, isDoctorOnly, doctorName } = useUserRoleScope();
 
   const init = useMemo(() => splitDateTime(appointment?.scheduled_at, defaultDate), [appointment, defaultDate]);
   const [patient_id, setPatient] = useState(appointment?.patient_id ?? defaultPatientId ?? "");
-  const defaultDoctorId = useMemo(
-    () => doctors.find((d) => d.email === user?.email)?.id || doctors[0]?.id || "",
-    [doctors, user]
-  );
-  const [doctor_id, setDoctorId] = useState(appointment?.doctor_id ?? defaultDoctorId);
+
+  const defaultDoctorId = useMemo(() => {
+    if (appointment?.doctor_id) return appointment.doctor_id;
+    if (authDoctorId) return authDoctorId;
+    const match = doctors.find(
+      (d) =>
+        (d.auth_id && user?.id && d.auth_id === user.id) ||
+        (d.email && user?.email && d.email.toLowerCase() === user.email.toLowerCase())
+    );
+    return match?.id || doctors[0]?.id || "";
+  }, [appointment?.doctor_id, authDoctorId, doctors, user]);
+
+  const [doctor_id, setDoctorId] = useState(() => appointment?.doctor_id ?? defaultDoctorId);
+
+  useEffect(() => {
+    if (open) {
+      if (!appointment?.doctor_id) {
+        if (defaultDoctorId) setDoctorId(defaultDoctorId);
+      } else {
+        setDoctorId(appointment.doctor_id);
+      }
+    } else if (!appointment?.doctor_id && defaultDoctorId && (!doctor_id || isDoctorOnly)) {
+      setDoctorId(defaultDoctorId);
+    }
+  }, [open, appointment?.doctor_id, defaultDoctorId, isDoctorOnly, doctor_id]);
   const [date, setDate] = useState(init.date);
   const [time, setTime] = useState(init.time);
   const [reason, setReason] = useState(appointment?.reason ?? "");
@@ -101,6 +123,8 @@ export function useAppointmentFormState({
     doctor_id,
     setDoctorId,
     selectedDoctor,
+    isDoctorOnly,
+    doctorName,
     date,
     setDate,
     time,

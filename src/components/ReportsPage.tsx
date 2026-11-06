@@ -7,6 +7,7 @@ import { useAppointments } from "@/lib/api/appointments";
 import { useDoctors } from "@/lib/api/profiles";
 import { useConsultations } from "@/lib/api/consultations";
 import { useExchangeRate } from "@/hooks/useExchangeRate";
+import { useUserRoleScope } from "@/hooks/useUserRoleScope";
 import { useSalesInvoices } from "@/components/finance/useSalesInvoices";
 import { CashCloseDialog } from "@/components/finance/CashCloseDialog";
 import { ReportsDateFilterBar } from "./reports/ReportsDateFilterBar";
@@ -34,15 +35,20 @@ function daysAgoISO(n: number) {
 }
 
 export function ReportsPage() {
+  const { isDoctorOnly, doctorId: currentDoctorId, canViewAllDoctors, doctorName } = useUserRoleScope();
   const [from, setFrom] = useState(() => daysAgoISO(30));
   const [to, setTo] = useState(() => todayISO());
   const [selectedDoctorId, setSelectedDoctorId] = useState("all");
   const [cashCloseOpen, setCashCloseOpen] = useState(false);
 
+  const effectiveDoctorId = isDoctorOnly
+    ? currentDoctorId || undefined
+    : (selectedDoctorId !== "all" ? selectedDoctorId : undefined);
+
   const { rate, rates, isSyncing, syncWithBcv } = useExchangeRate();
   const { facturas = [] } = useSalesInvoices();
   const { data: newPatientsCount = 0 } = usePatientsCountByDateRange(from, to);
-  const { data: appointments = [] } = useAppointments({ from, to });
+  const { data: appointments = [] } = useAppointments({ from, to, doctorId: effectiveDoctorId });
   const { data: doctors = [] } = useDoctors();
   const { data: consultations = [] } = useConsultations({ from, to });
 
@@ -50,6 +56,7 @@ export function ReportsPage() {
   const { data: upcomingAppointments = [] } = useAppointments({
     from: today,
     status: "programada",
+    doctorId: effectiveDoctorId,
     limit: 15,
   });
 
@@ -192,13 +199,15 @@ export function ReportsPage() {
       <ReportsDateFilterBar
         from={from}
         to={to}
-        selectedDoctorId={selectedDoctorId}
+        selectedDoctorId={isDoctorOnly && currentDoctorId ? currentDoctorId : selectedDoctorId}
         doctors={doctors}
         onChangeRange={(nextFrom, nextTo) => {
           setFrom(nextFrom);
           setTo(nextTo);
         }}
         onChangeDoctor={setSelectedDoctorId}
+        canViewAllDoctors={canViewAllDoctors}
+        doctorName={doctorName}
       />
 
       <ReportsExportHub

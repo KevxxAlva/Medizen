@@ -29,19 +29,49 @@ import { DashboardTrendsAndTreatments } from "@/components/dashboard/DashboardTr
 import { DashboardProfileCard } from "@/components/dashboard/DashboardProfileCard";
 import { DashboardCalendarWidget } from "@/components/dashboard/DashboardCalendarWidget";
 import { useSalesInvoices } from "@/components/finance/useSalesInvoices";
+import { useUserRoleScope } from "@/hooks/useUserRoleScope";
+import { getInvoicesForDoctor } from "@/lib/utils/invoiceDoctorPartition";
 
 export function Dashboard() {
   const { user, loading: authLoading } = useAuthSession();
+  const { isDoctorOnly, doctorId: currentDoctorId, isLoading: scopeLoading } = useUserRoleScope();
+  const doctorScopeId = isDoctorOnly ? currentDoctorId : undefined;
+  const scopeReady = !authLoading && !scopeLoading;
+
   const { data: roles = [] } = useRoles();
   const { data: profile } = useMyProfile(user?.id);
   const { data: doctors = [] } = useDoctors();
-  const { data: recentPatients = [] } = useRecentPatients(5);
-  const { data: totalPatients = 0 } = usePatientsCountByDateRange();
-  const { data: stats, isLoading: statsLoading } = useDashboardStats();
-  const { data: monthlyData = { total: 0, paymentsByDay: [] } } = useMonthlyPayments();
+  const { data: recentPatients = [] } = useRecentPatients(5, {
+    doctorId: doctorScopeId,
+    isDoctorOnly,
+    enabled: scopeReady,
+  });
+  const { data: totalPatients = 0 } = usePatientsCountByDateRange(undefined, undefined, {
+    doctorId: doctorScopeId,
+    isDoctorOnly,
+    enabled: scopeReady,
+  });
+  const { data: stats, isLoading: statsLoading } = useDashboardStats({
+    doctorId: doctorScopeId,
+    isDoctorOnly,
+    enabled: scopeReady,
+  });
+  const { data: monthlyData = { total: 0, paymentsByDay: [] } } = useMonthlyPayments({
+    doctorId: doctorScopeId,
+    isDoctorOnly,
+    enabled: scopeReady,
+  });
   const { data: clinic } = useClinicInfo();
-  const { data: trends = [] } = useDashboardTrends();
-  const { data: topTreatments = [] } = useTopTreatments();
+  const { data: trends = [] } = useDashboardTrends({
+    doctorId: doctorScopeId,
+    isDoctorOnly,
+    enabled: scopeReady,
+  });
+  const { data: topTreatments = [] } = useTopTreatments({
+    doctorId: doctorScopeId,
+    isDoctorOnly,
+    enabled: scopeReady,
+  });
   const { facturas = [], isLoading: facturasLoading } = useSalesInvoices();
 
   const startOfLastMonthStr = useMemo(() => {
@@ -56,7 +86,23 @@ export function Dashboard() {
   const addDailyGoal = useAddDailyGoal();
   const incrementDailyGoal = useIncrementDailyGoal();
 
-  const { data: appointments = [] } = useAppointments({ from: startOfLastMonthStr });
+  const { data: rawAppointments = [] } = useAppointments({
+    from: startOfLastMonthStr,
+  }, {
+    enabled: scopeReady,
+  });
+
+  const appointments = useMemo(() => {
+    if (isDoctorOnly && !currentDoctorId) return [];
+    if (!isDoctorOnly) return rawAppointments;
+    return rawAppointments.filter((a) => Number(a.doctor_id) === Number(currentDoctorId));
+  }, [rawAppointments, isDoctorOnly, currentDoctorId]);
+
+  const doctorInvoices = useMemo(() => {
+    if (!isDoctorOnly) return facturas;
+    if (!currentDoctorId || rawAppointments.length === 0) return [];
+    return getInvoicesForDoctor(facturas, rawAppointments, currentDoctorId);
+  }, [facturas, isDoctorOnly, rawAppointments, currentDoctorId]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -141,8 +187,8 @@ export function Dashboard() {
   const roleDisplay = rawRole.startsWith("admin")
     ? "Administrador"
     : rawRole.startsWith("recep")
-    ? "Recepcionista"
-    : "Médico";
+      ? "Recepcionista"
+      : "Médico";
 
   if ((authLoading && !user) || (statsLoading && !stats)) {
     return (
@@ -164,6 +210,7 @@ export function Dashboard() {
             totalPatients={totalPatients}
             stats={stats}
             monthlyData={monthlyData}
+            isDoctorOnly={isDoctorOnly}
           />
           <DashboardGoalsAndEvents
             stats={stats}
@@ -185,7 +232,7 @@ export function Dashboard() {
             clinic={clinic}
           />
           <DashboardCalendarWidget appointments={appointments} today={today} />
-          <DashboardDailyTreasuryCard invoices={facturas} isLoading={facturasLoading} />
+          <DashboardDailyTreasuryCard invoices={doctorInvoices} isLoading={facturasLoading} />
         </div>
       </div>
     </div>

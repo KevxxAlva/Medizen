@@ -27,9 +27,10 @@ import {
   Wand2,
   MessageSquare,
   Sparkles,
+  Stethoscope,
 } from "lucide-react";
+import { useUserRoleScope } from "@/hooks/useUserRoleScope";
 import {
-  AVAILABLE_SPECIALTIES,
   getSpecialtyBadgeStyle,
 } from "@/lib/constants/specialtyForms";
 import { DynamicSpecialtyFields } from "@/components/consultation/DynamicSpecialtyFields";
@@ -109,57 +110,60 @@ function ConsultationDoctorSpecialtyBar({
   doctors,
   handleDoctorChange,
   selectedSpecialty,
-  setSelectedSpecialty,
+  isDoctorOnly,
 }: {
   selectedDoctorId: string;
   currentDoctor: any;
   doctors: any[];
   handleDoctorChange: (id: string) => void;
   selectedSpecialty: string;
-  setSelectedSpecialty: (val: string) => void;
+  isDoctorOnly?: boolean;
 }) {
+  const doctorSpecialty = currentDoctor?.specialty || selectedSpecialty || "Medicina General";
+  const badge = getSpecialtyBadgeStyle(doctorSpecialty);
+
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 p-3 mb-3 rounded-2xl bg-muted/40 border border-border/50">
       <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-        <span className="text-xs font-bold text-muted-foreground">Médico:</span>
-        <Select
-          value={selectedDoctorId || currentDoctor?.id || ""}
-          onValueChange={handleDoctorChange}
-        >
-          <SelectTrigger className="h-8 text-xs rounded-xl bg-background border-border/50 font-bold w-full sm:w-auto sm:min-w-[200px]">
-            <SelectValue placeholder="Seleccione médico…" />
-          </SelectTrigger>
-          <SelectContent className="rounded-xl max-h-[300px]">
-            {doctors.map((d) => (
-              <SelectItem key={d.id} value={d.id} className="text-xs font-semibold">
-                {d.full_name} {d.specialty ? `— ${d.specialty}` : ""}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <span className="text-xs font-bold text-muted-foreground flex items-center gap-1.5">
+          <Stethoscope className="w-3.5 h-3.5 text-primary" /> Médico:
+        </span>
+        {isDoctorOnly ? (
+          <div className="flex items-center gap-2 h-8 px-3 rounded-xl bg-background border border-border/50 text-xs font-bold text-foreground">
+            <span>Dr(a). {currentDoctor?.full_name || "Médico Tratante"}</span>
+            <span className="text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full bg-primary/15 text-primary">
+              Tú
+            </span>
+          </div>
+        ) : (
+          <Select
+            value={selectedDoctorId || currentDoctor?.id || ""}
+            onValueChange={handleDoctorChange}
+          >
+            <SelectTrigger className="h-8 text-xs rounded-xl bg-background border-border/50 font-bold w-full sm:w-auto sm:min-w-[200px]">
+              <SelectValue placeholder="Seleccione médico…" />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl max-h-[300px]">
+              {doctors.map((d) => (
+                <SelectItem key={d.id} value={d.id} className="text-xs font-semibold">
+                  {d.full_name} {d.specialty ? `— ${d.specialty}` : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
         <span className="text-xs font-bold text-muted-foreground">Especialidad:</span>
-        <Select value={selectedSpecialty} onValueChange={(val) => setSelectedSpecialty(val)}>
-          <SelectTrigger className="h-8 text-xs rounded-xl bg-background border-primary/40 font-bold text-primary w-full sm:w-auto sm:min-w-[220px]">
-            <SelectValue placeholder="Seleccione especialidad…" />
-          </SelectTrigger>
-          <SelectContent className="rounded-xl max-h-[300px]">
-            {AVAILABLE_SPECIALTIES.map((spec) => (
-              <SelectItem key={spec.id} value={spec.name} className="text-xs font-semibold">
-                {spec.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
         <span
           className={cn(
-            "text-[10px] font-extrabold px-2.5 py-1 rounded-lg border uppercase tracking-wider hidden sm:inline-block",
-            getSpecialtyBadgeStyle(selectedSpecialty).className,
+            "text-xs font-extrabold px-3 py-1 rounded-xl border uppercase tracking-wider inline-flex items-center gap-1.5 shadow-xs",
+            badge.className,
           )}
         >
-          {selectedSpecialty}
+          <Sparkles className="w-3 h-3 opacity-80" />
+          {doctorSpecialty}
         </span>
       </div>
     </div>
@@ -281,6 +285,7 @@ function ConsultationFormContent({
   existingConsultation?: Consultation | null;
   onOpenChange: (v: boolean) => void;
 }) {
+  const { isDoctorOnly } = useUserRoleScope();
   const state = useConsultationFormState(appointment, existingConsultation, onOpenChange);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -299,7 +304,7 @@ function ConsultationFormContent({
         doctors={state.doctors}
         handleDoctorChange={state.handleDoctorChange}
         selectedSpecialty={state.selectedSpecialty}
-        setSelectedSpecialty={state.setSelectedSpecialty}
+        isDoctorOnly={isDoctorOnly}
       />
 
       <ConsultationAllergyBanner patient={state.patient} />

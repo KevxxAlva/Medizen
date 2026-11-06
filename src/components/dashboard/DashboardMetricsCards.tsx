@@ -22,12 +22,14 @@ export interface DashboardMetricsCardsProps {
   totalPatients: number;
   stats: any;
   monthlyData: { total: number; paymentsByDay: any[] };
+  isDoctorOnly?: boolean;
 }
 
 export function DashboardMetricsCards({
   totalPatients,
   stats,
   monthlyData,
+  isDoctorOnly,
 }: DashboardMetricsCardsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -74,7 +76,7 @@ export function DashboardMetricsCards({
             {totalPatients.toLocaleString("es-ES")}
           </span>
           <span className="text-xs font-medium text-muted-foreground whitespace-nowrap mb-1">
-            en el sistema
+            {isDoctorOnly ? "atendidos por ti" : "en el sistema"}
           </span>
         </div>
         <div className="mt-auto pt-4 h-16 w-full -mb-2">
@@ -190,15 +192,15 @@ export function DashboardMetricsCards({
           <span
             className={cn(
               "font-display font-bold text-foreground tracking-tight tabular-nums",
-              monthlyData.total >= 100000
+              (monthlyData?.total || 0) >= 100000
                 ? "text-2xl sm:text-3xl"
-                : monthlyData.total >= 10000
+                : (monthlyData?.total || 0) >= 10000
                 ? "text-3xl"
                 : "text-4xl",
             )}
           >
             $
-            {monthlyData.total.toLocaleString("en-US", {
+            {(monthlyData?.total || 0).toLocaleString("en-US", {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
@@ -208,7 +210,7 @@ export function DashboardMetricsCards({
           </span>
         </div>
         <div className="mt-auto pt-4 h-24 w-full">
-          {monthlyData.paymentsByDay.length > 0 ? (
+          {monthlyData?.paymentsByDay && monthlyData.paymentsByDay.length > 0 ? (
             <MonthlyPaymentsChart data={monthlyData.paymentsByDay} />
           ) : (
             <div className="h-full w-full bg-muted/20 rounded-xl flex items-center justify-center text-muted-foreground text-xs font-medium">

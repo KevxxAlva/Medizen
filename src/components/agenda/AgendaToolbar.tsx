@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Filter, Download, Search, LifeBuoy, Grid } from "lucide-react";
+import { Filter, Download, Search, LifeBuoy, Grid, Stethoscope } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +18,11 @@ interface AgendaToolbarProps {
   onSearchOpenChange: (open: boolean) => void;
   compactMode: boolean;
   onCompactModeChange: (compact: boolean) => void;
+  canViewAllDoctors?: boolean;
+  selectedDoctorId?: string;
+  onDoctorChange?: (doctorId: string) => void;
+  doctors?: Array<{ id: string; full_name?: string | null; email?: string | null }>;
+  doctorName?: string | null;
 }
 
 export function AgendaToolbar({
@@ -30,13 +35,44 @@ export function AgendaToolbar({
   onSearchOpenChange,
   compactMode,
   onCompactModeChange,
+  canViewAllDoctors = true,
+  selectedDoctorId = "all",
+  onDoctorChange,
+  doctors = [],
+  doctorName,
 }: AgendaToolbarProps) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-3">
+        {canViewAllDoctors && doctors.length > 0 ? (
+          <div className="flex items-center gap-2">
+            <Stethoscope className="h-4 w-4 text-primary shrink-0" />
+            <select
+              value={selectedDoctorId}
+              aria-label="Filtrar por especialista"
+              onChange={(e) => onDoctorChange?.(e.target.value)}
+              className="h-9 rounded-xl border border-border bg-background px-3 text-xs font-bold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
+            >
+              <option value="all">Todos los Médicos</option>
+              {doctors.map((doc) => (
+                <option key={doc.id} value={doc.id}>
+                  {doc.full_name || doc.email || "Médico"}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          doctorName && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-primary/20 bg-primary/10 text-primary text-xs font-bold">
+              <Stethoscope className="h-3.5 w-3.5 shrink-0" />
+              <span>Mis Citas · Dr(a). {doctorName}</span>
+            </span>
+          )
+        )}
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 text-xs font-bold text-foreground border border-border rounded-xl px-4 py-2 hover:bg-muted focus:outline-none">
+            <button className="flex items-center gap-2 text-xs font-bold text-foreground border border-border rounded-xl px-4 py-2 hover:bg-muted focus:outline-none cursor-pointer">
               <Filter className="h-4 w-4 text-muted-foreground" /> Filtro
               {statusFilter !== "todas" && (
                 <span className="bg-primary w-2 h-2 rounded-full absolute top-1 right-1"></span>

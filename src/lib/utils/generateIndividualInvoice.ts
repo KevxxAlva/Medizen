@@ -73,16 +73,29 @@ export const generateIndividualInvoice = async (invoice: any, customRate?: numbe
   doc.text(`Paciente: ${invoice.paciente_nombre || "Desconocido"}`, 40, 265);
   doc.setFont(config.customFontFamily, "normal");
 
-  const tableData = [
-    [
-      "1",
-      "Servicios Médicos / Consulta Especializada",
-      invoice.metodo_pago || "Por definir",
-      `$${invoice.total_general.toFixed(2)}`,
-      formatEurFromUsd(invoice.total_general, rates),
-      formatBs(invoice.total_general, rate),
-    ],
-  ];
+  const hasItems = Array.isArray(invoice.items) && invoice.items.length > 0;
+  const tableData = hasItems
+    ? invoice.items.map((it: any) => {
+        const itemAmount = Number(it.subtotal || it.precio_unitario || 0);
+        return [
+          String(it.cantidad || 1),
+          it.descripcion || invoice.concepto || "Servicio Médico",
+          invoice.metodo_pago || "Por definir",
+          `$${itemAmount.toFixed(2)}`,
+          formatEurFromUsd(itemAmount, rates),
+          formatBs(itemAmount, rate),
+        ];
+      })
+    : [
+        [
+          "1",
+          invoice.concepto || "Servicios Médicos / Consulta Especializada",
+          invoice.metodo_pago || "Por definir",
+          `$${invoice.total_general.toFixed(2)}`,
+          formatEurFromUsd(invoice.total_general, rates),
+          formatBs(invoice.total_general, rate),
+        ],
+      ];
 
   autoTable(doc, {
     startY: 285,

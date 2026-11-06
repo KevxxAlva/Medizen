@@ -174,12 +174,28 @@ export function usePatientsGrowth() {
   });
 }
 
-export function usePatientsCountByDateRange(from?: string, to?: string, options?: { enabled?: boolean }) {
+export function usePatientsCountByDateRange(
+  from?: string,
+  to?: string,
+  options?: { enabled?: boolean; doctorId?: string | number | null; isDoctorOnly?: boolean }
+) {
   const { user } = useAuthSession();
+  const doctorId = options?.doctorId ? Number(options.doctorId) : undefined;
+  const isDoctorOnly = options?.isDoctorOnly;
   return useQuery({
-    queryKey: ["patients_count_range", from, to, user?.id],
+    queryKey: ["patients_count_range", from, to, user?.id, doctorId, isDoctorOnly],
     enabled: (options?.enabled ?? true) && !!user,
     queryFn: async (): Promise<number> => {
+      if (isDoctorOnly && !doctorId) return 0;
+      if (doctorId) {
+        const { data: citas } = await supabase
+          .from("citas")
+          .select("id_paciente")
+          .eq("id_medico", doctorId);
+
+        const uniquePatientIds = new Set((citas || []).map((c) => c.id_paciente).filter(Boolean));
+        return uniquePatientIds.size;
+      }
       let query = supabase
         .from("pacientes")
         .select("id_paciente", { count: "exact", head: true });
@@ -196,12 +212,40 @@ export function usePatientsCountByDateRange(from?: string, to?: string, options?
   });
 }
 
-export function useRecentPatients(limit: number = 5, options?: { enabled?: boolean }) {
+export function useRecentPatients(
+  limit: number = 5,
+  options?: { enabled?: boolean; doctorId?: string | number | null; isDoctorOnly?: boolean }
+) {
   const { user } = useAuthSession();
+  const doctorId = options?.doctorId ? Number(options.doctorId) : undefined;
+  const isDoctorOnly = options?.isDoctorOnly;
   return useQuery({
-    queryKey: ["patients_recent", limit, user?.id],
+    queryKey: ["patients_recent", limit, user?.id, doctorId, isDoctorOnly],
     enabled: (options?.enabled ?? true) && !!user,
     queryFn: async (): Promise<Patient[]> => {
+      if (isDoctorOnly && !doctorId) return [];
+      if (doctorId) {
+        const { data: citas } = await supabase
+          .from("citas")
+          .select("id_paciente")
+          .eq("id_medico", doctorId);
+
+        const uniquePatientIds = Array.from(
+          new Set((citas || []).map((c) => c.id_paciente).filter(Boolean))
+        );
+        if (uniquePatientIds.length === 0) return [];
+
+        const { data, error } = await supabase
+          .from("pacientes")
+          .select(PATIENT_LIST_SELECT)
+          .in("id_paciente", uniquePatientIds)
+          .order("creado_en", { ascending: false })
+          .limit(limit);
+
+        if (error) throw error;
+        return (data ?? []).map(mapPatient);
+      }
+
       const { data, error } = await supabase
         .from("pacientes")
         .select(PATIENT_LIST_SELECT)

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession } from "@/hooks/useAuth";
+import { getInvoicesForDoctor } from "@/lib/utils/invoiceDoctorPartition";
 
 // Helper to get dates for the last 7 days (including today)
 const getLast7Days = () => {
@@ -13,39 +14,103 @@ const getLast7Days = () => {
   return dates;
 };
 
-export function useDashboardStats(options?: { enabled?: boolean }) {
+export function useDashboardStats(options?: {
+  enabled?: boolean;
+  doctorId?: string | number | null;
+  isDoctorOnly?: boolean;
+}) {
   const { user } = useAuthSession();
+  const doctorId = options?.doctorId ? Number(options.doctorId) : undefined;
+  const isDoctorOnly = options?.isDoctorOnly;
+
   return useQuery({
-    queryKey: ["dashboard_stats", user?.id],
+    queryKey: ["dashboard_stats", user?.id, doctorId, isDoctorOnly],
     enabled: (options?.enabled ?? true) && !!user,
     queryFn: async () => {
+      // Si el rol es exclusivo de doctor y no tiene ID médico asignado o resuelto, retornar 0
+      if (isDoctorOnly && !doctorId) {
+        return {
+          offlineWork: { total: 0, change: 0, sparkline: [0, 0, 0, 0, 0, 0, 0] },
+          onlineWork: { total: 0, change: 0, sparkline: [0, 0, 0, 0, 0, 0, 0] },
+          labWork: { total: 0, change: 0, sparkline: [0, 0, 0, 0, 0, 0, 0] },
+          scheduledEvents: {
+            consultations: 0,
+            labs: 0,
+            invoices: 0,
+            donutPercentage: 0,
+            week: { consultations: 0, labs: 0, invoices: 0, donutPercentage: 0 },
+          },
+          plansDone: { done: 0, total: 0, percentage: 0, change: 0 },
+        };
+      }
+
       const dates = getLast7Days();
       const todayStr = dates[6];
       const yesterdayStr = dates[5];
       const sevenDaysAgo = dates[0];
 
-      // Ejecutar las 3 consultas del Dashboard en paralelo (Promise.all) y acotadas a los últimos 7 días
-      const [{ data: citasData }, { data: labsData }, { data: invoicesData }] = await Promise.all([
-        supabase
-          .from("citas")
-          .select("fecha_hora, estado, motivo")
-          .or("motivo.is.null,motivo.not.ilike.%[TEST-LOAD]%")
-          .gte("fecha_hora", `${sevenDaysAgo}T00:00:00.000Z`),
-        supabase
-          .from("examenes_laboratorio")
-          .select("fecha_resultado")
-          .gte("fecha_resultado", `${sevenDaysAgo}T00:00:00.000Z`),
-        supabase
-          .from("facturas")
-          .select("fecha_emision, estado_pago")
-          .gte("fecha_emision", `${sevenDaysAgo}T00:00:00.000Z`),
-      ]);
+      // Consultas acotadas a los últimos 7 días y al doctor si aplica
+      let citasQuery = supabase
+        .from("citas")
+        .select("fecha_hora, estado, motivo, id_medico, id_paciente")
+        .or("motivo.is.null,motivo.not.ilike.%[TEST-LOAD]%")
+        .gte("fecha_hora", `${sevenDaysAgo}T00:00:00.000Z`);
+
+      if (doctorId) {
+        citasQuery = citasQuery.eq("id_medico", doctorId);
+      }
+
+      const { data: citasData } = await citasQuery;
 
       const citas = (citasData || []).filter(
         (c) => !["cancelada", "cancelado", "cancelled"].includes((c.estado || "").toLowerCase())
       );
-      const labs = labsData || [];
-      const invoices = invoicesData || [];
+
+      const doctorPatientIds = doctorId
+        ? new Set(citas.map((c) => c.id_paciente).filter(Boolean))
+        : null;
+
+      // Invoices
+      let invoices: any[] = [];
+      if (!isDoctorOnly && !doctorId) {
+        const { data: invoicesData } = await supabase
+          .from("facturas")
+          .select("id_paciente, fecha_emision, estado_pago")
+          .gte("fecha_emision", `${sevenDaysAgo}T00:00:00.000Z`);
+        invoices = invoicesData || [];
+      } else if (doctorPatientIds && doctorPatientIds.size > 0) {
+        const { data: invoicesData } = await supabase
+          .from("facturas")
+          .select("id_paciente, fecha_emision, estado_pago")
+          .in("id_paciente", Array.from(doctorPatientIds))
+          .gte("fecha_emision", `${sevenDaysAgo}T00:00:00.000Z`);
+        invoices = invoicesData || [];
+      }
+
+      // Labs
+      let labs: any[] = [];
+      if (!isDoctorOnly && !doctorId) {
+        const { data: labsData } = await supabase
+          .from("examenes_laboratorio")
+          .select("fecha_resultado")
+          .gte("fecha_resultado", `${sevenDaysAgo}T00:00:00.000Z`);
+        labs = labsData || [];
+      } else if (doctorId) {
+        const { data: consultasData } = await supabase
+          .from("consultas")
+          .select("id_consulta")
+          .eq("id_medico", doctorId);
+
+        const consultaIds = (consultasData || []).map((c) => c.id_consulta).filter(Boolean);
+        if (consultaIds.length > 0) {
+          const { data: labsData } = await supabase
+            .from("examenes_laboratorio")
+            .select("fecha_resultado")
+            .in("id_consulta", consultaIds)
+            .gte("fecha_resultado", `${sevenDaysAgo}T00:00:00.000Z`);
+          labs = labsData || [];
+        }
+      }
 
       // Helper to count by day
       const countByDay = (items: any[], dateField: string) => {
@@ -70,7 +135,7 @@ export function useDashboardStats(options?: { enabled?: boolean }) {
       const offlineYesterday = citasByDay[5];
       const offlineChange = getChange(offlineToday, offlineYesterday);
 
-      // COMPLETED CONSULTATIONS (Real completed appointments in last 7 days, replacing simulated 15%)
+      // COMPLETED CONSULTATIONS (Real completed appointments in last 7 days)
       const completedWeekTotal = completedByDay.reduce((acc, v) => acc + v, 0);
       const completedToday = completedByDay[6];
       const completedYesterday = completedByDay[5];
@@ -81,7 +146,6 @@ export function useDashboardStats(options?: { enabled?: boolean }) {
       const labYesterday = labsByDay[5];
       const labChange = getChange(labToday, labYesterday);
 
-      // Real agenda occupation based on 10 daily clinical hours (08:00 - 18:00)
       const DAILY_SLOT_CAPACITY = 10;
       const todayOccupationPct = Math.min(100, Math.round((offlineToday / DAILY_SLOT_CAPACITY) * 100));
 
@@ -104,24 +168,15 @@ export function useDashboardStats(options?: { enabled?: boolean }) {
           labs: weekLabs,
           invoices: weekInvoices,
           donutPercentage: weekOccupationPct,
-        },
+        }
       };
 
-      // PLANS DONE (Completed vs Scheduled for today & week)
-      const isPaidStatus = (st?: string | null) => ["pagado", "pagada", "paid"].includes((st || "").toLowerCase());
-      const citasTodayCompleted = completedToday;
-      const invoicesTodayPaid = invoices.filter(i => i.fecha_emision?.startsWith(todayStr) && isPaidStatus(i.estado_pago)).length;
-      const invoicesWeekPaid = invoices.filter(i => isPaidStatus(i.estado_pago)).length;
-      
+      // REAL CLINICAL PLANS DONE
       const plansDone = {
-        consultations: offlineToday > 0 ? Math.round((citasTodayCompleted / offlineToday) * 100) : 0,
-        labs: labToday > 0 ? 100 : 0,
-        invoices: invoicesByDay[6] > 0 ? Math.round((invoicesTodayPaid / invoicesByDay[6]) * 100) : 0,
-        week: {
-          consultations: weekConsultations > 0 ? Math.round((completedWeekTotal / weekConsultations) * 100) : 0,
-          labs: weekLabs > 0 ? 100 : 0,
-          invoices: weekInvoices > 0 ? Math.round((invoicesWeekPaid / weekInvoices) * 100) : 0,
-        },
+        done: completedWeekTotal,
+        total: Math.max(completedWeekTotal, weekConsultations),
+        percentage: weekConsultations > 0 ? Math.round((completedWeekTotal / weekConsultations) * 100) : 0,
+        change: completedChange,
       };
 
       return {
@@ -147,53 +202,144 @@ export function useDashboardStats(options?: { enabled?: boolean }) {
   });
 }
 
-export function useMonthlyPayments(options?: { enabled?: boolean }) {
+export function useMonthlyPayments(options?: {
+  enabled?: boolean;
+  doctorId?: string | number | null;
+  isDoctorOnly?: boolean;
+}) {
   const { user } = useAuthSession();
-  return useQuery({
-    queryKey: ["monthly_payments", user?.id],
-    enabled: (options?.enabled ?? true) && !!user,
-    queryFn: async () => {
-      const startOfMonth = new Date();
-      startOfMonth.setDate(1);
-      startOfMonth.setHours(0, 0, 0, 0);
+  const doctorId = options?.doctorId ? Number(options.doctorId) : undefined;
+  const isDoctorOnly = options?.isDoctorOnly;
 
+  return useQuery({
+    queryKey: ["monthly_payments", user?.id, doctorId, isDoctorOnly],
+    enabled: (options?.enabled ?? true) && !!user,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchInterval: 3000,
+    queryFn: async () => {
+      // 1. Si el usuario es doctor y no tiene ID médico resuelto (cuenta nueva sin citas),
+      // sus ingresos son única y exclusivamente los suyos (inicia en 0).
+      if (isDoctorOnly && !doctorId) {
+        return { total: 0, paymentsByDay: [] };
+      }
+
+      const now = new Date();
+      const currentMonthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      // CASO 1: DOCTOR INDIVIDUAL (isDoctorOnly o doctorId presente)
+      if (isDoctorOnly && doctorId) {
+        // Consultar citas de la clínica (excluyendo datos de prueba) y facturas emitidas
+        const [{ data: allCitas }, { data: allRawInvoices }] = await Promise.all([
+          supabase
+            .from("citas")
+            .select("id_cita, id_paciente, id_medico, fecha_hora, motivo, estado")
+            .or("motivo.is.null,motivo.not.ilike.%[TEST-LOAD]%")
+            .order("fecha_hora", { ascending: false }),
+          supabase
+            .from("facturas")
+            .select(`
+              id_factura,
+              id_paciente,
+              total_general,
+              estado_pago,
+              fecha_emision,
+              detalles_factura (
+                id_servicio,
+                servicios (nombre_servicio)
+              )
+            `)
+            .order("id_factura", { ascending: false }),
+        ]);
+
+        const paidInvoices = (allRawInvoices || []).filter((i) => {
+          const isPaid = ["pagado", "pagada", "paid"].includes((i.estado_pago || "").toLowerCase());
+          if (!isPaid) return false;
+          if (!i.fecha_emision) return false;
+          return i.fecha_emision.startsWith(currentMonthPrefix) || new Date(i.fecha_emision) >= startOfMonth;
+        });
+
+        // Partición biyectiva determinista: cada factura pagada va a su médico legítimo sin pérdidas ni solapamientos
+        const myPaidInvoices = getInvoicesForDoctor(paidInvoices, allCitas || [], doctorId);
+
+        const total = myPaidInvoices.reduce((sum, f) => sum + (Number(f.total_general) || 0), 0);
+
+        const dailyMap: Record<string, number> = {};
+        const today = new Date();
+        const numDays = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+
+        for (let i = 1; i <= numDays; i++) {
+          const year = today.getFullYear();
+          const month = String(today.getMonth() + 1).padStart(2, "0");
+          const day = String(i).padStart(2, "0");
+          dailyMap[`${year}-${month}-${day}`] = 0;
+        }
+
+        myPaidInvoices.forEach((inv) => {
+          if (!inv.fecha_emision) return;
+          const dateStr = inv.fecha_emision.slice(0, 10);
+          if (dailyMap[dateStr] !== undefined) {
+            dailyMap[dateStr] += Number(inv.total_general) || 0;
+          }
+        });
+
+        const paymentsByDay = Object.keys(dailyMap)
+          .sort()
+          .map((date) => ({
+            date,
+            amount: dailyMap[date],
+          }));
+
+        return { total, paymentsByDay };
+      }
+
+      // CASO 2: ADMIN Y RECEPCIONISTA (Vista global de la clínica)
       const { data, error } = await supabase
         .from("facturas")
-        .select("total_general, estado_pago, fecha_emision")
-        .gte("fecha_emision", startOfMonth.toISOString());
-        
+        .select("id_paciente, total_general, estado_pago, fecha_emision")
+        .order("id_factura", { ascending: false });
+
       if (error) throw error;
-      
-      const paidInvoices = (data || []).filter(i => ["pagado", "pagada", "paid"].includes((i.estado_pago || "").toLowerCase()));
-      
-      // Calculate total
+
+      const paidInvoices = (data || []).filter((i) => {
+        const isPaid = ["pagado", "pagada", "paid"].includes((i.estado_pago || "").toLowerCase());
+        if (!isPaid) return false;
+        if (!i.fecha_emision) return false;
+        return i.fecha_emision.startsWith(currentMonthPrefix) || new Date(i.fecha_emision) >= startOfMonth;
+      });
+
       const total = paidInvoices.reduce((sum, f) => sum + (Number(f.total_general) || 0), 0);
-      
-      // Calculate by day for charts
+
       const dailyMap: Record<string, number> = {};
       const today = new Date();
-      const numDays = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate(); // Full month
-      
+      const numDays = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+
       for (let i = 1; i <= numDays; i++) {
-        const year = today.getFullYear(); const month = String(today.getMonth() + 1).padStart(2, "0"); const day = String(i).padStart(2, "0");
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, "0");
+        const day = String(i).padStart(2, "0");
         dailyMap[`${year}-${month}-${day}`] = 0;
       }
-      
-      paidInvoices.forEach(inv => {
+
+      paidInvoices.forEach((inv) => {
         if (!inv.fecha_emision) return;
         const dateStr = inv.fecha_emision.slice(0, 10);
         if (dailyMap[dateStr] !== undefined) {
-          dailyMap[dateStr] += (Number(inv.total_general) || 0);
+          dailyMap[dateStr] += Number(inv.total_general) || 0;
         }
       });
-      
-      const paymentsByDay = Object.keys(dailyMap).sort().map(date => ({
-        date,
-        amount: dailyMap[date]
-      }));
+
+      const paymentsByDay = Object.keys(dailyMap)
+        .sort()
+        .map((date) => ({
+          date,
+          amount: dailyMap[date],
+        }));
 
       return { total, paymentsByDay };
-    }
+    },
   });
 }
 
@@ -256,25 +402,70 @@ export function useIncrementDailyGoal() {
   });
 }
 
-export function useDashboardTrends(options?: { enabled?: boolean }) {
+export function useDashboardTrends(options?: {
+  enabled?: boolean;
+  doctorId?: string | number | null;
+  isDoctorOnly?: boolean;
+}) {
   const { user } = useAuthSession();
+  const doctorId = options?.doctorId ? Number(options.doctorId) : undefined;
+  const isDoctorOnly = options?.isDoctorOnly;
+
   return useQuery({
-    queryKey: ["dashboard_trends", user?.id],
+    queryKey: ["dashboard_trends", user?.id, doctorId, isDoctorOnly],
     enabled: (options?.enabled ?? true) && !!user,
     queryFn: async () => {
+      const getEmptyMonthly = () => {
+        const emptyMonthly: { month: string; amount: number }[] = [];
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date();
+          d.setMonth(d.getMonth() - i);
+          emptyMonthly.push({
+            month: d.toLocaleString('es-ES', { month: 'short', year: '2-digit' }),
+            amount: 0,
+          });
+        }
+        return emptyMonthly;
+      };
+
+      if (isDoctorOnly && !doctorId) {
+        return getEmptyMonthly();
+      }
+
       const sixMonthsAgo = new Date();
       sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
       sixMonthsAgo.setDate(1);
 
-      const { data: invoices, error } = await supabase
+      let allowedPatientIds: Set<number> | null = null;
+      if (isDoctorOnly || doctorId) {
+        const { data: doctorCitas } = await supabase
+          .from("citas")
+          .select("id_paciente")
+          .eq("id_medico", doctorId!);
+
+        const patientIds = (doctorCitas || [])
+          .map((c) => c.id_paciente)
+          .filter((id): id is number => id !== null && id !== undefined);
+
+        allowedPatientIds = new Set(patientIds);
+        if (allowedPatientIds.size === 0) {
+          return getEmptyMonthly();
+        }
+      }
+
+      let query = supabase
         .from("facturas")
-        .select("fecha_emision, total_general, estado_pago")
+        .select("id_paciente, fecha_emision, total_general, estado_pago")
         .gte("fecha_emision", sixMonthsAgo.toISOString());
-      
+
+      if (allowedPatientIds) {
+        query = query.in("id_paciente", Array.from(allowedPatientIds));
+      }
+
+      const { data: invoices, error } = await query;
       if (error) throw error;
 
       const monthlyData: Record<string, number> = {};
-      
       for (let i = 5; i >= 0; i--) {
         const d = new Date();
         d.setMonth(d.getMonth() - i);
@@ -301,20 +492,49 @@ export function useDashboardTrends(options?: { enabled?: boolean }) {
   });
 }
 
-export function useTopTreatments(options?: { enabled?: boolean }) {
+export function useTopTreatments(options?: {
+  enabled?: boolean;
+  doctorId?: string | number | null;
+  isDoctorOnly?: boolean;
+}) {
   const { user } = useAuthSession();
+  const doctorId = options?.doctorId ? Number(options.doctorId) : undefined;
+  const isDoctorOnly = options?.isDoctorOnly;
+
   return useQuery({
-    queryKey: ["dashboard_top_treatments", user?.id],
+    queryKey: ["dashboard_top_treatments", user?.id, doctorId, isDoctorOnly],
     enabled: (options?.enabled ?? true) && !!user,
     queryFn: async () => {
+      if (isDoctorOnly && !doctorId) return [];
+
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      const { data: detalles } = await supabase
+      let allowedPatientIds: Set<number> | null = null;
+      if (isDoctorOnly || doctorId) {
+        const { data: doctorCitas } = await supabase
+          .from("citas")
+          .select("id_paciente")
+          .eq("id_medico", doctorId!);
+
+        const patientIds = (doctorCitas || [])
+          .map((c) => c.id_paciente)
+          .filter((id): id is number => id !== null && id !== undefined);
+
+        allowedPatientIds = new Set(patientIds);
+        if (allowedPatientIds.size === 0) return [];
+      }
+
+      let query = supabase
         .from("detalles_factura")
-        .select("id_servicio, cantidad, servicios(nombre_servicio), facturas!inner(fecha_emision)")
+        .select("id_servicio, cantidad, servicios(nombre_servicio), facturas!inner(id_paciente, fecha_emision)")
         .gte("facturas.fecha_emision", thirtyDaysAgo.toISOString());
 
+      if (allowedPatientIds) {
+        query = query.in("facturas.id_paciente", Array.from(allowedPatientIds));
+      }
+
+      const { data: detalles } = await query;
       if (!detalles || detalles.length === 0) return [];
 
       const counts: Record<string, { name: string, count: number }> = {};

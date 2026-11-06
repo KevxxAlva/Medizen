@@ -155,12 +155,6 @@ function useConsultationDoctorAndSpecialty(
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>(
     () => existingConsultation?.doctor_id || appointment?.doctor_id || "",
   );
-  const [selectedSpecialty, setSelectedSpecialty] = useState<string>(
-    () => existingConsultation?.specialty_name || "Ginecología y Obstetricia",
-  );
-  const [specialtyAnswers, setSpecialtyAnswers] = useState<Record<string, any>>(() =>
-    getInitialSpecialtyAnswers(existingConsultation),
-  );
 
   const currentDoctor = useMemo(() => {
     if (selectedDoctorId) {
@@ -189,6 +183,19 @@ function useConsultationDoctorAndSpecialty(
     currentUserId,
     currentUserEmail,
   ]);
+
+  const [selectedSpecialty, setSelectedSpecialty] = useState<string>(
+    () => existingConsultation?.specialty_name || currentDoctor?.specialty || "Ginecología y Obstetricia",
+  );
+  const [specialtyAnswers, setSpecialtyAnswers] = useState<Record<string, any>>(() =>
+    getInitialSpecialtyAnswers(existingConsultation),
+  );
+
+  useEffect(() => {
+    if (!existingConsultation?.specialty_name && currentDoctor?.specialty) {
+      setSelectedSpecialty(currentDoctor.specialty);
+    }
+  }, [currentDoctor?.specialty, existingConsultation?.specialty_name]);
 
   const specialtyConfig = useMemo(() => {
     const spec =
@@ -556,6 +563,7 @@ async function executeConsultationSave(params: {
   patient: any;
   clinic: any;
   onOpenChange?: (v: boolean) => void;
+  queryClient?: any;
 }) {
   const {
     actionType,
@@ -648,6 +656,7 @@ async function executeConsultationSave(params: {
           queryClient.invalidateQueries({ queryKey: ["appointments"], refetchType: "all" }),
           queryClient.invalidateQueries({ queryKey: ["dashboard_stats"], refetchType: "all" }),
           queryClient.invalidateQueries({ queryKey: ["monthly_payments"], refetchType: "all" }),
+          queryClient.invalidateQueries({ queryKey: ["financial_accounts"], refetchType: "all" }),
         ]);
       }
       toast.success("Consulta actualizada con éxito");
@@ -665,9 +674,10 @@ async function executeConsultationSave(params: {
           queryClient.invalidateQueries({ queryKey: ["appointments"], refetchType: "all" }),
           queryClient.invalidateQueries({ queryKey: ["dashboard_stats"], refetchType: "all" }),
           queryClient.invalidateQueries({ queryKey: ["monthly_payments"], refetchType: "all" }),
+          queryClient.invalidateQueries({ queryKey: ["financial_accounts"], refetchType: "all" }),
         ]);
       }
-      toast.success("Consulta registrada con éxito");
+      toast.success("Consulta registrada y factura generada con éxito");
     }
 
     const activeDoctor =

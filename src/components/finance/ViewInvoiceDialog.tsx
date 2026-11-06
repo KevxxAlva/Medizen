@@ -26,6 +26,14 @@ import { generateIndividualInvoice } from "@/lib/utils/generateIndividualInvoice
 import { toast } from "sonner";
 import { APP_LOCALE, APP_TIME_ZONE } from "@/lib/constants/locale";
 
+export interface InvoiceItem {
+  id?: number | string;
+  descripcion: string;
+  cantidad: number;
+  precio_unitario: number;
+  subtotal: number;
+}
+
 export interface Invoice {
   id_factura: number;
   id_paciente: number;
@@ -37,6 +45,8 @@ export interface Invoice {
   estado_pago: string;
   metodo_pago?: string | null;
   referencia?: string | null;
+  concepto?: string | null;
+  items?: InvoiceItem[];
 }
 
 export interface ViewInvoiceDialogProps {
@@ -363,14 +373,32 @@ export function ViewInvoiceDialog({
           referencia={invoice.referencia}
         />
 
-        <div className="rounded-2xl border border-border/70 bg-muted/20 p-3.5 text-xs space-y-2">
+        <div className="rounded-2xl border border-border/70 bg-muted/20 p-3.5 text-xs space-y-2.5">
           <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
             Concepto Facturado
           </span>
-          <div className="flex items-center justify-between font-semibold text-foreground">
-            <span>Servicios Médicos / Consulta Especializada</span>
-            <span>${totalUsd.toFixed(2)} USD</span>
-          </div>
+          {invoice.items && invoice.items.length > 0 ? (
+            <div className="space-y-2">
+              {invoice.items.map((item, idx) => (
+                <div key={idx} className="flex items-center justify-between font-semibold text-foreground">
+                  <div className="flex items-center gap-1.5">
+                    {item.cantidad > 1 && (
+                      <span className="text-[10px] bg-primary/10 text-primary font-bold px-1.5 py-0.5 rounded">
+                        {item.cantidad}x
+                      </span>
+                    )}
+                    <span>{item.descripcion}</span>
+                  </div>
+                  <span>${Number(item.subtotal || item.precio_unitario || 0).toFixed(2)} USD</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center justify-between font-semibold text-foreground">
+              <span>{invoice.concepto || "Servicios Médicos / Consulta Especializada"}</span>
+              <span>${totalUsd.toFixed(2)} USD</span>
+            </div>
+          )}
         </div>
 
         <InvoiceDialogFooter

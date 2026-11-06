@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Search, X, Loader2 } from "lucide-react";
 import { generateSalesReport } from "@/lib/utils/generateSalesReport";
 import { toast } from "sonner";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { usePaymentMethods } from "@/lib/api/paymentMethods";
 import { useExchangeRate } from "@/hooks/useExchangeRate";
+import { useUserRoleScope } from "@/hooks/useUserRoleScope";
+import { useAppointments } from "@/lib/api/appointments";
+import { getInvoicesForDoctor } from "@/lib/utils/invoiceDoctorPartition";
 import { ExchangeRateToolbarPill } from "./ExchangeRateToolbarPill";
 import { ViewInvoiceDialog, type Invoice } from "./ViewInvoiceDialog";
 import { ConfirmPaymentDialog } from "./ConfirmPaymentDialog";
@@ -54,6 +57,15 @@ export function SalesPage() {
 
   const { data: methods = [] } = usePaymentMethods();
   const { facturas, isLoading, updatePaymentStatus, deleteInvoice } = useSalesInvoices();
+  const { isDoctorOnly, doctorId: currentDoctorId } = useUserRoleScope();
+
+  const { data: allAppointments = [] } = useAppointments();
+
+  const scopedFacturas = useMemo(() => {
+    if (!isDoctorOnly) return facturas;
+    if (!currentDoctorId || allAppointments.length === 0) return [];
+    return getInvoicesForDoctor(facturas, allAppointments, currentDoctorId);
+  }, [facturas, isDoctorOnly, allAppointments, currentDoctorId]);
 
   const handleSort = (field: InvoiceSortField) => {
     if (sortField === field) {
@@ -66,7 +78,7 @@ export function SalesPage() {
   };
 
   const { filtered, kpiStats } = useSalesFilteredStats({
-    facturas,
+    facturas: scopedFacturas,
     q,
     filterMonth,
     filterStatus,

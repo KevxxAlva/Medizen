@@ -10,7 +10,7 @@ import {
 import type { Appointment } from "@/lib/api/appointments";
 import { useDoctors } from "@/lib/api/profiles";
 import { useServices } from "@/lib/api/services";
-import { Loader2 } from "lucide-react";
+import { Loader2, Stethoscope } from "lucide-react";
 import { AppointmentPatientSelect } from "./appointment/AppointmentPatientSelect";
 import { AppointmentServiceSelect } from "./appointment/AppointmentServiceSelect";
 import { useAppointmentFormState } from "./appointment/useAppointmentFormState";
@@ -44,6 +44,8 @@ export function AppointmentForm({
     doctor_id,
     setDoctorId,
     selectedDoctor,
+    isDoctorOnly,
+    doctorName,
     date,
     setDate,
     time,
@@ -83,16 +85,26 @@ export function AppointmentForm({
 
           <div className="grid gap-2">
             <Label>Médico</Label>
-            <Select value={doctor_id || undefined} onValueChange={setDoctorId}>
-              <SelectTrigger><SelectValue placeholder="Selecciona doctor" /></SelectTrigger>
-              <SelectContent>
-                {doctors.length === 0 ? (
-                  <SelectItem value="none" disabled>No hay doctores registrados</SelectItem>
-                ) : (
-                  doctors.map((d) => <SelectItem key={d.id} value={d.id}>{d.full_name || d.email}</SelectItem>)
-                )}
-              </SelectContent>
-            </Select>
+            {isDoctorOnly ? (
+              <div className="flex items-center gap-2.5 h-10 px-3.5 py-2 rounded-xl border border-primary/30 bg-primary/[0.07] text-sm font-bold text-foreground">
+                <Stethoscope className="h-4 w-4 text-primary shrink-0" />
+                <span className="truncate">Dr(a). {selectedDoctor?.full_name || doctorName || "Especialista asignado"}</span>
+                <span className="ml-auto text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 rounded-full bg-primary/15 text-primary shrink-0">
+                  Tú
+                </span>
+              </div>
+            ) : (
+              <Select value={doctor_id || undefined} onValueChange={setDoctorId}>
+                <SelectTrigger><SelectValue placeholder="Selecciona doctor" /></SelectTrigger>
+                <SelectContent>
+                  {doctors.length === 0 ? (
+                    <SelectItem value="none" disabled>No hay doctores registrados</SelectItem>
+                  ) : (
+                    doctors.map((d) => <SelectItem key={d.id} value={d.id}>{d.full_name || d.email}</SelectItem>)
+                  )}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getStoredAppointmentPrice, resolveServiceFromReason } from "@/lib/api/appointments";
 
 export type VisitType = "CONTROL" | "EMERGENCIA" | "CONSULTA_NUEVA" | "POST_TRATAMIENTO" | "OTRO";
 
@@ -364,10 +365,81 @@ export function useCreateConsultation() {
       }
 
       // 4. Mark appointment as completed
+      const citaId = parseInt(consultationData.appointment_id);
+      const patientId = parseInt(consultationData.patient_id);
       await supabase
         .from("citas")
         .update({ estado: "Completada" })
-        .eq("id_cita", parseInt(consultationData.appointment_id));
+        .eq("id_cita", citaId);
+
+      // 5. Emitir automáticamente la factura como Pendiente con el monto exacto del servicio de la cita
+      const { data: origCita } = await supabase
+        .from("citas")
+        .select("fecha_hora, motivo, id_medico")
+        .eq("id_cita", citaId)
+        .maybeSingle();
+
+      const invoiceDate = origCita?.fecha_hora || new Date().toISOString();
+
+      const { data: existingFacs } = await supabase
+        .from("facturas")
+        .select("id_factura")
+        .eq("id_paciente", patientId)
+        .eq("fecha_emision", invoiceDate)
+        .limit(1);
+
+      if (!existingFacs || existingFacs.length === 0) {
+        const { data: allServices } = await supabase
+          .from("servicios")
+          .select("id_servicio, nombre_servicio, costo_base")
+          .order("id_servicio", { ascending: true });
+        const servicesList = allServices || [];
+
+        const matchedServ =
+          resolveServiceFromReason(origCita?.motivo, servicesList) ||
+          resolveServiceFromReason(consultationData.specialty_name, servicesList);
+
+        let matchedServiceId: number | null = matchedServ ? matchedServ.id_servicio : null;
+        const storedPrice = getStoredAppointmentPrice(citaId) || 0;
+        const servicePrice = matchedServ?.costo_base ? Number(matchedServ.costo_base) : 0;
+
+        let finalPrice = storedPrice || servicePrice;
+
+        if (!matchedServiceId && servicesList.length > 0) {
+          const defServ = servicesList[0];
+          matchedServiceId = defServ.id_servicio;
+          if (finalPrice <= 0 && defServ.costo_base) {
+            finalPrice = Number(defServ.costo_base);
+          }
+        }
+
+        if (finalPrice <= 0) {
+          finalPrice = 35;
+        }
+
+        const { data: newF } = await supabase
+          .from("facturas")
+          .insert({
+            id_paciente: patientId,
+            total_general: finalPrice,
+            subtotal: finalPrice,
+            monto_paciente: finalPrice,
+            estado_pago: "Pendiente",
+            fecha_emision: invoiceDate,
+          })
+          .select("id_factura")
+          .single();
+
+        if (newF?.id_factura && matchedServiceId) {
+          await supabase.from("detalles_factura").insert({
+            id_factura: newF.id_factura,
+            id_servicio: matchedServiceId,
+            cantidad: 1,
+            precio_unitario: finalPrice,
+            subtotal: finalPrice,
+          });
+        }
+      }
 
       // 4. Create next appointment if next_appointment_date is provided
       if (consultationData.next_appointment_date) {

@@ -2,7 +2,7 @@ import { Link, useRouterState, useRouter } from "@tanstack/react-router";
 import {
   LayoutGrid, Calendar, UserRound, Stethoscope, Users,
   Wallet, ReceiptText, CreditCard,
-  Box, RotateCw, Headphones, Settings,
+  Box, RotateCw, Settings,
   LogOut, ChevronLeft, ChevronRight, X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -39,7 +39,6 @@ const navigation: ModuleDef[] = [
   { title: "Inventario", url: "/stocks", icon: Box, adminOnly: true },
   { category: "OTROS" },
   { title: "Reportes", url: "/reportes", icon: RotateCw },
-  { title: "Atención al Cliente", url: "/support", icon: Headphones },
   { title: "Configuración", url: "/configuracion", icon: Settings },
 ];
 

@@ -5,6 +5,7 @@ import {
   type AppointmentWithPatient,
 } from "@/lib/api/appointments";
 import { useDoctors } from "@/lib/api/profiles";
+import { useUserRoleScope } from "@/hooks/useUserRoleScope";
 import { AppointmentForm } from "@/components/AppointmentForm";
 import { ConsultationForm } from "@/components/ConsultationForm";
 import { generateAppointmentsReport } from "@/lib/utils/generateAppointmentsReport";
@@ -23,6 +24,8 @@ import { AgendaCalendarNav } from "./agenda/AgendaCalendarNav";
 import { useAgendaGridEvents } from "./agenda/useAgendaGridEvents";
 
 export function AgendaPage() {
+  const { isDoctorOnly, doctorId: currentDoctorId, canViewAllDoctors, doctorName } = useUserRoleScope();
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>("all");
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [formOpen, setFormOpen] = useState(false);
   const [defaultFormDate, setDefaultFormDate] = useState<string | undefined>(undefined);
@@ -53,10 +56,15 @@ export function AgendaPage() {
     return { from, to };
   }, [weekDays, monthDays]);
 
+  const effectiveDoctorId = isDoctorOnly
+    ? currentDoctorId || undefined
+    : (selectedDoctorId !== "all" ? selectedDoctorId : undefined);
+
   // Queries
   const { data: appointments = [] } = useAppointments({
     from: dateRange.from,
     to: dateRange.to,
+    doctorId: effectiveDoctorId,
   });
   const { data: doctors = [] } = useDoctors();
   const del = useDeleteAppointment();
@@ -135,6 +143,11 @@ export function AgendaPage() {
           onSearchOpenChange={setIsSearchOpen}
           compactMode={compactMode}
           onCompactModeChange={setCompactMode}
+          canViewAllDoctors={canViewAllDoctors}
+          selectedDoctorId={selectedDoctorId}
+          onDoctorChange={setSelectedDoctorId}
+          doctors={doctors}
+          doctorName={doctorName}
         />
 
         <div className="flex flex-col lg:flex-row gap-8 flex-1">

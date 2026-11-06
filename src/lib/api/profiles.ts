@@ -4,10 +4,12 @@ import { useAuthSession } from "@/hooks/useAuth";
 
 export interface Profile {
   id: string;
+  doctor_id?: string | null;
   auth_id?: string | null;
   full_name: string;
   email: string;
   specialty: string | null;
+  specialty_id?: number | null;
   avatar_url: string | null;
   university?: string | null;
   mpps?: string | null;
@@ -27,9 +29,11 @@ const mapProfile = (u: any): Profile => {
 
   return {
     id: u.auth_id || u.id_usuario?.toString(),
+    doctor_id: docInfo?.id_medico ? String(docInfo.id_medico) : null,
     full_name: docInfo ? `${docInfo.nombre} ${docInfo.apellido}` : u.nombre_usuario,
     email: docInfo?.email || `${u.nombre_usuario}@femesalud.com`,
     specialty: docInfo?.especialidades?.nombre || null,
+    specialty_id: docInfo?.id_especialidad || docInfo?.especialidades?.id_especialidad || null,
     avatar_url: null,
     mpps: docInfo?.numero_licencia || null,
     university: docInfo?.universidad || null,
@@ -46,7 +50,7 @@ export function useMyProfile(userId: string | undefined) {
       // First try to match by auth_id (UUID from Supabase Auth)
       const { data, error } = await supabase
         .from("usuarios")
-        .select("*, medicos(nombre, apellido, email, numero_licencia, universidad, cmc, especialidades(nombre))")
+        .select("*, roles(nombre_rol), medicos(id_medico, id_especialidad, nombre, apellido, email, numero_licencia, universidad, cmc, especialidades(id_especialidad, nombre))")
         .eq("auth_id", userId!)
         .maybeSingle();
 
@@ -67,23 +71,37 @@ export function useDoctors(options?: { enabled?: boolean }) {
     queryKey: ["doctors", user?.id],
     enabled: (options?.enabled ?? true) && !!user,
     queryFn: async (): Promise<Profile[]> => {
-      const { data, error } = await supabase
-        .from("medicos")
-        .select("id_medico, nombre, apellido, email, numero_licencia, universidad, cmc, especialidades(nombre), usuarios(auth_id, nombre_usuario)");
+      const [{ data: rawMedicos, error: medError }, { data: rawSpecialties }] = await Promise.all([
+        supabase
+          .from("medicos")
+          .select("id_medico, id_especialidad, nombre, apellido, email, numero_licencia, universidad, cmc, especialidades(id_especialidad, nombre), usuarios(auth_id, nombre_usuario)"),
+        supabase.from("especialidades").select("id_especialidad, nombre"),
+      ]);
         
-      if (error) throw error;
+      if (medError) throw medError;
+
+      const specMap = new Map<number, string>();
+      (rawSpecialties || []).forEach((esp) => {
+        specMap.set(esp.id_especialidad, esp.nombre);
+      });
       
-      return (data ?? []).map((m: any) => ({
-        id: m.id_medico?.toString(),
-        auth_id: m.usuarios?.auth_id || null,
-        full_name: `${m.nombre} ${m.apellido}`,
-        email: m.email || "",
-        specialty: m.especialidades?.nombre || null,
-        avatar_url: null,
-        mpps: m.numero_licencia,
-        university: m.universidad || null,
-        cmc: m.cmc || null,
-      }));
+      return (rawMedicos ?? []).map((m: any) => {
+        const joinedSpec = Array.isArray(m.especialidades) ? m.especialidades[0]?.nombre : m.especialidades?.nombre;
+        const mappedSpec = (m.id_especialidad && specMap.get(m.id_especialidad)) || joinedSpec || null;
+        return {
+          id: m.id_medico?.toString(),
+          doctor_id: m.id_medico?.toString(),
+          auth_id: m.usuarios?.auth_id || null,
+          full_name: `${m.nombre} ${m.apellido}`.trim(),
+          email: m.email || "",
+          specialty: mappedSpec,
+          specialty_id: m.id_especialidad || null,
+          avatar_url: null,
+          mpps: m.numero_licencia,
+          university: m.universidad || null,
+          cmc: m.cmc || null,
+        };
+      });
     },
   });
 }

@@ -1,7 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Search, Plus, X, Pencil, Trash2, ChevronLeft, Loader2, Stethoscope, ChevronRight, Filter, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useServices, useDeleteService, useSpecialties, Service } from "@/lib/api/services";
+import { useUserRoleScope } from "@/hooks/useUserRoleScope";
+import { useDoctors } from "@/lib/api/profiles";
 import { ServiceForm } from "@/components/ServiceForm";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { getSpecialtyBadgeStyle } from "@/lib/constants/specialtyForms";
@@ -9,12 +11,35 @@ import { getSpecialtyBadgeStyle } from "@/lib/constants/specialtyForms";
 export function ServiciosPage() {
   const { data: services = [], isLoading } = useServices();
   const { data: specialties = [] } = useSpecialties();
+  const { data: doctors = [] } = useDoctors();
+  const {
+    isDoctorOnly,
+    doctorId,
+    doctorName,
+    doctorSpecialtyId: scopedSpecialtyId,
+    doctorSpecialtyName: scopedSpecialtyName,
+    canViewAllDoctors,
+  } = useUserRoleScope();
   const deleteService = useDeleteService();
   
+  const currentDoctorProfile = useMemo(() => {
+    if (!doctorId) return null;
+    return doctors.find((d) => d.id === doctorId) || null;
+  }, [doctors, doctorId]);
+
+  const doctorSpecialtyId = scopedSpecialtyId || currentDoctorProfile?.specialty_id;
+  const doctorSpecialtyName = scopedSpecialtyName || currentDoctorProfile?.specialty;
+
   const [q, setQ] = useState("");
   const [specialtyFilter, setSpecialtyFilter] = useState<string>("all");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Service | null>(null);
+
+  useEffect(() => {
+    if (isDoctorOnly && doctorSpecialtyId) {
+      setSpecialtyFilter(String(doctorSpecialtyId));
+    }
+  }, [isDoctorOnly, doctorSpecialtyId]);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -104,55 +129,102 @@ export function ServiciosPage() {
 
       {/* SPECIALTY FILTER CHIPS / PILLS */}
       <div className="flex items-center gap-2 pb-3 mb-2 overflow-x-auto no-scrollbar border-b border-border/40">
-        <button
-          onClick={() => { setSpecialtyFilter("all"); setCurrentPage(1); }}
-          className={cn(
-            "text-xs font-semibold px-3 py-1.5 rounded-xl shrink-0 transition-colors border",
-            specialtyFilter === "all"
-              ? "bg-foreground text-background border-foreground font-bold shadow-sm"
-              : "bg-muted/60 text-muted-foreground border-transparent hover:bg-muted"
-          )}
-        >
-          Todas ({services.length})
-        </button>
-
-        {specialties.map((esp) => {
-          const count = countsBySpecialty[String(esp.id_especialidad)] || 0;
-          if (count === 0 && specialtyFilter !== String(esp.id_especialidad)) return null;
-          const badge = getSpecialtyBadgeStyle(esp.nombre);
-          const active = specialtyFilter === String(esp.id_especialidad);
-
-          return (
+        {isDoctorOnly && doctorSpecialtyId ? (
+          <>
             <button
-              key={esp.id_especialidad}
-              onClick={() => { setSpecialtyFilter(String(esp.id_especialidad)); setCurrentPage(1); }}
+              onClick={() => { setSpecialtyFilter(String(doctorSpecialtyId)); setCurrentPage(1); }}
               className={cn(
-                "text-xs font-semibold px-3 py-1.5 rounded-xl shrink-0 transition-colors border flex items-center gap-1.5",
-                active
+                "text-xs font-semibold px-3.5 py-1.5 rounded-xl shrink-0 transition-colors border flex items-center gap-2",
+                specialtyFilter === String(doctorSpecialtyId)
                   ? "bg-primary text-primary-foreground border-primary font-bold shadow-sm"
                   : "bg-muted/60 text-muted-foreground border-transparent hover:bg-muted"
               )}
             >
-              <span>{esp.nombre}</span>
-              <span className={cn("text-[10px] px-1.5 py-0.2 rounded-full", active ? "bg-white/20 text-white" : "bg-background text-muted-foreground")}>
-                {count}
+              <Sparkles className="w-3.5 h-3.5 opacity-80" />
+              <span>Mi Rama: {doctorSpecialtyName || "Mi Especialidad"}</span>
+              <span className={cn("text-[10px] px-1.5 py-0.2 rounded-full", specialtyFilter === String(doctorSpecialtyId) ? "bg-white/20 text-white" : "bg-background text-muted-foreground")}>
+                {countsBySpecialty[String(doctorSpecialtyId)] || 0}
               </span>
             </button>
-          );
-        })}
 
-        {countsBySpecialty.none > 0 && (
-          <button
-            onClick={() => { setSpecialtyFilter("none"); setCurrentPage(1); }}
-            className={cn(
-              "text-xs font-semibold px-3 py-1.5 rounded-xl shrink-0 transition-colors border",
-              specialtyFilter === "none"
-                ? "bg-foreground text-background border-foreground font-bold shadow-sm"
-                : "bg-muted/60 text-muted-foreground border-transparent hover:bg-muted"
+            {countsBySpecialty.none > 0 && (
+              <button
+                onClick={() => { setSpecialtyFilter("none"); setCurrentPage(1); }}
+                className={cn(
+                  "text-xs font-semibold px-3 py-1.5 rounded-xl shrink-0 transition-colors border",
+                  specialtyFilter === "none"
+                    ? "bg-primary text-primary-foreground border-primary font-bold shadow-sm"
+                    : "bg-muted/60 text-muted-foreground border-transparent hover:bg-muted"
+                )}
+              >
+                Multidisciplinarios ({countsBySpecialty.none})
+              </button>
             )}
-          >
-            Multidisciplinarios ({countsBySpecialty.none})
-          </button>
+
+            <button
+              onClick={() => { setSpecialtyFilter("all"); setCurrentPage(1); }}
+              className={cn(
+                "text-xs font-semibold px-3 py-1.5 rounded-xl shrink-0 transition-colors border",
+                specialtyFilter === "all"
+                  ? "bg-foreground text-background border-foreground font-bold shadow-sm"
+                  : "bg-muted/60 text-muted-foreground border-transparent hover:bg-muted"
+              )}
+            >
+              Ver Todas las Especialidades ({services.length})
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={() => { setSpecialtyFilter("all"); setCurrentPage(1); }}
+              className={cn(
+                "text-xs font-semibold px-3 py-1.5 rounded-xl shrink-0 transition-colors border",
+                specialtyFilter === "all"
+                  ? "bg-foreground text-background border-foreground font-bold shadow-sm"
+                  : "bg-muted/60 text-muted-foreground border-transparent hover:bg-muted"
+              )}
+            >
+              Todas ({services.length})
+            </button>
+
+            {specialties.map((esp) => {
+              const count = countsBySpecialty[String(esp.id_especialidad)] || 0;
+              if (count === 0 && specialtyFilter !== String(esp.id_especialidad)) return null;
+              const active = specialtyFilter === String(esp.id_especialidad);
+
+              return (
+                <button
+                  key={esp.id_especialidad}
+                  onClick={() => { setSpecialtyFilter(String(esp.id_especialidad)); setCurrentPage(1); }}
+                  className={cn(
+                    "text-xs font-semibold px-3 py-1.5 rounded-xl shrink-0 transition-colors border flex items-center gap-1.5",
+                    active
+                      ? "bg-primary text-primary-foreground border-primary font-bold shadow-sm"
+                      : "bg-muted/60 text-muted-foreground border-transparent hover:bg-muted"
+                  )}
+                >
+                  <span>{esp.nombre}</span>
+                  <span className={cn("text-[10px] px-1.5 py-0.2 rounded-full", active ? "bg-white/20 text-white" : "bg-background text-muted-foreground")}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+
+            {countsBySpecialty.none > 0 && (
+              <button
+                onClick={() => { setSpecialtyFilter("none"); setCurrentPage(1); }}
+                className={cn(
+                  "text-xs font-semibold px-3 py-1.5 rounded-xl shrink-0 transition-colors border",
+                  specialtyFilter === "none"
+                    ? "bg-foreground text-background border-foreground font-bold shadow-sm"
+                    : "bg-muted/60 text-muted-foreground border-transparent hover:bg-muted"
+                )}
+              >
+                Multidisciplinarios ({countsBySpecialty.none})
+              </button>
+            )}
+          </>
         )}
       </div>
 
@@ -160,6 +232,12 @@ export function ServiciosPage() {
       <div className="flex flex-wrap items-center justify-between mb-4 pb-2">
         <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
           <span>Mostrando {filtered.length} servicios</span>
+          {isDoctorOnly && doctorSpecialtyName && specialtyFilter === String(doctorSpecialtyId) && (
+            <span className="text-[11px] font-semibold text-primary bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+              <Stethoscope className="w-3 h-3" />
+              Rama: {doctorSpecialtyName} (compartida con tus colegas)
+            </span>
+          )}
           {specialtyFilter !== "all" && (
             <button 
               onClick={() => setSpecialtyFilter("all")} 
@@ -251,7 +329,13 @@ export function ServiciosPage() {
         onPageChange={setCurrentPage}
       />
 
-      <ServiceForm open={formOpen} onOpenChange={setFormOpen} service={editing} />
+      <ServiceForm
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        service={editing}
+        defaultSpecialtyId={doctorSpecialtyId}
+        isDoctorOnly={isDoctorOnly}
+      />
     </div>
   );
 }
