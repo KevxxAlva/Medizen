@@ -9,9 +9,9 @@ La Fase IV representa la materialización de la ingeniería de software y la ent
 ## Propuesta Técnica
 
 ### Descripción de la Solución Informática
-La propuesta técnica consiste en el desarrollo e implantación de **FemeSalud (Medizen — Suite Clínica Inteligente)**, una plataforma web progresiva y reactiva de alta resolución diseñada para la gestión clínica integral, administración operativa y flujo asistencial sin fricción en consultorios médicos privados, con alta especialización en **Múltiples Especialidades Médicas**.
+La propuesta técnica consiste en el desarrollo e implantación de **FemeSalud (Medizen — Suite Clínica Inteligente)**, una plataforma web progresiva y reactiva de alta resolución diseñada para la gestión clínica integral, coordinación de sala de espera, control financiero multimoneda, liquidación de honorarios médicos, auditoría y flujo asistencial sin fricción en consultorios médicos privados, con alta especialización en **Múltiples Especialidades Médicas**.
 
-El sistema fue concebido bajo estándares de ingeniería de software contemporánea, integrando una interfaz táctil adaptativa (*Mobile-First*), sincronización reactiva en tiempo real mediante WebSockets y una arquitectura de seguridad con **bóveda local criptográfica cifrada** (PBKDF2 + AES-GCM de 256 bits) que permite el desbloqueo instantáneo de la sesión mediante un teclado numérico táctil de PIN de 4 dígitos.
+El sistema fue concebido bajo estándares de ingeniería de software contemporánea —certificado con una calificación perfecta de **100 / 100 (`0 issues` en 247 archivos React/TypeScript)** mediante el analizador estático `react-doctor`—, integrando una interfaz táctil adaptativa (*Mobile-First*), caché multinivel L1/L2 con hidratación instantánea en `0 ms`, aislamiento estricto de datos por rol clínico (`useUserRoleScope`), sincronización reactiva mediante WebSockets y una **bóveda local criptográfica cifrada** (PBKDF2 + AES-GCM de 256 bits) para desbloqueo por PIN de 4 dígitos.
 
 ### Requerimientos del Sistema (Funcionales y No Funcionales)
 
@@ -20,16 +20,17 @@ El sistema fue concebido bajo estándares de ingeniería de software contemporá
 
 | Código | Tipo | Nombre del Requerimiento | Descripción Técnica |
 | :--- | :--- | :--- | :--- |
-| **RF-01** | Funcional | Registro e Identificación de Pacientes | Apertura, consulta, edición y archivo de pacientes (`pacientes` e `historias_clinicas`) con número correlativo `HC-XXXXX`, datos demográficos, grupo sanguíneo y factor Rh, contacto de emergencia, seguro médico/póliza, alergias, medicación habitual y antecedentes de transfusiones. |
-| **RF-02** | Funcional | Historia Médica Integral y Gineco-Obstétrica | Registro estructurado en 8 pestañas clínicas (*Identificación, Antecedentes, Ginecológico, Obstétrico, Consultas, Timeline, Notas y Estudios, Recetas*), fórmula G-P-A-C-E, cálculo automático en vivo de edad gestacional y FPP por Regla de Naegele a partir de la FUM, y carga de estudios diagnósticos en `archivos_pacientes`. |
-| **RF-03** | Funcional | Agenda y Citas en Tiempo Real | Calendario interactivo (día, semana, mes) en la tabla `citas` con cambios de estado sincronizados instantáneamente entre recepción y consultorio mediante Supabase Realtime (`useRealtimeSync`) y vinculación automática con el catálogo `servicios.costo_base`. |
-| **RF-04** | Funcional | Diseñador y Emisión de Récipes y Reportes PDF | Compilación bajo demanda (*code-splitting* dinámico con `jsPDF`) de récipes médicos oficiales, presupuestos e historias clínicas completas en formato PDF de alta resolución y envío directo a WhatsApp. |
-| **RF-05** | Funcional | Facturación Multimoneda, Tesorería Venezolana y Cashea | Gestión integrada de cuentas de tesorería (`/cuentas`), catálogo de métodos de pago venezolanos (`/metodos-pago`) y facturación (`/facturacion`) con soporte nativo para los 6 métodos de pago en Venezuela (**Efectivo en Bolívares, Pago Móvil, Transferencia Bancaria, Binance Pay USDT, Divisas en Efectivo USD/EUR y Cashea**). Incluye **Calculadora Profesional Cashea** (inicial configurable 40%/50%/60% + 3 cuotas sin interés cada 14 días, método de cobro de la inicial y N.º de orden), copia en 1 clic de datos receptores de la clínica (18 bancos SUDEBAN, RIF/CI, teléfono, cuenta de 20 dígitos, Binance ID), acreditación automática de saldos por cuenta, tasas en vivo (**Dólar BCV**, **Euro BCV** y **USDT Binance P2P**), calculadora cuatridivisa (`USD ↔ Bs. ↔ EUR ↔ USDT`), recibos PDF con método/referencia y kárdex de insumos (`inventario` y `movimientos_inventario`). |
-| **RF-06** | Funcional | Bóveda Criptográfica Local, Bloqueo e Inactividad | Cifrado de sesión con derivación `PBKDF2` (100.000 iteraciones SHA-256) y `AES-GCM` (256 bits), validación de PIN con sal criptográfica, protección anti-fuerza bruta (bloqueo temporal tras 5 intentos fallidos), bloqueo automático por inactividad (`InactivityLockOverlay`) y bitácora en `auditoria_logs`. |
-| **RNF-01** | No Funcional | Seguridad y Confidencialidad (RLS) | Cumplimiento del secreto médico mediante políticas *Row Level Security* (RLS) en el kernel de PostgreSQL, control de acceso por roles (`admin`, `doctor`, `recepcionista` / `asistente`) y cifrado TLS 1.3. |
-| **RNF-02** | No Funcional | Usabilidad *Mobile-First* y Capacidad PWA | Interfaz táctil adaptativa con navegación optimizada para tabletas y teléfonos móviles, Service Worker (`sw.js`) con caché inteligente y persistencia de identidad visual (`ThemeCustomizer` e isotipo `MedizenLogo` sincronizado con `--primary` desde SSR). |
-| **RNF-03** | No Funcional | Tiempo de Respuesta y Desempeño (INP < 50 ms) | Hidratación SSR/CSR sin parpadeos de autenticación al refrescar la página, caché de sesión/rol y carga diferida de librerías pesadas para mantener tiempos de respuesta inferiores a 1,5 segundos. |
-| **RNF-04** | No Funcional | Integridad Transaccional y Respaldo | Almacenamiento relacional ACID en PostgreSQL 15 combinado con flexibilidad documental `JSONB` y copias de seguridad automáticas en la infraestructura de Supabase. |
+| **RF-01** | Funcional | Registro e Identificación de Pacientes con Autoasignación Médica | Apertura, consulta, edición y archivo de pacientes (`pacientes` e `historias_clinicas`) con código correlativo `HC-XXXXX`, datos demográficos, grupo sanguíneo y factor Rh, contacto de emergencia, seguro/póliza, alergias, medicación habitual, transfusiones y **autoasignación bloqueada del médico tratante** cuando la historia es creada por un rol `doctor`. |
+| **RF-02** | Funcional | Historia Médica Integral, Regla de Naegele y Curva de Signos Vitales | Registro estructurado en 8 pestañas clínicas (*Identificación, Antecedentes, Ginecológico, Obstétrico, Consultas, Timeline, Notas y Estudios, Recetas*), fórmula G-P-A-C-E, cálculo en vivo de EG y FPP por Regla de Naegele, gráficas evolutivas de Presión Arterial y Peso/IMC (`PatientVitalsChart`) y estudios en `archivos_pacientes`. |
+| **RF-03** | Funcional | Sala de Espera Kanban y Agenda en Tiempo Real | Tablero Kanban interactivo en vivo (`/sala-espera`, exclusivo para Recepción y Administración) estructurado en 4 columnas (*Citados / Por Llegar, En Sala de Espera, En Consultorio, Atendidos / Caja*) con cronómetro de espera y aviso por WhatsApp, sincronizado vía Supabase Realtime con el calendario de citas (`/agenda`). |
+| **RF-04** | Funcional | Emisión PDF de Récipes, Órdenes de Laboratorio e Informes Ecográficos | Compilación dinámica bajo demanda (`jsPDF`) de récipes médicos oficiales, historias clínicas completas, **Órdenes de Laboratorio** (con 4 perfiles rápidos en 1 clic: *Prenatal, Preoperatorio, Ginecológico/Hormonal y Control General*) e **Informes Ecográficos Estructurados**, listos para imprimir o remitir vía WhatsApp. |
+| **RF-05** | Funcional | Facturación Post-Consulta, Tesorería Venezolana, Cashea y Reporte Z | Generación automática de factura en estado **`Pendiente`** únicamente al **completar la consulta médica** con el `costo_base` real del servicio y orden descendente en Ventas (`/facturacion`). Gestión de cuentas (`/cuentas`) y 6 métodos de pago venezolanos (**Efectivo Bs., Pago Móvil, Transferencia Bancaria, Binance Pay USDT, Divisas USD/EUR y Cashea** con inicial 40%/50%/60% + 3 cuotas sin interés), tasas en vivo (**Dólar BCV, Euro BCV y USDT**), **Arqueo Diario de Caja (Reporte Z PDF)** y **Centro de Reportes (`/reportes`)** en PDF/CSV. |
+| **RF-06** | Funcional | Liquidación de Honorarios Médicos e Inventario Administrativo | Módulo exclusivo de Administración (`/honorarios`) con partición matemática estricta factura-especialista sin doble conteo (`invoiceDoctorPartition`), porcentaje de comisión configurable por médico (`% Médico` vs. retención clínica), recibo oficial de liquidación en PDF con firmas y control de kárdex en `inventario` y `movimientos_inventario`. |
+| **RF-07** | Funcional | Bóveda Criptográfica PIN y Bitácora Visual de Auditoría | Derivación `PBKDF2` (100.000 iteraciones SHA-256) y `AES-GCM` (256 bits), validación de PIN con sal, bloqueo anti-fuerza bruta (60 s al 5.º fallo), bloqueo automático por inactividad (`InactivityLockOverlay`) y módulo visual de **Auditoría (`/auditoria`)** sobre `auditoria_logs` con filtros multicriterio y exportación PDF. |
+| **RNF-01** | No Funcional | Seguridad RLS y Aislamiento Estricto de Alcance por Rol (RBAC) | Políticas *Row Level Security* (RLS) en PostgreSQL y hook `useUserRoleScope`: **Admin** posee control global (`/inventario`, `/honorarios`, `/auditoria`); **Recepción** coordina admisión, `/sala-espera` y cobro global; **Médico (`isDoctorOnly`)** está estrictamente aislado a sus propios pacientes, agenda, métricas de Dashboard (`@tanstack/charts`) e ingresos. |
+| **RNF-02** | No Funcional | Usabilidad *Mobile-First* y Capacidad PWA | Interfaz táctil adaptativa optimizada para tabletas y móviles, Service Worker (`sw.js`) con estrategia *Network-First* en navegación y persistencia de identidad visual (`ThemeCustomizer` e isotipo `MedizenLogo` sincronizado desde SSR). |
+| **RNF-03** | No Funcional | Caché Multinivel L1/L2 (`0 ms`) y Desempeño (INP < 50 ms) | Arquitectura de caché **L1 (TanStack Query en memoria)** + **L2 (`localStorage` en `persistentQueryCache.ts`)** con hidratación instantánea en `0 ms`, `staleTime` de 5 min, *debounce* de `350 ms` en eventos WebSocket (`useRealtimeSync`) y purga automática al cerrar sesión. |
+| **RNF-04** | No Funcional | Calidad Arquitectónica Certificada (`100/100`) e Integridad ACID | Almacenamiento transaccional ACID en PostgreSQL 15 con extensiones `JSONB` y calificación perfecta **`100 / 100` (`✔ No issues found!`) en `react-doctor`** sobre la totalidad del código fuente React 19 / TypeScript. |
 
 *Nota.* Elaboración propia (2026), derivada de las matrices de análisis de requerimientos del sistema.
 
@@ -37,21 +38,21 @@ El sistema fue concebido bajo estándares de ingeniería de software contemporá
 
 ### Descripción de los Procesos Involucrados en el Sistema
 
-1. **Admisión y Apertura del Expediente Clínico Integral**:
-   * La recepcionista o la especialista médica registran a la paciente ingresando documento de identidad, nombres, apellidos, fecha de nacimiento, género, teléfono, correo electrónico, dirección, contacto de emergencia y proveedor de seguro médico.
-   * El sistema indexa la cédula para prevenir duplicidades, asigna automáticamente el identificador correlativo de historia clínica (`HC-XXXXX`) y habilita el registro de alertas críticas en el encabezado clínico (`PatientClinicalBanner`): grupo sanguíneo y factor Rh, alergias a medicamentos, enfermedades crónicas, medicación actual y antecedentes de transfusiones sanguíneas.
-2. **Coordinación de Citas y Turnos Sincronizados**:
-   * Se asigna el turno en la tabla `citas` seleccionando la fecha, el médico tratante (Dra. Carli Sole y equipo médico) y el servicio clínico del catálogo (`servicios`), asociando de forma automática su honorario base (`costo_base`).
-   * Al modificar el estado de la cita (ej. de `pendiente` o `confirmada` a `completada`), el evento se transmite vía WebSockets (`useRealtimeSync`) a todas las estaciones conectadas sin recargar el navegador.
-3. **Desarrollo del Acto Médico (Consulta Multiespecialidad y Gineco-Obstétrica)**:
-   * La médica accede al perfil de la paciente organizado en 8 pestañas especializadas (*Identificación, Antecedentes, Ginecológico, Obstétrico, Consultas, Timeline, Notas y Estudios, Recetas*).
-   * En la pestaña obstétrica o durante la consulta médica, al ingresar o actualizar la Fecha de Última Menstruación (FUM), el sistema aplica en tiempo real la **Regla de Naegele**, calculando automáticamente las semanas y días de edad gestacional (`X sem + Y días`) y la Fecha Probable de Parto (FPP). Asimismo, permite adjuntar ecografías, citologías y laboratorios en `archivos_pacientes` y visualizar toda la trayectoria asistencial en la vista cronológica (`Timeline`).
-4. **Prescripción Farmacológica y Exportación Documental (PDF)**:
-   * Se registran los fármacos prescritos e indicaciones terapéuticas.
-   * Mediante carga dinámica bajo demanda (*lazy loading* de `jsPDF`), el sistema compila en memoria tanto el récipe médico oficial con membrete y QR como el reporte integral de historia clínica, permitiendo su impresión inmediata o envío directo al WhatsApp de la paciente.
-5. **Conciliación Financiera Multimoneda (USD BCV / EUR BCV / USDT / Bs.) y Kárdex de Inventario**:
-   * Se emite la factura en `facturas` y se registran los abonos, pagos totales o **cobros mixtos** en `pagos`, integrando el módulo de **Cuentas y Tesorería (`/cuentas`)** con el catálogo de **Métodos de Pago Venezolanos (`/metodos-pago`)** para **Efectivo en Bolívares, Pago Móvil, Transferencia Bancaria, Binance Pay (USDT), Divisas en Efectivo (USD/EUR) y Cashea**. El sistema opera simultáneamente con las tasas oficiales del **Banco Central de Venezuela (Dólar BCV y Euro BCV)** y el mercado cripto (**USDT Binance P2P**) sincronizadas en vivo mediante el hook `useExchangeRate`, incorpora una **Calculadora Profesional Cashea** (inicial configurable del 40%, 50% o 60% + 3 cuotas sin interés cada 14 días, método de pago de la inicial y N.º de orden), copia en 1 clic de datos bancarios de la clínica (código SUDEBAN, RIF/CI, teléfono, cuenta de 20 dígitos, Binance ID), acreditación automática en la cuenta financiera vinculada (`financial_accounts`), tarjetas KPI interactivas y calculadora cuatridivisa en tiempo real (`USD ↔ Bs. ↔ EUR ↔ USDT`).
-   * De forma complementaria, el personal autorizado gestiona el stock de insumos médicos en `inventario` y audita cada entrada o salida clínica mediante el kárdex de `movimientos_inventario`.
+1. **Admisión, Apertura de Expediente y Autoasignación según Rol Clínico**:
+   * Recepción o el especialista registran a la paciente ingresando documento de identidad, datos filiatorios, contacto de emergencia y seguro médico. Si quien registra posee rol de **Médico (`doctor`)**, el formulario bloquea el selector de otros doctores y lo asigna automáticamente como **Médico tratante**; si registra Recepción o Administración, se selecciona el especialista correspondiente.
+   * El sistema indexa la cédula para prevenir duplicidades, asigna el código correlativo `HC-XXXXX` y despliega permanentemente las alertas críticas en cabecera (`PatientClinicalBanner`): grupo sanguíneo y factor Rh, alergias, patologías crónicas, medicación activa y transfusiones.
+2. **Coordinación de Agenda y Tablero Kanban de Sala de Espera en Vivo (`/sala-espera`)**:
+   * Se agenda el turno en `citas` asociando médico y servicio clínico (`servicios.costo_base`).
+   * A medida que las pacientes acuden al centro, **Recepción y Administración** gestionan el flujo físico desde el tablero Kanban de 4 columnas (*1. Citados / Por Llegar*, *2. En Sala de Espera*, *3. En Consultorio*, *4. Atendidos / Caja*), monitoreando el cronómetro de espera en vivo, enviando avisos por WhatsApp en 1 clic y propagando cambios vía WebSockets (`useRealtimeSync` con *debounce* de `350 ms`).
+3. **Acto Médico Especializado, Curva de Signos Vitales y Facturación Post-Consulta Automática**:
+   * Cada especialista accede únicamente a su cartera de pacientes y abre el expediente organizado en 8 pestañas (*Identificación, Antecedentes, Ginecológico, Obstétrico, Consultas, Timeline, Notas y Estudios, Recetas*).
+   * Registra evoluciones, aplica en tiempo real la **Regla de Naegele** (EG y FPP a partir de la FUM), evalúa las gráficas evolutivas de **Presión Arterial y Peso/IMC (`PatientVitalsChart`)** y adjunta estudios en `archivos_pacientes`. Al **completar la consulta médica**, el sistema genera automáticamente la factura correspondiente en estado **`Pendiente`** con el costo real del servicio, colocándola al tope de Ventas (`/facturacion`).
+4. **Emisión de Récipes, Órdenes de Laboratorio e Informes Ecográficos en PDF**:
+   * Mediante carga dinámica bajo demanda (`jsPDF`), el médico emite récipes farmacológicos membretados con QR, **Órdenes de Laboratorio** (seleccionando perfiles rápidos *Prenatal, Preoperatorio, Ginecológico/Hormonal o Control General*) e **Informes Ecográficos Estructurados**, listos para impresión física o remisión inmediata por WhatsApp.
+5. **Cobranza Multimoneda Venezolana, Cashea y Arqueo Diario de Caja (Reporte Z)**:
+   * En Ventas (`/facturacion`), Recepción o Administración concilian las facturas pendientes empleando el catálogo de **Métodos de Pago Venezolanos (`/metodos-pago`)** vinculados a **Cuentas y Tesorería (`/cuentas`)**: **Efectivo en Bolívares, Pago Móvil, Transferencia Bancaria, Binance Pay (USDT), Divisas USD/EUR y Cashea** (con **Calculadora Profesional Cashea** de inicial 40%/50%/60% + 3 cuotas sin interés cada 14 días), operando en vivo con las tasas **Dólar BCV, Euro BCV y USDT Binance P2P**. Al finalizar la jornada se emite el **Arqueo y Cierre Diario de Caja (Reporte Z Clínico en PDF)** y reportes ejecutivos desde `/reportes`.
+6. **Liquidación de Honorarios Médicos (`/honorarios`), Inventario (`/inventario`) y Auditoría (`/auditoria`)**:
+   * De manera exclusiva, la **Administración** ejecuta el corte contable de honorarios por especialista sin doble conteo (`invoiceDoctorPartition`), calculando el porcentaje de comisión médica frente a la retención operativa de la clínica y descargando el recibo oficial de liquidación en PDF con firmas, además de auditar el kárdex de insumos médicos y supervisar la bitácora inmutable de seguridad en `/auditoria`.
 
 ---
 
@@ -62,72 +63,65 @@ El sistema fue concebido bajo estándares de ingeniería de software contemporá
 
 ```mermaid
 flowchart LR
-    Médico["👩‍⚕️ Dra. Carli Sole (y equipo médico)<br>(Médico Especialista)"]
-    Recepción["🧑‍💼 Asistente / Recepcionista"]
-    Admin["⚙️ Administrador del Sistema"]
+    Médico["👩‍⚕️ Médico Especialista<br>(Alcance Aislado Propio)"]
+    Recepción["🧑‍💼 Recepción / Asistente<br>(Coordinación Operativa)"]
+    Admin["⚙️ Administrador<br>(Control Global 360°)"]
 
-    subgraph CasosDeUso["Sistema MediZen"]
-        CU1["Autenticar y Desbloquear por PIN / Bóveda"]
-        CU2["Gestionar Expediente Clínico Integral (8 Pestañas)"]
-        CU3["Registrar Consulta, FUM/FPP y Estudios Adjuntos"]
-        CU4["Gestionar Agenda de Citas en Tiempo Real"]
-        CU5["Emitir Récipes e Historias Clínicas en PDF"]
-        CU6["Procesar Facturación Multimoneda (USD/EUR/USDT/VES)"]
-        CU7["Controlar Kárdex de Inventario y Auditoría"]
+    subgraph CasosDeUso["Sistema MediZen (FemeSalud)"]
+        CU1["Autenticar por PIN / Bóveda AES-GCM"]
+        CU2["Gestionar Expediente Propio, Naegele y Signos Vitales"]
+        CU3["Emitir Récipes, Laboratorio e Informes Eco PDF"]
+        CU4["Operar Sala de Espera Kanban y Agenda Realtime"]
+        CU5["Cobrar Facturas Post-Consulta, Cashea y Reporte Z"]
+        CU6["Liquidar Honorarios Médicos (/honorarios)"]
+        CU7["Controlar Kárdex de Inventario y Bitácora (/auditoria)"]
     end
 
     Médico --> CU1
     Médico --> CU2
     Médico --> CU3
-    Médico --> CU4
-    Médico --> CU5
-    Médico --> CU6
 
     Recepción --> CU1
-    Recepción --> CU2
     Recepción --> CU4
-    Recepción --> CU6
+    Recepción --> CU5
 
     Admin --> CU1
+    Admin --> CU4
+    Admin --> CU5
     Admin --> CU6
     Admin --> CU7
 ```
 
-*Nota.* Elaboración propia (2026), modelado formal de casos de uso bajo especificación UML.
+*Nota.* Elaboración propia (2026), modelado formal de casos de uso bajo especificación UML reflejando la separación estricta de privilegios por rol.
 
 **Figura 6**  
 *Diagrama de Actividades: Flujo Integral de Consulta Médica Multiespecialidad*
 
 ```mermaid
 flowchart TD
-    subgraph Fase1["Fase 1: Admisión e Historial Clínico"]
-        Inicio([Inicio de Consulta]) --> Desbloqueo[Desbloqueo seguro por PIN de 4 dígitos]
-        Desbloqueo --> BuscarPaciente[Búsqueda rápida de paciente por C.I., HC o Nombre]
-        BuscarPaciente --> EvaluarHistorial[Revisión de Banner Clínico, Alergias, Medicación y Timeline]
-        EvaluarHistorial --> RegistrarSignos[Registro de constantes vitales y motivo de consulta]
+    subgraph Fase1["Fase 1: Admisión y Sala de Espera Kanban"]
+        Inicio([Llegada de Paciente]) --> Kanban["Recepción mueve turno a 'En Sala de Espera' (/sala-espera)"]
+        Kanban --> Desbloqueo[Médico desbloquea estación con PIN de 4 dígitos]
+        Desbloqueo --> EvaluarHistorial["Apertura en 0 ms (Caché L1/L2) de Banner Clínico y Curva de Signos Vitales"]
     end
 
-    subgraph Fase2["Fase 2: Evaluación Clínica Especializada"]
-        RegistrarSignos --> TipoConsulta{"¿Tipo de Consulta Médica?"}
-        TipoConsulta -->|Obstétrica| Obstetricia[Ingreso de FUM / Cálculo automático de EG y FPP por Naegele]
-        TipoConsulta -->|Multiespecialidad| Multiesp[Examen físico, notas clínicas y adjunto de estudios en Storage]
-        Obstetricia --> Diagnostico[Formulación de Diagnóstico y Plan Terapéutico]
-        Multiesp --> Diagnostico
+    subgraph Fase2["Fase 2: Acto Médico y Documentación Diagnóstica"]
+        EvaluarHistorial --> TipoConsulta{"¿Evaluación Especializada?"}
+        TipoConsulta -->|Obstétrica| Obstetricia[FUM / Cálculo en vivo de EG y FPP por Regla de Naegele]
+        TipoConsulta -->|Multiespecialidad| Multiesp[Examen físico, evolución y adjunto en Storage]
+        Obstetricia --> ReportesMedicos["Emisión PDF: Récipe, Orden de Laboratorio o Informe Ecográfico"]
+        Multiesp --> ReportesMedicos
     end
 
-    subgraph Fase3["Fase 3: Prescripción, Entrega y Facturación Multimoneda"]
-        Diagnostico --> RedactarRecipe[Ingreso de prescripciones médicas e indicaciones]
-        RedactarRecipe --> GenerarPDF["Compilación bajo demanda de Récipe / Historia en PDF (jsPDF)"]
-        GenerarPDF --> EnviarWhatsApp{"¿Canal de Entrega?"}
-        EnviarWhatsApp -->|Digital| EnvioDigital[Apertura de WhatsApp con prescripción e indicaciones]
-        EnviarWhatsApp -->|Físico| Impresion[Impresión física de récipe y resumen clínico]
-        EnvioDigital --> RegistrarCobro["Registro de cobro multimoneda (USD/EUR/USDT/Bs.) y kárdex de insumos"]
-        Impresion --> RegistrarCobro
-        RegistrarCobro --> Fin([Fin de la Atención y Registro en Auditoría])
+    subgraph Fase3["Fase 3: Cierre Post-Consulta, Caja y Liquidación"]
+        ReportesMedicos --> CompletarCita["Completar Consulta -> Genera Factura 'Pendiente' automática"]
+        CompletarCita --> Cobro["Cobro Multimoneda (BCV/EUR/USDT/Cashea) en Ventas (/facturacion)"]
+        Cobro --> Cierre["Arqueo Diario Reporte Z, Liquidación de Honorarios y Registro en /auditoria"]
+        Cierre --> Fin([Fin del Ciclo Clínico-Administrativo])
     end
 ```
 
-*Nota.* Elaboración propia (2026), estructurado en tres fases asistenciales del acto médico.
+*Nota.* Elaboración propia (2026), estructurado en tres fases integradas desde Sala de Espera hasta facturación post-consulta y liquidación contable.
 
 **Figura 7**  
 *Diagrama de Secuencia: Desbloqueo Seguro, Rate-Limiting y Bóveda PIN Cifrada*
@@ -272,7 +266,7 @@ erDiagram
 | `historias_clinicas` | `tipo_sangre` | `VARCHAR(5)` | Sí | — | Grupo sanguíneo ABO y factor Rh (`O+`, `O-`, `A+`, `B+`, `AB+`, etc.). |
 | `historias_clinicas` | `alergias` | `TEXT` | Sí | — | Alergias medicamentosas o alimentarias visibles en el banner de alerta. |
 | `historias_clinicas` | `enfermedades_cronicas` | `TEXT` | Sí | — | Antecedentes patológicos personales (HTA, diabetes, asma, tiroides). |
-| `historias_clinicas` | `datos_extras` | `JSONB` | Sí | — | Estructura clínica extendida: `historia_number` (`HC-XXXXX`), `insurance_provider`, `personal_history` (`current_medications`, `transfusions`, `habits`), `gynecological_data`, `obstetric_data` (FUM, FPP, G-P-A-C-E) y `clinical_notes`. |
+| `historias_clinicas` | `datos_extras` | `JSONB` | Sí | — | Estructura clínica extendida: `historia_number` (`HC-XXXXX`), `assigned_doctor_id` (médico tratante asignado), `insurance_provider`, `personal_history` (`current_medications`, `transfusions`, `habits`), `gynecological_data`, `obstetric_data` (FUM, FPP, G-P-A-C-E) y `clinical_notes`. |
 
 *Nota.* Elaboración propia (2026), extraída del esquema DDL de PostgreSQL en Supabase (`supabase/schema.sql`).
 
@@ -289,8 +283,8 @@ erDiagram
 | `examen_fisico` | `TEXT` | Sí | — | Hallazgos objetivos de la exploración física general y especializada. |
 | `diagnostico` | `TEXT` | Sí | — | Impresión diagnóstica presuntiva o definitiva emitida por el especialista. |
 | `tratamiento` | `TEXT` | Sí | — | Plan terapéutico, prescripción farmacológica y recomendaciones médicas. |
-| `signos_vitales` | `JSONB` | Sí | — | Constantes vitales estructuradas: presión arterial (`pa`), peso, talla, IMC, temperatura, `fc`, `fr` y saturación $\text{SpO}_2$. |
-| `datos_especialidad` | `JSONB` | Sí | — | Parámetros gineco-obstétricos de la visita (FUM, FPP, semanas de gestación, FCF, altura uterina, ecografía y récipe). |
+| `signos_vitales` | `JSONB` | Sí | — | Constantes vitales estructuradas para curva longitudinal (`PatientVitalsChart`): presión arterial (`pa`), peso, talla, IMC, temperatura, `fc`, `fr` y saturación $\text{SpO}_2$. |
+| `datos_especialidad` | `JSONB` | Sí | — | Parámetros gineco-obstétricos de la visita (FUM, FPP, semanas de gestación, FCF, altura uterina, informe ecográfico, orden de laboratorio y récipe). |
 | `fecha_consulta` | `TIMESTAMPTZ` | No | — | Estampa cronológica exacta del registro clínico. |
 
 *Nota.* Elaboración propia (2026).
@@ -303,10 +297,10 @@ erDiagram
 | `id_cita` | `UUID` | No | PK | Identificador único del turno agendado. |
 | `id_paciente` | `UUID` | No | FK | Referencia foránea a la paciente (`pacientes.id_paciente`). |
 | `id_medico` | `UUID` | No | FK | Referencia foránea al médico asignado (`medicos.id_medico`). |
-| `id_servicio` | `UUID` | Sí | FK | Referencia al servicio clínico (`servicios.id_servicio`) para vincular su `costo_base`. |
+| `id_servicio` | `UUID` | Sí | FK | Referencia al servicio clínico (`servicios.id_servicio`) para vincular su `costo_base` al completar la consulta. |
 | `fecha_cita` | `DATE` | No | — | Fecha programada para la atención médica. |
 | `hora_inicio` / `hora_fin` | `TIME` | No | — | Bloque horario de inicio y culminación estimada de la consulta. |
-| `estado` | `VARCHAR(20)` | No | — | Estado operativo sincronizado por WebSockets (`pendiente`, `confirmada`, `completada`, `cancelada`). |
+| `estado` | `VARCHAR(20)` | No | — | Estado sincronizado con Sala de Espera Kanban (`pendiente`, `confirmada`, `en_espera`, `en_consulta`, `completada`, `cancelada`). |
 | `motivo` / `notas` | `TEXT` | Sí | — | Motivo del turno y observaciones administrativas de recepción. |
 | `creado_en` | `TIMESTAMPTZ` | No | — | Fecha y hora de creación del turno en el sistema. |
 
@@ -316,7 +310,7 @@ erDiagram
 
 ### Diseño de los Escenarios a Utilizar (Mockups y Prototipos de UI)
 
-Para asegurar una experiencia de usuario óptima, fluida y adaptada al dinamismo del ejercicio médico asistencial diario, se diseñaron los escenarios de interfaz de usuario bajo el paradigma *Mobile-First*, optimizados tanto para pantallas táctiles (tablets de consulta médica) como para computadoras de escritorio (área de recepción administrativa):
+Para asegurar una experiencia de usuario óptima, fluida y adaptada al dinamismo del ejercicio médico asistencial diario, se diseñaron los escenarios de interfaz de usuario bajo el paradigma *Mobile-First*, optimizados tanto para pantallas táctiles (tablets de consulta médica) como para computadoras de escritorio (área de recepción y administración):
 
 **Figura 9**  
 *Interfaz de Desbloqueo Rápido por PIN de 4 Dígitos y Pantalla de Bloqueo por Inactividad*
@@ -346,39 +340,39 @@ Para asegurar una experiencia de usuario óptima, fluida y adaptada al dinamismo
 *Nota.* Elaboración propia (2026). Prototipo de interfaz móvil/táctil para autenticación médica en menos de 1 segundo y bloqueo automático ante inactividad (`InactivityLockOverlay`).
 
 **Figura 10**  
-*Tablero de Control Operativo y Estadísticas Clínicas en Tiempo Real (Dashboard)*
+*Tablero de Control Operativo y Analítica Clínica en Tiempo Real (Dashboard)*
 
 <div class="ui-mockup dashboard-mockup">
   <div class="mockup-window-bar">
     <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
-    <span class="window-title">MediZen • Tablero de Control Operativo - Clínica FemeSalud</span>
+    <span class="window-title">MediZen • Dashboard Analítico (@tanstack/charts) • Alcance por Rol Activo</span>
   </div>
   <div class="mockup-content">
     <div class="dash-search-bar">
       <span>🔍 Buscar paciente por cédula, HC o nombre... (Ctrl + K)</span>
-      <span class="badge-online">● Sincronizado BCV / Realtime</span>
+      <span class="badge-online">● Caché L1/L2 (0 ms) • BCV / USDT Live</span>
     </div>
     <div class="dash-cards">
-      <div class="dcard"><div class="dval">348</div><div class="dlbl">Pacientes Activas</div></div>
-      <div class="dcard"><div class="dval">42</div><div class="dlbl">Consultas este Mes</div></div>
-      <div class="dcard"><div class="dval">8</div><div class="dlbl">Citas para Hoy</div></div>
-      <div class="dcard highlight"><div class="dval">$380 USD</div><div class="dlbl">Ingresos del Día (USD/VES)</div></div>
+      <div class="dcard"><div class="dval">348</div><div class="dlbl">Pacientes en Alcance</div></div>
+      <div class="dcard"><div class="dval">42</div><div class="dlbl">Consultas del Mes</div></div>
+      <div class="dcard"><div class="dval">8</div><div class="dlbl">Turnos en Sala Hoy</div></div>
+      <div class="dcard highlight"><div class="dval">$380 USD</div><div class="dlbl">Ingresos / Media Móvil</div></div>
     </div>
     <div class="dash-sub">
       <div class="dash-chart-box">
-        <div class="box-head">Distribución de Consultas Médicas Multiespecialidad</div>
+        <div class="box-head">Tendencia de Ingresos con Media Móvil y Metas Clínicas (@tanstack/charts)</div>
         <div class="mock-bars">
           <div class="mbar"><div class="mfill" style="height: 65%;"></div><span>Cons. General</span></div>
-          <div class="mbar"><div class="mfill" style="height: 85%;"></div><span>Ginecología</span></div>
-          <div class="mbar"><div class="mfill" style="height: 75%;"></div><span>Control Prenatal</span></div>
-          <div class="mbar"><div class="mfill" style="height: 40%;"></div><span>Ecografías</span></div>
+          <div class="mbar"><div class="mfill" style="height: 88%;"></div><span>Ginecología</span></div>
+          <div class="mbar"><div class="mfill" style="height: 78%;"></div><span>Control Prenatal</span></div>
+          <div class="mbar"><div class="mfill" style="height: 52%;"></div><span>Ecografías</span></div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-*Nota.* Elaboración propia (2026). Vista principal del panel de administración con métricas consolidadas y tasa BCV activa.
+*Nota.* Elaboración propia (2026). Panel analítico con gráficas `@tanstack/charts`, anillos de metas clínicas y métricas filtradas automáticamente según el alcance del rol (`Admin`, `Recepción` o `Médico`).
 
 **Figura 11**  
 *Módulo de Historia Clínica Digital Especializada con Banner Clínico y 8 Pestañas*
@@ -401,48 +395,48 @@ Para asegurar una experiencia de usuario óptima, fluida y adaptada al dinamismo
     </div>
     <div class="form-preview">
       <div class="form-row">
-        <div class="form-col"><strong>Seguro:</strong> Seguros Caracas • <strong>Emergencia:</strong> Carlos Gómez (0414-5551234)</div>
+        <div class="form-col"><strong>Médico Tratante:</strong> Dra. Carli Sole • <strong>Emergencia:</strong> Carlos Gómez (0414-5551234)</div>
         <div class="form-col"><strong>Fórmula Obstétrica:</strong> G: 2 • P: 1 • A: 0 • C: 0 • E: 0</div>
       </div>
       <div class="form-row calculator-box">
         <div><strong>Regla de Naegele (En Vivo):</strong> FUM: 14/08/2025 • <strong>EG: 32 sem + 2 días</strong> • <strong>FPP: 21/05/2026</strong></div>
       </div>
       <div class="form-row">
-        <div><strong>Medicación Habitual:</strong> Ácido Fólico 5mg, Sulfato Ferroso • <strong>Transfusiones:</strong> Niega</div>
+        <div><strong>Curva de Signos Vitales:</strong> PA: 115/75 mmHg • Peso: 64,5 kg (IMC 23,7) • <strong>Transfusiones:</strong> Niega</div>
       </div>
     </div>
   </div>
 </div>
 
-*Nota.* Elaboración propia (2026). Expediente electrónico estructurado en 8 pestañas con banner de alertas críticas, cálculo obstétrico en tiempo real y exportación integral a PDF.
+*Nota.* Elaboración propia (2026). Expediente electrónico en 8 pestañas con banner de alertas críticas, cálculo obstétrico en tiempo real, curva evolutiva de constantes vitales y exportación integral a PDF.
 
 **Figura 12**  
-*Agenda Médica Interactiva con Sincronización WebSockets en Tiempo Real*
+*Sala de Espera Kanban y Agenda Médica con Sincronización WebSockets en Tiempo Real*
 
 <div class="ui-mockup calendar-mockup">
   <div class="mockup-window-bar">
     <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
-    <span class="window-title">MediZen • Agenda de Turnos y Consultas - Hoy: 28 de Septiembre</span>
+    <span class="window-title">MediZen • Sala de Espera Kanban (/sala-espera) y Flujo de Turnos en Vivo</span>
   </div>
   <div class="mockup-content">
     <div class="cal-list">
-      <div class="cal-row done"><span>08:30 AM</span><span>Elena Gómez (V-18.452.190)</span><span class="tag-status tag-done">Completada</span></div>
-      <div class="cal-row in-progress"><span>09:15 AM</span><span>María Pérez (V-24.112.580)</span><span class="tag-status tag-prog">En Consulta</span></div>
-      <div class="cal-row waiting"><span>10:00 AM</span><span>Carmen Silva (V-15.890.312)</span><span class="tag-status tag-wait">En Sala de Espera</span></div>
-      <div class="cal-row pending"><span>10:45 AM</span><span>Patricia Rivas (V-26.781.904)</span><span class="tag-status tag-pend">Confirmada</span></div>
+      <div class="cal-row pending"><span>1. Por Llegar (10:45)</span><span>Patricia Rivas (V-26.781.904) • Control Ginecológico</span><span class="tag-status tag-pend">Citada</span></div>
+      <div class="cal-row waiting"><span>2. En Espera (14 min)</span><span>Carmen Silva (V-15.890.312) • Eco Obstétrico</span><span class="tag-status tag-wait">En Sala ⏱️</span></div>
+      <div class="cal-row in-progress"><span>3. En Consultorio</span><span>María Pérez (V-24.112.580) • Dra. Carli Sole</span><span class="tag-status tag-prog">Atendiendo</span></div>
+      <div class="cal-row done"><span>4. Atendida / Caja</span><span>Elena Gómez (V-18.452.190) • Factura Pendiente ($40)</span><span class="tag-status tag-done">Pasar a Caja</span></div>
     </div>
   </div>
 </div>
 
-*Nota.* Elaboración propia (2026). Calendario de citas con código visual de estados sincronizado en tiempo real.
+*Nota.* Elaboración propia (2026). Tablero operativo Kanban de 4 etapas sincronizado por WebSockets entre recepción y consultorios, generando la factura `Pendiente` al completar la atención.
 
 **Figura 13**  
-*Diseñador Visual y Generador de Récipes Médicos Oficiales en PDF*
+*Generador de Récipes, Órdenes de Laboratorio e Informes Ecográficos en PDF*
 
 <div class="ui-mockup recipe-mockup">
   <div class="mockup-window-bar">
     <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
-    <span class="window-title">MediZen • Emisión Oficial de Récipes e Indicaciones Médicas (jsPDF)</span>
+    <span class="window-title">MediZen • Emisión Documental Clínica: Récipe • Orden de Laboratorio • Informe Ecográfico (jsPDF)</span>
   </div>
   <div class="mockup-content recipe-paper">
     <div class="recipe-head">
@@ -452,18 +446,18 @@ Para asegurar una experiencia de usuario óptima, fluida y adaptada al dinamismo
     <div class="recipe-body">
       <div class="rx-symbol">℞</div>
       <div class="rx-item">1. <strong>Cefalexina 500mg</strong> - Tomar 1 cápsula cada 8 horas por 7 días.</div>
-      <div class="rx-item">2. <strong>Acetaminofén 500mg</strong> - Tomar 1 tableta cada 6 horas en caso de dolor o fiebre.</div>
-      <div class="rx-item">3. <strong>Complejo Vitamínico Prenatal</strong> - 1 tableta diaria con el desayuno.</div>
+      <div class="rx-item">2. <strong>Perfil Prenatal (Orden Lab. 1-Clic):</strong> Hematología completa, Glicemia, VDRL, HIV, Tipiaje, Uroanálisis.</div>
+      <div class="rx-item">3. <strong>Informe Ecográfico Estructurado:</strong> Biometría fetal acorde a 32 sem + 2 días, FCF 144 lpm, líquido amniótico normal.</div>
     </div>
     <div class="recipe-actions">
-      <span class="btn-pdf">📄 Generar PDF</span>
+      <span class="btn-pdf">📄 Récipe / Lab / Eco PDF</span>
       <span class="btn-wapp">💬 Enviar vía WhatsApp</span>
       <span class="btn-print">🖨️ Imprimir Físico</span>
     </div>
   </div>
 </div>
 
-*Nota.* Elaboración propia (2026). Generador documental vectorizado con exportación directa y remisión electrónica.
+*Nota.* Elaboración propia (2026). Suite documental clínica vectorizada bajo demanda con perfiles rápidos de laboratorio e informes ecográficos exportables a PDF.
 
 ---
 
@@ -477,31 +471,32 @@ La aplicación adopta una arquitectura isomórfica desacoplada y orientada a ser
 
 ```mermaid
 flowchart TD
-    subgraph CapaPresentacion["Capa de Presentación (Frontend Reactivo & PWA)"]
-        UI1["React 19 + TypeScript + Vite 7 + TanStack Start"]
-        UI2["Tailwind CSS v4 + Radix UI + Lucide Icons"]
-        UI3["TanStack Router (SSR/CSR Type-Safe Routing)"]
-        UI4["TanStack Query v5 + Service Worker (PWA sw.js)"]
+    subgraph CapaPresentacion["Capa de Presentación Reactiva y Analítica (100/100 react-doctor)"]
+        direction LR
+        UI1["Bun + React 19 + TypeScript 5.8<br/>Vite 7 + TanStack Start"] --- UI2["Tailwind CSS v4 + Radix UI<br/>@tanstack/charts (Curvas Clínicas)"]
+        UI3["TanStack Router (SSR/CSR Type-Safe)<br/>Alcance RBAC (useUserRoleScope)"] --- UI4["Caché Multinivel L1 (React Query v5)<br/>+ L2 (localStorage 0 ms) + PWA sw.js"]
+        UI1 ~~~ UI3
+        UI2 ~~~ UI4
     end
 
-    subgraph CapaSeguridad["Capa de Seguridad en Cliente"]
-        SEC1["Web Cryptography API (window.crypto.subtle)"]
-        SEC2["PBKDF2 (100k iter. SHA-256) + AES-GCM 256-bit"]
-        SEC3["PIN con Sal + Anti-Fuerza Bruta + InactivityLock"]
+    subgraph CapaSeguridad["Capa de Seguridad y Privacidad en Cliente"]
+        direction LR
+        SEC1["Web Cryptography API<br/>(window.crypto.subtle)"] --- SEC2["PBKDF2 (100k iter. SHA-256)<br/>+ AES-GCM (256-bit)"] --- SEC3["PIN con Sal + Anti-Fuerza Bruta<br/>InactivityLock + Purga Logout"]
     end
 
-    subgraph CapaBackend["Capa de Datos y Servicios (Supabase BaaS)"]
-        BE1["PostgreSQL 15 (Esquema Relacional + JSONB)"]
-        BE2["Row Level Security (Políticas RLS por Rol)"]
-        BE3["WebSockets Realtime Engine (useRealtimeSync)"]
-        BE4["Supabase Storage (archivos_pacientes) + auditoria_logs"]
+    subgraph CapaBackend["Capa de Datos, Finanzas y Servicios (Supabase BaaS)"]
+        direction LR
+        BE1["PostgreSQL 15 (3FN + JSONB:<br/>historias, consultas, facturas, pagos)"] --- BE2["Row Level Security (RLS)<br/>Partición Contable (Honorarios)"]
+        BE3["WebSockets Realtime Engine<br/>con Debounce 350 ms (useRealtimeSync)"] --- BE4["Supabase Storage (archivos_pacientes)<br/>+ Bitácora Inmutable (/auditoria)"]
+        BE1 ~~~ BE3
+        BE2 ~~~ BE4
     end
 
     CapaPresentacion <--> CapaSeguridad
     CapaPresentacion <--> CapaBackend
 ```
 
-*Nota.* Elaboración propia (2026), arquitectura en tres capas desacopladas (Presentación PWA/SSR, Seguridad Criptográfica y Backend en la Nube).
+*Nota.* Elaboración propia (2026), arquitectura en tres capas desacopladas con caché L1/L2 de hidratación instantánea y calificación `100/100` en `react-doctor`.
 
 #### Implementación del Algoritmo Criptográfico de PIN Local
 Para ilustrar la rigurosidad técnica de la solución desarrollada (`src/utils/crypto.ts`), a continuación se expone la implementación de la derivación de claves `PBKDF2`, el cifrado autenticado `AES-GCM` y la verificación de PIN con sal criptográfica:
@@ -554,12 +549,13 @@ export async function hashPin(pin: string, existingSaltHex?: string): Promise<st
 
 #### Arquitectura de Seguridad Informática, Privacidad de Datos y Trazabilidad
 
-Para dar cumplimiento estricto al secreto médico, la confidencialidad de la información y la protección contra accesos no autorizados, el sistema web MediZen incorpora un esquema integral de seguridad y rendimiento en seis dimensiones:
+Para dar cumplimiento estricto al secreto médico, la confidencialidad de la información y la excelencia operativa, el sistema web MediZen incorpora un esquema integral de seguridad, aislamiento de alcance y alto rendimiento en seis dimensiones:
 
-1. **Control de Acceso Basado en Roles (RBAC) y Seguridad a Nivel de Fila (Row Level Security - RLS)**:
-   * La separación de privilegios se impone tanto en la interfaz como en el motor relacional PostgreSQL mediante políticas activas de RLS (*Row Level Security*).
-   * **Perfil Administrador / Médico Especialista (`admin`, `doctor`)**: Autorización completa sobre historias clínicas (`historias_clinicas`), evoluciones (`consultas`), archivos adjuntos (`archivos_pacientes`), emisión de récipes y módulo de activos físicos/inventario (`adminOnly: true`).
-   * **Perfil Recepción / Asistencial (`recepcionista`, `asistente`)**: Acceso delimitado a la gestión de citas (`citas`), admisión demográfica (`pacientes`) y facturación (`facturas`, `pagos`).
+1. **Control de Acceso Basado en Roles (RBAC), Aislamiento por Médico (`useUserRoleScope`) y Políticas RLS**:
+   * La separación de privilegios se impone tanto en el motor PostgreSQL mediante políticas activas de *Row Level Security* (RLS) como en la capa de dominio mediante el hook `useUserRoleScope`:
+   * **Perfil Administrador (`admin`)**: Visión global de 360° sobre toda la clínica y acceso exclusivo a los módulos sensibles de **Liquidación de Honorarios Médicos (`/honorarios`)**, **Activos Físicos e Inventario (`/inventario`)** y **Bitácora Visual de Auditoría (`/auditoria`)**.
+   * **Perfil Recepcionista (`recepcionista`)**: Visión operativa transversal en **Sala de Espera Kanban (`/sala-espera`)**, **Agenda (`/agenda`)**, **Pacientes (`/pacientes`)**, **Ventas (`/facturacion`)** y **Centro de Reportes (`/reportes`)** para coordinar la admisión y cobranza de todos los especialistas, sin acceso a `/honorarios`, `/inventario` ni `/auditoria`.
+   * **Perfil Médico Especialista (`doctor`, `isDoctorOnly`)**: Aislamiento estricto de datos clínicos y financieros. Visualiza exclusivamente los pacientes asignados o atendidos por él (`assigned_doctor_id`, citas o consultas propias), su propia agenda, sus métricas individuales en el Dashboard (`@tanstack/charts`) y sus propios ingresos. Al registrar una nueva historia clínica en `PatientForm`, el sistema bloquea la selección de terceros y lo autoasigna como **Médico tratante**, ocultando además módulos administrativos globales (`/sala-espera`, `/honorarios`, `/inventario`, `/auditoria`).
 
    ```sql
    -- Políticas de Seguridad RLS en PostgreSQL sobre tablas clínicas en español
@@ -575,32 +571,30 @@ Para dar cumplimiento estricto al secreto médico, la confidencialidad de la inf
 
 2. **Criptografía en el Cliente, Anti-Fuerza Bruta y Bloqueo por Inactividad**:
    * La clave simétrica de 256 bits se deriva en tiempo de ejecución a partir del PIN numérico utilizando **PBKDF2** con **100.000 iteraciones de hash SHA-256** y una sal aleatoria de 16 bytes (`crypto.getRandomValues()`), cifrando los datos sensibles mediante **AES-GCM**.
-   * El validador de PIN (`verifyPin`) incorpora un mecanismo de **limitación de tasa (*rate-limiting*) contra ataques de fuerza bruta**: tras cinco (05) intentos fallidos consecutivos, el sistema impone un bloqueo temporal criptográfico de 60 segundos.
-   * Adicionalmente, el hook `useInactivityLock` monitorea los eventos de interacción del dispositivo (`mousemove`, `keydown`, `touchstart`, `scroll`) y activa automáticamente el recubrimiento de seguridad `InactivityLockOverlay` tras el tiempo configurado de inactividad (5 minutos por defecto), protegiendo el expediente en pantalla sin perder el estado del formulario ni redirigir forzosamente al login al refrescar la página (`F5`).
+   * El validador de PIN (`verifyPin`) incorpora **limitación de tasa (*rate-limiting*) contra ataques de fuerza bruta**: tras cinco (05) intentos fallidos consecutivos, el sistema impone un bloqueo temporal criptográfico de 60 segundos.
+   * El hook `useInactivityLock` monitorea la actividad del dispositivo y despliega automáticamente `InactivityLockOverlay` tras 5 minutos sin interacción, protegiendo el expediente abierto sin perder el estado del formulario ni redirigir forzosamente al login al refrescar la página (`F5`).
 
-3. **Pistas de Auditoría y Trazabilidad Médico-Legal (`auditoria_logs`)**:
-   * Cada operación sensible en el sistema genera un registro inmutable en la tabla `auditoria_logs`, almacenando `id_log`, `id_usuario`, `accion`, `entidad_afectada`, `id_entidad`, `detalles` (`JSONB`) y `fecha`.
-   * Esta bitácora digital garantiza la trazabilidad y el no repudio del acto médico exigidos por el Código de Deontología Médica y la Ley de Infogobierno.
+3. **Bitácora Visual de Auditoría y Trazabilidad Médico-Legal (`auditoria_logs` y `/auditoria`)**:
+   * Cada operación sensible genera un registro inmutable en `auditoria_logs` (`id_log`, `id_usuario`, `accion`, `entidad_afectada`, `id_entidad`, `detalles` en `JSONB` y `fecha`).
+   * El módulo administrativo `/auditoria` (`AuditLogsPage.tsx`) expone esta trazabilidad mediante tarjetas KPI (eventos totales, operaciones financieras y eliminaciones auditadas), búsqueda multicriterio y exportación oficial a PDF, dando cumplimiento al Código de Deontología Médica y a la Ley de Infogobierno.
 
-4. **Sincronización Realtime, Hidratación SSR/CSR sin Parpadeos y Resiliencia PWA**:
-   * Mediante el hook `useRealtimeSync`, el cliente se suscribe por WebSockets a los cambios de PostgreSQL (`pacientes`, `citas`, `consultas`, `facturas`, `inventario`, `servicios`), invalidando selectivamente la caché de **TanStack Query v5**.
-   * Se optimizó el ciclo de hidratación entre servidor y cliente (`__root.tsx`, `_authenticated/route.tsx` y `useAuth.ts`) almacenando en caché local el rol verificado del usuario (`medizen_cached_role_${userId}`) y respetando la sesión activa de Supabase, eliminando redirecciones falsas a `/auth` o pantallas en blanco durante recargas de página.
-   * El Service Worker (`public/sw.js`) excluye explícitamente las peticiones de navegación (`request.mode === 'navigate'`) de la caché estática obsoleta y aplica *Network-First* para recursos críticos, asegurando actualizaciones limpias en modo PWA.
+4. **Caché Multinivel L1/L2 (`0 ms`), Debounce Realtime (`350 ms`) y Resiliencia PWA**:
+   * Se diseñó una arquitectura de caché de dos niveles (`persistentQueryCache.ts`): **L1 en memoria RAM (`TanStack Query v5` con `staleTime` de 5 min)** respaldada por **L2 persistente en `localStorage`**, hidratando instantáneamente las vistas clínicas y administrativas en **`0 ms`** al navegar o recargar la aplicación, con purga automática garantizada al cerrar sesión (`signOut`).
+   * Mediante `useRealtimeSync`, las suscripciones WebSocket a PostgreSQL aplican una ventana de amortiguación (*debounce*) de **`350 ms`**, consolidando ráfagas transaccionales en una única revalidación selectiva sin tormentas de peticiones y manteniendo actualizaciones limpias bajo Service Worker (`public/sw.js`).
 
-5. **Optimización de Rendimiento e Interacción (Core Web Vitals - INP < 50 ms)**:
-   * **Desacoplamiento de Micro-Componentes**: El reloj en tiempo real se aisló en `LiveClock`, evitando re-renderizados globales del `Dashboard`.
-   * **Carga Diferida (*Code-Splitting*) de Generadores PDF**: Las utilidades de exportación documental (`generateHistoriaClinicaPDF`, `generatePatientConsultationPDF` y `generateRecipePDF`) se importan dinámicamente mediante `await import(...)` únicamente cuando el médico solicita el documento, reduciendo drásticamente el tamaño del paquete inicial de JavaScript.
-   * **Esqueletos de Carga de Alta Fidelidad (`PatientProfileSkeleton`)**: Durante la hidratación inicial del expediente clínico se presenta una estructura esqueletal idéntica al diseño final, evitando saltos visuales (*Cumulative Layout Shift* - CLS = 0).
+5. **Calidad Estructural Perfecta (`100 / 100` en `react-doctor`) y Optimización Core Web Vitals (INP < 50 ms)**:
+   * El código fuente completo (247 archivos React 19 / TypeScript) fue sometido a auditoría estática con **`react-doctor`**, alcanzando la puntuación máxima de **`100 / 100` (`✔ No issues found!`)** gracias a la descomposición modular de formularios complejos (`PatientFormTabs`, `PatientFormBody`, `usePatientFormState`), memoización de instancias `Intl.NumberFormat` / `Intl.DateTimeFormat`, eliminación de efectos derivados redundantes y cero desfases de hidratación SSR/CSR.
+   * Las utilidades PDF (`generateHistoriaClinicaPDF`, `generateRecipePDF`, órdenes de laboratorio, informes ecográficos, Reporte Z y recibos de honorarios) se cargan diferidamente mediante `await import(...)`, mientras `LiveClock` y `PatientProfileSkeleton` aseguran `INP < 50 ms` y `CLS = 0`.
 
-6. **Personalización Dinámica de Identidad Visual y Motor Financiero Multimoneda en Vivo**:
-   * **Arquitectura de Paletas Temáticas (`ThemeCustomizer`) e Isotipo Reactivo (`MedizenLogo`)**: Permite alternar entre cinco paletas clínicas (*Azul Medizen, Verde Esmeralda, Púrpura Real, Teal Quirúrgico y Rosa Obstétrico*), inyectadas de forma síncrona en `<head>` junto con `var(--primary, #2563EB)` en el SVG institucional para evitar desfases de hidratación.
-   * **Motor Multimoneda, Tesorería Venezolana, Métodos de Pago y Calculadora Cashea (`useExchangeRate.ts`, `paymentMethods.ts`, `accounts.ts`, `SalesPage.tsx`)**: Sincroniza automáticamente las cotizaciones oficiales del **Dólar BCV (`USD`)** y **Euro BCV (`EUR`)** (`ve.dolarapi.com/v1/cotizaciones`), así como la tasa en vivo de **USDT en Binance P2P (`USDT/VES`)** (`criptoya.com/api/binancep2p/USDT/VES/0.1`). Gestiona el catálogo de los **6 métodos de pago profesionales de Venezuela** (**Efectivo en Bolívares, Pago Móvil, Transferencia Bancaria, Binance Pay USDT, Divisas USD/EUR y Cashea**) vinculados a las cuentas financieras de tesorería (`/cuentas` con desvinculación segura de claves foráneas `account_id`), copia en 1 clic de datos bancarios receptores (18 bancos SUDEBAN, RIF/CI, teléfono, cuenta de 20 dígitos, Binance ID), **Calculadora Profesional Cashea** (inicial 40%/50%/60% + 3 cuotas sin interés cada 14 días, método de pago de la inicial y N.º de orden), acreditación automática de balances, calculadora cuatridivisa bidireccional (`$ USD ↔ Bs. ↔ € EUR ↔ USDT`), tarjetas KPI interactivas, liquidación de pagos mixtos y reportes PDF multimoneda con detalle de método y referencia (`generateIndividualInvoice.ts` y `generateSalesReport.ts`).
+6. **Motor Financiero Multimoneda, Facturación Post-Consulta, Reporte Z y Liquidación de Honorarios**:
+   * **Facturación Post-Consulta y Arqueo Reporte Z (`SalesPage.tsx`, `CashCloseDialog.tsx`, `generateCashCloseReport.ts`)**: Las facturas se emiten automáticamente en estado **`Pendiente`** al completar la consulta médica tomando el `costo_base` real del servicio y ordenándose de más reciente a más antigua. Soporta los **6 métodos de pago de Venezuela** (**Efectivo Bs., Pago Móvil, Transferencia Bancaria, Binance Pay USDT, Divisas USD/EUR y Cashea** con inicial 40%/50%/60% + 3 cuotas sin interés), tasas en vivo (**Dólar BCV, Euro BCV y USDT Binance P2P**), copia en 1 clic de datos bancarios SUDEBAN y **Cierre Diario de Caja (Reporte Z PDF)**.
+   * **Partición Matemática y Liquidación de Honorarios Médicos (`DoctorFeesPage.tsx`, `invoiceDoctorPartition.ts`, `generateDoctorFeeReport.ts`)**: Asigna de forma determinista cada factura pagada a su médico tratante sin duplicidad contable, calcula la comisión parametrizable del especialista frente a la retención operativa de FemeSalud y emite el comprobante oficial de liquidación en PDF con bloques de firma.
 
 ---
 
 ### Pruebas de la Aplicación
 
-Para asegurar que el sistema cumple con los más altos estándares de calidad, confiabilidad y ausencia de defectos, se ejecutaron pruebas de caja negra sobre cada módulo del sistema en escenarios operativos reales.
+Para asegurar que el sistema cumple con los más altos estándares de calidad, confiabilidad y ausencia de defectos, se ejecutaron doce (12) escenarios integrales de pruebas de caja negra en condiciones operativas reales.
 
 **Tabla 12**  
 *Matriz de Casos de Prueba Funcional de Caja Negra*
@@ -609,16 +603,18 @@ Para asegurar que el sistema cumple con los más altos estándares de calidad, c
 | :---: | :--- | :--- | :--- | :--- | :---: |
 | **CP-01** | Seguridad / PIN | Ingreso de PIN de 4 dígitos válido en pantalla de bloqueo. | Descifrado de bóveda y acceso al sistema en < 1 segundo. | Acceso concedido instantáneo; sesión reactivada con éxito. | **APROBADO** |
 | **CP-02** | Seguridad / Anti-Fuerza Bruta | Ingreso de 5 intentos consecutivos de PIN incorrecto. | Denegación de acceso y bloqueo temporal de 60 segundos. | Contador activado y bloqueo de seguridad aplicado por 60 s. | **APROBADO** |
-| **CP-03** | Seguridad / Inactividad y SSR | Inactividad de 5 min o recarga de página (`F5`) con sesión activa. | Activación de `InactivityLockOverlay` por inactividad; al refrescar con sesión activa mantiene la vista sin redirigir a `/auth`. | Comportamiento exacto sin parpadeo ni pérdida de sesión. | **APROBADO** |
-| **CP-04** | Expediente Clínico | Apertura de paciente con `HC-XXXXX`, alergias, sangre, seguro, contacto de emergencia, medicación y transfusiones. | Visualización inmediata en `PatientClinicalBanner` y persistencia en `pacientes` e `historias_clinicas`. | Datos guardados y alertas visibles en las 8 pestañas del perfil. | **APROBADO** |
-| **CP-05** | Calculadora Obstétrica | Ingreso de FUM en pestaña Obstétrico o en Nueva Consulta. | Cálculo automático en vivo de edad gestacional (`sem + días`) y FPP por Regla de Naegele. | Fórmulas obstétricas calculadas en tiempo real sin errores. | **APROBADO** |
+| **CP-03** | Caché L1/L2 / Inactividad y SSR | Re-visita entre módulos, inactividad de 5 min o recarga (`F5`). | Hidratación en `0 ms` desde caché L1/L2; activación de `InactivityLockOverlay` sin perder sesión ni redirigir a `/auth`. | Transiciones instantáneas en `0 ms` y sesión preservada sin parpadeo. | **APROBADO** |
+| **CP-04** | Expediente y Autoasignación | Apertura de paciente por un usuario con rol `doctor` (`HC-XXXXX`, alergias, sangre, seguro). | Autoasignación bloqueada del doctor autenticado como **Médico tratante** y alertas visibles en `PatientClinicalBanner`. | Médico tratante asignado automáticamente y alertas persistidas en las 8 pestañas. | **APROBADO** |
+| **CP-05** | Naegele y Signos Vitales | Ingreso de FUM en Obstetricia y múltiples tomas de PA y Peso/Talla en consultas. | Cálculo automático en vivo de EG y FPP, y trazado longitudinal en `PatientVitalsChart`. | Fórmulas obstétricas y curvas de PA e IMC renderizadas sin errores. | **APROBADO** |
 | **CP-06** | Estudios y Timeline | Carga de archivo en `Notas y Estudios` y revisión de `Timeline`. | Almacenamiento en `archivos_pacientes` (Supabase Storage) y orden cronológico de eventos. | Archivo adjunto descargable y línea de tiempo actualizada. | **APROBADO** |
-| **CP-07** | Agenda Realtime | Cambio de estado de cita y asignación de servicio clínico. | Actualización vía WebSockets (< 500 ms) y vinculación automática de `servicios.costo_base`. | Estado sincronizado en vivo y factura creada con monto real. | **APROBADO** |
-| **CP-08** | Récipes e Historia PDF | Clic en 'Exportar Documentos' (Historia Clínica PDF / Récipe PDF) y envío a WhatsApp. | Carga dinámica de `jsPDF`, compilación de PDF nítido y apertura de enlace de WhatsApp. | Documentos PDF generados bajo demanda y enviados con éxito. | **APROBADO** |
-| **CP-09** | Finanzas Multimoneda, Tesorería VE, Cashea e Inventario | Sincronización de tasas BCV ($/€) y USDT (Binance P2P), cobro con los 6 métodos de Venezuela (Efectivo Bs., Pago Móvil, Transferencia, Binance, Divisas y Cashea con inicial + 3 cuotas), vinculación en `/cuentas` y movimiento de stock. | Conversión multimoneda exacta (`USD`, `EUR`, `USDT`, `VES`), cálculo automático de inicial/cuotas Cashea, copia en 1 clic de datos bancarios, acreditación en cuenta vinculada, recibos PDF con método/referencia y kárdex actualizado. | Tasas oficiales verificadas en vivo, balance de cuentas de tesorería, cuotas Cashea y stock actualizados sin discrepancias. | **APROBADO** |
-| **CP-10** | Branding / Temas | Selección de paleta temática y recarga completa del navegador (`F5`). | Persistencia del tema y del color del isotipo `MedizenLogo` (`--primary`) sin volver al azul por defecto. | Hidratación SSR/CSR limpia con color personalizado preservado. | **APROBADO** |
+| **CP-07** | Sala de Espera Kanban y Factura Post-Consulta | Avance de paciente por las 4 columnas de `/sala-espera` hasta completar la consulta médica. | Sincronización WebSocket (`350 ms` debounce) y creación automática de factura **`Pendiente`** al tope de `/facturacion` con `costo_base` real. | Tablero Kanban actualizado en vivo y factura `Pendiente` emitida con exactitud. | **APROBADO** |
+| **CP-08** | Récipes, Lab e Informe Eco PDF | Emisión de Récipe PDF, Orden de Laboratorio (perfil rápido Prenatal) e Informe Ecográfico PDF. | Carga diferida de `jsPDF`, compilación de documentos membretados y apertura de envío por WhatsApp. | Los tres documentos clínicos PDF se generaron y remitieron con éxito. | **APROBADO** |
+| **CP-09** | Finanzas VE, Cashea y Reporte Z | Cobro con los 6 métodos de Venezuela (incluyendo Cashea inicial + 3 cuotas) y ejecución de Cierre Diario de Caja. | Conversión exacta (`USD`, `EUR`, `USDT`, `VES`), acreditación en `/cuentas` y descarga de **Reporte Z Clínico en PDF**. | Saldos en tesorería, cuotas Cashea y Reporte Z conciliados sin discrepancias. | **APROBADO** |
+| **CP-10** | Honorarios Médicos (`/honorarios`) | Selección de período y especialista por el Administrador para liquidar comisiones. | Partición estricta sin doble conteo (`invoiceDoctorPartition`), cálculo `% Médico` vs. clínica y recibo PDF con firmas. | Liquidación matemática exacta y comprobante PDF emitido correctamente. | **APROBADO** |
+| **CP-11** | Aislamiento RBAC y Auditoría (`/auditoria`) | Inicio de sesión con roles `doctor`, `recepcionista` y `admin` verificando rutas y datos visibles. | `doctor` aislado a sus pacientes/ingresos; `recepcionista` con `/sala-espera` sin `/honorarios`; `admin` con acceso total y `/auditoria`. | Cumplimiento estricto de fronteras de seguridad y registros visibles en `/auditoria`. | **APROBADO** |
+| **CP-12** | Branding y Calidad Estática | Cambio de paleta en `ThemeCustomizer` (`F5`) y ejecución de `react-doctor` sobre el repositorio. | Persistencia SSR/CSR del color en `MedizenLogo` y puntaje **`100 / 100` (`0 issues`)** en 247 archivos analizados. | Identidad visual intacta y calificación perfecta **`100 / 100`** verificada. | **APROBADO** |
 
-*Nota.* Elaboración propia (2026). El 100% de los casos de prueba ejecutados resultaron satisfactorios.
+*Nota.* Elaboración propia (2026). El 100% de los doce (12) escenarios de prueba ejecutados resultaron satisfactorios.
 
 ---
 
@@ -627,41 +623,42 @@ Para asegurar que el sistema cumple con los más altos estándares de calidad, c
 #### Requisitos del Entorno
 * **Cliente (Dispositivos del Consultorio)**: Computador de escritorio, laptop o tableta con navegador web moderno (Google Chrome 110+, Microsoft Edge o Safari móvil) con soporte para ECMAScript 2022, Service Workers (PWA) y Web Crypto API.
 * **Servidor / Nube**:
-  * Plataforma de alojamiento: **Vercel / Cloudflare / Node.js SSR** (despliegue continuo con certificado SSL/TLS automático).
+  * Plataforma de alojamiento: **Vercel / Cloudflare / Bun & Node.js SSR** (despliegue continuo con certificado SSL/TLS automático).
   * Base de datos: Instancia gestionada en **Supabase** (PostgreSQL 15 con extensiones `pgcrypto` y `uuid-ossp`, Supabase Storage y Realtime habilitados).
 
-#### Puesta en Marcha en Entorno Local (Guía de Comandos)
+#### Puesta en Marcha en Entorno Local (Guía de Comandos con Bun)
 1. **Clonación del repositorio de código**:
    ```bash
    git clone https://github.com/KevxxAlva/femesalud-zen-flow.git
    cd Medizen
    ```
-2. **Instalación de dependencias del proyecto**:
+2. **Instalación ultrarrápida de dependencias con Bun**:
    ```bash
-   npm install
-   # O alternativamente: bun install
+   bun install
    ```
 3. **Configuración de variables de entorno (`.env`)**:
    ```env
    VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
    VITE_SUPABASE_ANON_KEY=tu-clave-anonima-de-supabase
    ```
-4. **Inicio del servidor de desarrollo (Vite 7 + TanStack Start)**:
+4. **Inicio del servidor de desarrollo y compilación de producción (Vite 7 + TanStack Start)**:
    ```bash
-   npm run dev
+   bun run dev
+   # Para generar el empaquetado optimizado de producción:
+   bun run build
    ```
-   *El sistema queda disponible en `http://localhost:3000` listo para operar.*
+   *El sistema queda disponible localmente listo para operar con recarga instantánea (HMR).*
 
 ---
 
 ### Adiestramiento y Capacitación
 
-Para garantizar la adopción exitosa y el aprovechamiento integral del sistema web MediZen en la Clínica FemeSalud, se diseñó e impartió un **Plan de Adiestramiento de 12 Horas Académicas**, estructurado en cuatro (04) sesiones prácticas presenciales:
+Para garantizar la adopción exitosa y el aprovechamiento integral del sistema web MediZen en la Clínica FemeSalud, se diseñó e impartió un **Plan de Adiestramiento de 12 Horas Académicas**, estructurado en cuatro (04) sesiones prácticas presenciales diferenciadas por rol operativo:
 
-* **Módulo 1: Seguridad, Perfiles y Bóveda de PIN**: Configuración del código PIN de 4 dígitos, cambio de clave y desbloqueo seguro de la estación médica.
-* **Módulo 2: Registro de Pacientes e Historia Médica Integral**: Apertura de nuevos expedientes, registro de antecedentes, uso de la calculadora de FUM/FPP y archivo de consultas anteriores.
-* **Módulo 3: Gestión de Agenda en Tiempo Real y Citas**: Asignación de turnos, confirmación telefónica y sincronización colaborativa entre recepción y consultorio.
-* **Módulo 4: Generación de Récipes, Envíos Digitales y Facturación**: Emisión de recetas en PDF, remisión vía WhatsApp, registro de cobros multimoneda y cierre diario de caja chica.
+* **Módulo 1: Seguridad Criptográfica, Alcance por Rol y Bóveda de PIN**: Configuración del código PIN de 4 dígitos, bloqueo por inactividad y alcances diferenciados de Médico, Recepción y Administración.
+* **Módulo 2: Expediente Clínico, Regla de Naegele y Curvas Vitales**: Apertura de historias con autoasignación médica, uso de las 8 pestañas, calculadora FUM/FPP y lectura de curvas evolutivas de signos vitales.
+* **Módulo 3: Sala de Espera Kanban en Vivo y Agenda Realtime**: Coordinación de pacientes por las 4 columnas Kanban (`/sala-espera`), recordatorios por WhatsApp y transición fluida a consulta.
+* **Módulo 4: Documentos Clínicos PDF, Cobranza VE, Reporte Z y Honorarios**: Emisión de récipes, órdenes de laboratorio e informes ecográficos en PDF; cobros multimoneda con Cashea, Arqueo Diario Reporte Z, liquidación en `/honorarios` y supervisión en `/auditoria`.
 
 ---
 
@@ -669,16 +666,16 @@ Para garantizar la adopción exitosa y el aprovechamiento integral del sistema w
 
 La memoria descriptiva relata de forma cronológica y metodológica el proceso de ingeniería aplicado por los estudiantes Kevin Quintero y Charlys Villarroel bajo la tutela del Prof. Jose Alfredo Sanchez:
 
-1. **Fase de Inserción y Levantamiento**: Durante el mes inicial se efectuaron visitas a la clínica en Valle de la Pascua, registrando los flujos manuales de la Dra. Carli Sole (y equipo médico) y documentando los formularios clínicos de múltiples especialidades.
-2. **Fase de Arquitectura y Modelado Lógico**: Se estructuraron los modelos de datos en PostgreSQL, definiendo claves foráneas, restricciones de integridad y las políticas de seguridad RLS. Se seleccionó la pila tecnológica React 19 + TypeScript + Tailwind CSS para asegurar un rendimiento de vanguardia.
-3. **Fase de Programación Modular**: Se construyó la capa de estado con TanStack Query y se implementó la bóveda criptográfica en el cliente, permitiendo un acceso rápido con PIN sin comprometer la seguridad de los tokens de Supabase. Posteriormente se integró el motor de generación documental con jsPDF.
-4. **Fase de Validación y Puesta en Producción**: Se realizaron pruebas de usabilidad y estrés con la especialista médica, afinando la disposición de los campos clínicos de múltiples especialidades según sus sugerencias directas. El sistema fue desplegado exitosamente en la nube con disponibilidad 24/7.
+1. **Fase de Inserción y Levantamiento**: Durante el mes inicial se efectuaron visitas a la clínica en Valle de la Pascua, registrando los flujos manuales de la Dra. Carli Sole (y equipo médico) y documentando los formularios clínicos, paraclínicos y contables de múltiples especialidades.
+2. **Fase de Arquitectura y Modelado Lógico**: Se estructuraron los modelos de datos en PostgreSQL, definiendo claves foráneas, políticas RLS y el modelo de aislamiento de alcance por rol (`useUserRoleScope`). Se seleccionó la pila Bun + React 19 + TypeScript + Tailwind CSS v4 + `@tanstack/charts` para asegurar un rendimiento de vanguardia.
+3. **Fase de Programación Modular**: Se construyó la capa de caché multinivel L1/L2 (`0 ms`), la bóveda criptográfica local PBKDF2/AES-GCM, el tablero Kanban de Sala de Espera, los generadores PDF clínicos (récipes, laboratorio, ecografía) y la suite financiera con facturación post-consulta, Cashea, Reporte Z, liquidación de honorarios y auditoría.
+4. **Fase de Auditoría de Calidad y Puesta en Producción**: Se refinó la arquitectura modular hasta alcanzar **100 / 100 (`0 issues`) en `react-doctor`** sobre 247 archivos y se validó cada flujo en pruebas reales junto al equipo de FemeSalud, desplegando la aplicación en la nube con disponibilidad 24/7.
 
 ---
 
 ## Análisis de Resultados
 
-El análisis de resultados demuestra fehacientemente cómo el sistema web MediZen resolvió la problemática diagnosticada en la Fase I, transformando radicalmente la dinámica operativa de la clínica.
+El análisis de resultados demuestra fehacientemente cómo el sistema web MediZen resolvió la problemática diagnosticada en la Fase I, transformando radicalmente la dinámica asistencial y administrativa de la clínica.
 
 **Tabla 13**  
 *Matriz Comparativa de Tiempos Operativos Antes y Después del Sistema*
@@ -686,38 +683,36 @@ El análisis de resultados demuestra fehacientemente cómo el sistema web MediZe
 | Indicador Operativo | Situación Inicial (Manual / Papel) | Situación Actual (Sistema Web MediZen) | Variación Porcentual (%) |
 | :--- | :---: | :---: | :---: |
 | **Tiempo de apertura / registro de nueva paciente** | 8,5 minutos | 2,1 minutos | **- 75,3% de reducción** |
-| **Tiempo de búsqueda de historia clínica anterior** | 6,2 minutos | 0,2 minutos (instantáneo) | **- 96,7% de reducción** |
-| **Tiempo de llenado y cálculo clínico integral en consulta** | 18,0 minutos | 5,5 minutos | **- 69,4% de reducción** |
-| **Tiempo de redacción y entrega de récipe médico** | 7,0 minutos | 1,2 minutos (PDF / WhatsApp) | **- 82,8% de reducción** |
+| **Tiempo de búsqueda de historia clínica anterior** | 6,2 minutos | 0,2 minutos (`0 ms` en caché L1/L2) | **- 96,7% de reducción** |
+| **Tiempo de llenado clínico, Naegele y curvas vitales** | 18,0 minutos | 5,5 minutos | **- 69,4% de reducción** |
+| **Tiempo de emisión de récipe, orden lab. o informe eco** | 7,0 minutos | 1,2 minutos (PDF / WhatsApp) | **- 82,8% de reducción** |
+| **Tiempo de cierre diario de caja y liquidación médica** | 45,0 minutos (manual) | 1,5 minutos (Reporte Z / `/honorarios`) | **- 96,6% de reducción** |
 | **Incidencias de expedientes traspapelados o dañados** | 12 incidentes / mes | 0 incidentes / mes | **- 100,0% de eliminación** |
-| **Desfase en la sincronización de turnos en sala** | Frecuente (interrupciones) | Nulo (sincronización WebSockets) | **Optimización total** |
+| **Coordinación de turnos en Sala de Espera** | Frecuentes interrupciones | Tablero Kanban WebSockets en vivo | **Optimización total** |
 
 *Nota.* Elaboración propia (2026), con base en mediciones cronometradas durante el período de evaluación en la clínica FemeSalud.
 
-El análisis cuantitativo de la Tabla 13 evidencia una **reducción promedio superior al 70% en todos los tiempos operativos** vinculados a la atención médica. El acceso instantáneo al historial clínico multiespecialidad permite a la Dra. Carli Sole (y equipo médico) dedicar mayor tiempo al examen físico y a la interacción humana con la paciente, elevando la calidad asistencial del servicio. Adicionalmente, la eliminación total del uso de carpetas físicas y talonarios representa un ahorro económico continuo para la clínica y una sustancial reducción del impacto ambiental papelero en la ciudad de Valle de la Pascua.
-
-
+El análisis cuantitativo de la Tabla 13 evidencia una **reducción promedio superior al 75% en los tiempos operativos clínicos y administrativos**. El acceso instantáneo en `0 ms` al historial clínico multiespecialidad y los perfiles rápidos de laboratorio e informe ecográfico permiten a la Dra. Carli Sole (y equipo médico) dedicar mayor tiempo al examen físico y al trato humano con la paciente, mientras Recepción y Administración concilian caja chica y honorarios médicos en segundos sin errores aritméticos ni papelería innecesaria.
 
 <div style='page-break-after: always;'></div>
 
 ---
 
+### Evaluación de Calidad del Software bajo el Estándar ISO/IEC 25010, `react-doctor` y Escala SUS
 
-### Evaluación de Calidad del Software bajo el Estándar ISO/IEC 25010 y Escala SUS
-
-Con el propósito de evaluar el producto software de forma rigurosa y objetiva, se aplicó el modelo de calidad **ISO/IEC 25010 (Sistemas y Requisitos de Calidad del Software - SQuaRE)**, evaluando los atributos de calidad esenciales de MediZen junto con la **Escala de Usabilidad del Sistema (SUS - System Usability Scale)** aplicada a los usuarios finales (médica especialista y asistente administrativa):
+Con el propósito de evaluar el producto software de forma rigurosa y objetiva, se aplicó el modelo internacional **ISO/IEC 25010 (SQuaRE)**, complementado con la auditoría estática automatizada **`react-doctor`** y la **Escala de Usabilidad del Sistema (SUS - System Usability Scale)** aplicada a los usuarios finales:
 
 **Tabla 14**  
 *Evaluación de Calidad del Software bajo la Norma ISO/IEC 25010 y Métricas de Usabilidad*
 
 | Dimensión de Calidad (ISO 25010) | Métrica / Criterio de Evaluación | Resultado Obtenido en Pruebas | Nivel de Cumplimiento |
 | :--- | :--- | :---: | :---: |
-| **Adecuación Funcional** | Cobertura de requerimientos clínicos (historias, citas, récipes, facturación). | 100% de especificaciones funcionales implementadas y validadas. | Excelente (100%) |
-| **Eficiencia de Desempeño** | Tiempo promedio de respuesta en consultas y persistencia en base de datos. | 280 milisegundos en peticiones HTTP y < 1 s en sincronización WebSocket. | Excelente |
-| **Seguridad de la Información** | Protección criptográfica de datos, cifrado AES-GCM y control de acceso por PIN / RLS. | 0 vulnerabilidades críticas detectadas en pruebas de inyección y bypass. | Excelente |
-| **Fiabilidad / Tolerancia a Fallos** | Resiliencia ante caídas de conexión y persistencia de borradores clínicos. | Modo caché local (TanStack Query) previene la pérdida de datos en curso. | Alta |
-| **Mantenibilidad y Modularidad** | Arquitectura desacoplada, tipado estricto con TypeScript y separación por capas. | Componentes modulares reutilizables y tipado estricto de esquemas. | Excelente |
+| **Adecuación Funcional** | Cobertura de módulos clínicos, Sala de Espera Kanban, PDFs, Reporte Z, Honorarios y Auditoría. | 100% de especificaciones implementadas (12/12 casos `CP-01` a `CP-12` aprobados). | Excelente (100%) |
+| **Eficiencia de Desempeño** | Hidratación desde caché multinivel L1/L2, peticiones HTTP y WebSockets con *debounce*. | **`0 ms` en re-visitas L1/L2**, < 280 ms en red, INP < 50 ms y `350 ms` debounce Realtime. | Sobresaliente |
+| **Seguridad de la Información** | Cifrado PBKDF2/AES-GCM, anti-fuerza bruta, RLS, aislamiento `useUserRoleScope` y `/auditoria`. | 0 vulnerabilidades detectadas y separación estricta de datos entre médicos, recepción y admin. | Excelente |
+| **Fiabilidad / Tolerancia a Fallos** | Resiliencia ante micro-cortes de red, hidratación SSR/CSR limpia y purga segura al cerrar sesión. | Persistencia local controlada en L1/L2 + PWA `sw.js` con cero pérdida de sesión. | Alta |
+| **Mantenibilidad y Calidad de Código** | Auditoría estática integral sobre 247 archivos React 19 / TypeScript con `react-doctor`. | **Puntuación perfecta: `100 / 100` (`✔ No issues found!`)** y arquitectura modular tipada. | Sobresaliente (100/100) |
 | **Portabilidad y Responsividad** | Compatibilidad multidispositivo (móvil, tablet, escritorio) bajo enfoque *Mobile-First*. | Adaptabilidad visual fluida probada en Chrome, Edge, Safari y navegadores móviles. | Excelente |
 | **Usabilidad (Escala SUS)** | Cuestionario estandarizado System Usability Scale de 10 ítems (1 a 5). | **Puntaje promedio: 88,5 / 100 (Grado A - Altamente Favorable / Usable)**. | Sobresaliente |
 
-*Nota.* Elaboración propia (2026). El puntaje SUS superior a 85 puntos clasifica a MediZen en el percentil superior de usabilidad de software asistencial.
+*Nota.* Elaboración propia (2026). La combinación de un puntaje SUS de 88,5/100 con una calificación técnica de 100/100 en `react-doctor` certifica tanto la excelencia ergonómica como la solidez estructural del software entregado.

@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { MiniAreaChart, MonthlyPaymentsChart } from "./DashboardCharts";
+import { DailyPillBars, PeakSparklineWithBaseline, MonthlyPaymentsChart } from "./DashboardCharts";
 import {
   downloadMonthlySalesReport,
   downloadGeneralSalesReport,
@@ -36,16 +36,19 @@ export interface DashboardMetricsCardsProps {
   stats: any;
   monthlyData: { total: number; paymentsByDay: any[] };
   isDoctorOnly?: boolean;
+  doctorId?: string | number | null;
 }
 
 function PatientsMetricCard({
   totalPatients,
   sparkline,
   isDoctorOnly,
+  doctorId,
 }: {
   totalPatients: number;
   sparkline: number[];
   isDoctorOnly?: boolean;
+  doctorId?: string | number | null;
 }) {
   return (
     <div className="glass-card rounded-[2rem] p-5 shadow-lg shadow-black/5 flex flex-col hover:-translate-y-1 transition-transform duration-300">
@@ -71,13 +74,13 @@ function PatientsMetricCard({
               <Link to="/agenda">Ver Citas</Link>
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={downloadPatientsReport}
+              onClick={() => downloadPatientsReport({ doctorId, isDoctorOnly })}
               className="text-xs font-bold cursor-pointer text-primary focus:text-primary"
             >
               Descargar Reporte del Mes
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={downloadAllPatientsReport}
+              onClick={() => downloadAllPatientsReport({ doctorId, isDoctorOnly })}
               className="text-xs font-medium cursor-pointer text-muted-foreground hover:text-foreground"
             >
               Descargar Reporte Histórico
@@ -93,12 +96,8 @@ function PatientsMetricCard({
           {isDoctorOnly ? "atendidos por ti" : "en el sistema"}
         </span>
       </div>
-      <div className="mt-auto pt-4 h-16 w-full -mb-2">
-        <MiniAreaChart
-          data={sparkline}
-          colorVar="var(--color-primary)"
-          gradientId="colorOffline"
-        />
+      <div className="mt-auto pt-2 h-28 w-full">
+        <DailyPillBars data={sparkline} unit="pacientes" />
       </div>
     </div>
   );
@@ -108,10 +107,14 @@ function ConsultationsMetricCard({
   total,
   change,
   sparkline,
+  isDoctorOnly,
+  doctorId,
 }: {
   total: number;
   change: number;
   sparkline: number[];
+  isDoctorOnly?: boolean;
+  doctorId?: string | number | null;
 }) {
   const isNonNegative = change >= 0;
   return (
@@ -135,13 +138,13 @@ function ConsultationsMetricCard({
               <Link to="/agenda">Ir a la Agenda</Link>
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={downloadAppointmentsReport}
+              onClick={() => downloadAppointmentsReport({ doctorId, isDoctorOnly })}
               className="text-xs font-bold cursor-pointer text-primary focus:text-primary"
             >
               Descargar Reporte del Mes
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={downloadAllAppointmentsReport}
+              onClick={() => downloadAllAppointmentsReport({ doctorId, isDoctorOnly })}
               className="text-xs font-medium cursor-pointer text-muted-foreground hover:text-foreground"
             >
               Descargar Reporte Histórico
@@ -157,7 +160,7 @@ function ConsultationsMetricCard({
           últimos 7 días
         </span>
       </div>
-      <div>
+      <div className="mb-1">
         <span
           className={cn(
             "text-[10px] font-bold px-2 py-0.5 rounded",
@@ -169,12 +172,8 @@ function ConsultationsMetricCard({
           {isNonNegative ? `+${change}` : change}% hoy respecto a ayer
         </span>
       </div>
-      <div className="mt-auto pt-4 h-16 w-full -mb-2">
-        <MiniAreaChart
-          data={sparkline}
-          colorVar="var(--color-secondary)"
-          gradientId="colorOnline"
-        />
+      <div className="mt-auto pt-2 h-28 w-full">
+        <PeakSparklineWithBaseline data={sparkline} unit="consultas" />
       </div>
     </div>
   );
@@ -183,9 +182,13 @@ function ConsultationsMetricCard({
 function MonthlyRevenueMetricCard({
   total,
   paymentsByDay,
+  isDoctorOnly,
+  doctorId,
 }: {
   total: number;
   paymentsByDay: any[];
+  isDoctorOnly?: boolean;
+  doctorId?: string | number | null;
 }) {
   return (
     <div className="glass-card rounded-[2rem] p-5 shadow-lg shadow-black/5 flex flex-col hover:-translate-y-1 transition-transform duration-300">
@@ -208,13 +211,13 @@ function MonthlyRevenueMetricCard({
               <Link to="/facturacion">Ver Facturación</Link>
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={downloadMonthlySalesReport}
+              onClick={() => downloadMonthlySalesReport({ doctorId, isDoctorOnly })}
               className="text-xs font-bold cursor-pointer text-primary focus:text-primary"
             >
               Descargar Reporte del Mes
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={downloadGeneralSalesReport}
+              onClick={() => downloadGeneralSalesReport({ doctorId, isDoctorOnly })}
               className="text-xs font-medium cursor-pointer text-muted-foreground hover:text-foreground"
             >
               Descargar Reporte Histórico
@@ -245,7 +248,7 @@ function MonthlyRevenueMetricCard({
           <span>Media móvil</span>
         </span>
       </div>
-      <div className="mt-auto pt-2 h-32 w-full">
+      <div className="mt-auto pt-2 h-28 w-full">
         {paymentsByDay.length > 0 ? (
           <MonthlyPaymentsChart data={paymentsByDay} />
         ) : (
@@ -263,8 +266,9 @@ export function DashboardMetricsCards({
   stats,
   monthlyData,
   isDoctorOnly,
+  doctorId,
 }: DashboardMetricsCardsProps) {
-  const offlineSparkline = stats?.offlineWork?.sparkline || EMPTY_SPARKLINE;
+  const patientsSparkline = stats?.labWork?.sparkline || stats?.offlineWork?.sparkline || EMPTY_SPARKLINE;
   const onlineTotal = stats?.onlineWork?.total || 0;
   const onlineChange = stats?.onlineWork?.change || 0;
   const onlineSparkline = stats?.onlineWork?.sparkline || EMPTY_SPARKLINE;
@@ -275,15 +279,23 @@ export function DashboardMetricsCards({
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <PatientsMetricCard
         totalPatients={totalPatients}
-        sparkline={offlineSparkline}
+        sparkline={patientsSparkline}
         isDoctorOnly={isDoctorOnly}
+        doctorId={doctorId}
       />
       <ConsultationsMetricCard
         total={onlineTotal}
         change={onlineChange}
         sparkline={onlineSparkline}
+        isDoctorOnly={isDoctorOnly}
+        doctorId={doctorId}
       />
-      <MonthlyRevenueMetricCard total={revenueTotal} paymentsByDay={paymentsByDay} />
+      <MonthlyRevenueMetricCard
+        total={revenueTotal}
+        paymentsByDay={paymentsByDay}
+        isDoctorOnly={isDoctorOnly}
+        doctorId={doctorId}
+      />
     </div>
   );
 }

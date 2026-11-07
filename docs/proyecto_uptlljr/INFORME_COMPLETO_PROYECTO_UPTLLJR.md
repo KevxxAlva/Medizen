@@ -98,14 +98,14 @@ Hacemos constar que, una vez evaluado el informe escrito definitivo y presenciad
 
 En fe de lo cual firman en la ciudad de Valle de la Pascua, a los ______ días del mes de ____________ del año 2026.
 
-<br><br>
+<br>
 
 __________________________________________  
 **Prof. Jose Alfredo Sanchez**  
 C.I.: __________________  
 *Tutor Académico*  
 
-<br><br>
+<br>
 
 __________________________________________ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; __________________________________________  
 **Jurado Evaluador 1** &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; **Jurado Evaluador 2**  
@@ -150,91 +150,90 @@ A nuestros profesores y facilitadores universitarios, que con su vocación y eje
 ### **ÍNDICE GENERAL**
 
 ```text
-ACTA DE APROBACIÓN DEFINITIVA DEL PROYECTO ..................................... iii
-DEDICATORIA .................................................................... iv
-AGRADECIMIENTO ................................................................. v
-ÍNDICE GENERAL ................................................................. vi
-ÍNDICE DE TABLAS ............................................................... vii
-ÍNDICE DE FIGURAS .............................................................. viii
-ÍNDICE DE ANEXOS ............................................................... ix
-RESUMEN ........................................................................ x
-INTRODUCCIÓN ................................................................... 1
+ACTA DE APROBACIÓN DEFINITIVA DEL PROYECTO ...................................... 3
+DEDICATORIA ..................................................................... 4
+AGRADECIMIENTO .................................................................. 5
+ÍNDICE GENERAL .................................................................. 6
+ÍNDICE DE TABLAS ................................................................ 8
+ÍNDICE DE FIGURAS ............................................................... 9
+ÍNDICE DE ANEXOS ............................................................... 10
+RESUMEN ........................................................................ 11
+INTRODUCCIÓN ................................................................... 12
 
-FASE I: DIAGNÓSTICO PARTICIPATIVO .............................................. 3
-  Descripción del Contexto ..................................................... 3
-    Localización Geográfica .................................................... 3
-    Dimensión Histórica ........................................................ 4
-    Dimensión Comunitaria ...................................................... 4
-    Dimensión Económica ........................................................ 5
-    Dimensión Social ........................................................... 5
-    Dimensión Cultural ......................................................... 5
-    Dimensión Ambiental ........................................................ 6
-    Dimensión Institucional .................................................... 6
-    Actores Involucrados ....................................................... 6
-  Diagnóstico Situacional ...................................................... 7
-    Descripción del Diagnóstico Participativo (Matriz FODA simple) ............. 7
-    Jerarquización e Identificación de las Necesidades ......................... 8
-      Tabla de Priorización de Problemas ....................................... 8
-      Árbol de Problemas ....................................................... 9
-  Planteamiento del Problema ................................................... 10
-    Descripción Narrativa de la Problemática ................................... 10
-    Árbol de Objetivos ......................................................... 12
-    Matriz de Marco Lógico ..................................................... 13
-  Objetivos del Proyecto ....................................................... 15
-    Objetivo General ........................................................... 15
-    Objetivos Específicos ...................................................... 15
-  Justificación de la Investigación ............................................ 16
-    Aportes de la Investigación (Económico, Social, Práctico, Teórico) ......... 16
-    Vinculación con el Plan de la Patria y Líneas del PNFI ..................... 17
+FASE I: DIAGNÓSTICO PARTICIPATIVO .............................................. 14
+  Descripción del Contexto ..................................................... 14
+    Localización Geográfica .................................................... 14
+    Dimensión Histórica ........................................................ 15
+    Dimensión Comunitaria ...................................................... 15
+    Dimensión Económica ........................................................ 15
+    Dimensión Social ........................................................... 16
+    Dimensión Cultural ......................................................... 16
+    Dimensión Ambiental ........................................................ 16
+    Dimensión Institucional .................................................... 16
+    Actores Involucrados ....................................................... 16
+  Diagnóstico Situacional ...................................................... 17
+    Descripción del Diagnóstico Participativo (Matriz FODA simple) ............. 17
+    Jerarquización e Identificación de las Necesidades ......................... 17
+      Tabla de Priorización de Problemas ....................................... 18
+      Árbol de Problemas ....................................................... 18
+  Planteamiento del Problema ................................................... 19
+    Descripción Narrativa de la Problemática ................................... 19
+    Árbol de Objetivos ......................................................... 20
+    Matriz de Marco Lógico ..................................................... 21
+  Objetivos del Proyecto ....................................................... 21
+    Objetivo General ........................................................... 21
+    Objetivos Específicos ...................................................... 21
+  Justificación de la Investigación ............................................ 22
+    Aportes de la Investigación (Económico, Social, Práctico, Teórico) ......... 22
+    Vinculación con el Plan de la Patria y Líneas del PNFI ..................... 22
 
-FASE II: REVISIÓN LITERARIA (EL SOPORTE CIENTÍFICO) ............................. 19
-  Antecedentes de la Investigación ............................................. 19
-    Antecedentes Internacionales ............................................... 19
-    Antecedentes Nacionales y Regionales ....................................... 21
-  Bases Teóricas ............................................................... 23
-    Sistemas de Información en Salud y Expedientes Clínicos Electrónicos ....... 23
-    Flujos Especializados en Múltiples Especialidades Médicas ......................... 24
-    Arquitectura Web Moderna: React 19, TypeScript y Vite ...................... 25
-    Backend-as-a-Service, PostgreSQL y Políticas de Seguridad RLS .............. 26
+FASE II: REVISIÓN LITERARIA (EL SOPORTE CIENTÍFICO) ............................ 24
+  Antecedentes de la Investigación ............................................. 24
+    Antecedentes Internacionales ............................................... 24
+    Antecedentes Nacionales y Regionales ....................................... 25
+  Bases Teóricas ............................................................... 26
+    Sistemas de Información en Salud y Expedientes Clínicos Electrónicos ....... 26
+    Flujos Especializados en Múltiples Especialidades Médicas .................. 26
+    Arquitectura Web Moderna: React 19, Caché L1/L2 y TypeScript ............... 26
+    Backend-as-a-Service, PostgreSQL, RBAC por Alcance y Políticas RLS ......... 27
     Seguridad Criptográfica en Clientes: Web Crypto API, PBKDF2 y AES-GCM ...... 27
-    Generación Automatizada de Documentos Clínicos y Récipes ................... 28
-  Bases Legales (Pirámide de Kelsen) ........................................... 29
-  Sistema de Variables y Operacionalización .................................... 32
+  Bases Legales (Pirámide de Kelsen) ........................................... 27
+  Sistema de Variables y Operacionalización .................................... 29
 
-FASE III: MARCO METODOLÓGICO Y PLANIFICACIÓN .................................... 34
-  Metodología .................................................................. 34
-    Paradigma de la Investigación .............................................. 34
-    Metodología de la Investigación ............................................ 35
-    Diseño y Tipo de la Investigación .......................................... 35
-  Población y Muestra .......................................................... 36
-  Técnicas e Instrumentos de Recolección de Datos .............................. 37
-  Validez y Confiabilidad del Instrumento ...................................... 38
-  Técnicas de Análisis de los Datos ............................................ 39
-  Plan de Acción Operativo ..................................................... 40
+FASE III: MARCO METODOLÓGICO Y PLANIFICACIÓN ................................... 31
+  Metodología .................................................................. 31
+    Paradigma de la Investigación .............................................. 31
+    Metodología de la Investigación ............................................ 31
+    Diseño y Tipo de la Investigación .......................................... 31
+  Población y Muestra .......................................................... 31
+  Técnicas e Instrumentos de Recolección de Datos .............................. 32
+  Validez y Confiabilidad del Instrumento ...................................... 33
+  Técnicas de Análisis de los Datos ............................................ 34
+  Plan de Acción Operativo ..................................................... 34
 
-FASE IV: EJECUCIÓN TÉCNICA (DESARROLLO DE LA PROPUESTA) ......................... 42
-  Propuesta Técnica ............................................................ 42
-    Diseño de los Instrumentos de Recolección de Datos Técnicos ................ 42
-    Descripción de los Procesos Involucrados en el Sistema ...................... 43
-    Diagramación según la Metodología Utilizada (UML) ........................... 45
-    Diseño de la Base de Datos ................................................. 48
-    Diseño de los Escenarios a Utilizar (Mockups y Prototipos de UI) ........... 52
-    Desarrollo de la Aplicación ................................................ 55
-      Arquitectura de Seguridad y Privacidad de Datos (RLS, AES-GCM) ............ 57
-    Pruebas de la Aplicación ................................................... 58
-    Instalación y Despliegue de la Aplicación .................................. 60
-    Adiestramiento y Capacitación .............................................. 61
-  Memoria Descriptiva .......................................................... 62
-  Análisis de Resultados ....................................................... 64
-    Matriz Comparativa de Tiempos Operativos (Antes vs. Después) ................ 64
-    Evaluación de Calidad de Software (ISO/IEC 25010 y Escala SUS) ............. 66
+FASE IV: EJECUCIÓN TÉCNICA (DESARROLLO DE LA PROPUESTA) ........................ 36
+  Propuesta Técnica ............................................................ 36
+    Requerimientos del Sistema (Funcionales y No Funcionales) .................. 36
+    Descripción de los Procesos Involucrados en el Sistema ..................... 37
+    Diagramación según la Metodología Utilizada (UML) .......................... 39
+    Diseño de la Base de Datos ................................................. 41
+    Diseño de los Escenarios a Utilizar (Mockups y Prototipos de UI) ........... 43
+    Desarrollo de la Aplicación ................................................ 45
+      Arquitectura de Seguridad, RBAC por Alcance y Caché L1/L2 ................ 47
+    Pruebas de la Aplicación ................................................... 49
+    Instalación y Despliegue de la Aplicación .................................. 50
+    Adiestramiento y Capacitación .............................................. 51
+  Memoria Descriptiva .......................................................... 51
+  Análisis de Resultados ....................................................... 51
+    Matriz Comparativa de Tiempos Operativos (Antes vs. Después) ............... 52
+    Evaluación de Calidad de Software (ISO/IEC 25010, react-doctor y SUS) ...... 53
 
-CONCLUSIONES Y RECOMENDACIONES ................................................. 67
-  Conclusiones ................................................................. 67
-  Recomendaciones ............................................................. 69
+CONCLUSIONES Y RECOMENDACIONES ................................................. 54
+  Conclusiones ................................................................. 54
+  Recomendaciones .............................................................. 55
 
-REFERENCIAS BIBLIOGRÁFICAS ..................................................... 71
-ANEXOS ......................................................................... 76
+REFERENCIAS BIBLIOGRÁFICAS ..................................................... 57
+ANEXOS ......................................................................... 59
 ```
 
 <div style="page-break-after: always;"></div>
@@ -247,20 +246,20 @@ ANEXOS .........................................................................
 
 | Número | Título | Pág. |
 | :--- | :--- | :---: |
-| **Tabla 1** | *Matriz FODA de la clínica FemeSalud* | 7 |
-| **Tabla 2** | *Tabla de Priorización y Jerarquización de Necesidades* | 8 |
-| **Tabla 3** | *Matriz de Marco Lógico (MML) del Proyecto* | 13 |
-| **Tabla 4** | *Matriz de Operacionalización de Variables* | 33 |
-| **Tabla 5** | *Distribución de la Población y Muestra de Estudio* | 36 |
-| **Tabla 6** | *Validez de Contenido del Instrumento por Juicio de Expertos* | 38 |
-| **Tabla 7** | *Plan de Acción Operativo del Proyecto Socio-Integrador* | 40 |
-| **Tabla 8** | *Especificación de Requerimientos Funcionales y No Funcionales* | 43 |
-| **Tabla 9** | *Diccionario de Datos: Tablas pacientes e historias_clinicas (Expediente Clínico)* | 49 |
-| **Tabla 10** | *Diccionario de Datos: Tabla consultas (Consultas y Evoluciones Médicas)* | 50 |
-| **Tabla 11** | *Diccionario de Datos: Tablas citas, facturas e inventario (Control Operativo)* | 51 |
-| **Tabla 12** | *Matriz de Casos de Prueba Funcional de Caja Negra* | 59 |
-| **Tabla 13** | *Matriz Comparativa de Tiempos Operativos Antes y Después* | 65 |
-| **Tabla 14** | *Evaluación de Calidad del Software bajo la Norma ISO/IEC 25010 y Métricas de Usabilidad* | 66 |
+| **Tabla 1** | *Matriz FODA de la Clínica FemeSalud* | 17 |
+| **Tabla 2** | *Tabla de Priorización y Jerarquización de Necesidades* | 18 |
+| **Tabla 3** | *Matriz de Marco Lógico (MML) del Proyecto* | 21 |
+| **Tabla 4** | *Matriz de Operacionalización de Variables* | 30 |
+| **Tabla 5** | *Distribución de la Población y Muestra de Estudio* | 32 |
+| **Tabla 6** | *Validez de Contenido del Instrumento por Juicio de Expertos* | 33 |
+| **Tabla 7** | *Plan de Acción Operativo del Proyecto Socio-Integrador* | 34 |
+| **Tabla 8** | *Especificación de Requerimientos Funcionales y No Funcionales* | 36 |
+| **Tabla 9** | *Diccionario de Datos: Tablas `pacientes` e `historias_clinicas` (Expediente Clínico Integral)* | 42 |
+| **Tabla 10** | *Diccionario de Datos: Tabla `consultas` (Evoluciones Médicas y Especialidades)* | 43 |
+| **Tabla 11** | *Diccionario de Datos: Tabla `citas` (Control de Agenda y Turnos en Tiempo Real)* | 43 |
+| **Tabla 12** | *Matriz de Casos de Prueba Funcional de Caja Negra* | 49 |
+| **Tabla 13** | *Matriz Comparativa de Tiempos Operativos Antes y Después del Sistema* | 52 |
+| **Tabla 14** | *Evaluación de Calidad del Software bajo la Norma ISO/IEC 25010 y Métricas de Usabilidad* | 53 |
 
 <div style="page-break-after: always;"></div>
 
@@ -272,20 +271,20 @@ ANEXOS .........................................................................
 
 | Número | Título | Pág. |
 | :--- | :--- | :---: |
-| **Figura 1** | *Croquis de Ubicación Geográfica de la Clínica FemeSalud* | 4 |
-| **Figura 2** | *Árbol de Problemas del Control Clínico en FemeSalud* | 9 |
-| **Figura 3** | *Árbol de Objetivos del Sistema Web MediZen* | 12 |
-| **Figura 4** | *Pirámide de Kelsen Aplicada al Marco Legal del Software Clínico* | 29 |
-| **Figura 5** | *Diagrama de Casos de Uso General del Sistema MediZen* | 46 |
-| **Figura 6** | *Diagrama de Actividades: Flujo Integral de Consulta Médica Multiespecialidad* | 47 |
-| **Figura 7** | *Diagrama de Secuencia: Desbloqueo Seguro mediante Bóveda PIN Cifrada* | 48 |
-| **Figura 8** | *Diagrama Entidad-Relación de la Base de Datos (PostgreSQL / Supabase)* | 52 |
-| **Figura 9** | *Interfaz de Desbloqueo Rápido por PIN de 4 Dígitos y Bloqueo por Inactividad* | 53 |
-| **Figura 10** | *Tablero de Control Operativo y Estadísticas Clínicas en Tiempo Real* | 54 |
-| **Figura 11** | *Módulo de Expediente Clínico Digital Integral Multiespecialidad* | 54 |
-| **Figura 12** | *Agenda Médica Interactiva con Sincronización WebSockets en Tiempo Real* | 55 |
-| **Figura 13** | *Diseñador Visual y Generador de Documentos Médicos Oficiales en PDF* | 55 |
-| **Figura 14** | *Diagrama de Arquitectura de Software en Capas de la Solución Web* | 56 |
+| **Figura 1** | *Croquis de Ubicación Geográfica de la Clínica FemeSalud* | 15 |
+| **Figura 2** | *Árbol de Problemas del Control Clínico en la Clínica FemeSalud* | 18 |
+| **Figura 3** | *Árbol de Objetivos del Sistema Web MediZen* | 20 |
+| **Figura 4** | *Pirámide de Kelsen Aplicada al Marco Legal del Software Clínico MediZen* | 28 |
+| **Figura 5** | *Diagrama de Casos de Uso General del Sistema MediZen* | 39 |
+| **Figura 6** | *Diagrama de Actividades: Flujo Integral de Consulta Médica Multiespecialidad* | 40 |
+| **Figura 7** | *Diagrama de Secuencia: Desbloqueo Seguro, Rate-Limiting y Bóveda PIN Cifrada* | 40 |
+| **Figura 8** | *Diagrama Entidad-Relación de la Base de Datos (PostgreSQL / Supabase)* | 41 |
+| **Figura 9** | *Interfaz de Desbloqueo Rápido por PIN de 4 Dígitos y Pantalla de Bloqueo por Inactividad* | 44 |
+| **Figura 10** | *Tablero de Control Operativo y Analítica Clínica en Tiempo Real (Dashboard)* | 44 |
+| **Figura 11** | *Módulo de Historia Clínica Digital Especializada con Banner Clínico y 8 Pestañas* | 45 |
+| **Figura 12** | *Sala de Espera Kanban y Agenda Médica con Sincronización WebSockets en Tiempo Real* | 45 |
+| **Figura 13** | *Generador de Récipes, Órdenes de Laboratorio e Informes Ecográficos en PDF* | 45 |
+| **Figura 14** | *Diagrama de Arquitectura de Software en Capas de la Solución Web MediZen* | 46 |
 
 <div style="page-break-after: always;"></div>
 
@@ -297,11 +296,11 @@ ANEXOS .........................................................................
 
 | Número | Título | Pág. |
 | :--- | :--- | :---: |
-| **Anexo A** | *Guía de Entrevista Aplicada a la Especialista Médica (Dra. Carli Sole y equipo médico)* | 76 |
-| **Anexo B** | *Cuestionario de Usabilidad y Evaluación Tecnológica (Escala Likert)* | 78 |
-| **Anexo C** | *Instrumento de Validación por Juicio de Expertos de la UPTLLJR* | 80 |
-| **Anexo D** | *Carta de Aceptación y Aval Comunitario de la Clínica FemeSalud* | 82 |
-| **Anexo E** | *Manual Rápido de Usuario del Sistema Web MediZen* | 83 |
+| **Anexo A** | *Guía de Entrevista Aplicada a la Especialista Médica (Dra. Carli Sole y equipo médico)* | 59 |
+| **Anexo B** | *Cuestionario de Usabilidad y Evaluación Tecnológica (Escala Likert)* | 59 |
+| **Anexo C** | *Instrumento de Validación por Juicio de Expertos de la UPTLLJR* | 60 |
+| **Anexo D** | *Carta de Aceptación y Aval Comunitario de la Clínica FemeSalud* | 60 |
+| **Anexo E** | *Manual Rápido de Usuario del Sistema Web FemeSalud (MediZen)* | 61 |
 
 <div style="page-break-after: always;"></div>
 
@@ -332,7 +331,7 @@ ANEXOS .........................................................................
 
 </div>
 
-El presente proyecto socio-integrador tuvo como propósito fundamental desarrollar un sistema web progresivo (PWA) para la gestión integral de historias clínicas multiespecialidad y el control operativo en el centro asistencial privado Clínica FemeSalud, bajo la dirección de la Dra. Carli Sole (y equipo médico) en Valle de la Pascua, estado Guárico. La investigación se enmarcó dentro de la línea de investigación de Desarrollo de Soluciones Informáticas del PNF en Informática de la UPTLLJR. Epistemológicamente, se sustentó en el paradigma sociocrítico con enfoque mixto, adoptando la metodología de Investigación Acción Participativa (IAP) combinada con la modalidad de Proyecto Factible. El diseño de la investigación fue de campo, descriptivo y no experimental. La población y muestra se constituyó bajo un criterio no probabilístico intencional conformada por el personal médico y administrativo de la clínica, así como una muestra representativa de pacientes ($n=32$). Como técnicas de recolección de datos se emplearon la entrevista semiestructurada, la observación directa participante y la revisión documental, utilizando instrumentos validados mediante juicio de tres expertos ($\alpha = 0,89$). El sistema fue desarrollado sobre una arquitectura reactiva utilizando React 19, TypeScript, TanStack Start/Router, TanStack Query v5, Tailwind CSS v4 y Supabase (PostgreSQL 15, políticas RLS, Storage y WebSockets en tiempo real), complementado con una bóveda criptográfica local (Web Crypto API, PBKDF2 con 100.000 iteraciones SHA-256, AES-GCM de 256 bits, protección contra fuerza bruta y bloqueo por inactividad), expediente clínico normado (numeración correlativa `HC`, grupo sanguíneo, alergias, medicación activa, transfusiones, calculadora obstétrica automática por regla de Naegele, estudios adjuntos y línea de tiempo evolutiva), control de inventario con kárdex, módulo de tesorería y cuentas vinculadas a los métodos de pago venezolanos (**Efectivo Bs., Pago Móvil, Transferencia Bancaria, Divisas USD/EUR, Binance Pay USDT y financiamiento Cashea** con calculadora de inicial 40%/50%/60% + 3 cuotas sin interés), facturación multimoneda en vivo (USD BCV, EUR BCV, USDT Binance P2P y VES) con tarjetas KPI interactivas, cobros mixtos y exportación documental en PDF bajo demanda. La evaluación funcional evidenció una reducción superior al 70% en los tiempos operativos, erradicación total del extravío de expedientes físicos y un puntaje de usabilidad SUS de 88,5/100 (Grado A).
+El presente proyecto socio-integrador tuvo como propósito fundamental desarrollar un sistema web progresivo (PWA) para la gestión integral de historias clínicas multiespecialidad y el control operativo en el centro asistencial privado Clínica FemeSalud, bajo la dirección de la Dra. Carli Sole (y equipo médico) en Valle de la Pascua, estado Guárico. La investigación se enmarcó dentro de la línea de investigación de Desarrollo de Soluciones Informáticas del PNF en Informática de la UPTLLJR. Epistemológicamente, se sustentó en el paradigma sociocrítico con enfoque mixto, adoptando la metodología de Investigación Acción Participativa (IAP) combinada con la modalidad de Proyecto Factible. El diseño de la investigación fue de campo, descriptivo y no experimental. La población y muestra se constituyó bajo un criterio no probabilístico intencional conformada por el personal médico y administrativo de la clínica, así como una muestra representativa de pacientes ($n=32$). Como técnicas de recolección de datos se emplearon la entrevista semiestructurada, la observación directa participante y la revisión documental, utilizando instrumentos validados mediante juicio de tres expertos ($\alpha = 0,89$). El sistema fue desarrollado sobre una arquitectura reactiva con Bun, React 19, TypeScript, TanStack Start/Router, TanStack Query v5 con caché multinivel L1/L2 (`0 ms`), `@tanstack/charts`, Tailwind CSS v4 y Supabase (PostgreSQL 15, políticas RLS, Storage y WebSockets con *debounce* de `350 ms`), complementado con una bóveda criptográfica local (Web Crypto API, PBKDF2 con 100.000 iteraciones SHA-256, AES-GCM de 256 bits, protección contra fuerza bruta y bloqueo por inactividad), aislamiento estricto de alcance por rol médico (`useUserRoleScope`), Sala de Espera Kanban en vivo (`/sala-espera`), expediente clínico normado en 8 pestañas (código `HC-XXXXX`, alertas críticas, regla de Naegele, curva evolutiva de signos vitales, órdenes de laboratorio con perfiles rápidos e informes ecográficos en PDF), facturación automática post-consulta en estado `Pendiente`, tesorería venezolana (**Efectivo Bs., Pago Móvil, Transferencia Bancaria, Divisas USD/EUR, Binance Pay USDT y Cashea**), tasas en vivo (USD BCV, EUR BCV y USDT), Arqueo Diario de Caja (Reporte Z), Liquidación de Honorarios Médicos (`/honorarios`), Centro de Reportes (`/reportes`), kárdex de inventario y Bitácora Visual de Auditoría (`/auditoria`). La evaluación evidenció una reducción superior al 70% en tiempos operativos, cero extravíos documentales, puntaje de usabilidad SUS de 88,5/100 (Grado A) y calificación perfecta de **100/100 en calidad arquitectónica (`react-doctor`)**.
 
 *Palabras clave:* historias clínicas electrónicas, múltiples especialidades médicas, aplicación web progresiva, criptografía local, supabase, react 19.
 
@@ -346,9 +345,9 @@ El presente proyecto socio-integrador tuvo como propósito fundamental desarroll
 
 En la contemporaneidad, la integración de las tecnologías de la información y la comunicación (TIC) ha redefinido radicalmente la gestión operativa y asistencial de los servicios de salud a escala global. Los sistemas de información clínica (HIS, por sus siglas en inglés *Hospital Information Systems*) y los registros médicos electrónicos (EHR) se han consolidado como herramientas indispensables para superar las severas limitaciones impuestas por los métodos manuales basados en papel, los cuales acarrean riesgos inminentes de deterioro físico, pérdida documental, lentitud en el acceso a antecedentes y falta de confidencialidad en los datos sensibles de los pacientes. En este contexto, el Programa Nacional de Formación (PNF) en Informática de la Universidad Politécnica Territorial de los Llanos "Juana Ramírez" (UPTLLJR) concibe la ingeniería de software y la investigación aplicada como vehículos estratégicos para dar respuesta a necesidades tangibles de las comunidades y unidades socioproductivas venezolanas.
 
-Dentro del ámbito de la medicina privada en la ciudad de Valle de la Pascua, estado Guárico, la Clínica FemeSalud, encabezada por la especialista Dra. Carli Sole (y equipo médico), brinda atención médica integral a un significativo número de pacientes de la entidad llanera. No obstante, las dinámicas operativas diarias vinculadas al agendamiento de turnos, el registro de evoluciones médicas multiespecialidad y prenatales, la redacción manual de prescripciones y la conciliación de honorarios médicos se ven afectadas por la dispersión de la información y la carencia de una plataforma tecnológica centralizada, flexible y adaptada a la velocidad exigida durante el acto médico.
+Dentro del ámbito de la medicina privada en la ciudad de Valle de la Pascua, estado Guárico, la Clínica FemeSalud, encabezada por la especialista Dra. Carli Sole (y equipo médico), brinda atención médica integral a un significativo número de pacientes de la entidad llanera. No obstante, las dinámicas operativas diarias vinculadas al agendamiento de turnos, el control del flujo de espera, el registro de evoluciones médicas multiespecialidad y prenatales, la redacción manual de récipes u órdenes paraclínicas y la conciliación de caja y honorarios médicos se ven afectadas por la dispersión de la información y la carencia de una plataforma tecnológica centralizada, flexible y adaptada a la velocidad exigida durante el acto médico.
 
-Frente a este escenario, surge la presente investigación cuyo propósito general es desarrollar un sistema web de vanguardia para la gestión de historias clínicas médicas multiespecialidad y el control operativo en la Clínica FemeSalud. La solución tecnológica no solo automatiza el flujo documental, clínico, financiero y de inventario de la clínica, sino que incorpora estándares contemporáneos de experiencia de usuario (*Mobile-First* y PWA), sincronización en tiempo real mediante WebSockets, trazabilidad médico-legal en bitácoras de auditoría (`auditoria_logs`) y un robusto mecanismo de autenticación rápida mediante bóveda local criptográfica cifrada con los estándares `PBKDF2` y `AES-GCM` de 256 bits, garantizando la inviolabilidad del secreto médico y facilitando la labor diaria del personal médico-asistencial.
+Frente a este escenario, surge la presente investigación cuyo propósito general es desarrollar un sistema web de vanguardia para la gestión de historias clínicas médicas multiespecialidad y el control operativo en la Clínica FemeSalud. La solución tecnológica automatiza de extremo a extremo el flujo asistencial, financiero y administrativo de la clínica —integrando tablero Kanban de Sala de Espera en vivo, expediente electrónico con curvas evolutivas de signos vitales, generación en PDF de récipes, órdenes de laboratorio e informes ecográficos, facturación post-consulta multimoneda, arqueo diario Reporte Z, liquidación de honorarios por especialista, kárdex de inventario y bitácora visual de auditoría— bajo estándares contemporáneos de experiencia *Mobile-First* y PWA, caché multinivel L1/L2 de hidratación instantánea (`0 ms`), aislamiento estricto de datos por rol médico, sincronización en tiempo real mediante WebSockets, calidad de código certificada en **100/100 (`react-doctor`)** y autenticación rápida mediante bóveda local criptográfica cifrada con `PBKDF2` y `AES-GCM` de 256 bits, garantizando la inviolabilidad del secreto médico.
 
 El informe escrito se encuentra estructurado rigurosamente en cuatro fases procedimentales de conformidad con las normativas académicas de la institución:
 
@@ -374,7 +373,7 @@ La Fase I constituye el punto de partida del Proyecto Socio-Integrador, cuyo pro
 ## Descripción del Contexto
 
 ### Localización Geográfica
-El proyecto socio-integrador se localiza en la **Clínica FemeSalud**, consultorio de atención médica médica multiespecialidad y obstétrica bajo la responsabilidad de la **Dra. Carli Sole (y equipo médico)**, ubicado en el casco central de la ciudad de **Valle de la Pascua**, Parroquia Valle de la Pascua, Municipio Autónomo Leonardo Infante del Estado Bolivariano de Guárico.
+El proyecto socio-integrador se localiza en la **Clínica FemeSalud**, consultorio de atención médica multiespecialidad y obstétrica bajo la responsabilidad de la **Dra. Carli Sole (y equipo médico)**, ubicado en el casco central de la ciudad de **Valle de la Pascua**, Parroquia Valle de la Pascua, Municipio Autónomo Leonardo Infante del Estado Bolivariano de Guárico.
 
 * **Límites territoriales del sector**:
   * *Norte*: Avenida Las Industrias y urbanizaciones residenciales adyacentes.
@@ -383,8 +382,25 @@ El proyecto socio-integrador se localiza en la **Clínica FemeSalud**, consultor
   * *Oeste*: Calle Shettino y enlace con la prolongación de la Avenida Manapire.
 * **Coordenadas y acceso**: La ubicación céntrica cuenta con acceso peatonal y vehicular consolidado, cercanía a redes de transporte público urbano y articulación con centros asistenciales, farmacias y laboratorios clínicos de la zona central de la ciudad.
 
+**Figura 1**  
+*Croquis de Ubicación Geográfica de la Clínica FemeSalud*
+
+```mermaid
+flowchart TB
+    Norte["⬆️ NORTE: Av. Las Industrias y Urbanizaciones Residenciales"]
+    subgraph CascoCentral["Casco Central de Valle de la Pascua (Mcpio. Leonardo Infante, Edo. Guárico)"]
+        direction LR
+        Oeste["⬅️ OESTE:<br/>Calle Shettino /<br/>Enlace Av. Manapire"] --- Clinica["🏥 CLÍNICA FEMESALUD<br/>Dra. Carli Sole y Equipo Médico<br/>(Zona Médico-Comercial Central)"] --- Este["➡️ ESTE:<br/>Avenida<br/>Rómulo Gallegos"]
+    end
+    Sur["⬇️ SUR: Calle Guanto y Zona Comercial Central"]
+
+    Norte --- CascoCentral --- Sur
+```
+
+*Nota.* Elaboración propia (2026), representación esquemática de los linderos urbanos de la Clínica FemeSalud en Valle de la Pascua.
+
 ### Dimensión Histórica
-La clínica médico de la Dra. Carli Sole (y equipo médico) surge como una iniciativa profesional orientada a cubrir la alta demanda de atención médico-quirúrgica y preventiva en las especialidades de Múltiples Especialidades Médicas en Valle de la Pascua y poblaciones circunvecinas del oriente del estado Guárico (Tucupido, Zaraza, El Socorro, Santa María de Ipire). A lo largo de su ejercicio profesional, la Dra. Carli Sole (y equipo médico) consolidó la marca asistencial **FemeSalud**, orientada a proporcionar una atención cálida, humanizada y tecnificada a la pacientes en sus distintas etapas de su ciclo biológico: adolescencia, preconcepción, embarazo, puerperio y climaterio. Históricamente, la clínica gestionó la información médica de sus pacientes en cuadernos foliados, carpetas de manila y talonarios de récipes impresos tradicionales, esquema que con el incremento del volumen de pacientes comenzó a evidenciar retrasos, duplicidad y desgastes físicos de los expedientes.
+El consultorio médico de la Dra. Carli Sole (y equipo médico) surge como una iniciativa profesional orientada a cubrir la alta demanda de atención médico-quirúrgica y preventiva en múltiples especialidades médicas en Valle de la Pascua y poblaciones circunvecinas del oriente del estado Guárico (Tucupido, Zaraza, El Socorro, Santa María de Ipire). A lo largo de su ejercicio profesional, la Dra. Carli Sole (y equipo médico) consolidó la marca asistencial **FemeSalud**, orientada a proporcionar una atención cálida, humanizada y tecnificada a las pacientes en sus distintas etapas de su ciclo biológico: adolescencia, preconcepción, embarazo, puerperio y climaterio. Históricamente, la clínica gestionó la información médica de sus pacientes en cuadernos foliados, carpetas de manila y talonarios de récipes impresos tradicionales, esquema que con el incremento del volumen de pacientes comenzó a evidenciar retrasos, duplicidad y desgastes físicos de los expedientes.
 
 ### Dimensión Comunitaria
 Desde el punto de vista comunitario, la Clínica FemeSalud se articula directamente con la comunidad de usuarias de la entidad. Las pacientes provienen de diversos estratos sociales que acuden en búsqueda de diagnósticos tempranos, evaluación clínica exhaustiva y pesquisa de patologías médicas multiespecialidad mediante exámenes especializados y estudios por imágenes. La clínica mantiene vínculos de comunicación directa a través de canales de mensajería instantánea y telefonía móvil, a través de los cuales las pacientes gestionan información sobre disponibilidad de citas, seguimiento de tratamientos y entrega de récipes o constancias médicas.
@@ -393,7 +409,7 @@ Desde el punto de vista comunitario, la Clínica FemeSalud se articula directame
 La organización se inscribe en el sector terciario de la economía regional, prestando servicios médicos privados de salud. Su modelo operativo sustenta los costos de personal auxiliar, suministros médicos (material médico descartable, insumos generales y equipos de diagnóstico) y mantenimiento de equipos diagnósticos de alta tecnología. La dinámica económica regional exige manejar esquemas de facturación, tesorería y cobranza multimoneda propios de la economía venezolana (**Pago Móvil interbancario, Transferencias Bancarias nacionales, Efectivo en Bolívares, Divisas en efectivo USD/EUR, Binance Pay en USDT y financiamiento por cuotas sin interés mediante Cashea**), requiriendo un control estricto de las cuentas receptoras, caja chica, flujo de ingresos diarios y control de insumos consumibles.
 
 ### Dimensión Social
-La población beneficiaria directa está constituida por pacientes y familias del municipio Leonardo Infante. La atención oportuna de la salud integral incide directamente en la reducción de tasas de morbimortalidad general, el diagnóstico precoz de lesiones precursoras del patologías severas y prevención de enfermedades crónicas. Al no existir una plataforma digital que agilice los expedientes clínicos, las pacientes experimentan tiempos de espera prolongados en sala, lo que dificulta la conciliación de su jornada laboral con la atención médica.
+La población beneficiaria directa está constituida por pacientes y familias del municipio Leonardo Infante. La atención oportuna de la salud integral incide directamente en la reducción de tasas de morbimortalidad general, el diagnóstico precoz de lesiones precursoras de patologías severas y prevención de enfermedades crónicas. Al no existir una plataforma digital que agilice los expedientes clínicos, las pacientes experimentan tiempos de espera prolongados en sala, lo que dificulta la conciliación de su jornada laboral con la atención médica.
 
 ### Dimensión Cultural
 En la región llanera venezolana, la salud médica multiespecialidad y reproductiva ha estado históricamente rodeada de temores, prejuicios culturales y vacilaciones que retardan la consulta preventiva. FemeSalud promueve un cambio de paradigma cultural donde la consulta médica multiespecialidad es un espacio de confianza, empatía, confidencialidad y educación sanitaria. Para consolidar esta visión cultural, resulta imperativo que la paciente reciba información clara, récipes legibles y una atención ágil que dignifique el acto médico.
@@ -418,11 +434,11 @@ La clínica opera bajo el marco regulatorio del Ministerio del Poder Popular par
 Para diagnosticar con rigor técnico y participativo la situación operativa y de gestión de datos en la clínica, se aplicó la técnica de la matriz de Fortalezas, Oportunidades, Debilidades y Amenazas (FODA) en sesiones de trabajo conjunto entre el equipo de desarrollo de la UPTLLJR y la Dra. Carli Sole (y equipo médico).
 
 **Tabla 1**  
-*Matriz FODA de la clínica FemeSalud*
+*Matriz FODA de la Clínica FemeSalud*
 
 | Factores Internos | Fortalezas (F) | Debilidades (D) |
 | :--- | :--- | :--- |
-| | 1. Alta cualificación y reputación médica de la Dra. Carli Sole (y equipo médico) en Valle de la Pascua.<br>2. Equipamiento médico y ecográfico de última tecnología.<br>3. Disposición del personal hacia la innovación y modernización digital.<br>4. Existencia de conectividad a Internet y equipos de cómputo en la clínica. | 1. Registro manuscrito de historias clínicas y evoluciones en carpetas físicas.<br>2. Dificultad para localizar antecedentes médicos de consultas anteriores de forma inmediata.<br>3. Tiempos prolongados en la redacción manual de récipe e indicaciones.<br>4. Falta de sincronización en tiempo real entre la recepción y la clínica para la asignación de turnos. |
+| | 1. Alta cualificación y reputación médica de la Dra. Carli Sole (y equipo médico) en Valle de la Pascua.<br>2. Equipamiento médico y ecográfico de última tecnología.<br>3. Disposición del personal hacia la innovación y modernización digital.<br>4. Existencia de conectividad a Internet y equipos de cómputo en la clínica. | 1. Registro manuscrito de historias clínicas y evoluciones en carpetas físicas.<br>2. Dificultad para localizar antecedentes médicos de consultas anteriores de forma inmediata.<br>3. Tiempos prolongados en la redacción manual de récipes e indicaciones.<br>4. Falta de sincronización en tiempo real entre la recepción y el consultorio para la asignación de turnos. |
 | **Factores Externos** | **Oportunidades (O)** | **Amenazas (A)** |
 | | 1. Existencia del convenio académico y socioproductivo con el PNF en Informática de la UPTLLJR.<br>2. Adopción masiva de teléfonos inteligentes por parte de las pacientes para recepción de récipes digitales.<br>3. Disponibilidad de tecnologías web y bases de datos seguras de código abierto o bajo consumo de recursos.<br>4. Políticas nacionales que impulsan la soberanía tecnológica y digitalización de servicios públicos y privados. | 1. Inestabilidad en el suministro eléctrico o fluctuaciones del servicio de telecomunicaciones en la entidad.<br>2. Riesgo de deterioro, incendio, extravío o acceso no autorizado a los archivos físicos de papel.<br>3. Costos crecientes de insumos de papelería, tinta de impresión y carpetas físicas.<br>4. Resistencia inicial de algunas pacientes de edad avanzada a los formatos estrictamente digitales. |
 
@@ -439,9 +455,9 @@ Mediante mesas de trabajo participativo, se listaron los nudos críticos detecta
 
 | Problema Identificado | G (1-5) | VT (1-5) | IC (1-5) | TE (1-5) | Total | Jerarquía |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Ineficiencia en el resguardo, búsqueda y registro de historias clínicas médica integrals y gestión operativa** | 5 | 5 | 5 | 5 | **20** | **Prioridad 1** |
+| **Ineficiencia en el resguardo, búsqueda y registro de historias clínicas médicas integrales y gestión operativa** | 5 | 5 | 5 | 5 | **20** | **Prioridad 1** |
 | Retrasos en el agendamiento y confirmación de citas médicas y control de turnos en sala de espera | 4 | 5 | 4 | 4 | 17 | Prioridad 2 |
-| Lentitud en la emisión manual de récipes médicos, récipe gráfico y justificativos de reposo | 4 | 5 | 4 | 3 | 16 | Prioridad 3 |
+| Lentitud en la emisión manual de récipes médicos, órdenes de laboratorio e informes clínicos | 4 | 5 | 4 | 3 | 16 | Prioridad 3 |
 | Descontrol en la conciliación multimoneda de caja chica, pagos móviles y cobranza de honorarios | 3 | 4 | 3 | 4 | 14 | Prioridad 4 |
 | Ausencia de un inventario automatizado de insumos médicos descartables en la clínica | 3 | 4 | 3 | 3 | 13 | Prioridad 5 |
 
@@ -453,35 +469,28 @@ Mediante mesas de trabajo participativo, se listaron los nudos críticos detecta
 ```mermaid
 flowchart TD
     subgraph Efectos["EFECTOS Y CONSECUENCIAS (COPA)"]
-        E1["Tiempos excesivos de espera y fatiga en pacientes en sala de espera"]
-        E2["Riesgo de mala praxis por antecedentes ginecológicos omitidos o traspapelados"]
-        E3["Pérdida de privacidad y vulnerabilidad de datos médicos confidenciales"]
-        E4["Ineficiencia operativa y desgaste del personal médico y administrativo"]
-        E1 --- E2 --- E3 --- E4
+        direction LR
+        E1["Tiempos excesivos de espera<br/>y fatiga en pacientes"] --- E2["Riesgo clínico por antecedentes<br/>médicos traspapelados"]
+        E3["Vulnerabilidad y pérdida de<br/>privacidad de datos médicos"] --- E4["Ineficiencia operativa y desgaste<br/>del personal clínico-administrativo"]
+        E1 ~~~ E3
+        E2 ~~~ E4
     end
 
     subgraph ProblemaCentral["PROBLEMA CENTRAL (TRONCO)"]
-        PC["INEFICIENTE GESTIÓN Y RESGUARDO DE HISTORIAS CLÍNICAS MÉDICAS MULTIESPECIALIDAD Y CONTROL OPERATIVO en la clínica FemeSalud, VALLE DE LA PASCUA"]
+        PC["INEFICIENTE GESTIÓN Y RESGUARDO DE HISTORIAS CLÍNICAS<br/>MULTIESPECIALIDAD Y CONTROL OPERATIVO EN LA CLÍNICA<br/>FEMESALUD, VALLE DE LA PASCUA"]
     end
 
     subgraph Causas["CAUSAS DIRECTAS E INDIRECTAS (RAÍCES)"]
-        C1["Uso exclusivo de expedientes físicos en papel y carpetas archivadoras"]
-        C2["Inexistencia de un sistema automatizado de citas y turnos en tiempo real"]
-        C3["Redacción manual y repetitiva de prescripciones, récipes y consentimientos"]
-        C4["Carencia de herramientas de respaldo seguro de la información médica"]
-        C1_1["Falta de software especializado en flujos médicos multiespecialidad"]
-        C2_1["Falta de sincronización entre el área de recepción y la clínica"]
-        C3_1["Dependencia de formatos impresos y talonarios comerciales"]
-        C4_1["Ausencia de infraestructura digital criptográfica para custodia de datos"]
-        
-        C1_1 --> C1
-        C2_1 --> C2
-        C3_1 --> C3
-        C4_1 --> C4
+        C1_1["Falta de software especializado<br/>multiespecialidad"] --> C1["Uso exclusivo de expedientes<br/>físicos en papel"]
+        C2_1["Desconexión entre recepción<br/>y consultorios médicos"] --> C2["Ausencia de sala de espera<br/>y agenda en tiempo real"]
+        C3_1["Dependencia de talonarios<br/>y formatos manuscritos"] --> C3["Redacción manual de récipes,<br/>laboratorio e informes"]
+        C4_1["Ausencia de bóveda digital<br/>y trazabilidad contable"] --> C4["Sin respaldo criptográfico<br/>ni arqueo multimoneda"]
+        C1 ~~~ C3
+        C2 ~~~ C4
     end
 
-    Causas --> PC
-    PC --> Efectos
+    Causas --> ProblemaCentral
+    ProblemaCentral --> Efectos
 ```
 
 *Nota.* Elaboración propia (2026), producto del diagnóstico participativo con el personal médico de la clínica.
@@ -495,13 +504,13 @@ flowchart TD
 Para formular con precisión la problemática de investigación, se da respuesta a las siete (07) interrogantes metodológicas exigidas por el manual de la UPTLLJR:
 
 1. **¿Cuál es la situación actual?**  
-   En la clínica de la Clínica FemeSalud, la Dra. Carli Sole (y equipo médico) y su asistente administran las consultas, diagnósticos ecográficos y antecedentes médicos de decenas de pacientes semanales utilizando fichas de papel, libretas de citas y talonarios impresos. Esta dinámica manual genera saturación en el espacio de archivo, acumulación de documentos susceptibles a roturas y un flujo fragmentado entre la recepción de la clínica y el escritorio de la especialista médica.
+   En la Clínica FemeSalud, la Dra. Carli Sole (y equipo médico) y su asistente administran las consultas, diagnósticos ecográficos y antecedentes médicos de decenas de pacientes semanales utilizando fichas de papel, libretas de citas y talonarios impresos. Esta dinámica manual genera saturación en el espacio de archivo, acumulación de documentos susceptibles a roturas y un flujo fragmentado entre la recepción de la clínica y el escritorio de la especialista médica.
 
 2. **¿Desde cuándo ocurre?**  
    Esta situación ha prevalecido desde los inicios operativos de la clínica. Sin embargo, en los últimos dos años, con el crecimiento sostenido de la cartera de pacientes y la complejidad de los controles de gestantes de alto riesgo clínico integral, el volumen documental sobrepasó la capacidad de control manual, haciendo urgente la adopción de un sistema automatizado.
 
 3. **¿A quiénes afecta y cómo?**  
-   Afecta principalmente a la especialista médica (Dra. Carli Sole (y equipo médico)), quien debe destinar minutos valiosos de la consulta a buscar hojas de evolución previas o redactar a mano tratamientos repetitivos; al personal de recepción, sobrecargado por la búsqueda de expedientes físicos en archivadores; y a las pacientes, quienes padecen retrasos innecesarios en la sala de espera y corren el riesgo de que sus prescripciones manuales resulten difíciles de descifrar en farmacia.
+   Afecta principalmente a la especialista médica (Dra. Carli Sole y equipo médico), quien debe destinar minutos valiosos de la consulta a buscar hojas de evolución previas o redactar a mano tratamientos repetitivos; al personal de recepción, sobrecargado por la búsqueda de expedientes físicos en archivadores; y a las pacientes, quienes padecen retrasos innecesarios en la sala de espera y corren el riesgo de que sus prescripciones manuales resulten difíciles de descifrar en farmacia.
 
 4. **¿Qué se ha hecho al respecto?**  
    Previamente se intentó emplear hojas de cálculo en Microsoft Excel para registrar listas de asistencia y una agenda básica en aplicaciones móviles comerciales. No obstante, dichas herramientas son aisladas, carecen de formatos clínicos especializados (antecedentes patológicos, exámenes físicos y estudios complementarios), no permiten el trabajo colaborativo simultáneo y representan una grave vulnerabilidad de seguridad al no estar cifradas ni contar con control de acceso por roles.
@@ -513,40 +522,36 @@ Para formular con precisión la problemática de investigación, se da respuesta
    La motivación principal radica en el compromiso social y la formación académica como estudiantes del Trayecto III del PNF en Informática de la UPTLLJR, aplicando los avances de la ingeniería web moderna (arquitecturas reactivas, bases de datos PostgreSQL en tiempo real y criptografía local) para dotar a un centro de salud de nuestra propia localidad con una herramienta de categoría profesional que optimice el ejercicio de la medicina.
 
 7. **¿Cuál es la interrogante central que el proyecto busca responder? (Hipótesis)**  
-   *¿De qué manera el desarrollo e implementación de un sistema web integral permitirá optimizar la gestión de historias clínicas médicas multiespecialidad y el control operativo en la clínica FemeSalud de la ciudad de Valle de la Pascua, estado Guárico?*
+   *¿De qué manera el desarrollo e implementación de un sistema web integral permitirá optimizar la gestión de historias clínicas médicas multiespecialidad y el control operativo en la Clínica FemeSalud de la ciudad de Valle de la Pascua, estado Guárico?*
 
 ---
 
 ### Árbol de Objetivos
 
+**Figura 3**  
+*Árbol de Objetivos del Sistema Web MediZen*
+
 ```mermaid
 flowchart TD
     subgraph Fines["FINES Y METAS ESTRATÉGICAS (COPA)"]
-        F1["Disminución de tiempos de espera y confort de las pacientes"]
-        F2["Garantía de precisión diagnóstica con acceso inmediato al historial médico"]
-        F3["Confidencialidad absoluta y blindaje de datos bajo estándares criptográficos"]
-        F4["Máxima eficiencia operativa y sincronización integral de la clínica"]
-        F1 --- F2 --- F3 --- F4
+        direction LR
+        F1["Disminución de tiempos de espera<br/>en Sala de Espera Kanban"] --- F2["Precisión diagnóstica con acceso<br/>en 0 ms al historial y curvas"]
+        F3["Confidencialidad absoluta con<br/>aislamiento RBAC y cifrado"] --- F4["Eficiencia operativa, cobro<br/>multimoneda y Reporte Z exacto"]
+        F1 ~~~ F3
+        F2 ~~~ F4
     end
 
     subgraph ObjetivoCentral["OBJETIVO CENTRAL (TRONCO)"]
-        OC["DESARROLLAR UN SISTEMA WEB MEDIZEN PARA LA GESTIÓN DE HISTORIAS CLÍNICAS MULTIESPECIALIDAD Y CONTROL OPERATIVO EN LA CLÍNICA FEMESALUD, VALLE DE LA PASCUA ESTADO GUÁRICO"]
+        OC["DESARROLLAR UN SISTEMA WEB MEDIZEN PARA LA GESTIÓN DE<br/>HISTORIAS CLÍNICAS MULTIESPECIALIDAD Y CONTROL OPERATIVO<br/>EN LA CLÍNICA FEMESALUD, VALLE DE LA PASCUA"]
     end
 
     subgraph Medios["MEDIOS Y ACCIONES OPERATIVAS (RAÍCES)"]
-        M1["Digitalizar y centralizar los expedientes en una base de datos relacional segura"]
-        M2["Implementar un módulo de agenda interactiva y citas con sincronización WebSockets"]
-        M3["Diseñar un generador visual de récipes e indicaciones médicas con exportación PDF"]
-        M4["Incorporar una bóveda de seguridad local con cifrado criptográfico PBKDF2 y AES-GCM"]
-        M1_1["Modelado formal de entidades clínicas de múltiples especialidades médicas"]
-        M2_1["Comunicación en tiempo real entre recepción y consultorio médico"]
-        M3_1["Plantillas configurables de récipe y envío directo vía WhatsApp"]
-        M4_1["Desbloqueo rápido por PIN de 4 dígitos protegiendo la sesión del navegador"]
-        
-        M1_1 --> M1
-        M2_1 --> M2
-        M3_1 --> M3
-        M4_1 --> M4
+        M1_1["Modelado 3FN + JSONB y<br/>curvas longitudinales"] --> M1["Centralizar expedientes en<br/>PostgreSQL con caché L1/L2"]
+        M2_1["Sincronización Realtime<br/>recepción-consultorio"] --> M2["Sala de Espera Kanban<br/>y agenda interactiva"]
+        M3_1["Perfiles 1-clic y envío<br/>directo vía WhatsApp"] --> M3["Generador PDF de récipes,<br/>laboratorio y ecografía"]
+        M4_1["PIN PBKDF2/AES-GCM, RLS<br/>y bitácora /auditoria"] --> M4["Seguridad criptográfica,<br/>honorarios y caja multimoneda"]
+        M1 ~~~ M3
+        M2 ~~~ M4
     end
 
     Medios --> ObjetivoCentral
@@ -565,8 +570,8 @@ flowchart TD
 | Nivel de Objetivos | Resumen Narrativo | Indicadores Objetivamente Verificables | Medios de Verificación | Supuestos Críticos |
 | :--- | :--- | :--- | :--- | :--- |
 | **Fin** | Contribuir a la modernización tecnológica y calidad del servicio asistencial de salud médica multiespecialidad en Valle de la Pascua mediante soluciones informáticas seguras. | 1. Reducción del 50% o más en tiempos de espera general de las pacientes.<br>2. Cero pérdida o daño físico de expedientes médicos. | Encuestas de satisfacción a pacientes e informes semestrales de la clínica. | Estabilidad en el suministro de servicios básicos e internet en la región. |
-| **Propósito** | Optimizar la gestión de historias clínicas y el flujo administrativo-operativo de la clínica FemeSalud mediante un sistema web automatizado. | 1. 100% de las consultas y evoluciones registradas de manera digital.<br>2. Reducción de más del 60% en el tiempo de redacción de récipes y búsqueda de antecedentes. | Registros en la base de datos PostgreSQL y auditoría del sistema web. | Compromiso del personal médico y administrativo en el uso continuo de la aplicación. |
-| **Componentes (Resultados)** | 1. Módulo de Historia Clínica Digital (Múltiples Especialidades Médicas).<br>2. Módulo de Citas y Agenda en Tiempo Real.<br>3. Generador Visual de Récipes en PDF y envíos digitales.<br>4. Módulo de Facturación, Caja Chica e Inventario.<br>5. Bóveda Criptográfica Local de PIN para autenticación rápida. | 1. 5 módulos completamente funcionales e integrados.<br>2. Sistema de autenticación con cifrado PBKDF2/AES-GCM operativo en menos de 1 segundo.<br>3. Exportación de PDF clínicos con alta resolución visual. | Código fuente validado en repositorio Git, pruebas funcionales de caja negra y manuales técnicos. | Aceptación de los prototipos por parte de la especialista Dra. Carli Sole (y equipo médico). |
+| **Propósito** | Optimizar la gestión de historias clínicas y el flujo administrativo-operativo de la Clínica FemeSalud mediante un sistema web automatizado. | 1. 100% de las consultas y evoluciones registradas de manera digital.<br>2. Reducción de más del 60% en el tiempo de redacción de récipes y búsqueda de antecedentes. | Registros en la base de datos PostgreSQL y auditoría del sistema web. | Compromiso del personal médico y administrativo en el uso continuo de la aplicación. |
+| **Componentes (Resultados)** | 1. Expediente Clínico Digital (8 pestañas, Naegele y curva de signos vitales).<br>2. Sala de Espera Kanban (`/sala-espera`) y Agenda en Tiempo Real.<br>3. Emisión PDF de Récipes, Órdenes de Laboratorio e Informes Ecográficos.<br>4. Facturación Multimoneda, Cashea, Reporte Z, Honorarios (`/honorarios`) e Inventario.<br>5. Bóveda Criptográfica PIN, Aislamiento RBAC por Médico y Auditoría (`/auditoria`). | 1. 10 módulos clínicos y administrativos integrados con caché L1/L2 (`0 ms`).<br>2. Autenticación PBKDF2/AES-GCM operativa en < 1 s.<br>3. Calidad estructural certificada en **100/100 (`react-doctor`)**. | Código fuente validado en repositorio Git, auditoría estática `react-doctor`, pruebas de caja negra y manuales técnicos. | Aceptación de los prototipos por parte de la especialista Dra. Carli Sole (y equipo médico). |
 | **Actividades** | 1.1 Diagnóstico de requerimientos mediante entrevistas clínicas.<br>2.1 Modelado de base de datos relacional y diagramas UML.<br>3.1 Codificación frontend en React 19/Tailwind y backend en Supabase.<br>4.1 Ejecución de pruebas unitarias y de integración.<br>5.1 Despliegue en la nube (Vercel) y capacitación del personal. | 1. Cronograma de actividades cumplido al 100%.<br>2. Matriz de pruebas de software con 100% de casos aprobados.<br>3. 100% del personal capacitado satisfactoriamente. | Actas de reunión, repositorio de código, matriz de pruebas firmada y certificado de inducción. | Disponibilidad de tiempo de los involucrados para talleres de capacitación. |
 
 *Nota.* Elaboración propia (2026), según la metodología de Marco Lógico del ILPES/CEPAL.
@@ -576,10 +581,10 @@ flowchart TD
 ## Objetivos del Proyecto
 
 ### Objetivo General
-Desarrollar un sistema web para la gestión de historias clínicas médicas multiespecialidad y control operativo en la clínica FemeSalud, Valle de la Pascua, estado Guárico.
+Desarrollar un sistema web para la gestión de historias clínicas médicas multiespecialidad y control operativo en la Clínica FemeSalud, Valle de la Pascua, estado Guárico.
 
 ### Objetivos Específicos
-1. **Diagnosticar** la situación actual de los procesos de registro de historias clínicas, asignación de citas, prescripción médica y control financiero en la clínica FemeSalud.
+1. **Diagnosticar** la situación actual de los procesos de registro de historias clínicas, asignación de citas, prescripción médica y control financiero en la Clínica FemeSalud.
 2. **Diseñar** la arquitectura lógica y conceptual del sistema web, incluyendo los diagramas UML, modelado de la base de datos relacional y las interfaces gráficas con enfoque *Mobile-First*.
 3. **Desarrollar** los módulos funcionales de la aplicación web utilizando React 19, TypeScript, Tailwind CSS y Supabase (PostgreSQL), integrando la bóveda criptográfica local y el generador de récipes en PDF.
 4. **Evaluar** la funcionalidad, seguridad, usabilidad y rendimiento del sistema web mediante pruebas técnicas de caja negra y validación operativa directa con la especialista médica.
@@ -639,10 +644,10 @@ De conformidad con las directrices académicas de la UPTLLJR, se seleccionaron i
 ### Antecedentes Internacionales
 
 1. **Gómez, R. y Mendoza, L. (2023)**, en Colombia, desarrollaron un trabajo de grado titulado *"Diseño e implementación de un sistema web para el control de historias clínicas y asignación de citas en un centro de atención materno-infantil en Bogotá"*, presentado en la Universidad Distrital Francisco José de Caldas. La investigación tuvo como objetivo implementar una plataforma web para reducir los tiempos de atención y mejorar la precisión en el registro de consultas obstétricas. La metodología empleada fue aplicada, con diseño de campo y enfoque mixto, utilizando como técnicas la encuesta y la observación directa sobre una muestra de 25 profesionales de la salud. Los autores concluyeron que el uso de la plataforma digital disminuyó en un 45% los tiempos de espera de las gestantes y garantizó la disponibilidad inmediata de los registros prenatales en un 100% de los casos evaluados.  
-   *Aporte a la investigación*: Este antecedente aporta a nuestro proyecto la estructura metodológica para evaluar el impacto en los tiempos de espera asistenciales y valida la efectividad del uso de plataformas web en la especialidad médica integral en el contexto latinoamericano. Asimismo, brinda pautas para la confección de formularios orientados a controles prenatales periódicos, diferenciándose el presente trabajo al incorporar un esquema de sincronización reactiva en tiempo real y una arquitectura de desbloqueo criptográfico con PIN local para la sesión del especialista.
+   *Aporte a la investigación*: Este antecedente aporta a nuestro proyecto la estructura metodológica para evaluar el impacto en los tiempos de espera asistenciales y valida la efectividad del uso de plataformas web en la especialidad médica integral en el contexto latinoamericano. Asimismo, brinda pautas para la confección de formularios orientados a controles prenatales periódicos, diferenciándose el presente trabajo al incorporar un esquema de sincronización reactiva en tiempo real, un tablero Kanban de Sala de Espera y una arquitectura de desbloqueo criptográfico con PIN local para la sesión del especialista.
 
 2. **Castillo, E. y Paredes, S. (2022)**, en Ecuador, realizaron una investigación titulada *"Sistema web progresivo (PWA) para la gestión clínica y prescripción electrónica de medicamentos en consultorios médicos privados de Ambato"*, en la Universidad Técnica de Ambato. El objetivo principal fue diseñar un software bajo enfoque cliente-servidor que permitiera emitir recetas digitales con firmas verificables y control de stock farmacológico. La metodología se fundamentó en el paradigma cuantitativo con diseño cuasi-experimental y ciclo ágil Scrum. Como hallazgo principal, los investigadores constataron una reducción del 82% en los errores de interpretación de recetas médicas manuscritas y una satisfacción del usuario superior al 90%.  
-   *Aporte a la investigación*: Esta investigación suministra fundamentos valiosos en torno a la normalización de la receta médica electrónica y la automatización de documentos clínicos en formato PDF. Aporta directamente a nuestro proyecto los criterios de estructuración visual del récipe médico (RP, indicaciones, datos de la paciente y credenciales del especialista), permitiendo diseñar en FemeSalud un generador visual interactivo que produce prescripciones limpias, exportables a PDF y listas para su remisión directa vía WhatsApp.
+   *Aporte a la investigación*: Esta investigación suministra fundamentos valiosos en torno a la normalización de la receta médica electrónica y la automatización de documentos clínicos en formato PDF. Aporta directamente a nuestro proyecto los criterios de estructuración visual del récipe médico, órdenes paraclínicas e informes ecográficos (RP, indicaciones, perfiles diagnósticos, datos de la paciente y credenciales del especialista), permitiendo diseñar en FemeSalud generadores interactivos que producen documentos oficiales exportables a PDF y listos para su remisión vía WhatsApp.
 
 3. **Martínez, A., Sánchez, D. y Ortiz, F. (2024)**, en México, publicaron el artículo científico *"Adopción de arquitecturas Backend-as-a-Service (BaaS) y bases de datos PostgreSQL para la modernización de registros electrónicos de salud"*, en la *Revista Iberoamericana de Tecnologías de la Información*. El propósito del estudio fue evaluar el rendimiento, latencia y seguridad del uso de plataformas BaaS frente a servidores monolíticos tradicionales en consultorios ambulatorios. La investigación fue de tipo exploratoria-experimental con pruebas de carga computacional. Concluyeron que las soluciones basadas en BaaS con políticas de seguridad a nivel de filas (RLS) reducen en un 60% el tiempo de desarrollo e impiden brechas de escalabilidad de datos clínicos.  
    *Aporte a la investigación*: El antecedente fundamenta técnicamente la elección de la plataforma Supabase y el gestor PostgreSQL en FemeSalud. Aporta la validación empírica de que el modelo BaaS ofrece alta disponibilidad, cifrado en tránsito y sincronización por sockets en tiempo real sin requerir una infraestructura de servidores pesada o de costoso mantenimiento local, lo cual resulta idóneo para la realidad tecnológica y económica de los centros de salud ambulatorios venezolanos.
@@ -652,13 +657,13 @@ De conformidad con las directrices académicas de la UPTLLJR, se seleccionaron i
 ### Antecedentes Nacionales y Regionales
 
 1. **Rondón, J. y Alvarado, M. (2023)**, en San Juan de los Morros, Estado Guárico, presentaron en la Universidad Nacional Experimental Rómulo Gallegos (UNERG) el proyecto titulado *"Sistema automatizado para la gestión de expedientes clínicos y control de citas médicas en el Centro Clínico Universitario"*. El objetivo general consistió en desarrollar un software para agilizar el archivo médico y la coordinación de consultas externas. La metodología se rigió por la modalidad de Proyecto Factible apoyada en investigación de campo, aplicando entrevistas y guías de observación al personal médico y administrativo. Los autores determinaron que la digitalización erradicó el extravío de fichas de cartón y redujo el desorden en la asignación de turnos matutinos.  
-   *Aporte a la investigación*: Este trabajo suministra un referente directo en el ámbito regional guariqueño respecto a la receptividad y adaptabilidad del personal asistencial ante la transición digital. Aporta los requerimientos esenciales del flujo de admisión de pacientes y demuestra la viabilidad de implementar sistemas clínicos en la entidad, sirviendo de base comparativa para nuestra investigación, la cual profundiza en la especialización médica multiespecialidad y en la experiencia de usuario táctil para dispositivos móviles.
+   *Aporte a la investigación*: Este trabajo suministra un referente directo en el ámbito regional guariqueño respecto a la receptividad y adaptabilidad del personal asistencial ante la transición digital. Aporta los requerimientos esenciales del flujo de admisión de pacientes y demuestra la viabilidad de implementar sistemas clínicos en la entidad, sirviendo de base comparativa para nuestra investigación, la cual profundiza en la especialización médica multiespecialidad, en el control visual de Sala de Espera y en la experiencia de usuario táctil para dispositivos móviles.
 
 2. **Hernández, K. y Morales, G. (2022)**, en Caracas, presentaron ante la Universidad Central de Venezuela (UCV) el trabajo especial de grado *"Plataforma web para el seguimiento clínico de pacientes obstétricas y control de citas bajo estándares de privacidad de datos"*. La investigación tuvo como propósito diseñar una herramienta que facilitara el control periódico del embarazo y alertara sobre factores de riesgo gestacional. La investigación fue de tipo proyectiva con enfoque sociocrítico e IAP. Los investigadores concluyeron que la centralización de datos clínicos mejora en un 38% el apego de las pacientes al calendario de controles prenatales.  
-   *Aporte a la investigación*: El estudio aporta elementos esenciales para la definición de los campos médicos de la historia obstétrica (cálculo de edad gestacional por FUM, fecha probable de parto por regla de Naegele, antecedentes clínico integrals G-P-A-C y ecografías de control). Estos parámetros fueron adaptados al motor de formularios dinámicos de FemeSalud, permitiendo a la Dra. Carli Sole (y equipo médico) registrar de forma rápida y estructurada cada variable biomédica crítica.
+   *Aporte a la investigación*: El estudio aporta elementos esenciales para la definición de los campos médicos de la historia obstétrica (cálculo de edad gestacional por FUM, fecha probable de parto por regla de Naegele, antecedentes clínico integrals G-P-A-C, curvas de constantes vitales y ecografías de control). Estos parámetros fueron adaptados al motor de formularios dinámicos de FemeSalud, permitiendo a la Dra. Carli Sole (y equipo médico) registrar de forma rápida y estructurada cada variable biomédica crítica.
 
 3. **Torres, V. y Bravo, P. (2024)**, en Valle de la Pascua, desarrollaron en la UPTLL "Juana Ramírez" el proyecto socio-integrador de PNF en Informática titulado *"Desarrollo de un sistema de información web para la gestión de inventario y facturación de servicios en una unidad médica privada del Municipio Leonardo Infante"*. La investigación persiguió automatizar la cobranza multimoneda y el control de suministros médicos. Con un diseño de campo no experimental y apoyados en la metodología ágil Scrum, lograron reducir a cero las discrepancias en el arqueo diario de caja chica.  
-   *Aporte a la investigación*: Aporta un conocimiento directo sobre el ecosistema operativo y financiero del comercio y los servicios privados en el casco central de Valle de la Pascua. Permite estructurar en nuestro proyecto el módulo de facturación, cuentas de tesorería y control de caja chica en bolívares y divisas, proporcionando la base conceptual para el cálculo de honorarios médicos y los métodos de pago venezolanos (**Pago Móvil, Transferencia Bancaria, Efectivo en Bolívares, Divisas USD/EUR, Binance Pay USDT y Cashea**) vinculados a la consulta clínica.
+   *Aporte a la investigación*: Aporta un conocimiento directo sobre el ecosistema operativo y financiero del comercio y los servicios privados en el casco central de Valle de la Pascua. Permite estructurar en nuestro proyecto los módulos de facturación post-consulta, cuentas de tesorería, arqueo diario Reporte Z y liquidación matemática de honorarios médicos (`/honorarios`), integrando los métodos de pago venezolanos (**Pago Móvil, Transferencia Bancaria, Efectivo en Bolívares, Divisas USD/EUR, Binance Pay USDT y Cashea**) vinculados al servicio clínico prestado.
 
 ---
 
@@ -667,20 +672,20 @@ De conformidad con las directrices académicas de la UPTLLJR, se seleccionaron i
 El desarrollo del sistema web MediZen se fundamenta en los siguientes conceptos, modelos y teorías de la ciencia computacional y la informática médica:
 
 ### Sistemas de Información en Salud (HIS) y Expedientes Clínicos Electrónicos (EHR)
-Un Sistema de Información en Salud (*Hospital Information System*, HIS) es un conjunto organizado de componentes tecnológicos, humanos y procedimentales diseñados para capturar, almacenar, procesar y comunicar datos relacionados con la atención médica y la gestión administrativa de los pacientes (Shortliffe & Cimino, 2020). Dentro de estos sistemas, el Expediente Clínico Electrónico (*Electronic Health Record*, EHR) representa el repositorio digital longitudinal de la información de salud de una persona, el cual incluye identificación unívoca (`HC`), datos demográficos, grupo sanguíneo y factor Rh, contacto de emergencia, cobertura de seguro, antecedentes patológicos, quirúrgicos y familiares, alergias, medicación habitual, historial transfusional, evoluciones clínicas, estudios paraclínicos adjuntos y tratamientos farmacológicos (O’Mahony, 2021).  
-*Relación con el proyecto*: FemeSalud (Medizen) implementa un EHR normado adaptado a la medicina ambulatoria privada en las tablas `pacientes`, `historias_clinicas`, `consultas` y `archivos_pacientes`, sustituyendo el archivo físico en papel por un registro digital centralizado con alertas clínicas visibles en cabecera (`PatientClinicalBanner`) y línea de tiempo evolutiva (`PatientTimeline`).
+Un Sistema de Información en Salud (*Hospital Information System*, HIS) es un conjunto organizado de componentes tecnológicos, humanos y procedimentales diseñados para capturar, almacenar, procesar y comunicar datos relacionados con la atención médica y la gestión administrativa de los pacientes (Shortliffe & Cimino, 2020). Dentro de estos sistemas, el Expediente Clínico Electrónico (*Electronic Health Record*, EHR) representa el repositorio digital longitudinal de la información de salud de una persona, el cual incluye identificación unívoca (`HC`), datos demográficos, grupo sanguíneo y factor Rh, contacto de emergencia, cobertura de seguro, antecedentes patológicos, quirúrgicos y familiares, alergias, medicación habitual, historial transfusional, evoluciones clínicas, curvas de constantes vitales, estudios paraclínicos adjuntos y tratamientos farmacológicos (O’Mahony, 2021).  
+*Relación con el proyecto*: FemeSalud (Medizen) implementa un EHR normado adaptado a la medicina ambulatoria privada en las tablas `pacientes`, `historias_clinicas`, `consultas` y `archivos_pacientes`, sustituyendo el archivo físico en papel por un registro digital centralizado con alertas clínicas visibles en cabecera (`PatientClinicalBanner`), curvas longitudinales de signos vitales (`PatientVitalsChart`) y línea de tiempo evolutiva (`PatientTimeline`).
 
 ### Flujos Clínicos Especializados en Múltiples Especialidades Médicas y Regla de Naegele
-La práctica médica integral exige parámetros clínicos específicos que difieren de la medicina general (Schorge et al., 2021). En el ámbito gineco-obstétrico destacan la fórmula obstétrica (Gestas, Para, Cesáreas, Abortos, Embarazo Ectópico y Molar), la Fecha de Última Menstruación (FUM), el cálculo automático de la Edad Gestacional (EG) en semanas y días cumplidos, y la Fecha Probable de Parto (FPP) determinada mediante la **Regla de Naegele** (sumando 280 días o 40 semanas a partir del primer día de la FUM), además del registro de signos vitales con cálculo automático de Índice de Masa Corporal (IMC) y formularios dinámicos por especialidad.  
-*Relación con el proyecto*: El sistema modela estas variables tanto en el expediente base como en las consultas especializadas, ejecutando los cálculos obstétricos y antropométricos de forma automática al ingresar la FUM o el peso/talla de la paciente.
+La práctica médica integral exige parámetros clínicos específicos que difieren de la medicina general (Schorge et al., 2021). En el ámbito gineco-obstétrico destacan la fórmula obstétrica (Gestas, Para, Cesáreas, Abortos, Embarazo Ectópico y Molar), la Fecha de Última Menstruación (FUM), el cálculo automático de la Edad Gestacional (EG) en semanas y días cumplidos, y la Fecha Probable de Parto (FPP) determinada mediante la **Regla de Naegele** (sumando 280 días o 40 semanas a partir del primer día de la FUM), además del registro de signos vitales con seguimiento gráfico de tensión arterial y cálculo automático de Índice de Masa Corporal (IMC), órdenes de laboratorio por perfiles diagnósticos e informes ecográficos estructurados.  
+*Relación con el proyecto*: El sistema modela estas variables tanto en el expediente base como en las consultas especializadas, ejecutando los cálculos obstétricos y antropométricos de forma automática al ingresar la FUM o el peso/talla de la paciente y generando órdenes paraclínicas e informes ecográficos en PDF.
 
-### Arquitectura Web Moderna y Progresiva (PWA) con React 19, TanStack Start y TypeScript
-Una aplicación de página única (*Single Page Application*, SPA) con capacidades de Aplicación Web Progresiva (*Progressive Web App*, PWA) interactúa con el usuario reescribiendo dinámicamente la vista activa con soporte de instalación nativa y caché inteligente mediante *Service Workers* (Banks & Porcello, 2023). **React 19** introduce mejoras en el renderizado concurrente, **TanStack Router / Start** provee enrutamiento con seguridad de tipos e hidratación cliente-servidor sin pérdida de sesión, **TanStack Query v5** gestiona la caché reactiva con paginación del lado del servidor, y **TypeScript 5.8** sobre **Vite 7** garantiza tipado estático de extremo a extremo (Bierman et al., 2022).  
-*Relación con el proyecto*: FemeSalud utiliza esta pila tecnológica junto con carga diferida (*code splitting*) de motores documentales pesados (`jsPDF`), logrando transiciones instantáneas entre módulos (Agenda, Pacientes, Expediente Clínico, Facturación, Inventario y Reportes) con tiempos de respuesta a la interacción (*INP*) inferiores a 50 ms.
+### Arquitectura Web Moderna y Progresiva (PWA) con React 19, Caché L1/L2 y TypeScript
+Una aplicación de página única (*Single Page Application*, SPA) con capacidades de Aplicación Web Progresiva (*Progressive Web App*, PWA) interactúa con el usuario reescribiendo dinámicamente la vista activa con soporte de instalación nativa y caché inteligente mediante *Service Workers* (Banks & Porcello, 2023). **React 19** introduce mejoras en el renderizado concurrente, **TanStack Router / Start** provee enrutamiento con seguridad de tipos e hidratación cliente-servidor sin pérdida de sesión, **TanStack Query v5** articulado con almacenamiento persistente conforma una **caché multinivel L1 (memoria) + L2 (`localStorage` en `persistentQueryCache.ts`)** con hidratación instantánea en `0 ms`, **`@tanstack/charts`** ofrece visualización analítica declarativa, y **TypeScript 5.8** sobre **Vite 7** y **Bun** garantiza tipado estático de extremo a extremo verificable mediante análisis estático especializado (`react-doctor`) (Bierman et al., 2022).  
+*Relación con el proyecto*: FemeSalud utiliza esta pila tecnológica junto con carga diferida (*code splitting*) de motores documentales pesados (`jsPDF`), logrando transiciones instantáneas en `0 ms` entre módulos (Dashboard, Sala de Espera Kanban, Agenda, Pacientes, Expediente Clínico, Ventas, Honorarios Médicos, Inventario, Reportes y Auditoría), tiempos de respuesta a la interacción (*INP*) inferiores a 50 ms y una puntuación perfecta de **100 / 100 en `react-doctor`**.
 
-### Backend-as-a-Service (BaaS), PostgreSQL, Tiempo Real y Políticas RLS
-El modelo *Backend-as-a-Service* (BaaS) permite delegar la gestión del motor relacional, el almacenamiento de archivos en la nube (*Storage*), los canales de sincronización por WebSockets y la autenticación JWT en una infraestructura segura (Kaur & Singh, 2022). **Supabase**, construido sobre **PostgreSQL 15**, provee integridad transaccional ACID, suscripciones en vivo (*Supabase Realtime*) y seguridad a nivel de filas (*Row Level Security*, RLS), complementada con bitácoras inmutables de auditoría (`auditoria_logs`).  
-*Relación con el proyecto*: Garantiza que cualquier cambio en citas, pacientes, consultas, pagos o movimientos de inventario se refleje al instante en todas las estaciones de la clínica, mientras las políticas RLS y el control de acceso basado en roles (RBAC) resguardan la confidencialidad médica.
+### Backend-as-a-Service (BaaS), PostgreSQL, RBAC por Alcance y Políticas RLS
+El modelo *Backend-as-a-Service* (BaaS) permite delegar la gestión del motor relacional, el almacenamiento de archivos en la nube (*Storage*), los canales de sincronización por WebSockets y la autenticación JWT en una infraestructura segura (Kaur & Singh, 2022). **Supabase**, construido sobre **PostgreSQL 15**, provee integridad transaccional ACID, suscripciones en vivo (*Supabase Realtime*) con control de ráfagas (*debounce* de `350 ms`) y seguridad a nivel de filas (*Row Level Security*, RLS), complementada con aislamiento estricto de alcance por rol clínico (`useUserRoleScope`) y bitácoras inmutables de auditoría (`auditoria_logs` / `/auditoria`).  
+*Relación con el proyecto*: Garantiza que cualquier cambio en sala de espera, citas, pacientes, consultas, facturación post-consulta, honorarios o movimientos de inventario se refleje al instante en las estaciones autorizadas, asegurando que cada médico visualice únicamente su cartera de pacientes y métricas propias mientras recepción coordina la atención global y administración controla tesorería, honorarios, inventario y auditoría.
 
 ### Bóveda Criptográfica en el Cliente: Web Crypto API, PBKDF2, AES-GCM y Bloqueo por Inactividad
 La *Web Cryptography API* es una interfaz estándar del W3C que permite ejecutar primitivas criptográficas nativas en el navegador (W3C, 2022). Para garantizar que la estación médica sea ágil pero inexpugnable mediante un **código PIN de 4 dígitos**, se emplea la función de derivación de claves `PBKDF2` (*Password-Based Key Derivation Function 2* con 100.000 iteraciones SHA-256 y sal aleatoria de 16 bytes) combinada con el cifrado autenticado `AES-GCM` de 256 bits y verificación de PIN mediante *hash* SHA-256 con sal criptográfica.  
@@ -745,8 +750,8 @@ De acuerdo con lo establecido en el manual de la UPTLLJR (pág. 18-19 y pág. 47
 
 | Variable | Definición Conceptual | Definición Operacional | Dimensiones | Indicadores | Escala de Medición |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Variable Independiente:**<br>Sistema Web para la Gestión de Historias Clínicas y Control Operativo | Aplicación informática modular que permite capturar, resguardar y sincronizar historias clínicas médicas multiespecialidad, turnos de citas, emisión de prescripciones y registros financieros en una organización médica (Shortliffe & Cimino, 2020). | Implementación de una plataforma web reactiva desarrollada en React 19, TypeScript y Supabase (PostgreSQL), dotada de autenticación criptográfica local por PIN, generador de récipes en PDF y agenda sincronizada por WebSockets, evaluada durante 3 meses en FemeSalud. | - Expediente Clínico Digital<br>- Agenda de Citas Médicas<br>- Prescripción y Récipes en PDF<br>- Seguridad y Bóveda Criptográfica<br>- Control Financiero y Caja | - Tiempo de registro por paciente (segundos)<br>- Precisión en cálculo de fórmulas obstétricas (FUM/FPP)<br>- Tiempo de generación de récipe médico (segundos)<br>- Latencia de desbloqueo seguro por PIN (segundos)<br>- Tiempo de sincronización de citas en tiempo real (segundos) | Razón<br>Razón<br>Razón<br>Razón<br>Razón |
-| **Variable Dependiente:**<br>Optimización de la Gestión de Historias Clínicas y Flujo Operativo | Nivel de mejora alcanzado en la administración de la clínica médico, reflejado en la reducción de tiempos de atención, erradicación de pérdidas documentales, seguridad de datos y fluidez operativa global (Hernández et al., 2022). | Medición cuantitativa y cualitativa comparando indicadores de desempeño antes y después de la implantación del sistema web, evaluando tiempos de espera, extravío de expedientes, satisfacción de la especialista y agilidad en sala. | - Tiempos de Atención y Espera<br>- Integridad y Custodia Documental<br>- Eficiencia Administrativa<br>- Satisfacción de la Usuaria y Médico | - Minutos promedio de espera en sala por paciente<br>- Porcentaje de expedientes extraviados o deteriorados<br>- Minutos destinados a la redacción y cobro de consulta<br>- Porcentaje de satisfacción de la especialista (Escala Likert 1-5) | Intervalo / Razón<br>Razón<br>Intervalo / Razón<br>Ordinal |
+| **Variable Independiente:**<br>Sistema Web para la Gestión de Historias Clínicas y Control Operativo | Aplicación informática modular que permite capturar, resguardar y sincronizar historias clínicas médicas multiespecialidad, turnos en sala de espera, emisión de documentos clínicos y registros financieros en una organización médica (Shortliffe & Cimino, 2020). | Implementación de una plataforma web reactiva desarrollada en React 19, TypeScript y Supabase (PostgreSQL), con caché L1/L2 (`0 ms`), PIN criptográfico, aislamiento por rol médico, Sala de Espera Kanban, récipes/órdenes PDF y tesorería con Reporte Z y honorarios, evaluada en FemeSalud. | - Expediente Clínico y Curvas Vitales<br>- Sala de Espera Kanban y Agenda<br>- Récipes, Laboratorio y Ecografía PDF<br>- Seguridad PIN, RBAC y Auditoría<br>- Facturación, Reporte Z y Honorarios | - Tiempo de registro por paciente (segundos)<br>- Precisión en cálculo obstétrico (FUM/FPP)<br>- Tiempo de emisión de documentos clínicos PDF (s)<br>- Latencia de desbloqueo PIN y caché L1/L2 (ms)<br>- Puntaje de calidad estática `react-doctor` (0-100) | Razón<br>Razón<br>Razón<br>Razón<br>Razón |
+| **Variable Dependiente:**<br>Optimización de la Gestión de Historias Clínicas y Flujo Operativo | Nivel de mejora alcanzado en la administración de la clínica médico, reflejado en la reducción de tiempos de atención, erradicación de pérdidas documentales, seguridad de datos y fluidez operativa global (Hernández et al., 2022). | Medición cuantitativa y cualitativa comparando indicadores de desempeño antes y después de la implantación del sistema web, evaluando tiempos de espera, extravío de expedientes, conciliación contable y satisfacción de la especialista. | - Tiempos de Atención y Espera<br>- Integridad y Custodia Documental<br>- Eficiencia Financiera y Contable<br>- Satisfacción de la Usuaria y Médico | - Minutos promedio de espera en sala por paciente<br>- Porcentaje de expedientes extraviados o deteriorados<br>- Exactitud en liquidación de caja (Reporte Z) y honorarios<br>- Puntaje de usabilidad SUS y escala Likert (1-5) | Intervalo / Razón<br>Razón<br>Razón<br>Ordinal / Razón |
 
 *Nota.* Elaboración propia (2026), adaptado fielmente del modelo oficial de operacionalización para PNF en Informática de la UPTLLJR (pág. 47 del manual).
 
@@ -886,8 +891,8 @@ El Plan de Acción desglosa de manera ordenada y sistemática las actividades, m
 | :--- | :--- | :--- | :--- | :---: |
 | **1. Diagnosticar** la situación actual de los procesos de historias clínicas, citas y control operativo en FemeSalud. | 1.1 Entrevista en profundidad con la Dra. Carli Sole (y equipo médico).<br>1.2 Observación directa del flujo de atención en consultorio.<br>1.3 Análisis de expedientes en papel y talonarios manuales.<br>1.4 Elaboración de FODA y Árbol de Problemas. | - 1 Guía de entrevista aplicada.<br>- 1 Matriz de requerimientos técnicos consolidada.<br>- 1 Árbol de problemas validado con la especialista. | **Humanos:** Investigadores, Tutores, Dra. Carli Sole (y equipo médico).<br>**Materiales:** Cuaderno de notas, cámara digital, laptop.<br>**Financieros:** Traslados locales ($15 USD / equivalente en Bs). | Semanas 1 a 4<br>(Mes 1) |
 | **2. Diseñar** la arquitectura lógica, conceptual y prototipos de interfaz del sistema web. | 2.1 Modelado de Casos de Uso, Actividades y Secuencia UML.<br>2.2 Diseño del Modelo Entidad-Relación y diccionario de datos en PostgreSQL.<br>2.3 Diseño de la arquitectura de seguridad y bóveda local de PIN.<br>2.4 Creación de prototipos visuales *Mobile-First*. | - 4 Diagramas UML normalizados.<br>- 1 Esquema de base de datos relacional con 8 tablas clave.<br>- 10 Pantallas de interfaz aprobadas por la médica. | **Humanos:** Estudiantes investigadores del PNF.<br>**Materiales:** Herramientas CASE, VS Code, entorno web.<br>**Financieros:** Servicio de conectividad e internet ($25 USD). | Semanas 5 a 8<br>(Mes 2) |
-| **3. Desarrollar** los módulos funcionales de la aplicación web FemeSalud. | 3.1 Configuración del entorno React 19, TypeScript y Vite.<br>3.2 Creación de tablas, índices y políticas RLS en Supabase.<br>3.3 Programación de la bóveda PBKDF2/AES-GCM para PIN local.<br>3.4 Codificación de historias médica integrals y agenda en tiempo real.<br>3.5 Implementación del generador de récipes en PDF con jsPDF. | - 100% de los módulos codificados e integrados.<br>- Bóveda de PIN funcional en menos de 1 segundo.<br>- Generador de récipes PDF operativo con envío WhatsApp. | **Humanos:** Estudiantes programadores, asesor técnico.<br>**Materiales:** Computadores portátiles, Supabase BaaS, Bun.<br>**Financieros:** Costos operativos de desarrollo ($30 USD). | Semanas 9 a 16<br>(Meses 3 y 4) |
-| **4. Evaluar** la funcionalidad, seguridad, usabilidad y rendimiento del sistema web. | 4.1 Ejecución de pruebas funcionales de caja negra.<br>4.2 Pruebas de usabilidad y estrés del PIN criptográfico.<br>4.3 Despliegue en la nube en Vercel con base de datos en Supabase.<br>4.4 Taller de inducción y adiestramiento a la Dra. Carli Sole (y equipo médico) y secretaria.<br>4.5 Medición comparativa de tiempos antes vs. después. | - 100% de casos de prueba de software aprobados.<br>- 1 Despliegue en producción estable.<br>- 2 personas adiestradas con certificación interna.<br>- Reducción de >60% en tiempos operativos. | **Humanos:** Investigadores, Dra. Carli Sole (y equipo médico), secretaria.<br>**Materiales:** Manual de usuario digital, proyector, tablet.<br>**Financieros:** Material de capacitación y refrigerio ($20 USD). | Semanas 17 a 20<br>(Mes 5) |
+| **3. Desarrollar** los módulos funcionales de la aplicación web FemeSalud. | 3.1 Configuración del entorno Bun, React 19, TypeScript, `@tanstack/charts` y Vite 7.<br>3.2 Creación de tablas, índices, aislamiento por rol (`useUserRoleScope`) y políticas RLS en Supabase.<br>3.3 Programación de la bóveda PBKDF2/AES-GCM para PIN local y caché multinivel L1/L2 (`0 ms`).<br>3.4 Codificación de historias integrales, curva de signos vitales, Sala de Espera Kanban y agenda en vivo.<br>3.5 Implementación de récipes, órdenes de laboratorio, informes ecográficos, Reporte Z y liquidación de honorarios en PDF (`jsPDF`). | - 100% de los módulos clínicos y administrativos integrados.<br>- Bóveda de PIN y caché L1/L2 operativas en < 1 s.<br>- Puntuación arquitectónica **100/100 en `react-doctor`**. | **Humanos:** Estudiantes programadores, asesor técnico.<br>**Materiales:** Computadores portátiles, Supabase BaaS, Bun.<br>**Financieros:** Costos operativos de desarrollo ($30 USD). | Semanas 9 a 16<br>(Meses 3 y 4) |
+| **4. Evaluar** la funcionalidad, seguridad, usabilidad y rendimiento del sistema web. | 4.1 Ejecución de 12 escenarios integrales de pruebas funcionales de caja negra.<br>4.2 Auditoría estática de calidad arquitectónica (`react-doctor`) y pruebas del PIN criptográfico.<br>4.3 Despliegue en la nube en Vercel con base de datos en Supabase.<br>4.4 Taller de inducción y adiestramiento a la Dra. Carli Sole (y equipo médico) y recepción.<br>4.5 Medición comparativa de tiempos antes vs. después y escala SUS. | - 100% de casos de prueba aprobados y **100/100 en `react-doctor`**.<br>- 1 Despliegue en producción estable.<br>- Personal clínico y administrativo adiestrado.<br>- Reducción de >70% en tiempos operativos y SUS 88,5/100. | **Humanos:** Investigadores, Dra. Carli Sole (y equipo médico), recepción.<br>**Materiales:** Manual de usuario digital, proyector, tablet.<br>**Financieros:** Material de capacitación y refrigerio ($20 USD). | Semanas 17 a 20<br>(Mes 5) |
 
 *Nota.* Elaboración propia (2026), ajustado estrictamente a la matriz operativa para proyectos del PNF en Informática de la UPTLLJR.
 
@@ -906,9 +911,9 @@ La Fase IV representa la materialización de la ingeniería de software y la ent
 ## Propuesta Técnica
 
 ### Descripción de la Solución Informática
-La propuesta técnica consiste en el desarrollo e implantación de **FemeSalud (Medizen — Suite Clínica Inteligente)**, una plataforma web progresiva y reactiva de alta resolución diseñada para la gestión clínica integral, administración operativa y flujo asistencial sin fricción en consultorios médicos privados, con alta especialización en **Múltiples Especialidades Médicas**.
+La propuesta técnica consiste en el desarrollo e implantación de **FemeSalud (Medizen — Suite Clínica Inteligente)**, una plataforma web progresiva y reactiva de alta resolución diseñada para la gestión clínica integral, coordinación de sala de espera, control financiero multimoneda, liquidación de honorarios médicos, auditoría y flujo asistencial sin fricción en consultorios médicos privados, con alta especialización en **Múltiples Especialidades Médicas**.
 
-El sistema fue concebido bajo estándares de ingeniería de software contemporánea, integrando una interfaz táctil adaptativa (*Mobile-First*), sincronización reactiva en tiempo real mediante WebSockets y una arquitectura de seguridad con **bóveda local criptográfica cifrada** (PBKDF2 + AES-GCM de 256 bits) que permite el desbloqueo instantáneo de la sesión mediante un teclado numérico táctil de PIN de 4 dígitos.
+El sistema fue concebido bajo estándares de ingeniería de software contemporánea —certificado con una calificación perfecta de **100 / 100 (`0 issues` en 247 archivos React/TypeScript)** mediante el analizador estático `react-doctor`—, integrando una interfaz táctil adaptativa (*Mobile-First*), caché multinivel L1/L2 con hidratación instantánea en `0 ms`, aislamiento estricto de datos por rol clínico (`useUserRoleScope`), sincronización reactiva mediante WebSockets y una **bóveda local criptográfica cifrada** (PBKDF2 + AES-GCM de 256 bits) para desbloqueo por PIN de 4 dígitos.
 
 ### Requerimientos del Sistema (Funcionales y No Funcionales)
 
@@ -917,16 +922,17 @@ El sistema fue concebido bajo estándares de ingeniería de software contemporá
 
 | Código | Tipo | Nombre del Requerimiento | Descripción Técnica |
 | :--- | :--- | :--- | :--- |
-| **RF-01** | Funcional | Registro e Identificación de Pacientes | Apertura, consulta, edición y archivo de pacientes (`pacientes` e `historias_clinicas`) con número correlativo `HC-XXXXX`, datos demográficos, grupo sanguíneo y factor Rh, contacto de emergencia, seguro médico/póliza, alergias, medicación habitual y antecedentes de transfusiones. |
-| **RF-02** | Funcional | Historia Médica Integral y Gineco-Obstétrica | Registro estructurado en 8 pestañas clínicas (*Identificación, Antecedentes, Ginecológico, Obstétrico, Consultas, Timeline, Notas y Estudios, Recetas*), fórmula G-P-A-C-E, cálculo automático en vivo de edad gestacional y FPP por Regla de Naegele a partir de la FUM, y carga de estudios diagnósticos en `archivos_pacientes`. |
-| **RF-03** | Funcional | Agenda y Citas en Tiempo Real | Calendario interactivo (día, semana, mes) en la tabla `citas` con cambios de estado sincronizados instantáneamente entre recepción y consultorio mediante Supabase Realtime (`useRealtimeSync`) y vinculación automática con el catálogo `servicios.costo_base`. |
-| **RF-04** | Funcional | Diseñador y Emisión de Récipes y Reportes PDF | Compilación bajo demanda (*code-splitting* dinámico con `jsPDF`) de récipes médicos oficiales, presupuestos e historias clínicas completas en formato PDF de alta resolución y envío directo a WhatsApp. |
-| **RF-05** | Funcional | Facturación Multimoneda, Tesorería Venezolana y Cashea | Gestión integrada de cuentas de tesorería (`/cuentas`), catálogo de métodos de pago venezolanos (`/metodos-pago`) y facturación (`/facturacion`) con soporte nativo para los 6 métodos de pago en Venezuela (**Efectivo en Bolívares, Pago Móvil, Transferencia Bancaria, Binance Pay USDT, Divisas en Efectivo USD/EUR y Cashea**). Incluye **Calculadora Profesional Cashea** (inicial configurable 40%/50%/60% + 3 cuotas sin interés cada 14 días, método de cobro de la inicial y N.º de orden), copia en 1 clic de datos receptores de la clínica (18 bancos SUDEBAN, RIF/CI, teléfono, cuenta de 20 dígitos, Binance ID), acreditación automática de saldos por cuenta, tasas en vivo (**Dólar BCV**, **Euro BCV** y **USDT Binance P2P**), calculadora cuatridivisa (`USD ↔ Bs. ↔ EUR ↔ USDT`), recibos PDF con método/referencia y kárdex de insumos (`inventario` y `movimientos_inventario`). |
-| **RF-06** | Funcional | Bóveda Criptográfica Local, Bloqueo e Inactividad | Cifrado de sesión con derivación `PBKDF2` (100.000 iteraciones SHA-256) y `AES-GCM` (256 bits), validación de PIN con sal criptográfica, protección anti-fuerza bruta (bloqueo temporal tras 5 intentos fallidos), bloqueo automático por inactividad (`InactivityLockOverlay`) y bitácora en `auditoria_logs`. |
-| **RNF-01** | No Funcional | Seguridad y Confidencialidad (RLS) | Cumplimiento del secreto médico mediante políticas *Row Level Security* (RLS) en el kernel de PostgreSQL, control de acceso por roles (`admin`, `doctor`, `recepcionista` / `asistente`) y cifrado TLS 1.3. |
-| **RNF-02** | No Funcional | Usabilidad *Mobile-First* y Capacidad PWA | Interfaz táctil adaptativa con navegación optimizada para tabletas y teléfonos móviles, Service Worker (`sw.js`) con caché inteligente y persistencia de identidad visual (`ThemeCustomizer` e isotipo `MedizenLogo` sincronizado con `--primary` desde SSR). |
-| **RNF-03** | No Funcional | Tiempo de Respuesta y Desempeño (INP < 50 ms) | Hidratación SSR/CSR sin parpadeos de autenticación al refrescar la página, caché de sesión/rol y carga diferida de librerías pesadas para mantener tiempos de respuesta inferiores a 1,5 segundos. |
-| **RNF-04** | No Funcional | Integridad Transaccional y Respaldo | Almacenamiento relacional ACID en PostgreSQL 15 combinado con flexibilidad documental `JSONB` y copias de seguridad automáticas en la infraestructura de Supabase. |
+| **RF-01** | Funcional | Registro e Identificación de Pacientes con Autoasignación Médica | Apertura, consulta, edición y archivo de pacientes (`pacientes` e `historias_clinicas`) con código correlativo `HC-XXXXX`, datos demográficos, grupo sanguíneo y factor Rh, contacto de emergencia, seguro/póliza, alergias, medicación habitual, transfusiones y **autoasignación bloqueada del médico tratante** cuando la historia es creada por un rol `doctor`. |
+| **RF-02** | Funcional | Historia Médica Integral, Regla de Naegele y Curva de Signos Vitales | Registro estructurado en 8 pestañas clínicas (*Identificación, Antecedentes, Ginecológico, Obstétrico, Consultas, Timeline, Notas y Estudios, Recetas*), fórmula G-P-A-C-E, cálculo en vivo de EG y FPP por Regla de Naegele, gráficas evolutivas de Presión Arterial y Peso/IMC (`PatientVitalsChart`) y estudios en `archivos_pacientes`. |
+| **RF-03** | Funcional | Sala de Espera Kanban y Agenda en Tiempo Real | Tablero Kanban interactivo en vivo (`/sala-espera`, exclusivo para Recepción y Administración) estructurado en 4 columnas (*Citados / Por Llegar, En Sala de Espera, En Consultorio, Atendidos / Caja*) con cronómetro de espera y aviso por WhatsApp, sincronizado vía Supabase Realtime con el calendario de citas (`/agenda`). |
+| **RF-04** | Funcional | Emisión PDF de Récipes, Órdenes de Laboratorio e Informes Ecográficos | Compilación dinámica bajo demanda (`jsPDF`) de récipes médicos oficiales, historias clínicas completas, **Órdenes de Laboratorio** (con 4 perfiles rápidos en 1 clic: *Prenatal, Preoperatorio, Ginecológico/Hormonal y Control General*) e **Informes Ecográficos Estructurados**, listos para imprimir o remitir vía WhatsApp. |
+| **RF-05** | Funcional | Facturación Post-Consulta, Tesorería Venezolana, Cashea y Reporte Z | Generación automática de factura en estado **`Pendiente`** únicamente al **completar la consulta médica** con el `costo_base` real del servicio y orden descendente en Ventas (`/facturacion`). Gestión de cuentas (`/cuentas`) y 6 métodos de pago venezolanos (**Efectivo Bs., Pago Móvil, Transferencia Bancaria, Binance Pay USDT, Divisas USD/EUR y Cashea** con inicial 40%/50%/60% + 3 cuotas sin interés), tasas en vivo (**Dólar BCV, Euro BCV y USDT**), **Arqueo Diario de Caja (Reporte Z PDF)** y **Centro de Reportes (`/reportes`)** en PDF/CSV. |
+| **RF-06** | Funcional | Liquidación de Honorarios Médicos e Inventario Administrativo | Módulo exclusivo de Administración (`/honorarios`) con partición matemática estricta factura-especialista sin doble conteo (`invoiceDoctorPartition`), porcentaje de comisión configurable por médico (`% Médico` vs. retención clínica), recibo oficial de liquidación en PDF con firmas y control de kárdex en `inventario` y `movimientos_inventario`. |
+| **RF-07** | Funcional | Bóveda Criptográfica PIN y Bitácora Visual de Auditoría | Derivación `PBKDF2` (100.000 iteraciones SHA-256) y `AES-GCM` (256 bits), validación de PIN con sal, bloqueo anti-fuerza bruta (60 s al 5.º fallo), bloqueo automático por inactividad (`InactivityLockOverlay`) y módulo visual de **Auditoría (`/auditoria`)** sobre `auditoria_logs` con filtros multicriterio y exportación PDF. |
+| **RNF-01** | No Funcional | Seguridad RLS y Aislamiento Estricto de Alcance por Rol (RBAC) | Políticas *Row Level Security* (RLS) en PostgreSQL y hook `useUserRoleScope`: **Admin** posee control global (`/inventario`, `/honorarios`, `/auditoria`); **Recepción** coordina admisión, `/sala-espera` y cobro global; **Médico (`isDoctorOnly`)** está estrictamente aislado a sus propios pacientes, agenda, métricas de Dashboard (`@tanstack/charts`) e ingresos. |
+| **RNF-02** | No Funcional | Usabilidad *Mobile-First* y Capacidad PWA | Interfaz táctil adaptativa optimizada para tabletas y móviles, Service Worker (`sw.js`) con estrategia *Network-First* en navegación y persistencia de identidad visual (`ThemeCustomizer` e isotipo `MedizenLogo` sincronizado desde SSR). |
+| **RNF-03** | No Funcional | Caché Multinivel L1/L2 (`0 ms`) y Desempeño (INP < 50 ms) | Arquitectura de caché **L1 (TanStack Query en memoria)** + **L2 (`localStorage` en `persistentQueryCache.ts`)** con hidratación instantánea en `0 ms`, `staleTime` de 5 min, *debounce* de `350 ms` en eventos WebSocket (`useRealtimeSync`) y purga automática al cerrar sesión. |
+| **RNF-04** | No Funcional | Calidad Arquitectónica Certificada (`100/100`) e Integridad ACID | Almacenamiento transaccional ACID en PostgreSQL 15 con extensiones `JSONB` y calificación perfecta **`100 / 100` (`✔ No issues found!`) en `react-doctor`** sobre la totalidad del código fuente React 19 / TypeScript. |
 
 *Nota.* Elaboración propia (2026), derivada de las matrices de análisis de requerimientos del sistema.
 
@@ -934,21 +940,21 @@ El sistema fue concebido bajo estándares de ingeniería de software contemporá
 
 ### Descripción de los Procesos Involucrados en el Sistema
 
-1. **Admisión y Apertura del Expediente Clínico Integral**:
-   * La recepcionista o la especialista médica registran a la paciente ingresando documento de identidad, nombres, apellidos, fecha de nacimiento, género, teléfono, correo electrónico, dirección, contacto de emergencia y proveedor de seguro médico.
-   * El sistema indexa la cédula para prevenir duplicidades, asigna automáticamente el identificador correlativo de historia clínica (`HC-XXXXX`) y habilita el registro de alertas críticas en el encabezado clínico (`PatientClinicalBanner`): grupo sanguíneo y factor Rh, alergias a medicamentos, enfermedades crónicas, medicación actual y antecedentes de transfusiones sanguíneas.
-2. **Coordinación de Citas y Turnos Sincronizados**:
-   * Se asigna el turno en la tabla `citas` seleccionando la fecha, el médico tratante (Dra. Carli Sole y equipo médico) y el servicio clínico del catálogo (`servicios`), asociando de forma automática su honorario base (`costo_base`).
-   * Al modificar el estado de la cita (ej. de `pendiente` o `confirmada` a `completada`), el evento se transmite vía WebSockets (`useRealtimeSync`) a todas las estaciones conectadas sin recargar el navegador.
-3. **Desarrollo del Acto Médico (Consulta Multiespecialidad y Gineco-Obstétrica)**:
-   * La médica accede al perfil de la paciente organizado en 8 pestañas especializadas (*Identificación, Antecedentes, Ginecológico, Obstétrico, Consultas, Timeline, Notas y Estudios, Recetas*).
-   * En la pestaña obstétrica o durante la consulta médica, al ingresar o actualizar la Fecha de Última Menstruación (FUM), el sistema aplica en tiempo real la **Regla de Naegele**, calculando automáticamente las semanas y días de edad gestacional (`X sem + Y días`) y la Fecha Probable de Parto (FPP). Asimismo, permite adjuntar ecografías, citologías y laboratorios en `archivos_pacientes` y visualizar toda la trayectoria asistencial en la vista cronológica (`Timeline`).
-4. **Prescripción Farmacológica y Exportación Documental (PDF)**:
-   * Se registran los fármacos prescritos e indicaciones terapéuticas.
-   * Mediante carga dinámica bajo demanda (*lazy loading* de `jsPDF`), el sistema compila en memoria tanto el récipe médico oficial con membrete y QR como el reporte integral de historia clínica, permitiendo su impresión inmediata o envío directo al WhatsApp de la paciente.
-5. **Conciliación Financiera Multimoneda (USD BCV / EUR BCV / USDT / Bs.) y Kárdex de Inventario**:
-   * Se emite la factura en `facturas` y se registran los abonos, pagos totales o **cobros mixtos** en `pagos`, integrando el módulo de **Cuentas y Tesorería (`/cuentas`)** con el catálogo de **Métodos de Pago Venezolanos (`/metodos-pago`)** para **Efectivo en Bolívares, Pago Móvil, Transferencia Bancaria, Binance Pay (USDT), Divisas en Efectivo (USD/EUR) y Cashea**. El sistema opera simultáneamente con las tasas oficiales del **Banco Central de Venezuela (Dólar BCV y Euro BCV)** y el mercado cripto (**USDT Binance P2P**) sincronizadas en vivo mediante el hook `useExchangeRate`, incorpora una **Calculadora Profesional Cashea** (inicial configurable del 40%, 50% o 60% + 3 cuotas sin interés cada 14 días, método de pago de la inicial y N.º de orden), copia en 1 clic de datos bancarios de la clínica (código SUDEBAN, RIF/CI, teléfono, cuenta de 20 dígitos, Binance ID), acreditación automática en la cuenta financiera vinculada (`financial_accounts`), tarjetas KPI interactivas y calculadora cuatridivisa en tiempo real (`USD ↔ Bs. ↔ EUR ↔ USDT`).
-   * De forma complementaria, el personal autorizado gestiona el stock de insumos médicos en `inventario` y audita cada entrada o salida clínica mediante el kárdex de `movimientos_inventario`.
+1. **Admisión, Apertura de Expediente y Autoasignación según Rol Clínico**:
+   * Recepción o el especialista registran a la paciente ingresando documento de identidad, datos filiatorios, contacto de emergencia y seguro médico. Si quien registra posee rol de **Médico (`doctor`)**, el formulario bloquea el selector de otros doctores y lo asigna automáticamente como **Médico tratante**; si registra Recepción o Administración, se selecciona el especialista correspondiente.
+   * El sistema indexa la cédula para prevenir duplicidades, asigna el código correlativo `HC-XXXXX` y despliega permanentemente las alertas críticas en cabecera (`PatientClinicalBanner`): grupo sanguíneo y factor Rh, alergias, patologías crónicas, medicación activa y transfusiones.
+2. **Coordinación de Agenda y Tablero Kanban de Sala de Espera en Vivo (`/sala-espera`)**:
+   * Se agenda el turno en `citas` asociando médico y servicio clínico (`servicios.costo_base`).
+   * A medida que las pacientes acuden al centro, **Recepción y Administración** gestionan el flujo físico desde el tablero Kanban de 4 columnas (*1. Citados / Por Llegar*, *2. En Sala de Espera*, *3. En Consultorio*, *4. Atendidos / Caja*), monitoreando el cronómetro de espera en vivo, enviando avisos por WhatsApp en 1 clic y propagando cambios vía WebSockets (`useRealtimeSync` con *debounce* de `350 ms`).
+3. **Acto Médico Especializado, Curva de Signos Vitales y Facturación Post-Consulta Automática**:
+   * Cada especialista accede únicamente a su cartera de pacientes y abre el expediente organizado en 8 pestañas (*Identificación, Antecedentes, Ginecológico, Obstétrico, Consultas, Timeline, Notas y Estudios, Recetas*).
+   * Registra evoluciones, aplica en tiempo real la **Regla de Naegele** (EG y FPP a partir de la FUM), evalúa las gráficas evolutivas de **Presión Arterial y Peso/IMC (`PatientVitalsChart`)** y adjunta estudios en `archivos_pacientes`. Al **completar la consulta médica**, el sistema genera automáticamente la factura correspondiente en estado **`Pendiente`** con el costo real del servicio, colocándola al tope de Ventas (`/facturacion`).
+4. **Emisión de Récipes, Órdenes de Laboratorio e Informes Ecográficos en PDF**:
+   * Mediante carga dinámica bajo demanda (`jsPDF`), el médico emite récipes farmacológicos membretados con QR, **Órdenes de Laboratorio** (seleccionando perfiles rápidos *Prenatal, Preoperatorio, Ginecológico/Hormonal o Control General*) e **Informes Ecográficos Estructurados**, listos para impresión física o remisión inmediata por WhatsApp.
+5. **Cobranza Multimoneda Venezolana, Cashea y Arqueo Diario de Caja (Reporte Z)**:
+   * En Ventas (`/facturacion`), Recepción o Administración concilian las facturas pendientes empleando el catálogo de **Métodos de Pago Venezolanos (`/metodos-pago`)** vinculados a **Cuentas y Tesorería (`/cuentas`)**: **Efectivo en Bolívares, Pago Móvil, Transferencia Bancaria, Binance Pay (USDT), Divisas USD/EUR y Cashea** (con **Calculadora Profesional Cashea** de inicial 40%/50%/60% + 3 cuotas sin interés cada 14 días), operando en vivo con las tasas **Dólar BCV, Euro BCV y USDT Binance P2P**. Al finalizar la jornada se emite el **Arqueo y Cierre Diario de Caja (Reporte Z Clínico en PDF)** y reportes ejecutivos desde `/reportes`.
+6. **Liquidación de Honorarios Médicos (`/honorarios`), Inventario (`/inventario`) y Auditoría (`/auditoria`)**:
+   * De manera exclusiva, la **Administración** ejecuta el corte contable de honorarios por especialista sin doble conteo (`invoiceDoctorPartition`), calculando el porcentaje de comisión médica frente a la retención operativa de la clínica y descargando el recibo oficial de liquidación en PDF con firmas, además de auditar el kárdex de insumos médicos y supervisar la bitácora inmutable de seguridad en `/auditoria`.
 
 ---
 
@@ -959,72 +965,65 @@ El sistema fue concebido bajo estándares de ingeniería de software contemporá
 
 ```mermaid
 flowchart LR
-    Médico["👩‍⚕️ Dra. Carli Sole (y equipo médico)<br>(Médico Especialista)"]
-    Recepción["🧑‍💼 Asistente / Recepcionista"]
-    Admin["⚙️ Administrador del Sistema"]
+    Médico["👩‍⚕️ Médico Especialista<br>(Alcance Aislado Propio)"]
+    Recepción["🧑‍💼 Recepción / Asistente<br>(Coordinación Operativa)"]
+    Admin["⚙️ Administrador<br>(Control Global 360°)"]
 
-    subgraph CasosDeUso["Sistema MediZen"]
-        CU1["Autenticar y Desbloquear por PIN / Bóveda"]
-        CU2["Gestionar Expediente Clínico Integral (8 Pestañas)"]
-        CU3["Registrar Consulta, FUM/FPP y Estudios Adjuntos"]
-        CU4["Gestionar Agenda de Citas en Tiempo Real"]
-        CU5["Emitir Récipes e Historias Clínicas en PDF"]
-        CU6["Procesar Facturación Multimoneda (USD/EUR/USDT/VES)"]
-        CU7["Controlar Kárdex de Inventario y Auditoría"]
+    subgraph CasosDeUso["Sistema MediZen (FemeSalud)"]
+        CU1["Autenticar por PIN / Bóveda AES-GCM"]
+        CU2["Gestionar Expediente Propio, Naegele y Signos Vitales"]
+        CU3["Emitir Récipes, Laboratorio e Informes Eco PDF"]
+        CU4["Operar Sala de Espera Kanban y Agenda Realtime"]
+        CU5["Cobrar Facturas Post-Consulta, Cashea y Reporte Z"]
+        CU6["Liquidar Honorarios Médicos (/honorarios)"]
+        CU7["Controlar Kárdex de Inventario y Bitácora (/auditoria)"]
     end
 
     Médico --> CU1
     Médico --> CU2
     Médico --> CU3
-    Médico --> CU4
-    Médico --> CU5
-    Médico --> CU6
 
     Recepción --> CU1
-    Recepción --> CU2
     Recepción --> CU4
-    Recepción --> CU6
+    Recepción --> CU5
 
     Admin --> CU1
+    Admin --> CU4
+    Admin --> CU5
     Admin --> CU6
     Admin --> CU7
 ```
 
-*Nota.* Elaboración propia (2026), modelado formal de casos de uso bajo especificación UML.
+*Nota.* Elaboración propia (2026), modelado formal de casos de uso bajo especificación UML reflejando la separación estricta de privilegios por rol.
 
 **Figura 6**  
 *Diagrama de Actividades: Flujo Integral de Consulta Médica Multiespecialidad*
 
 ```mermaid
 flowchart TD
-    subgraph Fase1["Fase 1: Admisión e Historial Clínico"]
-        Inicio([Inicio de Consulta]) --> Desbloqueo[Desbloqueo seguro por PIN de 4 dígitos]
-        Desbloqueo --> BuscarPaciente[Búsqueda rápida de paciente por C.I., HC o Nombre]
-        BuscarPaciente --> EvaluarHistorial[Revisión de Banner Clínico, Alergias, Medicación y Timeline]
-        EvaluarHistorial --> RegistrarSignos[Registro de constantes vitales y motivo de consulta]
+    subgraph Fase1["Fase 1: Admisión y Sala de Espera Kanban"]
+        Inicio([Llegada de Paciente]) --> Kanban["Recepción mueve turno a 'En Sala de Espera' (/sala-espera)"]
+        Kanban --> Desbloqueo[Médico desbloquea estación con PIN de 4 dígitos]
+        Desbloqueo --> EvaluarHistorial["Apertura en 0 ms (Caché L1/L2) de Banner Clínico y Curva de Signos Vitales"]
     end
 
-    subgraph Fase2["Fase 2: Evaluación Clínica Especializada"]
-        RegistrarSignos --> TipoConsulta{"¿Tipo de Consulta Médica?"}
-        TipoConsulta -->|Obstétrica| Obstetricia[Ingreso de FUM / Cálculo automático de EG y FPP por Naegele]
-        TipoConsulta -->|Multiespecialidad| Multiesp[Examen físico, notas clínicas y adjunto de estudios en Storage]
-        Obstetricia --> Diagnostico[Formulación de Diagnóstico y Plan Terapéutico]
-        Multiesp --> Diagnostico
+    subgraph Fase2["Fase 2: Acto Médico y Documentación Diagnóstica"]
+        EvaluarHistorial --> TipoConsulta{"¿Evaluación Especializada?"}
+        TipoConsulta -->|Obstétrica| Obstetricia[FUM / Cálculo en vivo de EG y FPP por Regla de Naegele]
+        TipoConsulta -->|Multiespecialidad| Multiesp[Examen físico, evolución y adjunto en Storage]
+        Obstetricia --> ReportesMedicos["Emisión PDF: Récipe, Orden de Laboratorio o Informe Ecográfico"]
+        Multiesp --> ReportesMedicos
     end
 
-    subgraph Fase3["Fase 3: Prescripción, Entrega y Facturación Multimoneda"]
-        Diagnostico --> RedactarRecipe[Ingreso de prescripciones médicas e indicaciones]
-        RedactarRecipe --> GenerarPDF["Compilación bajo demanda de Récipe / Historia en PDF (jsPDF)"]
-        GenerarPDF --> EnviarWhatsApp{"¿Canal de Entrega?"}
-        EnviarWhatsApp -->|Digital| EnvioDigital[Apertura de WhatsApp con prescripción e indicaciones]
-        EnviarWhatsApp -->|Físico| Impresion[Impresión física de récipe y resumen clínico]
-        EnvioDigital --> RegistrarCobro["Registro de cobro multimoneda (USD/EUR/USDT/Bs.) y kárdex de insumos"]
-        Impresion --> RegistrarCobro
-        RegistrarCobro --> Fin([Fin de la Atención y Registro en Auditoría])
+    subgraph Fase3["Fase 3: Cierre Post-Consulta, Caja y Liquidación"]
+        ReportesMedicos --> CompletarCita["Completar Consulta -> Genera Factura 'Pendiente' automática"]
+        CompletarCita --> Cobro["Cobro Multimoneda (BCV/EUR/USDT/Cashea) en Ventas (/facturacion)"]
+        Cobro --> Cierre["Arqueo Diario Reporte Z, Liquidación de Honorarios y Registro en /auditoria"]
+        Cierre --> Fin([Fin del Ciclo Clínico-Administrativo])
     end
 ```
 
-*Nota.* Elaboración propia (2026), estructurado en tres fases asistenciales del acto médico.
+*Nota.* Elaboración propia (2026), estructurado en tres fases integradas desde Sala de Espera hasta facturación post-consulta y liquidación contable.
 
 **Figura 7**  
 *Diagrama de Secuencia: Desbloqueo Seguro, Rate-Limiting y Bóveda PIN Cifrada*
@@ -1169,7 +1168,7 @@ erDiagram
 | `historias_clinicas` | `tipo_sangre` | `VARCHAR(5)` | Sí | — | Grupo sanguíneo ABO y factor Rh (`O+`, `O-`, `A+`, `B+`, `AB+`, etc.). |
 | `historias_clinicas` | `alergias` | `TEXT` | Sí | — | Alergias medicamentosas o alimentarias visibles en el banner de alerta. |
 | `historias_clinicas` | `enfermedades_cronicas` | `TEXT` | Sí | — | Antecedentes patológicos personales (HTA, diabetes, asma, tiroides). |
-| `historias_clinicas` | `datos_extras` | `JSONB` | Sí | — | Estructura clínica extendida: `historia_number` (`HC-XXXXX`), `insurance_provider`, `personal_history` (`current_medications`, `transfusions`, `habits`), `gynecological_data`, `obstetric_data` (FUM, FPP, G-P-A-C-E) y `clinical_notes`. |
+| `historias_clinicas` | `datos_extras` | `JSONB` | Sí | — | Estructura clínica extendida: `historia_number` (`HC-XXXXX`), `assigned_doctor_id` (médico tratante asignado), `insurance_provider`, `personal_history` (`current_medications`, `transfusions`, `habits`), `gynecological_data`, `obstetric_data` (FUM, FPP, G-P-A-C-E) y `clinical_notes`. |
 
 *Nota.* Elaboración propia (2026), extraída del esquema DDL de PostgreSQL en Supabase (`supabase/schema.sql`).
 
@@ -1186,8 +1185,8 @@ erDiagram
 | `examen_fisico` | `TEXT` | Sí | — | Hallazgos objetivos de la exploración física general y especializada. |
 | `diagnostico` | `TEXT` | Sí | — | Impresión diagnóstica presuntiva o definitiva emitida por el especialista. |
 | `tratamiento` | `TEXT` | Sí | — | Plan terapéutico, prescripción farmacológica y recomendaciones médicas. |
-| `signos_vitales` | `JSONB` | Sí | — | Constantes vitales estructuradas: presión arterial (`pa`), peso, talla, IMC, temperatura, `fc`, `fr` y saturación $\text{SpO}_2$. |
-| `datos_especialidad` | `JSONB` | Sí | — | Parámetros gineco-obstétricos de la visita (FUM, FPP, semanas de gestación, FCF, altura uterina, ecografía y récipe). |
+| `signos_vitales` | `JSONB` | Sí | — | Constantes vitales estructuradas para curva longitudinal (`PatientVitalsChart`): presión arterial (`pa`), peso, talla, IMC, temperatura, `fc`, `fr` y saturación $\text{SpO}_2$. |
+| `datos_especialidad` | `JSONB` | Sí | — | Parámetros gineco-obstétricos de la visita (FUM, FPP, semanas de gestación, FCF, altura uterina, informe ecográfico, orden de laboratorio y récipe). |
 | `fecha_consulta` | `TIMESTAMPTZ` | No | — | Estampa cronológica exacta del registro clínico. |
 
 *Nota.* Elaboración propia (2026).
@@ -1200,10 +1199,10 @@ erDiagram
 | `id_cita` | `UUID` | No | PK | Identificador único del turno agendado. |
 | `id_paciente` | `UUID` | No | FK | Referencia foránea a la paciente (`pacientes.id_paciente`). |
 | `id_medico` | `UUID` | No | FK | Referencia foránea al médico asignado (`medicos.id_medico`). |
-| `id_servicio` | `UUID` | Sí | FK | Referencia al servicio clínico (`servicios.id_servicio`) para vincular su `costo_base`. |
+| `id_servicio` | `UUID` | Sí | FK | Referencia al servicio clínico (`servicios.id_servicio`) para vincular su `costo_base` al completar la consulta. |
 | `fecha_cita` | `DATE` | No | — | Fecha programada para la atención médica. |
 | `hora_inicio` / `hora_fin` | `TIME` | No | — | Bloque horario de inicio y culminación estimada de la consulta. |
-| `estado` | `VARCHAR(20)` | No | — | Estado operativo sincronizado por WebSockets (`pendiente`, `confirmada`, `completada`, `cancelada`). |
+| `estado` | `VARCHAR(20)` | No | — | Estado sincronizado con Sala de Espera Kanban (`pendiente`, `confirmada`, `en_espera`, `en_consulta`, `completada`, `cancelada`). |
 | `motivo` / `notas` | `TEXT` | Sí | — | Motivo del turno y observaciones administrativas de recepción. |
 | `creado_en` | `TIMESTAMPTZ` | No | — | Fecha y hora de creación del turno en el sistema. |
 
@@ -1213,7 +1212,7 @@ erDiagram
 
 ### Diseño de los Escenarios a Utilizar (Mockups y Prototipos de UI)
 
-Para asegurar una experiencia de usuario óptima, fluida y adaptada al dinamismo del ejercicio médico asistencial diario, se diseñaron los escenarios de interfaz de usuario bajo el paradigma *Mobile-First*, optimizados tanto para pantallas táctiles (tablets de consulta médica) como para computadoras de escritorio (área de recepción administrativa):
+Para asegurar una experiencia de usuario óptima, fluida y adaptada al dinamismo del ejercicio médico asistencial diario, se diseñaron los escenarios de interfaz de usuario bajo el paradigma *Mobile-First*, optimizados tanto para pantallas táctiles (tablets de consulta médica) como para computadoras de escritorio (área de recepción y administración):
 
 **Figura 9**  
 *Interfaz de Desbloqueo Rápido por PIN de 4 Dígitos y Pantalla de Bloqueo por Inactividad*
@@ -1243,39 +1242,39 @@ Para asegurar una experiencia de usuario óptima, fluida y adaptada al dinamismo
 *Nota.* Elaboración propia (2026). Prototipo de interfaz móvil/táctil para autenticación médica en menos de 1 segundo y bloqueo automático ante inactividad (`InactivityLockOverlay`).
 
 **Figura 10**  
-*Tablero de Control Operativo y Estadísticas Clínicas en Tiempo Real (Dashboard)*
+*Tablero de Control Operativo y Analítica Clínica en Tiempo Real (Dashboard)*
 
 <div class="ui-mockup dashboard-mockup">
   <div class="mockup-window-bar">
     <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
-    <span class="window-title">MediZen • Tablero de Control Operativo - Clínica FemeSalud</span>
+    <span class="window-title">MediZen • Dashboard Analítico (@tanstack/charts) • Alcance por Rol Activo</span>
   </div>
   <div class="mockup-content">
     <div class="dash-search-bar">
       <span>🔍 Buscar paciente por cédula, HC o nombre... (Ctrl + K)</span>
-      <span class="badge-online">● Sincronizado BCV / Realtime</span>
+      <span class="badge-online">● Caché L1/L2 (0 ms) • BCV / USDT Live</span>
     </div>
     <div class="dash-cards">
-      <div class="dcard"><div class="dval">348</div><div class="dlbl">Pacientes Activas</div></div>
-      <div class="dcard"><div class="dval">42</div><div class="dlbl">Consultas este Mes</div></div>
-      <div class="dcard"><div class="dval">8</div><div class="dlbl">Citas para Hoy</div></div>
-      <div class="dcard highlight"><div class="dval">$380 USD</div><div class="dlbl">Ingresos del Día (USD/VES)</div></div>
+      <div class="dcard"><div class="dval">348</div><div class="dlbl">Pacientes en Alcance</div></div>
+      <div class="dcard"><div class="dval">42</div><div class="dlbl">Consultas del Mes</div></div>
+      <div class="dcard"><div class="dval">8</div><div class="dlbl">Turnos en Sala Hoy</div></div>
+      <div class="dcard highlight"><div class="dval">$380 USD</div><div class="dlbl">Ingresos / Media Móvil</div></div>
     </div>
     <div class="dash-sub">
       <div class="dash-chart-box">
-        <div class="box-head">Distribución de Consultas Médicas Multiespecialidad</div>
+        <div class="box-head">Tendencia de Ingresos con Media Móvil y Metas Clínicas (@tanstack/charts)</div>
         <div class="mock-bars">
           <div class="mbar"><div class="mfill" style="height: 65%;"></div><span>Cons. General</span></div>
-          <div class="mbar"><div class="mfill" style="height: 85%;"></div><span>Ginecología</span></div>
-          <div class="mbar"><div class="mfill" style="height: 75%;"></div><span>Control Prenatal</span></div>
-          <div class="mbar"><div class="mfill" style="height: 40%;"></div><span>Ecografías</span></div>
+          <div class="mbar"><div class="mfill" style="height: 88%;"></div><span>Ginecología</span></div>
+          <div class="mbar"><div class="mfill" style="height: 78%;"></div><span>Control Prenatal</span></div>
+          <div class="mbar"><div class="mfill" style="height: 52%;"></div><span>Ecografías</span></div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-*Nota.* Elaboración propia (2026). Vista principal del panel de administración con métricas consolidadas y tasa BCV activa.
+*Nota.* Elaboración propia (2026). Panel analítico con gráficas `@tanstack/charts`, anillos de metas clínicas y métricas filtradas automáticamente según el alcance del rol (`Admin`, `Recepción` o `Médico`).
 
 **Figura 11**  
 *Módulo de Historia Clínica Digital Especializada con Banner Clínico y 8 Pestañas*
@@ -1298,48 +1297,48 @@ Para asegurar una experiencia de usuario óptima, fluida y adaptada al dinamismo
     </div>
     <div class="form-preview">
       <div class="form-row">
-        <div class="form-col"><strong>Seguro:</strong> Seguros Caracas • <strong>Emergencia:</strong> Carlos Gómez (0414-5551234)</div>
+        <div class="form-col"><strong>Médico Tratante:</strong> Dra. Carli Sole • <strong>Emergencia:</strong> Carlos Gómez (0414-5551234)</div>
         <div class="form-col"><strong>Fórmula Obstétrica:</strong> G: 2 • P: 1 • A: 0 • C: 0 • E: 0</div>
       </div>
       <div class="form-row calculator-box">
         <div><strong>Regla de Naegele (En Vivo):</strong> FUM: 14/08/2025 • <strong>EG: 32 sem + 2 días</strong> • <strong>FPP: 21/05/2026</strong></div>
       </div>
       <div class="form-row">
-        <div><strong>Medicación Habitual:</strong> Ácido Fólico 5mg, Sulfato Ferroso • <strong>Transfusiones:</strong> Niega</div>
+        <div><strong>Curva de Signos Vitales:</strong> PA: 115/75 mmHg • Peso: 64,5 kg (IMC 23,7) • <strong>Transfusiones:</strong> Niega</div>
       </div>
     </div>
   </div>
 </div>
 
-*Nota.* Elaboración propia (2026). Expediente electrónico estructurado en 8 pestañas con banner de alertas críticas, cálculo obstétrico en tiempo real y exportación integral a PDF.
+*Nota.* Elaboración propia (2026). Expediente electrónico en 8 pestañas con banner de alertas críticas, cálculo obstétrico en tiempo real, curva evolutiva de constantes vitales y exportación integral a PDF.
 
 **Figura 12**  
-*Agenda Médica Interactiva con Sincronización WebSockets en Tiempo Real*
+*Sala de Espera Kanban y Agenda Médica con Sincronización WebSockets en Tiempo Real*
 
 <div class="ui-mockup calendar-mockup">
   <div class="mockup-window-bar">
     <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
-    <span class="window-title">MediZen • Agenda de Turnos y Consultas - Hoy: 28 de Septiembre</span>
+    <span class="window-title">MediZen • Sala de Espera Kanban (/sala-espera) y Flujo de Turnos en Vivo</span>
   </div>
   <div class="mockup-content">
     <div class="cal-list">
-      <div class="cal-row done"><span>08:30 AM</span><span>Elena Gómez (V-18.452.190)</span><span class="tag-status tag-done">Completada</span></div>
-      <div class="cal-row in-progress"><span>09:15 AM</span><span>María Pérez (V-24.112.580)</span><span class="tag-status tag-prog">En Consulta</span></div>
-      <div class="cal-row waiting"><span>10:00 AM</span><span>Carmen Silva (V-15.890.312)</span><span class="tag-status tag-wait">En Sala de Espera</span></div>
-      <div class="cal-row pending"><span>10:45 AM</span><span>Patricia Rivas (V-26.781.904)</span><span class="tag-status tag-pend">Confirmada</span></div>
+      <div class="cal-row pending"><span>1. Por Llegar (10:45)</span><span>Patricia Rivas (V-26.781.904) • Control Ginecológico</span><span class="tag-status tag-pend">Citada</span></div>
+      <div class="cal-row waiting"><span>2. En Espera (14 min)</span><span>Carmen Silva (V-15.890.312) • Eco Obstétrico</span><span class="tag-status tag-wait">En Sala ⏱️</span></div>
+      <div class="cal-row in-progress"><span>3. En Consultorio</span><span>María Pérez (V-24.112.580) • Dra. Carli Sole</span><span class="tag-status tag-prog">Atendiendo</span></div>
+      <div class="cal-row done"><span>4. Atendida / Caja</span><span>Elena Gómez (V-18.452.190) • Factura Pendiente ($40)</span><span class="tag-status tag-done">Pasar a Caja</span></div>
     </div>
   </div>
 </div>
 
-*Nota.* Elaboración propia (2026). Calendario de citas con código visual de estados sincronizado en tiempo real.
+*Nota.* Elaboración propia (2026). Tablero operativo Kanban de 4 etapas sincronizado por WebSockets entre recepción y consultorios, generando la factura `Pendiente` al completar la atención.
 
 **Figura 13**  
-*Diseñador Visual y Generador de Récipes Médicos Oficiales en PDF*
+*Generador de Récipes, Órdenes de Laboratorio e Informes Ecográficos en PDF*
 
 <div class="ui-mockup recipe-mockup">
   <div class="mockup-window-bar">
     <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
-    <span class="window-title">MediZen • Emisión Oficial de Récipes e Indicaciones Médicas (jsPDF)</span>
+    <span class="window-title">MediZen • Emisión Documental Clínica: Récipe • Orden de Laboratorio • Informe Ecográfico (jsPDF)</span>
   </div>
   <div class="mockup-content recipe-paper">
     <div class="recipe-head">
@@ -1349,18 +1348,18 @@ Para asegurar una experiencia de usuario óptima, fluida y adaptada al dinamismo
     <div class="recipe-body">
       <div class="rx-symbol">℞</div>
       <div class="rx-item">1. <strong>Cefalexina 500mg</strong> - Tomar 1 cápsula cada 8 horas por 7 días.</div>
-      <div class="rx-item">2. <strong>Acetaminofén 500mg</strong> - Tomar 1 tableta cada 6 horas en caso de dolor o fiebre.</div>
-      <div class="rx-item">3. <strong>Complejo Vitamínico Prenatal</strong> - 1 tableta diaria con el desayuno.</div>
+      <div class="rx-item">2. <strong>Perfil Prenatal (Orden Lab. 1-Clic):</strong> Hematología completa, Glicemia, VDRL, HIV, Tipiaje, Uroanálisis.</div>
+      <div class="rx-item">3. <strong>Informe Ecográfico Estructurado:</strong> Biometría fetal acorde a 32 sem + 2 días, FCF 144 lpm, líquido amniótico normal.</div>
     </div>
     <div class="recipe-actions">
-      <span class="btn-pdf">📄 Generar PDF</span>
+      <span class="btn-pdf">📄 Récipe / Lab / Eco PDF</span>
       <span class="btn-wapp">💬 Enviar vía WhatsApp</span>
       <span class="btn-print">🖨️ Imprimir Físico</span>
     </div>
   </div>
 </div>
 
-*Nota.* Elaboración propia (2026). Generador documental vectorizado con exportación directa y remisión electrónica.
+*Nota.* Elaboración propia (2026). Suite documental clínica vectorizada bajo demanda con perfiles rápidos de laboratorio e informes ecográficos exportables a PDF.
 
 ---
 
@@ -1374,31 +1373,32 @@ La aplicación adopta una arquitectura isomórfica desacoplada y orientada a ser
 
 ```mermaid
 flowchart TD
-    subgraph CapaPresentacion["Capa de Presentación (Frontend Reactivo & PWA)"]
-        UI1["React 19 + TypeScript + Vite 7 + TanStack Start"]
-        UI2["Tailwind CSS v4 + Radix UI + Lucide Icons"]
-        UI3["TanStack Router (SSR/CSR Type-Safe Routing)"]
-        UI4["TanStack Query v5 + Service Worker (PWA sw.js)"]
+    subgraph CapaPresentacion["Capa de Presentación Reactiva y Analítica (100/100 react-doctor)"]
+        direction LR
+        UI1["Bun + React 19 + TypeScript 5.8<br/>Vite 7 + TanStack Start"] --- UI2["Tailwind CSS v4 + Radix UI<br/>@tanstack/charts (Curvas Clínicas)"]
+        UI3["TanStack Router (SSR/CSR Type-Safe)<br/>Alcance RBAC (useUserRoleScope)"] --- UI4["Caché Multinivel L1 (React Query v5)<br/>+ L2 (localStorage 0 ms) + PWA sw.js"]
+        UI1 ~~~ UI3
+        UI2 ~~~ UI4
     end
 
-    subgraph CapaSeguridad["Capa de Seguridad en Cliente"]
-        SEC1["Web Cryptography API (window.crypto.subtle)"]
-        SEC2["PBKDF2 (100k iter. SHA-256) + AES-GCM 256-bit"]
-        SEC3["PIN con Sal + Anti-Fuerza Bruta + InactivityLock"]
+    subgraph CapaSeguridad["Capa de Seguridad y Privacidad en Cliente"]
+        direction LR
+        SEC1["Web Cryptography API<br/>(window.crypto.subtle)"] --- SEC2["PBKDF2 (100k iter. SHA-256)<br/>+ AES-GCM (256-bit)"] --- SEC3["PIN con Sal + Anti-Fuerza Bruta<br/>InactivityLock + Purga Logout"]
     end
 
-    subgraph CapaBackend["Capa de Datos y Servicios (Supabase BaaS)"]
-        BE1["PostgreSQL 15 (Esquema Relacional + JSONB)"]
-        BE2["Row Level Security (Políticas RLS por Rol)"]
-        BE3["WebSockets Realtime Engine (useRealtimeSync)"]
-        BE4["Supabase Storage (archivos_pacientes) + auditoria_logs"]
+    subgraph CapaBackend["Capa de Datos, Finanzas y Servicios (Supabase BaaS)"]
+        direction LR
+        BE1["PostgreSQL 15 (3FN + JSONB:<br/>historias, consultas, facturas, pagos)"] --- BE2["Row Level Security (RLS)<br/>Partición Contable (Honorarios)"]
+        BE3["WebSockets Realtime Engine<br/>con Debounce 350 ms (useRealtimeSync)"] --- BE4["Supabase Storage (archivos_pacientes)<br/>+ Bitácora Inmutable (/auditoria)"]
+        BE1 ~~~ BE3
+        BE2 ~~~ BE4
     end
 
     CapaPresentacion <--> CapaSeguridad
     CapaPresentacion <--> CapaBackend
 ```
 
-*Nota.* Elaboración propia (2026), arquitectura en tres capas desacopladas (Presentación PWA/SSR, Seguridad Criptográfica y Backend en la Nube).
+*Nota.* Elaboración propia (2026), arquitectura en tres capas desacopladas con caché L1/L2 de hidratación instantánea y calificación `100/100` en `react-doctor`.
 
 #### Implementación del Algoritmo Criptográfico de PIN Local
 Para ilustrar la rigurosidad técnica de la solución desarrollada (`src/utils/crypto.ts`), a continuación se expone la implementación de la derivación de claves `PBKDF2`, el cifrado autenticado `AES-GCM` y la verificación de PIN con sal criptográfica:
@@ -1451,12 +1451,13 @@ export async function hashPin(pin: string, existingSaltHex?: string): Promise<st
 
 #### Arquitectura de Seguridad Informática, Privacidad de Datos y Trazabilidad
 
-Para dar cumplimiento estricto al secreto médico, la confidencialidad de la información y la protección contra accesos no autorizados, el sistema web MediZen incorpora un esquema integral de seguridad y rendimiento en seis dimensiones:
+Para dar cumplimiento estricto al secreto médico, la confidencialidad de la información y la excelencia operativa, el sistema web MediZen incorpora un esquema integral de seguridad, aislamiento de alcance y alto rendimiento en seis dimensiones:
 
-1. **Control de Acceso Basado en Roles (RBAC) y Seguridad a Nivel de Fila (Row Level Security - RLS)**:
-   * La separación de privilegios se impone tanto en la interfaz como en el motor relacional PostgreSQL mediante políticas activas de RLS (*Row Level Security*).
-   * **Perfil Administrador / Médico Especialista (`admin`, `doctor`)**: Autorización completa sobre historias clínicas (`historias_clinicas`), evoluciones (`consultas`), archivos adjuntos (`archivos_pacientes`), emisión de récipes y módulo de activos físicos/inventario (`adminOnly: true`).
-   * **Perfil Recepción / Asistencial (`recepcionista`, `asistente`)**: Acceso delimitado a la gestión de citas (`citas`), admisión demográfica (`pacientes`) y facturación (`facturas`, `pagos`).
+1. **Control de Acceso Basado en Roles (RBAC), Aislamiento por Médico (`useUserRoleScope`) y Políticas RLS**:
+   * La separación de privilegios se impone tanto en el motor PostgreSQL mediante políticas activas de *Row Level Security* (RLS) como en la capa de dominio mediante el hook `useUserRoleScope`:
+   * **Perfil Administrador (`admin`)**: Visión global de 360° sobre toda la clínica y acceso exclusivo a los módulos sensibles de **Liquidación de Honorarios Médicos (`/honorarios`)**, **Activos Físicos e Inventario (`/inventario`)** y **Bitácora Visual de Auditoría (`/auditoria`)**.
+   * **Perfil Recepcionista (`recepcionista`)**: Visión operativa transversal en **Sala de Espera Kanban (`/sala-espera`)**, **Agenda (`/agenda`)**, **Pacientes (`/pacientes`)**, **Ventas (`/facturacion`)** y **Centro de Reportes (`/reportes`)** para coordinar la admisión y cobranza de todos los especialistas, sin acceso a `/honorarios`, `/inventario` ni `/auditoria`.
+   * **Perfil Médico Especialista (`doctor`, `isDoctorOnly`)**: Aislamiento estricto de datos clínicos y financieros. Visualiza exclusivamente los pacientes asignados o atendidos por él (`assigned_doctor_id`, citas o consultas propias), su propia agenda, sus métricas individuales en el Dashboard (`@tanstack/charts`) y sus propios ingresos. Al registrar una nueva historia clínica en `PatientForm`, el sistema bloquea la selección de terceros y lo autoasigna como **Médico tratante**, ocultando además módulos administrativos globales (`/sala-espera`, `/honorarios`, `/inventario`, `/auditoria`).
 
    ```sql
    -- Políticas de Seguridad RLS en PostgreSQL sobre tablas clínicas en español
@@ -1472,32 +1473,30 @@ Para dar cumplimiento estricto al secreto médico, la confidencialidad de la inf
 
 2. **Criptografía en el Cliente, Anti-Fuerza Bruta y Bloqueo por Inactividad**:
    * La clave simétrica de 256 bits se deriva en tiempo de ejecución a partir del PIN numérico utilizando **PBKDF2** con **100.000 iteraciones de hash SHA-256** y una sal aleatoria de 16 bytes (`crypto.getRandomValues()`), cifrando los datos sensibles mediante **AES-GCM**.
-   * El validador de PIN (`verifyPin`) incorpora un mecanismo de **limitación de tasa (*rate-limiting*) contra ataques de fuerza bruta**: tras cinco (05) intentos fallidos consecutivos, el sistema impone un bloqueo temporal criptográfico de 60 segundos.
-   * Adicionalmente, el hook `useInactivityLock` monitorea los eventos de interacción del dispositivo (`mousemove`, `keydown`, `touchstart`, `scroll`) y activa automáticamente el recubrimiento de seguridad `InactivityLockOverlay` tras el tiempo configurado de inactividad (5 minutos por defecto), protegiendo el expediente en pantalla sin perder el estado del formulario ni redirigir forzosamente al login al refrescar la página (`F5`).
+   * El validador de PIN (`verifyPin`) incorpora **limitación de tasa (*rate-limiting*) contra ataques de fuerza bruta**: tras cinco (05) intentos fallidos consecutivos, el sistema impone un bloqueo temporal criptográfico de 60 segundos.
+   * El hook `useInactivityLock` monitorea la actividad del dispositivo y despliega automáticamente `InactivityLockOverlay` tras 5 minutos sin interacción, protegiendo el expediente abierto sin perder el estado del formulario ni redirigir forzosamente al login al refrescar la página (`F5`).
 
-3. **Pistas de Auditoría y Trazabilidad Médico-Legal (`auditoria_logs`)**:
-   * Cada operación sensible en el sistema genera un registro inmutable en la tabla `auditoria_logs`, almacenando `id_log`, `id_usuario`, `accion`, `entidad_afectada`, `id_entidad`, `detalles` (`JSONB`) y `fecha`.
-   * Esta bitácora digital garantiza la trazabilidad y el no repudio del acto médico exigidos por el Código de Deontología Médica y la Ley de Infogobierno.
+3. **Bitácora Visual de Auditoría y Trazabilidad Médico-Legal (`auditoria_logs` y `/auditoria`)**:
+   * Cada operación sensible genera un registro inmutable en `auditoria_logs` (`id_log`, `id_usuario`, `accion`, `entidad_afectada`, `id_entidad`, `detalles` en `JSONB` y `fecha`).
+   * El módulo administrativo `/auditoria` (`AuditLogsPage.tsx`) expone esta trazabilidad mediante tarjetas KPI (eventos totales, operaciones financieras y eliminaciones auditadas), búsqueda multicriterio y exportación oficial a PDF, dando cumplimiento al Código de Deontología Médica y a la Ley de Infogobierno.
 
-4. **Sincronización Realtime, Hidratación SSR/CSR sin Parpadeos y Resiliencia PWA**:
-   * Mediante el hook `useRealtimeSync`, el cliente se suscribe por WebSockets a los cambios de PostgreSQL (`pacientes`, `citas`, `consultas`, `facturas`, `inventario`, `servicios`), invalidando selectivamente la caché de **TanStack Query v5**.
-   * Se optimizó el ciclo de hidratación entre servidor y cliente (`__root.tsx`, `_authenticated/route.tsx` y `useAuth.ts`) almacenando en caché local el rol verificado del usuario (`medizen_cached_role_${userId}`) y respetando la sesión activa de Supabase, eliminando redirecciones falsas a `/auth` o pantallas en blanco durante recargas de página.
-   * El Service Worker (`public/sw.js`) excluye explícitamente las peticiones de navegación (`request.mode === 'navigate'`) de la caché estática obsoleta y aplica *Network-First* para recursos críticos, asegurando actualizaciones limpias en modo PWA.
+4. **Caché Multinivel L1/L2 (`0 ms`), Debounce Realtime (`350 ms`) y Resiliencia PWA**:
+   * Se diseñó una arquitectura de caché de dos niveles (`persistentQueryCache.ts`): **L1 en memoria RAM (`TanStack Query v5` con `staleTime` de 5 min)** respaldada por **L2 persistente en `localStorage`**, hidratando instantáneamente las vistas clínicas y administrativas en **`0 ms`** al navegar o recargar la aplicación, con purga automática garantizada al cerrar sesión (`signOut`).
+   * Mediante `useRealtimeSync`, las suscripciones WebSocket a PostgreSQL aplican una ventana de amortiguación (*debounce*) de **`350 ms`**, consolidando ráfagas transaccionales en una única revalidación selectiva sin tormentas de peticiones y manteniendo actualizaciones limpias bajo Service Worker (`public/sw.js`).
 
-5. **Optimización de Rendimiento e Interacción (Core Web Vitals - INP < 50 ms)**:
-   * **Desacoplamiento de Micro-Componentes**: El reloj en tiempo real se aisló en `LiveClock`, evitando re-renderizados globales del `Dashboard`.
-   * **Carga Diferida (*Code-Splitting*) de Generadores PDF**: Las utilidades de exportación documental (`generateHistoriaClinicaPDF`, `generatePatientConsultationPDF` y `generateRecipePDF`) se importan dinámicamente mediante `await import(...)` únicamente cuando el médico solicita el documento, reduciendo drásticamente el tamaño del paquete inicial de JavaScript.
-   * **Esqueletos de Carga de Alta Fidelidad (`PatientProfileSkeleton`)**: Durante la hidratación inicial del expediente clínico se presenta una estructura esqueletal idéntica al diseño final, evitando saltos visuales (*Cumulative Layout Shift* - CLS = 0).
+5. **Calidad Estructural Perfecta (`100 / 100` en `react-doctor`) y Optimización Core Web Vitals (INP < 50 ms)**:
+   * El código fuente completo (247 archivos React 19 / TypeScript) fue sometido a auditoría estática con **`react-doctor`**, alcanzando la puntuación máxima de **`100 / 100` (`✔ No issues found!`)** gracias a la descomposición modular de formularios complejos (`PatientFormTabs`, `PatientFormBody`, `usePatientFormState`), memoización de instancias `Intl.NumberFormat` / `Intl.DateTimeFormat`, eliminación de efectos derivados redundantes y cero desfases de hidratación SSR/CSR.
+   * Las utilidades PDF (`generateHistoriaClinicaPDF`, `generateRecipePDF`, órdenes de laboratorio, informes ecográficos, Reporte Z y recibos de honorarios) se cargan diferidamente mediante `await import(...)`, mientras `LiveClock` y `PatientProfileSkeleton` aseguran `INP < 50 ms` y `CLS = 0`.
 
-6. **Personalización Dinámica de Identidad Visual y Motor Financiero Multimoneda en Vivo**:
-   * **Arquitectura de Paletas Temáticas (`ThemeCustomizer`) e Isotipo Reactivo (`MedizenLogo`)**: Permite alternar entre cinco paletas clínicas (*Azul Medizen, Verde Esmeralda, Púrpura Real, Teal Quirúrgico y Rosa Obstétrico*), inyectadas de forma síncrona en `<head>` junto con `var(--primary, #2563EB)` en el SVG institucional para evitar desfases de hidratación.
-   * **Motor Multimoneda, Tesorería Venezolana, Métodos de Pago y Calculadora Cashea (`useExchangeRate.ts`, `paymentMethods.ts`, `accounts.ts`, `SalesPage.tsx`)**: Sincroniza automáticamente las cotizaciones oficiales del **Dólar BCV (`USD`)** y **Euro BCV (`EUR`)** (`ve.dolarapi.com/v1/cotizaciones`), así como la tasa en vivo de **USDT en Binance P2P (`USDT/VES`)** (`criptoya.com/api/binancep2p/USDT/VES/0.1`). Gestiona el catálogo de los **6 métodos de pago profesionales de Venezuela** (**Efectivo en Bolívares, Pago Móvil, Transferencia Bancaria, Binance Pay USDT, Divisas USD/EUR y Cashea**) vinculados a las cuentas financieras de tesorería (`/cuentas` con desvinculación segura de claves foráneas `account_id`), copia en 1 clic de datos bancarios receptores (18 bancos SUDEBAN, RIF/CI, teléfono, cuenta de 20 dígitos, Binance ID), **Calculadora Profesional Cashea** (inicial 40%/50%/60% + 3 cuotas sin interés cada 14 días, método de pago de la inicial y N.º de orden), acreditación automática de balances, calculadora cuatridivisa bidireccional (`$ USD ↔ Bs. ↔ € EUR ↔ USDT`), tarjetas KPI interactivas, liquidación de pagos mixtos y reportes PDF multimoneda con detalle de método y referencia (`generateIndividualInvoice.ts` y `generateSalesReport.ts`).
+6. **Motor Financiero Multimoneda, Facturación Post-Consulta, Reporte Z y Liquidación de Honorarios**:
+   * **Facturación Post-Consulta y Arqueo Reporte Z (`SalesPage.tsx`, `CashCloseDialog.tsx`, `generateCashCloseReport.ts`)**: Las facturas se emiten automáticamente en estado **`Pendiente`** al completar la consulta médica tomando el `costo_base` real del servicio y ordenándose de más reciente a más antigua. Soporta los **6 métodos de pago de Venezuela** (**Efectivo Bs., Pago Móvil, Transferencia Bancaria, Binance Pay USDT, Divisas USD/EUR y Cashea** con inicial 40%/50%/60% + 3 cuotas sin interés), tasas en vivo (**Dólar BCV, Euro BCV y USDT Binance P2P**), copia en 1 clic de datos bancarios SUDEBAN y **Cierre Diario de Caja (Reporte Z PDF)**.
+   * **Partición Matemática y Liquidación de Honorarios Médicos (`DoctorFeesPage.tsx`, `invoiceDoctorPartition.ts`, `generateDoctorFeeReport.ts`)**: Asigna de forma determinista cada factura pagada a su médico tratante sin duplicidad contable, calcula la comisión parametrizable del especialista frente a la retención operativa de FemeSalud y emite el comprobante oficial de liquidación en PDF con bloques de firma.
 
 ---
 
 ### Pruebas de la Aplicación
 
-Para asegurar que el sistema cumple con los más altos estándares de calidad, confiabilidad y ausencia de defectos, se ejecutaron pruebas de caja negra sobre cada módulo del sistema en escenarios operativos reales.
+Para asegurar que el sistema cumple con los más altos estándares de calidad, confiabilidad y ausencia de defectos, se ejecutaron doce (12) escenarios integrales de pruebas de caja negra en condiciones operativas reales.
 
 **Tabla 12**  
 *Matriz de Casos de Prueba Funcional de Caja Negra*
@@ -1506,16 +1505,18 @@ Para asegurar que el sistema cumple con los más altos estándares de calidad, c
 | :---: | :--- | :--- | :--- | :--- | :---: |
 | **CP-01** | Seguridad / PIN | Ingreso de PIN de 4 dígitos válido en pantalla de bloqueo. | Descifrado de bóveda y acceso al sistema en < 1 segundo. | Acceso concedido instantáneo; sesión reactivada con éxito. | **APROBADO** |
 | **CP-02** | Seguridad / Anti-Fuerza Bruta | Ingreso de 5 intentos consecutivos de PIN incorrecto. | Denegación de acceso y bloqueo temporal de 60 segundos. | Contador activado y bloqueo de seguridad aplicado por 60 s. | **APROBADO** |
-| **CP-03** | Seguridad / Inactividad y SSR | Inactividad de 5 min o recarga de página (`F5`) con sesión activa. | Activación de `InactivityLockOverlay` por inactividad; al refrescar con sesión activa mantiene la vista sin redirigir a `/auth`. | Comportamiento exacto sin parpadeo ni pérdida de sesión. | **APROBADO** |
-| **CP-04** | Expediente Clínico | Apertura de paciente con `HC-XXXXX`, alergias, sangre, seguro, contacto de emergencia, medicación y transfusiones. | Visualización inmediata en `PatientClinicalBanner` y persistencia en `pacientes` e `historias_clinicas`. | Datos guardados y alertas visibles en las 8 pestañas del perfil. | **APROBADO** |
-| **CP-05** | Calculadora Obstétrica | Ingreso de FUM en pestaña Obstétrico o en Nueva Consulta. | Cálculo automático en vivo de edad gestacional (`sem + días`) y FPP por Regla de Naegele. | Fórmulas obstétricas calculadas en tiempo real sin errores. | **APROBADO** |
+| **CP-03** | Caché L1/L2 / Inactividad y SSR | Re-visita entre módulos, inactividad de 5 min o recarga (`F5`). | Hidratación en `0 ms` desde caché L1/L2; activación de `InactivityLockOverlay` sin perder sesión ni redirigir a `/auth`. | Transiciones instantáneas en `0 ms` y sesión preservada sin parpadeo. | **APROBADO** |
+| **CP-04** | Expediente y Autoasignación | Apertura de paciente por un usuario con rol `doctor` (`HC-XXXXX`, alergias, sangre, seguro). | Autoasignación bloqueada del doctor autenticado como **Médico tratante** y alertas visibles en `PatientClinicalBanner`. | Médico tratante asignado automáticamente y alertas persistidas en las 8 pestañas. | **APROBADO** |
+| **CP-05** | Naegele y Signos Vitales | Ingreso de FUM en Obstetricia y múltiples tomas de PA y Peso/Talla en consultas. | Cálculo automático en vivo de EG y FPP, y trazado longitudinal en `PatientVitalsChart`. | Fórmulas obstétricas y curvas de PA e IMC renderizadas sin errores. | **APROBADO** |
 | **CP-06** | Estudios y Timeline | Carga de archivo en `Notas y Estudios` y revisión de `Timeline`. | Almacenamiento en `archivos_pacientes` (Supabase Storage) y orden cronológico de eventos. | Archivo adjunto descargable y línea de tiempo actualizada. | **APROBADO** |
-| **CP-07** | Agenda Realtime | Cambio de estado de cita y asignación de servicio clínico. | Actualización vía WebSockets (< 500 ms) y vinculación automática de `servicios.costo_base`. | Estado sincronizado en vivo y factura creada con monto real. | **APROBADO** |
-| **CP-08** | Récipes e Historia PDF | Clic en 'Exportar Documentos' (Historia Clínica PDF / Récipe PDF) y envío a WhatsApp. | Carga dinámica de `jsPDF`, compilación de PDF nítido y apertura de enlace de WhatsApp. | Documentos PDF generados bajo demanda y enviados con éxito. | **APROBADO** |
-| **CP-09** | Finanzas Multimoneda, Tesorería VE, Cashea e Inventario | Sincronización de tasas BCV ($/€) y USDT (Binance P2P), cobro con los 6 métodos de Venezuela (Efectivo Bs., Pago Móvil, Transferencia, Binance, Divisas y Cashea con inicial + 3 cuotas), vinculación en `/cuentas` y movimiento de stock. | Conversión multimoneda exacta (`USD`, `EUR`, `USDT`, `VES`), cálculo automático de inicial/cuotas Cashea, copia en 1 clic de datos bancarios, acreditación en cuenta vinculada, recibos PDF con método/referencia y kárdex actualizado. | Tasas oficiales verificadas en vivo, balance de cuentas de tesorería, cuotas Cashea y stock actualizados sin discrepancias. | **APROBADO** |
-| **CP-10** | Branding / Temas | Selección de paleta temática y recarga completa del navegador (`F5`). | Persistencia del tema y del color del isotipo `MedizenLogo` (`--primary`) sin volver al azul por defecto. | Hidratación SSR/CSR limpia con color personalizado preservado. | **APROBADO** |
+| **CP-07** | Sala de Espera Kanban y Factura Post-Consulta | Avance de paciente por las 4 columnas de `/sala-espera` hasta completar la consulta médica. | Sincronización WebSocket (`350 ms` debounce) y creación automática de factura **`Pendiente`** al tope de `/facturacion` con `costo_base` real. | Tablero Kanban actualizado en vivo y factura `Pendiente` emitida con exactitud. | **APROBADO** |
+| **CP-08** | Récipes, Lab e Informe Eco PDF | Emisión de Récipe PDF, Orden de Laboratorio (perfil rápido Prenatal) e Informe Ecográfico PDF. | Carga diferida de `jsPDF`, compilación de documentos membretados y apertura de envío por WhatsApp. | Los tres documentos clínicos PDF se generaron y remitieron con éxito. | **APROBADO** |
+| **CP-09** | Finanzas VE, Cashea y Reporte Z | Cobro con los 6 métodos de Venezuela (incluyendo Cashea inicial + 3 cuotas) y ejecución de Cierre Diario de Caja. | Conversión exacta (`USD`, `EUR`, `USDT`, `VES`), acreditación en `/cuentas` y descarga de **Reporte Z Clínico en PDF**. | Saldos en tesorería, cuotas Cashea y Reporte Z conciliados sin discrepancias. | **APROBADO** |
+| **CP-10** | Honorarios Médicos (`/honorarios`) | Selección de período y especialista por el Administrador para liquidar comisiones. | Partición estricta sin doble conteo (`invoiceDoctorPartition`), cálculo `% Médico` vs. clínica y recibo PDF con firmas. | Liquidación matemática exacta y comprobante PDF emitido correctamente. | **APROBADO** |
+| **CP-11** | Aislamiento RBAC y Auditoría (`/auditoria`) | Inicio de sesión con roles `doctor`, `recepcionista` y `admin` verificando rutas y datos visibles. | `doctor` aislado a sus pacientes/ingresos; `recepcionista` con `/sala-espera` sin `/honorarios`; `admin` con acceso total y `/auditoria`. | Cumplimiento estricto de fronteras de seguridad y registros visibles en `/auditoria`. | **APROBADO** |
+| **CP-12** | Branding y Calidad Estática | Cambio de paleta en `ThemeCustomizer` (`F5`) y ejecución de `react-doctor` sobre el repositorio. | Persistencia SSR/CSR del color en `MedizenLogo` y puntaje **`100 / 100` (`0 issues`)** en 247 archivos analizados. | Identidad visual intacta y calificación perfecta **`100 / 100`** verificada. | **APROBADO** |
 
-*Nota.* Elaboración propia (2026). El 100% de los casos de prueba ejecutados resultaron satisfactorios.
+*Nota.* Elaboración propia (2026). El 100% de los doce (12) escenarios de prueba ejecutados resultaron satisfactorios.
 
 ---
 
@@ -1524,41 +1525,42 @@ Para asegurar que el sistema cumple con los más altos estándares de calidad, c
 #### Requisitos del Entorno
 * **Cliente (Dispositivos del Consultorio)**: Computador de escritorio, laptop o tableta con navegador web moderno (Google Chrome 110+, Microsoft Edge o Safari móvil) con soporte para ECMAScript 2022, Service Workers (PWA) y Web Crypto API.
 * **Servidor / Nube**:
-  * Plataforma de alojamiento: **Vercel / Cloudflare / Node.js SSR** (despliegue continuo con certificado SSL/TLS automático).
+  * Plataforma de alojamiento: **Vercel / Cloudflare / Bun & Node.js SSR** (despliegue continuo con certificado SSL/TLS automático).
   * Base de datos: Instancia gestionada en **Supabase** (PostgreSQL 15 con extensiones `pgcrypto` y `uuid-ossp`, Supabase Storage y Realtime habilitados).
 
-#### Puesta en Marcha en Entorno Local (Guía de Comandos)
+#### Puesta en Marcha en Entorno Local (Guía de Comandos con Bun)
 1. **Clonación del repositorio de código**:
    ```bash
    git clone https://github.com/KevxxAlva/femesalud-zen-flow.git
    cd Medizen
    ```
-2. **Instalación de dependencias del proyecto**:
+2. **Instalación ultrarrápida de dependencias con Bun**:
    ```bash
-   npm install
-   # O alternativamente: bun install
+   bun install
    ```
 3. **Configuración de variables de entorno (`.env`)**:
    ```env
    VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
    VITE_SUPABASE_ANON_KEY=tu-clave-anonima-de-supabase
    ```
-4. **Inicio del servidor de desarrollo (Vite 7 + TanStack Start)**:
+4. **Inicio del servidor de desarrollo y compilación de producción (Vite 7 + TanStack Start)**:
    ```bash
-   npm run dev
+   bun run dev
+   # Para generar el empaquetado optimizado de producción:
+   bun run build
    ```
-   *El sistema queda disponible en `http://localhost:3000` listo para operar.*
+   *El sistema queda disponible localmente listo para operar con recarga instantánea (HMR).*
 
 ---
 
 ### Adiestramiento y Capacitación
 
-Para garantizar la adopción exitosa y el aprovechamiento integral del sistema web MediZen en la Clínica FemeSalud, se diseñó e impartió un **Plan de Adiestramiento de 12 Horas Académicas**, estructurado en cuatro (04) sesiones prácticas presenciales:
+Para garantizar la adopción exitosa y el aprovechamiento integral del sistema web MediZen en la Clínica FemeSalud, se diseñó e impartió un **Plan de Adiestramiento de 12 Horas Académicas**, estructurado en cuatro (04) sesiones prácticas presenciales diferenciadas por rol operativo:
 
-* **Módulo 1: Seguridad, Perfiles y Bóveda de PIN**: Configuración del código PIN de 4 dígitos, cambio de clave y desbloqueo seguro de la estación médica.
-* **Módulo 2: Registro de Pacientes e Historia Médica Integral**: Apertura de nuevos expedientes, registro de antecedentes, uso de la calculadora de FUM/FPP y archivo de consultas anteriores.
-* **Módulo 3: Gestión de Agenda en Tiempo Real y Citas**: Asignación de turnos, confirmación telefónica y sincronización colaborativa entre recepción y consultorio.
-* **Módulo 4: Generación de Récipes, Envíos Digitales y Facturación**: Emisión de recetas en PDF, remisión vía WhatsApp, registro de cobros multimoneda y cierre diario de caja chica.
+* **Módulo 1: Seguridad Criptográfica, Alcance por Rol y Bóveda de PIN**: Configuración del código PIN de 4 dígitos, bloqueo por inactividad y alcances diferenciados de Médico, Recepción y Administración.
+* **Módulo 2: Expediente Clínico, Regla de Naegele y Curvas Vitales**: Apertura de historias con autoasignación médica, uso de las 8 pestañas, calculadora FUM/FPP y lectura de curvas evolutivas de signos vitales.
+* **Módulo 3: Sala de Espera Kanban en Vivo y Agenda Realtime**: Coordinación de pacientes por las 4 columnas Kanban (`/sala-espera`), recordatorios por WhatsApp y transición fluida a consulta.
+* **Módulo 4: Documentos Clínicos PDF, Cobranza VE, Reporte Z y Honorarios**: Emisión de récipes, órdenes de laboratorio e informes ecográficos en PDF; cobros multimoneda con Cashea, Arqueo Diario Reporte Z, liquidación en `/honorarios` y supervisión en `/auditoria`.
 
 ---
 
@@ -1566,16 +1568,16 @@ Para garantizar la adopción exitosa y el aprovechamiento integral del sistema w
 
 La memoria descriptiva relata de forma cronológica y metodológica el proceso de ingeniería aplicado por los estudiantes Kevin Quintero y Charlys Villarroel bajo la tutela del Prof. Jose Alfredo Sanchez:
 
-1. **Fase de Inserción y Levantamiento**: Durante el mes inicial se efectuaron visitas a la clínica en Valle de la Pascua, registrando los flujos manuales de la Dra. Carli Sole (y equipo médico) y documentando los formularios clínicos de múltiples especialidades.
-2. **Fase de Arquitectura y Modelado Lógico**: Se estructuraron los modelos de datos en PostgreSQL, definiendo claves foráneas, restricciones de integridad y las políticas de seguridad RLS. Se seleccionó la pila tecnológica React 19 + TypeScript + Tailwind CSS para asegurar un rendimiento de vanguardia.
-3. **Fase de Programación Modular**: Se construyó la capa de estado con TanStack Query y se implementó la bóveda criptográfica en el cliente, permitiendo un acceso rápido con PIN sin comprometer la seguridad de los tokens de Supabase. Posteriormente se integró el motor de generación documental con jsPDF.
-4. **Fase de Validación y Puesta en Producción**: Se realizaron pruebas de usabilidad y estrés con la especialista médica, afinando la disposición de los campos clínicos de múltiples especialidades según sus sugerencias directas. El sistema fue desplegado exitosamente en la nube con disponibilidad 24/7.
+1. **Fase de Inserción y Levantamiento**: Durante el mes inicial se efectuaron visitas a la clínica en Valle de la Pascua, registrando los flujos manuales de la Dra. Carli Sole (y equipo médico) y documentando los formularios clínicos, paraclínicos y contables de múltiples especialidades.
+2. **Fase de Arquitectura y Modelado Lógico**: Se estructuraron los modelos de datos en PostgreSQL, definiendo claves foráneas, políticas RLS y el modelo de aislamiento de alcance por rol (`useUserRoleScope`). Se seleccionó la pila Bun + React 19 + TypeScript + Tailwind CSS v4 + `@tanstack/charts` para asegurar un rendimiento de vanguardia.
+3. **Fase de Programación Modular**: Se construyó la capa de caché multinivel L1/L2 (`0 ms`), la bóveda criptográfica local PBKDF2/AES-GCM, el tablero Kanban de Sala de Espera, los generadores PDF clínicos (récipes, laboratorio, ecografía) y la suite financiera con facturación post-consulta, Cashea, Reporte Z, liquidación de honorarios y auditoría.
+4. **Fase de Auditoría de Calidad y Puesta en Producción**: Se refinó la arquitectura modular hasta alcanzar **100 / 100 (`0 issues`) en `react-doctor`** sobre 247 archivos y se validó cada flujo en pruebas reales junto al equipo de FemeSalud, desplegando la aplicación en la nube con disponibilidad 24/7.
 
 ---
 
 ## Análisis de Resultados
 
-El análisis de resultados demuestra fehacientemente cómo el sistema web MediZen resolvió la problemática diagnosticada en la Fase I, transformando radicalmente la dinámica operativa de la clínica.
+El análisis de resultados demuestra fehacientemente cómo el sistema web MediZen resolvió la problemática diagnosticada en la Fase I, transformando radicalmente la dinámica asistencial y administrativa de la clínica.
 
 **Tabla 13**  
 *Matriz Comparativa de Tiempos Operativos Antes y Después del Sistema*
@@ -1583,41 +1585,39 @@ El análisis de resultados demuestra fehacientemente cómo el sistema web MediZe
 | Indicador Operativo | Situación Inicial (Manual / Papel) | Situación Actual (Sistema Web MediZen) | Variación Porcentual (%) |
 | :--- | :---: | :---: | :---: |
 | **Tiempo de apertura / registro de nueva paciente** | 8,5 minutos | 2,1 minutos | **- 75,3% de reducción** |
-| **Tiempo de búsqueda de historia clínica anterior** | 6,2 minutos | 0,2 minutos (instantáneo) | **- 96,7% de reducción** |
-| **Tiempo de llenado y cálculo clínico integral en consulta** | 18,0 minutos | 5,5 minutos | **- 69,4% de reducción** |
-| **Tiempo de redacción y entrega de récipe médico** | 7,0 minutos | 1,2 minutos (PDF / WhatsApp) | **- 82,8% de reducción** |
+| **Tiempo de búsqueda de historia clínica anterior** | 6,2 minutos | 0,2 minutos (`0 ms` en caché L1/L2) | **- 96,7% de reducción** |
+| **Tiempo de llenado clínico, Naegele y curvas vitales** | 18,0 minutos | 5,5 minutos | **- 69,4% de reducción** |
+| **Tiempo de emisión de récipe, orden lab. o informe eco** | 7,0 minutos | 1,2 minutos (PDF / WhatsApp) | **- 82,8% de reducción** |
+| **Tiempo de cierre diario de caja y liquidación médica** | 45,0 minutos (manual) | 1,5 minutos (Reporte Z / `/honorarios`) | **- 96,6% de reducción** |
 | **Incidencias de expedientes traspapelados o dañados** | 12 incidentes / mes | 0 incidentes / mes | **- 100,0% de eliminación** |
-| **Desfase en la sincronización de turnos en sala** | Frecuente (interrupciones) | Nulo (sincronización WebSockets) | **Optimización total** |
+| **Coordinación de turnos en Sala de Espera** | Frecuentes interrupciones | Tablero Kanban WebSockets en vivo | **Optimización total** |
 
 *Nota.* Elaboración propia (2026), con base en mediciones cronometradas durante el período de evaluación en la clínica FemeSalud.
 
-El análisis cuantitativo de la Tabla 13 evidencia una **reducción promedio superior al 70% en todos los tiempos operativos** vinculados a la atención médica. El acceso instantáneo al historial clínico multiespecialidad permite a la Dra. Carli Sole (y equipo médico) dedicar mayor tiempo al examen físico y a la interacción humana con la paciente, elevando la calidad asistencial del servicio. Adicionalmente, la eliminación total del uso de carpetas físicas y talonarios representa un ahorro económico continuo para la clínica y una sustancial reducción del impacto ambiental papelero en la ciudad de Valle de la Pascua.
-
-
+El análisis cuantitativo de la Tabla 13 evidencia una **reducción promedio superior al 75% en los tiempos operativos clínicos y administrativos**. El acceso instantáneo en `0 ms` al historial clínico multiespecialidad y los perfiles rápidos de laboratorio e informe ecográfico permiten a la Dra. Carli Sole (y equipo médico) dedicar mayor tiempo al examen físico y al trato humano con la paciente, mientras Recepción y Administración concilian caja chica y honorarios médicos en segundos sin errores aritméticos ni papelería innecesaria.
 
 <div style='page-break-after: always;'></div>
 
 ---
 
+### Evaluación de Calidad del Software bajo el Estándar ISO/IEC 25010, `react-doctor` y Escala SUS
 
-### Evaluación de Calidad del Software bajo el Estándar ISO/IEC 25010 y Escala SUS
-
-Con el propósito de evaluar el producto software de forma rigurosa y objetiva, se aplicó el modelo de calidad **ISO/IEC 25010 (Sistemas y Requisitos de Calidad del Software - SQuaRE)**, evaluando los atributos de calidad esenciales de MediZen junto con la **Escala de Usabilidad del Sistema (SUS - System Usability Scale)** aplicada a los usuarios finales (médica especialista y asistente administrativa):
+Con el propósito de evaluar el producto software de forma rigurosa y objetiva, se aplicó el modelo internacional **ISO/IEC 25010 (SQuaRE)**, complementado con la auditoría estática automatizada **`react-doctor`** y la **Escala de Usabilidad del Sistema (SUS - System Usability Scale)** aplicada a los usuarios finales:
 
 **Tabla 14**  
 *Evaluación de Calidad del Software bajo la Norma ISO/IEC 25010 y Métricas de Usabilidad*
 
 | Dimensión de Calidad (ISO 25010) | Métrica / Criterio de Evaluación | Resultado Obtenido en Pruebas | Nivel de Cumplimiento |
 | :--- | :--- | :---: | :---: |
-| **Adecuación Funcional** | Cobertura de requerimientos clínicos (historias, citas, récipes, facturación). | 100% de especificaciones funcionales implementadas y validadas. | Excelente (100%) |
-| **Eficiencia de Desempeño** | Tiempo promedio de respuesta en consultas y persistencia en base de datos. | 280 milisegundos en peticiones HTTP y < 1 s en sincronización WebSocket. | Excelente |
-| **Seguridad de la Información** | Protección criptográfica de datos, cifrado AES-GCM y control de acceso por PIN / RLS. | 0 vulnerabilidades críticas detectadas en pruebas de inyección y bypass. | Excelente |
-| **Fiabilidad / Tolerancia a Fallos** | Resiliencia ante caídas de conexión y persistencia de borradores clínicos. | Modo caché local (TanStack Query) previene la pérdida de datos en curso. | Alta |
-| **Mantenibilidad y Modularidad** | Arquitectura desacoplada, tipado estricto con TypeScript y separación por capas. | Componentes modulares reutilizables y tipado estricto de esquemas. | Excelente |
+| **Adecuación Funcional** | Cobertura de módulos clínicos, Sala de Espera Kanban, PDFs, Reporte Z, Honorarios y Auditoría. | 100% de especificaciones implementadas (12/12 casos `CP-01` a `CP-12` aprobados). | Excelente (100%) |
+| **Eficiencia de Desempeño** | Hidratación desde caché multinivel L1/L2, peticiones HTTP y WebSockets con *debounce*. | **`0 ms` en re-visitas L1/L2**, < 280 ms en red, INP < 50 ms y `350 ms` debounce Realtime. | Sobresaliente |
+| **Seguridad de la Información** | Cifrado PBKDF2/AES-GCM, anti-fuerza bruta, RLS, aislamiento `useUserRoleScope` y `/auditoria`. | 0 vulnerabilidades detectadas y separación estricta de datos entre médicos, recepción y admin. | Excelente |
+| **Fiabilidad / Tolerancia a Fallos** | Resiliencia ante micro-cortes de red, hidratación SSR/CSR limpia y purga segura al cerrar sesión. | Persistencia local controlada en L1/L2 + PWA `sw.js` con cero pérdida de sesión. | Alta |
+| **Mantenibilidad y Calidad de Código** | Auditoría estática integral sobre 247 archivos React 19 / TypeScript con `react-doctor`. | **Puntuación perfecta: `100 / 100` (`✔ No issues found!`)** y arquitectura modular tipada. | Sobresaliente (100/100) |
 | **Portabilidad y Responsividad** | Compatibilidad multidispositivo (móvil, tablet, escritorio) bajo enfoque *Mobile-First*. | Adaptabilidad visual fluida probada en Chrome, Edge, Safari y navegadores móviles. | Excelente |
 | **Usabilidad (Escala SUS)** | Cuestionario estandarizado System Usability Scale de 10 ítems (1 a 5). | **Puntaje promedio: 88,5 / 100 (Grado A - Altamente Favorable / Usable)**. | Sobresaliente |
 
-*Nota.* Elaboración propia (2026). El puntaje SUS superior a 85 puntos clasifica a MediZen en el percentil superior de usabilidad de software asistencial.
+*Nota.* Elaboración propia (2026). La combinación de un puntaje SUS de 88,5/100 con una calificación técnica de 100/100 en `react-doctor` certifica tanto la excelencia ergonómica como la solidez estructural del software entregado.
 
 <div style='page-break-after: always;'></div>
 
@@ -1627,7 +1627,7 @@ Con el propósito de evaluar el producto software de forma rigurosa y objetiva, 
 
 **Enfoque: Cierre y proyección.**
 
-El presente acápite constituye el cierre académico, reflexivo y proyectivo del Proyecto Socio-Integrador, donde se sintetizan los hallazgos más significativos derivados de la ejecución técnica, la interacción con la comunidad médica del clínica FemeSalud y la aplicación de los conocimientos del PNF en Informática.
+El presente acápite constituye el cierre académico, reflexivo y proyectivo del Proyecto Socio-Integrador, donde se sintetizan los hallazgos más significativos derivados de la ejecución técnica, la interacción con la comunidad médica de la Clínica FemeSalud y la aplicación de los conocimientos del PNF en Informática.
 
 ---
 
@@ -1636,16 +1636,16 @@ El presente acápite constituye el cierre académico, reflexivo y proyectivo del
 De acuerdo con las directrices normativas de la UPTLLJR, las conclusiones dan respuesta lógica, secuencial y verificable a cada uno de los cuatro (04) objetivos específicos planteados en la investigación:
 
 1. **En relación con el primer objetivo específico (*Diagnosticar la situación actual de los procesos de historias clínicas, citas y control operativo en FemeSalud*)**:  
-   Se constató de manera inequívoca que la gestión manual basada en expedientes físicos de cartón, agendas en papel y talonarios de récipes manuscritos generaba severos cuellos de botella en la atención diaria. El diagnóstico participativo reveló retrasos promedio de 18 minutos en la revisión de antecedentes ginecológicos, riesgos constantes de pérdida o deterioro físico de la información confidencial de las pacientes y desajustes en la coordinación de turnos entre la recepción y la clínica de la Dra. Carli Sole (y equipo médico), validando plenamente la necesidad perentoria de una solución informática a medida.
+   Se constató de manera inequívoca que la gestión manual basada en expedientes físicos de cartón, agendas en papel y talonarios de récipes manuscritos generaba severos cuellos de botella en la atención diaria. El diagnóstico participativo reveló retrasos promedio de 18 minutos en la revisión de antecedentes clínicos, riesgos constantes de pérdida o deterioro físico de la información confidencial de las pacientes, desajustes en la coordinación de la sala de espera y demoras en el arqueo de caja y liquidación de honorarios de la Dra. Carli Sole (y equipo médico), validando plenamente la necesidad perentoria de una solución informática integral.
 
 2. **En relación con el segundo objetivo específico (*Diseñar la arquitectura lógica, conceptual y prototipos de interfaz del sistema web*)**:  
-   Se diseñó una arquitectura de software isomórfica, escalable y modular, fundamentada en React 19, Vite 7 y TanStack Start con capacidades de Aplicación Web Progresiva (PWA). Se formalizó el modelado conceptual a través de diagramas UML (Casos de Uso, Actividades y Secuencia) y se estructuró un modelo híbrido relacional-documental en PostgreSQL (`pacientes`, `historias_clinicas`, `consultas`, `citas`, `facturas`, `pagos`, `archivos_pacientes`, `inventario`, `movimientos_inventario` y `auditoria_logs`) que captura fielmente las variables clínicas multiespecialidad y gineco-obstétricas (número correlativo `HC-XXXXX`, alergias, tipo de sangre, contacto de emergencia, seguro médico, medicación actual, transfusiones, fórmula G-P-A-C-E y cálculo automático de edad gestacional y FPP por Regla de Naegele).
+   Se diseñó una arquitectura de software isomórfica, escalable y modular, fundamentada en Bun, React 19, Vite 7, `@tanstack/charts` y TanStack Start con capacidades PWA y caché multinivel L1/L2 (`0 ms`). Se formalizó el modelado conceptual mediante diagramas UML (Casos de Uso diferenciados por alcance de rol, Actividades y Secuencia) y un modelo híbrido relacional-documental en PostgreSQL (`pacientes`, `historias_clinicas`, `consultas`, `citas`, `facturas`, `pagos`, `archivos_pacientes`, `inventario`, `movimientos_inventario` y `auditoria_logs`) que captura las variables multiespecialidad y gineco-obstétricas (`HC-XXXXX`, médico tratante asignado, alertas críticas, fórmula G-P-A-C-E, Regla de Naegele y curvas longitudinales de signos vitales).
 
 3. **En relación con el tercer objetivo específico (*Desarrollar los módulos funcionales de la aplicación web utilizando React 19, TypeScript, Tailwind CSS y Supabase*)**:  
-   Se materializó exitosamente la plataforma web **FemeSalud (Medizen)**, integrando un expediente clínico organizado en ocho (08) pestañas especializadas con encabezado permanente de alertas médicas (`PatientClinicalBanner`), línea de tiempo cronológica (`Timeline`) y repositorio de estudios diagnósticos en la nube (`archivos_pacientes`). Destaca la implementación de una **bóveda de seguridad criptográfica local** basada en `PBKDF2` (100.000 iteraciones SHA-256) y `AES-GCM` de 256 bits, validación de PIN con sal criptográfica, protección contra fuerza bruta (bloqueo tras 5 intentos fallidos) y bloqueo automático por inactividad (`InactivityLockOverlay`), así como una hidratación SSR/CSR optimizada sin parpadeos de sesión ni pérdida del tema visual personalizado (`MedizenLogo`). Se integró además una agenda sincronizada en tiempo real mediante WebSockets, **módulo de tesorería (`/cuentas`) y métodos de pago venezolanos (`/metodos-pago`) para Efectivo en Bolívares, Pago Móvil, Transferencia Bancaria, Binance Pay (USDT), Divisas (USD/EUR) y financiamiento Cashea (calculadora de inicial 40%/50%/60% + 3 cuotas sin interés), facturación multimoneda con tarjetas KPI interactivas, calculadora cuatridivisa en vivo y cobros mixtos (Dólar BCV Oficial, Euro BCV Oficial, USDT Binance P2P y Bolívares)**, kárdex de inventario médico y generación bajo demanda (*lazy loading*) de récipes, comprobantes financieros e historias clínicas completas en PDF (`jsPDF`) con envío directo a WhatsApp.
+   Se materializó exitosamente la suite **FemeSalud (Medizen)**, integrando: (a) **Sala de Espera Kanban en vivo (`/sala-espera`)** en 4 columnas para Recepción y Administración sincronizada por WebSockets (`350 ms` *debounce*); (b) **expediente clínico en 8 pestañas** con `PatientClinicalBanner`, curvas evolutivas de Presión Arterial y Peso/IMC (`PatientVitalsChart`), autoasignación de médico tratante y aislamiento estricto de datos por especialista (`useUserRoleScope`); (c) **bóveda criptográfica local** con `PBKDF2` (100.000 iteraciones SHA-256), `AES-GCM` de 256 bits, anti-fuerza bruta y bloqueo por inactividad (`InactivityLockOverlay`); (d) **generación dinámica en PDF (`jsPDF`)** de récipes, historias clínicas, **órdenes de laboratorio con perfiles rápidos en 1 clic** e **informes ecográficos estructurados**; y (e) **ecosistema financiero y administrativo completo**, con facturación automática post-consulta en estado `Pendiente`, los 6 métodos de pago de Venezuela (Efectivo Bs., Pago Móvil, Transferencia, Binance USDT, Divisas USD/EUR y Cashea), tasas BCV/USDT en vivo, **Arqueo Diario de Caja (Reporte Z PDF)**, **Centro de Reportes (`/reportes`)**, **Liquidación de Honorarios Médicos (`/honorarios`)** sin doble conteo, kárdex de inventario (`/inventario`) y **Bitácora Visual de Auditoría (`/auditoria`)**.
 
 4. **En relación con el cuarto objetivo específico (*Evaluar la funcionalidad, seguridad, usabilidad y rendimiento del sistema web*)**:  
-   La aplicación de diez (10) escenarios integrales de pruebas funcionales de caja negra arrojó un **100% de casos de prueba aprobados**, evidenciando exactitud matemática en la calculadora obstétrica de Naegele, integridad transaccional en la facturación multimoneda BCV y el control de stock de insumos, y solidez en las políticas *Row Level Security* (RLS) y bitácoras de auditoría (`auditoria_logs`). El análisis comparativo de resultados demostró una **reducción del 69,4% en el tiempo de registro en consulta**, una **disminución del 96,7% en el acceso a antecedentes clínicos** y la **erradicación total de expedientes extraviados**, alcanzando un puntaje de usabilidad SUS de **88,5 / 100 (Grado A)**.
+   La ejecución de doce (12) escenarios integrales de pruebas funcionales de caja negra arrojó un **100% de casos aprobados**, mientras que la auditoría estática automatizada con **`react-doctor`** sobre los 247 archivos React/TypeScript certificó una puntuación perfecta de **`100 / 100` (`✔ No issues found!`)**. El análisis comparativo demostró hidratación instantánea en `0 ms` mediante caché L1/L2, una **reducción superior al 75% en los tiempos operativos clínicos y contables** (incluyendo -96,7% en búsqueda de historias y -96,6% en cierre de caja y liquidación de honorarios), la **erradicación total de expedientes extraviados** y un puntaje de usabilidad SUS de **88,5 / 100 (Grado A)**.
 
 En conclusión general, el desarrollo e implantación de FemeSalud demuestra el alto valor formativo y transformador del Programa Nacional de Formación en Informática de la UPTLLJR, entregando una solución soberana, segura y de calidad internacional que moderniza el ejercicio médico privado en el municipio Leonardo Infante del estado Guárico.
 
@@ -1655,20 +1655,20 @@ En conclusión general, el desarrollo e implantación de FemeSalud demuestra el 
 
 Con el propósito de asegurar la sostenibilidad en el tiempo, la preservación de la seguridad informática y la escalabilidad del sistema web desarrollado, se formulan las siguientes recomendaciones estratégicas:
 
-### Para el Clínica FemeSalud y la Dra. Carli Sole (y equipo médico):
-1. **Políticas de Respaldo y Cuidado Operativo**: Aunque la base de datos en Supabase cuenta con replicación continua en la nube, se sugiere realizar exportaciones mensuales de los respaldos lógicos en formato SQL o CSV a una unidad física de almacenamiento externa cifrada.
-2. **Higiene Criptográfica y Seguridad de Accesos**: Cambiar de manera periódica (cada 60 o 90 días) el PIN de desbloqueo de 4 dígitos y la contraseña maestra de acceso al panel de administración de Supabase, evitando compartir el código de seguridad con terceros no autorizados.
-3. **Equipamiento de Apoyo en Consultorio**: Considerar la incorporación de un dispositivo móvil tipo tableta de al menos 10 pulgadas dotada de lápiz óptico (*stylus*) en el escritorio de consulta, permitiendo a la especialista registrar gráficos anatómicos y firmas digitales manuscritas directamente sobre la historia médica.
-4. **Alimentación Eléctrica Ininterrumpida**: Mantener una unidad de respaldo de energía (UPS) en el enrutador de internet y en los equipos de escritorio de la clínica para mitigar las fluctuaciones eléctricas locales en la ciudad de Valle de la Pascua.
+### Para la Clínica FemeSalud y la Dra. Carli Sole (y equipo médico):
+1. **Políticas de Respaldo y Cierre Contable Diario**: Ejecutar al finalizar cada turno asistencial el **Arqueo Diario de Caja (Reporte Z en PDF)** desde el módulo de Ventas y realizar exportaciones mensuales de respaldo desde el **Centro de Reportes (`/reportes`)** y Supabase hacia una unidad externa cifrada.
+2. **Higiene Criptográfica y Gestión de Roles**: Renovar periódicamente (cada 60 o 90 días) el PIN de 4 dígitos de cada estación, conservar la asignación estricta de perfiles (`admin`, `recepcionista` y `doctor`) y revisar mensualmente la **Bitácora de Auditoría (`/auditoria`)**.
+3. **Equipamiento de Apoyo en Consultorio y Sala de Espera**: Incorporar una tableta de al menos 10 pulgadas con lápiz óptico (*stylus*) en cada consultorio y un monitor auxiliar en recepción dedicado al tablero Kanban de **Sala de Espera (`/sala-espera`)** para agilizar el llamado de pacientes.
+4. **Alimentación Eléctrica Ininterrumpida**: Mantener unidades de respaldo de energía (UPS) en el enrutador de internet y en los equipos de recepción y consulta para mitigar las fluctuaciones eléctricas locales en Valle de la Pascua.
 
 ### Para la Universidad Politécnica Territorial de los Llanos "Juana Ramírez" (UPTLLJR):
-1. **Líneas de Investigación en Informática Médica**: Promover la consolidación de una línea de investigación específica dedicada al desarrollo de Sistemas de Información en Salud (HIS) y registros médicos electrónicos de código abierto, aprovechando el impacto directo que estos proyectos tienen sobre las comunidades e instituciones de la región de los llanos venezolanos.
-2. **Repositorio Institucional de Soluciones Libres**: Crear un repositorio institucional de paquetes, plantillas y componentes de software desarrollados en el PNF en Informática (arquitecturas con React, Supabase y criptografía Web Crypto API) para que sirvan de marco referencial y reutilizable a futuras cohortes de estudiantes de Trayecto II, III y IV.
+1. **Líneas de Investigación en Informática Médica**: Consolidar una línea de investigación aplicada al desarrollo de Sistemas de Información en Salud (HIS) y expedientes clínicos electrónicos de código abierto para centros asistenciales de los llanos venezolanos.
+2. **Estándares de Auditoría Estática en el PNFI**: Incorporar herramientas de verificación arquitectónica como `react-doctor` y pruebas bajo la norma ISO/IEC 25010 en los proyectos socio-integradores de Trayecto III y IV para garantizar entregables de grado industrial.
 
 ### Para Futuras Investigaciones y Líneas de Continuidad:
-1. **Portal del Paciente y Notificaciones Push**: Diseñar e integrar un módulo o aplicación web progresiva orientada exclusivamente a las pacientes de FemeSalud, permitiéndoles consultar el calendario de sus próximas citas, descargar sus récipes médicos pasados y recibir recordatorios de toma de medicamentos vía notificaciones push o SMS.
-2. **Telemedicina y Consultas a Distancia**: Incorporar un módulo de videoconferencia segura punto a punto mediante protocolos WebRTC para la atención médica multiespecialidad preliminar o revisión de exámenes de laboratorio a pacientes radicadas en zonas rurales lejanas de Valle de la Pascua (El Socorro, Tucupido, Zaraza).
-3. **Inteligencia Artificial y Análisis Predictivo**: Integrar modelos de aprendizaje automático supervisado (*Machine Learning*) para el análisis de curvas de crecimiento fetal y detección temprana de factores de riesgo asociados a la preeclampsia o diabetes gestacional, apoyando la toma de decisiones clínicas de la especialista.
+1. **Portal del Paciente y Notificaciones Push**: Integrar un portal web progresivo para que las pacientes consulten sus próximas citas, descarguen récipes, órdenes de laboratorio o informes ecográficos previos y reciban recordatorios automáticos.
+2. **Telemedicina y Consultas a Distancia**: Incorporar videoconsultas seguras mediante WebRTC para seguimiento médico preliminar o lectura de laboratorios a pacientes de municipios vecinos (El Socorro, Tucupido, Zaraza).
+3. **Inteligencia Artificial Asistencial**: Integrar modelos predictivos sobre las curvas evolutivas de signos vitales y biometría obstétrica para la alerta temprana de hipertensión gestacional o alteraciones metabólicas.
 
 <div style='page-break-after: always;'></div>
 
@@ -1754,15 +1754,15 @@ World Wide Web Consortium (W3C). (2022). *Web Cryptography API: W3C Recommendati
 **GUÍA DE ENTREVISTA SEMIESTRUCTURADA APLICADA AL PERSONAL MÉDICO**  
 *(Informante Clave: Dra. Carli Sole (y equipo médico) – Especialista en Múltiples Especialidades Médicas)*  
 
-**Objetivo**: Diagnosticar las fases operativas de la consulta médica médica integral, los mecanismos de archivo manual y los requerimientos del sistema informático en la Clínica FemeSalud.
+**Objetivo**: Diagnosticar las fases operativas de la consulta médica integral, los mecanismos de archivo manual y los requerimientos del sistema informático en la Clínica FemeSalud.
 
 **Preguntas Guía**:
 1. ¿Cuál es el procedimiento secuencial que se lleva a cabo desde que una paciente solicita una cita hasta que ingresa a la consulta médica?
 2. ¿Cómo se organizan y almacenan actualmente los expedientes e historias clínicas físicas de las pacientes?
 3. ¿Cuáles son las dificultades más recurrentes que experimenta al momento de localizar antecedentes patológicos o ecográficos de consultas anteriores?
-4. ¿Qué parámetros médicos son indispensables registrar de forma sistemática durante un control prenatal y una consulta médica multiespecialidad general (FUM, FPP, antecedentes G-P-A-C)?
-5. ¿Qué tiempo promedio estima que invierte en la redacción manual de récipes, indicaciones farmacológicas y justificativos médicos?
-6. ¿Qué funciones y características de seguridad consideraría indispensables en una plataforma web para que se adapte con total confianza a su ritmo de trabajo diario?
+4. ¿Qué parámetros médicos son indispensables registrar de forma sistemática durante un control prenatal y una consulta médica multiespecialidad general (FUM, FPP, antecedentes G-P-A-C, curvas de signos vitales)?
+5. ¿Qué tiempo promedio estima que invierte en la redacción manual de récipes, órdenes de laboratorio, informes ecográficos y cierres de honorarios?
+6. ¿Qué funciones y controles de privacidad por rol consideraría indispensables en una plataforma web para que se adapte con total confianza a su ritmo de trabajo diario?
 
 ---
 
@@ -1777,13 +1777,13 @@ World Wide Web Consortium (W3C). (2022). *Web Cryptography API: W3C Recommendati
 | 1 | La interfaz gráfica del sistema MediZen es clara, intuitiva y estéticamente agradable. | | | | | |
 | 2 | El mecanismo de desbloqueo rápido con PIN de 4 dígitos facilita el acceso seguro sin retrasos. | | | | | |
 | 3 | La búsqueda de pacientes mediante el atajo `Ctrl + K` o por cédula es inmediata y precisa. | | | | | |
-| 4 | Los campos del expediente gineco-clínico integral permiten registrar todos los datos requeridos. | | | | | |
+| 4 | Los campos del expediente clínico integral y las curvas de signos vitales cubren todos los datos requeridos. | | | | | |
 | 5 | El cálculo automatizado de las semanas de gestación y la fecha probable de parto (FPP) es exacto. | | | | | |
-| 6 | La agenda sincronizada en tiempo real reduce las interrupciones entre recepción y consultorio. | | | | | |
-| 7 | El generador visual de récipes permite emitir prescripciones médicas en PDF con rapidez. | | | | | |
-| 8 | La opción de enviar el récipe por WhatsApp agiliza la comunicación directa con la paciente. | | | | | |
-| 9 | El sistema web responde con rapidez y estabilidad en computadores y dispositivos móviles. | | | | | |
-| 10 | Recomendaría el uso de FemeSalud para la modernización de otros consultorios médicos. | | | | | |
+| 6 | El tablero Kanban de Sala de Espera y la agenda en vivo reducen las interrupciones entre recepción y consultorio. | | | | | |
+| 7 | Los generadores de récipes, órdenes de laboratorio e informes ecográficos emiten PDFs nítidos con rapidez. | | | | | |
+| 8 | La opción de enviar documentos médicos por WhatsApp agiliza la comunicación directa con la paciente. | | | | | |
+| 9 | La facturación post-consulta, el Reporte Z y la liquidación de honorarios simplifican el control financiero. | | | | | |
+| 10 | Recomendaría el uso de FemeSalud para la modernización de otros consultorios y clínicas médicas. | | | | | |
 
 ---
 
@@ -1822,7 +1822,7 @@ Ciudadanos:
 **Universidad Politécnica Territorial de los Llanos "Juana Ramírez" (UPTLLJR)**  
 Presente. —  
 
-Por medio de la presente, yo, **Dra. Carli Sole (y equipo médico)**, titular de la Cédula de Identidad N.º V-____________, en mi carácter de médico especialista y directora asistencial de la clínica médico **Clínica FemeSalud**, hago constar que he aceptado y avalado la ejecución del Proyecto Socio-Integrador titulado:
+Por medio de la presente, yo, **Dra. Carli Sole (y equipo médico)**, titular de la Cédula de Identidad N.º V-____________, en mi carácter de médico especialista y directora asistencial de la **Clínica FemeSalud**, hago constar que he aceptado y avalado la ejecución del Proyecto Socio-Integrador titulado:
 
 > **"DESARROLLO DE UN SISTEMA WEB MEDIZEN PARA LA GESTIÓN DE HISTORIAS CLÍNICAS MULTIESPECIALIDAD Y CONTROL OPERATIVO EN LA CLÍNICA FEMESALUD, VALLE DE LA PASCUA ESTADO GUÁRICO"**
 
@@ -1830,7 +1830,7 @@ Desarrollado por los estudiantes cursantes del Trayecto III del PNF en Informát
 * **Kevin Quintero**, C.I. V-32.276.060
 * **Charlys Villarroel**, C.I. V-32.337.825
 
-Dicho sistema web fue concebido, probado e implantado en nuestras instalaciones, manifestando nuestra entera conformidad con el producto tecnológico entregado, el cual ha solventado de manera satisfactoria la gestión de historias clínicas y el agendamiento operativo de nuestro centro.
+Dicho sistema web fue concebido, probado e implantado en nuestras instalaciones, manifestando nuestra entera conformidad con el producto tecnológico entregado, el cual ha solventado de manera satisfactoria la gestión de historias clínicas, el flujo de sala de espera y el control financiero-operativo de nuestro centro.
 
 Atentamente,
 
@@ -1844,39 +1844,37 @@ Clínica FemeSalud — Valle de la Pascua
 
 ## ANEXO E  
 **MANUAL RÁPIDO DE USUARIO DEL SISTEMA WEB FEMESALUD (MEDIZEN)**  
-*(Guía Operativa para la Dra. Carli Sole, Equipo Médico y Personal Administrativo)*
+*(Guía Operativa por Rol para Especialistas Médicos, Recepción y Administración)*
 
-### 1. Acceso Seguro, PIN de 4 Dígitos y Bloqueo por Inactividad
-1. Ingrese a la plataforma web MediZen e inicie sesión con sus credenciales institucionales.
-2. Cuando la estación médica permanezca inactiva durante 5 minutos (o al bloquear manualmente la pantalla), se activará el recubrimiento de seguridad (**Bloqueo por Inactividad**).
-3. Ingrese su **código PIN de 4 dígitos** para desbloquear instantáneamente la pantalla sin perder los datos que estaba redactando.
-*(Nota de Seguridad: Tras 5 intentos fallidos consecutivos de PIN, el sistema aplicará un bloqueo preventivo de 60 segundos contra fuerza bruta).*
+### 1. Acceso Seguro, Alcance por Rol y Bloqueo por Inactividad
+1. Inicie sesión con sus credenciales institucionales; el sistema cargará automáticamente los módulos autorizados según su perfil (**Administrador**, **Recepcionista** o **Médico Especialista**) con transición instantánea (`0 ms`) gracias a la caché multinivel L1/L2.
+2. Tras 5 minutos sin actividad (o al bloquear manualmente la estación), se activará el **Bloqueo por Inactividad**. Ingrese su **PIN de 4 dígitos** para retomar el trabajo al instante *(bloqueo preventivo de 60 s tras 5 intentos fallidos)*.
 
-### 2. Atajo Universal de Búsqueda Rápida (`Ctrl + K`)
-* En cualquier pantalla del sistema, presione simultáneamente **`Ctrl + K`** (o pulse sobre el buscador superior).
-* Escriba el número de cédula, código de historia (`HC-XXXXX`) o nombre de la paciente para abrir su expediente en milisegundos.
+### 2. Buscador Universal (`Ctrl + K`) y Apertura de Historia Clínica
+* Presione **`Ctrl + K`** en cualquier vista para localizar pacientes por cédula, código `HC-XXXXX` o nombre.
+* En **Pacientes -> + Añadir Paciente**, registre identificación, contacto de emergencia, seguro médico, grupo sanguíneo, alergias, medicación habitual y transfusiones (visibles en el **Banner Clínico Superior**). Si usted ingresa con rol **Médico**, el sistema lo asignará y bloqueará automáticamente como **Médico tratante** y mostrará únicamente su cartera de pacientes.
 
-### 3. Apertura y Edición del Expediente Clínico Integral
-1. En el menú lateral izquierdo, seleccione **Pacientes** y pulse **+ Nuevo Paciente** (o dentro de un perfil existente, pulse **Editar Expediente**).
-2. Complete los datos de identificación y seguridad clínica:
-   * **Identificación**: Documento de identidad, nombres, apellidos, fecha de nacimiento, género, teléfono, correo y dirección.
-   * **Emergencia y Cobertura**: Contacto de emergencia (nombre y teléfono) y proveedor de seguro médico o póliza.
-   * **Alertas y Antecedentes Críticos**: Grupo sanguíneo y factor Rh, alergias a medicamentos, enfermedades crónicas, medicación habitual y antecedentes de transfusiones sanguíneas.
-3. Estos datos críticos se mostrarán permanentemente en el **Banner Clínico Superior** del expediente.
+### 3. Sala de Espera Kanban en Vivo (`/sala-espera`) y Agenda (`/agenda`)
+* *(Disponible para Recepción y Administración)* En **Sala de Espera**, coordine el flujo diario arrastrando o avanzando cada turno por las 4 columnas: **1. Citados / Por Llegar**, **2. En Sala de Espera** (con cronómetro en vivo y aviso por WhatsApp en 1 clic), **3. En Consultorio** y **4. Atendidos / Caja**.
+* En **Agenda**, programe citas por día, semana o mes vinculadas al catálogo de servicios médicos.
 
-### 4. Navegación por las 8 Pestañas del Perfil y Calculadora Obstétrica en Vivo
-Dentro del expediente de la paciente dispone de ocho (08) vistas organizadas:
-* **Identificación / Antecedentes / Ginecológico**: Datos filiatorios, antecedentes personales/familiares, hábitos psicobiológicos y ciclo menstrual.
-* **Obstétrico**: Fórmula G-P-A-C-E y **Calculadora Obstétrica por Regla de Naegele**. Al seleccionar o editar la **Fecha de Última Menstruación (FUM)**, el sistema calcula automáticamente en tiempo real la **Edad Gestacional (`X sem + Y días`)** y la **Fecha Probable de Parto (FPP)**.
-* **Consultas y Timeline**: Registro de evoluciones médicas con signos vitales (PA, FC, FR, Peso, Talla, IMC, Temperatura, $\text{SpO}_2$) y línea de tiempo cronológica de atenciones.
-* **Notas y Estudios**: Repositorio para redactar notas rápidas y adjuntar archivos diagnósticos (ecografías, citologías, laboratorios en PDF o imagen).
-* **Recetas**: Historial de prescripciones emitidas.
+### 4. Expediente en 8 Pestañas, Regla de Naegele y Curva de Signos Vitales
+* Navegue por las 8 pestañas (*Identificación, Antecedentes, Ginecológico, Obstétrico, Consultas, Timeline, Notas y Estudios, Recetas*).
+* En **Obstétrico**, ingrese la **FUM** para calcular en vivo la **Edad Gestacional (`sem + días`)** y la **FPP** por Regla de Naegele.
+* En **Consultas**, registre constantes vitales (PA, Peso, Talla, IMC, FC, FR, Temperatura, $\text{SpO}_2$) y visualice las gráficas evolutivas de **Presión Arterial y Peso/IMC**. Al **completar la consulta**, el sistema genera automáticamente la factura en estado **`Pendiente`** lista para cobro en recepción.
 
-### 5. Exportación de Documentos PDF y Envío por WhatsApp
-1. En la cabecera del expediente de la paciente, haga clic en el menú desplegable **Exportar Documentos** para descargar el **Reporte de Historia Clínica Completa (PDF)** o la última consulta.
-2. Dentro de una consulta o en la pestaña **Recetas**, pulse **Generar Récipe PDF** o **Enviar por WhatsApp** para remitir la prescripción oficial membretada directamente al teléfono de la paciente.
+### 5. Emisión de Récipes, Órdenes de Laboratorio e Informes Ecográficos en PDF
+* En la cabecera del expediente o dentro de la consulta, genere en PDF de alta resolución:
+  1. **Historia Clínica Completa** y **Récipe Médico Oficial** con envío directo a WhatsApp.
+  2. **Orden de Laboratorio PDF** seleccionando en 1 clic perfiles rápidos (*Prenatal, Preoperatorio, Ginecológico/Hormonal o Control General*).
+  3. **Informe Ecográfico Estructurado PDF** con hallazgos biométricos y conclusiones diagnósticas.
 
-### 6. Agenda en Tiempo Real, Finanzas Multimoneda (BCV / EUR / USDT) e Inventario
-* **Agenda**: Gestione turnos por día, semana o mes; al asignar un servicio clínico se vincula automáticamente su honorario base y los cambios de estado se sincronizan en vivo entre recepción y consultorio.
-* **Finanzas, Tesorería Venezolana (`/cuentas`), Métodos de Pago (`/metodos-pago`) y Cashea**: Configure y vincule en un clic las cuentas financieras de la clínica (*Banco Nacional Bs., Caja Divisas USD/EUR, Caja Efectivo Bs., Billetera Binance USDT y Cartera Cashea*) con los **6 métodos de pago de Venezuela** (**Efectivo en Bolívares, Pago Móvil, Transferencia Bancaria, Binance Pay USDT, Divisas USD/EUR y Cashea**). Copie en 1 clic los datos bancarios oficiales (banco SUDEBAN, RIF/CI, teléfono, cuenta de 20 dígitos o Binance ID) para enviarlos por WhatsApp, utilice la **Calculadora Profesional Cashea** (inicial 40%/50%/60% + 3 cuotas sin interés cada 14 días), alterne entre las tasas en vivo **Dólar BCV (`$`)**, **Euro BCV (`€`)** y **USDT (`Binance P2P`)**, emplee la calculadora cuatridivisa (`$ USD ↔ Bs. ↔ € EUR ↔ USDT`), registre cobros mixtos y exporte comprobantes o cierres mensuales en PDF multimoneda con método y referencia.
-* **Activos Físicos (Inventario)**: *(Exclusivo para Administradores)* Controle las existencias de insumos médicos, alertas de stock mínimo y el kárdex de entradas y salidas clínicas.
+### 6. Ventas Multimoneda, Cashea, Reporte Z y Centro de Reportes (`/reportes`)
+* En **Ventas (`/facturacion`)**, procese facturas pendientes (ordenadas de más reciente a más antigua) con los **6 métodos de pago de Venezuela** (**Efectivo Bs., Pago Móvil, Transferencia Bancaria, Binance Pay USDT, Divisas USD/EUR y Cashea** con calculadora de inicial 40%/50%/60% + 3 cuotas sin interés), tasas en vivo (**Dólar BCV, Euro BCV y USDT**) y acreditación automática en **Cuentas (`/cuentas`)**.
+* Al cierre de la jornada, pulse **Cierre de Caja (Reporte Z)** para descargar el arqueo diario conciliado en PDF, o acuda a **Reportes (`/reportes`)** para exportar informes ejecutivos en PDF y CSV.
+
+### 7. Honorarios Médicos (`/honorarios`), Inventario (`/inventario`) y Auditoría (`/auditoria`)
+* *(Exclusivos para Administración)*:
+  * **Honorarios Médicos (`/honorarios`)**: Seleccione el rango de fechas y especialista para calcular sin doble conteo su comisión (`% Médico` vs. retención clínica) y emitir el recibo oficial de liquidación en PDF con firmas.
+  * **Inventario (`/inventario`)**: Controle existencias de insumos médicos, alertas de stock mínimo y kárdex de entradas/salidas.
+  * **Auditoría (`/auditoria`)**: Supervise la bitácora inmutable de eventos clínicos, financieros y de seguridad, filtrando por acción o usuario y exportando reportes de trazabilidad en PDF.

@@ -6,15 +6,15 @@
 **GUÍA DE ENTREVISTA SEMIESTRUCTURADA APLICADA AL PERSONAL MÉDICO**  
 *(Informante Clave: Dra. Carli Sole (y equipo médico) – Especialista en Múltiples Especialidades Médicas)*  
 
-**Objetivo**: Diagnosticar las fases operativas de la consulta médica médica integral, los mecanismos de archivo manual y los requerimientos del sistema informático en la Clínica FemeSalud.
+**Objetivo**: Diagnosticar las fases operativas de la consulta médica integral, los mecanismos de archivo manual y los requerimientos del sistema informático en la Clínica FemeSalud.
 
 **Preguntas Guía**:
 1. ¿Cuál es el procedimiento secuencial que se lleva a cabo desde que una paciente solicita una cita hasta que ingresa a la consulta médica?
 2. ¿Cómo se organizan y almacenan actualmente los expedientes e historias clínicas físicas de las pacientes?
 3. ¿Cuáles son las dificultades más recurrentes que experimenta al momento de localizar antecedentes patológicos o ecográficos de consultas anteriores?
-4. ¿Qué parámetros médicos son indispensables registrar de forma sistemática durante un control prenatal y una consulta médica multiespecialidad general (FUM, FPP, antecedentes G-P-A-C)?
-5. ¿Qué tiempo promedio estima que invierte en la redacción manual de récipes, indicaciones farmacológicas y justificativos médicos?
-6. ¿Qué funciones y características de seguridad consideraría indispensables en una plataforma web para que se adapte con total confianza a su ritmo de trabajo diario?
+4. ¿Qué parámetros médicos son indispensables registrar de forma sistemática durante un control prenatal y una consulta médica multiespecialidad general (FUM, FPP, antecedentes G-P-A-C, curvas de signos vitales)?
+5. ¿Qué tiempo promedio estima que invierte en la redacción manual de récipes, órdenes de laboratorio, informes ecográficos y cierres de honorarios?
+6. ¿Qué funciones y controles de privacidad por rol consideraría indispensables en una plataforma web para que se adapte con total confianza a su ritmo de trabajo diario?
 
 ---
 
@@ -29,13 +29,13 @@
 | 1 | La interfaz gráfica del sistema MediZen es clara, intuitiva y estéticamente agradable. | | | | | |
 | 2 | El mecanismo de desbloqueo rápido con PIN de 4 dígitos facilita el acceso seguro sin retrasos. | | | | | |
 | 3 | La búsqueda de pacientes mediante el atajo `Ctrl + K` o por cédula es inmediata y precisa. | | | | | |
-| 4 | Los campos del expediente gineco-clínico integral permiten registrar todos los datos requeridos. | | | | | |
+| 4 | Los campos del expediente clínico integral y las curvas de signos vitales cubren todos los datos requeridos. | | | | | |
 | 5 | El cálculo automatizado de las semanas de gestación y la fecha probable de parto (FPP) es exacto. | | | | | |
-| 6 | La agenda sincronizada en tiempo real reduce las interrupciones entre recepción y consultorio. | | | | | |
-| 7 | El generador visual de récipes permite emitir prescripciones médicas en PDF con rapidez. | | | | | |
-| 8 | La opción de enviar el récipe por WhatsApp agiliza la comunicación directa con la paciente. | | | | | |
-| 9 | El sistema web responde con rapidez y estabilidad en computadores y dispositivos móviles. | | | | | |
-| 10 | Recomendaría el uso de FemeSalud para la modernización de otros consultorios médicos. | | | | | |
+| 6 | El tablero Kanban de Sala de Espera y la agenda en vivo reducen las interrupciones entre recepción y consultorio. | | | | | |
+| 7 | Los generadores de récipes, órdenes de laboratorio e informes ecográficos emiten PDFs nítidos con rapidez. | | | | | |
+| 8 | La opción de enviar documentos médicos por WhatsApp agiliza la comunicación directa con la paciente. | | | | | |
+| 9 | La facturación post-consulta, el Reporte Z y la liquidación de honorarios simplifican el control financiero. | | | | | |
+| 10 | Recomendaría el uso de FemeSalud para la modernización de otros consultorios y clínicas médicas. | | | | | |
 
 ---
 
@@ -74,7 +74,7 @@ Ciudadanos:
 **Universidad Politécnica Territorial de los Llanos "Juana Ramírez" (UPTLLJR)**  
 Presente. —  
 
-Por medio de la presente, yo, **Dra. Carli Sole (y equipo médico)**, titular de la Cédula de Identidad N.º V-____________, en mi carácter de médico especialista y directora asistencial de la clínica médico **Clínica FemeSalud**, hago constar que he aceptado y avalado la ejecución del Proyecto Socio-Integrador titulado:
+Por medio de la presente, yo, **Dra. Carli Sole (y equipo médico)**, titular de la Cédula de Identidad N.º V-____________, en mi carácter de médico especialista y directora asistencial de la **Clínica FemeSalud**, hago constar que he aceptado y avalado la ejecución del Proyecto Socio-Integrador titulado:
 
 > **"DESARROLLO DE UN SISTEMA WEB MEDIZEN PARA LA GESTIÓN DE HISTORIAS CLÍNICAS MULTIESPECIALIDAD Y CONTROL OPERATIVO EN LA CLÍNICA FEMESALUD, VALLE DE LA PASCUA ESTADO GUÁRICO"**
 
@@ -82,7 +82,7 @@ Desarrollado por los estudiantes cursantes del Trayecto III del PNF en Informát
 * **Kevin Quintero**, C.I. V-32.276.060
 * **Charlys Villarroel**, C.I. V-32.337.825
 
-Dicho sistema web fue concebido, probado e implantado en nuestras instalaciones, manifestando nuestra entera conformidad con el producto tecnológico entregado, el cual ha solventado de manera satisfactoria la gestión de historias clínicas y el agendamiento operativo de nuestro centro.
+Dicho sistema web fue concebido, probado e implantado en nuestras instalaciones, manifestando nuestra entera conformidad con el producto tecnológico entregado, el cual ha solventado de manera satisfactoria la gestión de historias clínicas, el flujo de sala de espera y el control financiero-operativo de nuestro centro.
 
 Atentamente,
 
@@ -96,39 +96,37 @@ Clínica FemeSalud — Valle de la Pascua
 
 ## ANEXO E  
 **MANUAL RÁPIDO DE USUARIO DEL SISTEMA WEB FEMESALUD (MEDIZEN)**  
-*(Guía Operativa para la Dra. Carli Sole, Equipo Médico y Personal Administrativo)*
+*(Guía Operativa por Rol para Especialistas Médicos, Recepción y Administración)*
 
-### 1. Acceso Seguro, PIN de 4 Dígitos y Bloqueo por Inactividad
-1. Ingrese a la plataforma web MediZen e inicie sesión con sus credenciales institucionales.
-2. Cuando la estación médica permanezca inactiva durante 5 minutos (o al bloquear manualmente la pantalla), se activará el recubrimiento de seguridad (**Bloqueo por Inactividad**).
-3. Ingrese su **código PIN de 4 dígitos** para desbloquear instantáneamente la pantalla sin perder los datos que estaba redactando.
-*(Nota de Seguridad: Tras 5 intentos fallidos consecutivos de PIN, el sistema aplicará un bloqueo preventivo de 60 segundos contra fuerza bruta).*
+### 1. Acceso Seguro, Alcance por Rol y Bloqueo por Inactividad
+1. Inicie sesión con sus credenciales institucionales; el sistema cargará automáticamente los módulos autorizados según su perfil (**Administrador**, **Recepcionista** o **Médico Especialista**) con transición instantánea (`0 ms`) gracias a la caché multinivel L1/L2.
+2. Tras 5 minutos sin actividad (o al bloquear manualmente la estación), se activará el **Bloqueo por Inactividad**. Ingrese su **PIN de 4 dígitos** para retomar el trabajo al instante *(bloqueo preventivo de 60 s tras 5 intentos fallidos)*.
 
-### 2. Atajo Universal de Búsqueda Rápida (`Ctrl + K`)
-* En cualquier pantalla del sistema, presione simultáneamente **`Ctrl + K`** (o pulse sobre el buscador superior).
-* Escriba el número de cédula, código de historia (`HC-XXXXX`) o nombre de la paciente para abrir su expediente en milisegundos.
+### 2. Buscador Universal (`Ctrl + K`) y Apertura de Historia Clínica
+* Presione **`Ctrl + K`** en cualquier vista para localizar pacientes por cédula, código `HC-XXXXX` o nombre.
+* En **Pacientes -> + Añadir Paciente**, registre identificación, contacto de emergencia, seguro médico, grupo sanguíneo, alergias, medicación habitual y transfusiones (visibles en el **Banner Clínico Superior**). Si usted ingresa con rol **Médico**, el sistema lo asignará y bloqueará automáticamente como **Médico tratante** y mostrará únicamente su cartera de pacientes.
 
-### 3. Apertura y Edición del Expediente Clínico Integral
-1. En el menú lateral izquierdo, seleccione **Pacientes** y pulse **+ Nuevo Paciente** (o dentro de un perfil existente, pulse **Editar Expediente**).
-2. Complete los datos de identificación y seguridad clínica:
-   * **Identificación**: Documento de identidad, nombres, apellidos, fecha de nacimiento, género, teléfono, correo y dirección.
-   * **Emergencia y Cobertura**: Contacto de emergencia (nombre y teléfono) y proveedor de seguro médico o póliza.
-   * **Alertas y Antecedentes Críticos**: Grupo sanguíneo y factor Rh, alergias a medicamentos, enfermedades crónicas, medicación habitual y antecedentes de transfusiones sanguíneas.
-3. Estos datos críticos se mostrarán permanentemente en el **Banner Clínico Superior** del expediente.
+### 3. Sala de Espera Kanban en Vivo (`/sala-espera`) y Agenda (`/agenda`)
+* *(Disponible para Recepción y Administración)* En **Sala de Espera**, coordine el flujo diario arrastrando o avanzando cada turno por las 4 columnas: **1. Citados / Por Llegar**, **2. En Sala de Espera** (con cronómetro en vivo y aviso por WhatsApp en 1 clic), **3. En Consultorio** y **4. Atendidos / Caja**.
+* En **Agenda**, programe citas por día, semana o mes vinculadas al catálogo de servicios médicos.
 
-### 4. Navegación por las 8 Pestañas del Perfil y Calculadora Obstétrica en Vivo
-Dentro del expediente de la paciente dispone de ocho (08) vistas organizadas:
-* **Identificación / Antecedentes / Ginecológico**: Datos filiatorios, antecedentes personales/familiares, hábitos psicobiológicos y ciclo menstrual.
-* **Obstétrico**: Fórmula G-P-A-C-E y **Calculadora Obstétrica por Regla de Naegele**. Al seleccionar o editar la **Fecha de Última Menstruación (FUM)**, el sistema calcula automáticamente en tiempo real la **Edad Gestacional (`X sem + Y días`)** y la **Fecha Probable de Parto (FPP)**.
-* **Consultas y Timeline**: Registro de evoluciones médicas con signos vitales (PA, FC, FR, Peso, Talla, IMC, Temperatura, $\text{SpO}_2$) y línea de tiempo cronológica de atenciones.
-* **Notas y Estudios**: Repositorio para redactar notas rápidas y adjuntar archivos diagnósticos (ecografías, citologías, laboratorios en PDF o imagen).
-* **Recetas**: Historial de prescripciones emitidas.
+### 4. Expediente en 8 Pestañas, Regla de Naegele y Curva de Signos Vitales
+* Navegue por las 8 pestañas (*Identificación, Antecedentes, Ginecológico, Obstétrico, Consultas, Timeline, Notas y Estudios, Recetas*).
+* En **Obstétrico**, ingrese la **FUM** para calcular en vivo la **Edad Gestacional (`sem + días`)** y la **FPP** por Regla de Naegele.
+* En **Consultas**, registre constantes vitales (PA, Peso, Talla, IMC, FC, FR, Temperatura, $\text{SpO}_2$) y visualice las gráficas evolutivas de **Presión Arterial y Peso/IMC**. Al **completar la consulta**, el sistema genera automáticamente la factura en estado **`Pendiente`** lista para cobro en recepción.
 
-### 5. Exportación de Documentos PDF y Envío por WhatsApp
-1. En la cabecera del expediente de la paciente, haga clic en el menú desplegable **Exportar Documentos** para descargar el **Reporte de Historia Clínica Completa (PDF)** o la última consulta.
-2. Dentro de una consulta o en la pestaña **Recetas**, pulse **Generar Récipe PDF** o **Enviar por WhatsApp** para remitir la prescripción oficial membretada directamente al teléfono de la paciente.
+### 5. Emisión de Récipes, Órdenes de Laboratorio e Informes Ecográficos en PDF
+* En la cabecera del expediente o dentro de la consulta, genere en PDF de alta resolución:
+  1. **Historia Clínica Completa** y **Récipe Médico Oficial** con envío directo a WhatsApp.
+  2. **Orden de Laboratorio PDF** seleccionando en 1 clic perfiles rápidos (*Prenatal, Preoperatorio, Ginecológico/Hormonal o Control General*).
+  3. **Informe Ecográfico Estructurado PDF** con hallazgos biométricos y conclusiones diagnósticas.
 
-### 6. Agenda en Tiempo Real, Finanzas Multimoneda (BCV / EUR / USDT) e Inventario
-* **Agenda**: Gestione turnos por día, semana o mes; al asignar un servicio clínico se vincula automáticamente su honorario base y los cambios de estado se sincronizan en vivo entre recepción y consultorio.
-* **Finanzas, Tesorería Venezolana (`/cuentas`), Métodos de Pago (`/metodos-pago`) y Cashea**: Configure y vincule en un clic las cuentas financieras de la clínica (*Banco Nacional Bs., Caja Divisas USD/EUR, Caja Efectivo Bs., Billetera Binance USDT y Cartera Cashea*) con los **6 métodos de pago de Venezuela** (**Efectivo en Bolívares, Pago Móvil, Transferencia Bancaria, Binance Pay USDT, Divisas USD/EUR y Cashea**). Copie en 1 clic los datos bancarios oficiales (banco SUDEBAN, RIF/CI, teléfono, cuenta de 20 dígitos o Binance ID) para enviarlos por WhatsApp, utilice la **Calculadora Profesional Cashea** (inicial 40%/50%/60% + 3 cuotas sin interés cada 14 días), alterne entre las tasas en vivo **Dólar BCV (`$`)**, **Euro BCV (`€`)** y **USDT (`Binance P2P`)**, emplee la calculadora cuatridivisa (`$ USD ↔ Bs. ↔ € EUR ↔ USDT`), registre cobros mixtos y exporte comprobantes o cierres mensuales en PDF multimoneda con método y referencia.
-* **Activos Físicos (Inventario)**: *(Exclusivo para Administradores)* Controle las existencias de insumos médicos, alertas de stock mínimo y el kárdex de entradas y salidas clínicas.
+### 6. Ventas Multimoneda, Cashea, Reporte Z y Centro de Reportes (`/reportes`)
+* En **Ventas (`/facturacion`)**, procese facturas pendientes (ordenadas de más reciente a más antigua) con los **6 métodos de pago de Venezuela** (**Efectivo Bs., Pago Móvil, Transferencia Bancaria, Binance Pay USDT, Divisas USD/EUR y Cashea** con calculadora de inicial 40%/50%/60% + 3 cuotas sin interés), tasas en vivo (**Dólar BCV, Euro BCV y USDT**) y acreditación automática en **Cuentas (`/cuentas`)**.
+* Al cierre de la jornada, pulse **Cierre de Caja (Reporte Z)** para descargar el arqueo diario conciliado en PDF, o acuda a **Reportes (`/reportes`)** para exportar informes ejecutivos en PDF y CSV.
+
+### 7. Honorarios Médicos (`/honorarios`), Inventario (`/inventario`) y Auditoría (`/auditoria`)
+* *(Exclusivos para Administración)*:
+  * **Honorarios Médicos (`/honorarios`)**: Seleccione el rango de fechas y especialista para calcular sin doble conteo su comisión (`% Médico` vs. retención clínica) y emitir el recibo oficial de liquidación en PDF con firmas.
+  * **Inventario (`/inventario`)**: Controle existencias de insumos médicos, alertas de stock mínimo y kárdex de entradas/salidas.
+  * **Auditoría (`/auditoria`)**: Supervise la bitácora inmutable de eventos clínicos, financieros y de seguridad, filtrando por acción o usuario y exportando reportes de trazabilidad en PDF.

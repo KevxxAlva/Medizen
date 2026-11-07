@@ -9,7 +9,7 @@ La Fase I constituye el punto de partida del Proyecto Socio-Integrador, cuyo pro
 ## Descripción del Contexto
 
 ### Localización Geográfica
-El proyecto socio-integrador se localiza en la **Clínica FemeSalud**, consultorio de atención médica médica multiespecialidad y obstétrica bajo la responsabilidad de la **Dra. Carli Sole (y equipo médico)**, ubicado en el casco central de la ciudad de **Valle de la Pascua**, Parroquia Valle de la Pascua, Municipio Autónomo Leonardo Infante del Estado Bolivariano de Guárico.
+El proyecto socio-integrador se localiza en la **Clínica FemeSalud**, consultorio de atención médica multiespecialidad y obstétrica bajo la responsabilidad de la **Dra. Carli Sole (y equipo médico)**, ubicado en el casco central de la ciudad de **Valle de la Pascua**, Parroquia Valle de la Pascua, Municipio Autónomo Leonardo Infante del Estado Bolivariano de Guárico.
 
 * **Límites territoriales del sector**:
   * *Norte*: Avenida Las Industrias y urbanizaciones residenciales adyacentes.
@@ -18,8 +18,25 @@ El proyecto socio-integrador se localiza en la **Clínica FemeSalud**, consultor
   * *Oeste*: Calle Shettino y enlace con la prolongación de la Avenida Manapire.
 * **Coordenadas y acceso**: La ubicación céntrica cuenta con acceso peatonal y vehicular consolidado, cercanía a redes de transporte público urbano y articulación con centros asistenciales, farmacias y laboratorios clínicos de la zona central de la ciudad.
 
+**Figura 1**  
+*Croquis de Ubicación Geográfica de la Clínica FemeSalud*
+
+```mermaid
+flowchart TB
+    Norte["⬆️ NORTE: Av. Las Industrias y Urbanizaciones Residenciales"]
+    subgraph CascoCentral["Casco Central de Valle de la Pascua (Mcpio. Leonardo Infante, Edo. Guárico)"]
+        direction LR
+        Oeste["⬅️ OESTE:<br/>Calle Shettino /<br/>Enlace Av. Manapire"] --- Clinica["🏥 CLÍNICA FEMESALUD<br/>Dra. Carli Sole y Equipo Médico<br/>(Zona Médico-Comercial Central)"] --- Este["➡️ ESTE:<br/>Avenida<br/>Rómulo Gallegos"]
+    end
+    Sur["⬇️ SUR: Calle Guanto y Zona Comercial Central"]
+
+    Norte --- CascoCentral --- Sur
+```
+
+*Nota.* Elaboración propia (2026), representación esquemática de los linderos urbanos de la Clínica FemeSalud en Valle de la Pascua.
+
 ### Dimensión Histórica
-La clínica médico de la Dra. Carli Sole (y equipo médico) surge como una iniciativa profesional orientada a cubrir la alta demanda de atención médico-quirúrgica y preventiva en las especialidades de Múltiples Especialidades Médicas en Valle de la Pascua y poblaciones circunvecinas del oriente del estado Guárico (Tucupido, Zaraza, El Socorro, Santa María de Ipire). A lo largo de su ejercicio profesional, la Dra. Carli Sole (y equipo médico) consolidó la marca asistencial **FemeSalud**, orientada a proporcionar una atención cálida, humanizada y tecnificada a la pacientes en sus distintas etapas de su ciclo biológico: adolescencia, preconcepción, embarazo, puerperio y climaterio. Históricamente, la clínica gestionó la información médica de sus pacientes en cuadernos foliados, carpetas de manila y talonarios de récipes impresos tradicionales, esquema que con el incremento del volumen de pacientes comenzó a evidenciar retrasos, duplicidad y desgastes físicos de los expedientes.
+El consultorio médico de la Dra. Carli Sole (y equipo médico) surge como una iniciativa profesional orientada a cubrir la alta demanda de atención médico-quirúrgica y preventiva en múltiples especialidades médicas en Valle de la Pascua y poblaciones circunvecinas del oriente del estado Guárico (Tucupido, Zaraza, El Socorro, Santa María de Ipire). A lo largo de su ejercicio profesional, la Dra. Carli Sole (y equipo médico) consolidó la marca asistencial **FemeSalud**, orientada a proporcionar una atención cálida, humanizada y tecnificada a las pacientes en sus distintas etapas de su ciclo biológico: adolescencia, preconcepción, embarazo, puerperio y climaterio. Históricamente, la clínica gestionó la información médica de sus pacientes en cuadernos foliados, carpetas de manila y talonarios de récipes impresos tradicionales, esquema que con el incremento del volumen de pacientes comenzó a evidenciar retrasos, duplicidad y desgastes físicos de los expedientes.
 
 ### Dimensión Comunitaria
 Desde el punto de vista comunitario, la Clínica FemeSalud se articula directamente con la comunidad de usuarias de la entidad. Las pacientes provienen de diversos estratos sociales que acuden en búsqueda de diagnósticos tempranos, evaluación clínica exhaustiva y pesquisa de patologías médicas multiespecialidad mediante exámenes especializados y estudios por imágenes. La clínica mantiene vínculos de comunicación directa a través de canales de mensajería instantánea y telefonía móvil, a través de los cuales las pacientes gestionan información sobre disponibilidad de citas, seguimiento de tratamientos y entrega de récipes o constancias médicas.
@@ -28,7 +45,7 @@ Desde el punto de vista comunitario, la Clínica FemeSalud se articula directame
 La organización se inscribe en el sector terciario de la economía regional, prestando servicios médicos privados de salud. Su modelo operativo sustenta los costos de personal auxiliar, suministros médicos (material médico descartable, insumos generales y equipos de diagnóstico) y mantenimiento de equipos diagnósticos de alta tecnología. La dinámica económica regional exige manejar esquemas de facturación, tesorería y cobranza multimoneda propios de la economía venezolana (**Pago Móvil interbancario, Transferencias Bancarias nacionales, Efectivo en Bolívares, Divisas en efectivo USD/EUR, Binance Pay en USDT y financiamiento por cuotas sin interés mediante Cashea**), requiriendo un control estricto de las cuentas receptoras, caja chica, flujo de ingresos diarios y control de insumos consumibles.
 
 ### Dimensión Social
-La población beneficiaria directa está constituida por pacientes y familias del municipio Leonardo Infante. La atención oportuna de la salud integral incide directamente en la reducción de tasas de morbimortalidad general, el diagnóstico precoz de lesiones precursoras del patologías severas y prevención de enfermedades crónicas. Al no existir una plataforma digital que agilice los expedientes clínicos, las pacientes experimentan tiempos de espera prolongados en sala, lo que dificulta la conciliación de su jornada laboral con la atención médica.
+La población beneficiaria directa está constituida por pacientes y familias del municipio Leonardo Infante. La atención oportuna de la salud integral incide directamente en la reducción de tasas de morbimortalidad general, el diagnóstico precoz de lesiones precursoras de patologías severas y prevención de enfermedades crónicas. Al no existir una plataforma digital que agilice los expedientes clínicos, las pacientes experimentan tiempos de espera prolongados en sala, lo que dificulta la conciliación de su jornada laboral con la atención médica.
 
 ### Dimensión Cultural
 En la región llanera venezolana, la salud médica multiespecialidad y reproductiva ha estado históricamente rodeada de temores, prejuicios culturales y vacilaciones que retardan la consulta preventiva. FemeSalud promueve un cambio de paradigma cultural donde la consulta médica multiespecialidad es un espacio de confianza, empatía, confidencialidad y educación sanitaria. Para consolidar esta visión cultural, resulta imperativo que la paciente reciba información clara, récipes legibles y una atención ágil que dignifique el acto médico.
@@ -53,11 +70,11 @@ La clínica opera bajo el marco regulatorio del Ministerio del Poder Popular par
 Para diagnosticar con rigor técnico y participativo la situación operativa y de gestión de datos en la clínica, se aplicó la técnica de la matriz de Fortalezas, Oportunidades, Debilidades y Amenazas (FODA) en sesiones de trabajo conjunto entre el equipo de desarrollo de la UPTLLJR y la Dra. Carli Sole (y equipo médico).
 
 **Tabla 1**  
-*Matriz FODA de la clínica FemeSalud*
+*Matriz FODA de la Clínica FemeSalud*
 
 | Factores Internos | Fortalezas (F) | Debilidades (D) |
 | :--- | :--- | :--- |
-| | 1. Alta cualificación y reputación médica de la Dra. Carli Sole (y equipo médico) en Valle de la Pascua.<br>2. Equipamiento médico y ecográfico de última tecnología.<br>3. Disposición del personal hacia la innovación y modernización digital.<br>4. Existencia de conectividad a Internet y equipos de cómputo en la clínica. | 1. Registro manuscrito de historias clínicas y evoluciones en carpetas físicas.<br>2. Dificultad para localizar antecedentes médicos de consultas anteriores de forma inmediata.<br>3. Tiempos prolongados en la redacción manual de récipe e indicaciones.<br>4. Falta de sincronización en tiempo real entre la recepción y la clínica para la asignación de turnos. |
+| | 1. Alta cualificación y reputación médica de la Dra. Carli Sole (y equipo médico) en Valle de la Pascua.<br>2. Equipamiento médico y ecográfico de última tecnología.<br>3. Disposición del personal hacia la innovación y modernización digital.<br>4. Existencia de conectividad a Internet y equipos de cómputo en la clínica. | 1. Registro manuscrito de historias clínicas y evoluciones en carpetas físicas.<br>2. Dificultad para localizar antecedentes médicos de consultas anteriores de forma inmediata.<br>3. Tiempos prolongados en la redacción manual de récipes e indicaciones.<br>4. Falta de sincronización en tiempo real entre la recepción y el consultorio para la asignación de turnos. |
 | **Factores Externos** | **Oportunidades (O)** | **Amenazas (A)** |
 | | 1. Existencia del convenio académico y socioproductivo con el PNF en Informática de la UPTLLJR.<br>2. Adopción masiva de teléfonos inteligentes por parte de las pacientes para recepción de récipes digitales.<br>3. Disponibilidad de tecnologías web y bases de datos seguras de código abierto o bajo consumo de recursos.<br>4. Políticas nacionales que impulsan la soberanía tecnológica y digitalización de servicios públicos y privados. | 1. Inestabilidad en el suministro eléctrico o fluctuaciones del servicio de telecomunicaciones en la entidad.<br>2. Riesgo de deterioro, incendio, extravío o acceso no autorizado a los archivos físicos de papel.<br>3. Costos crecientes de insumos de papelería, tinta de impresión y carpetas físicas.<br>4. Resistencia inicial de algunas pacientes de edad avanzada a los formatos estrictamente digitales. |
 
@@ -74,9 +91,9 @@ Mediante mesas de trabajo participativo, se listaron los nudos críticos detecta
 
 | Problema Identificado | G (1-5) | VT (1-5) | IC (1-5) | TE (1-5) | Total | Jerarquía |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Ineficiencia en el resguardo, búsqueda y registro de historias clínicas médica integrals y gestión operativa** | 5 | 5 | 5 | 5 | **20** | **Prioridad 1** |
+| **Ineficiencia en el resguardo, búsqueda y registro de historias clínicas médicas integrales y gestión operativa** | 5 | 5 | 5 | 5 | **20** | **Prioridad 1** |
 | Retrasos en el agendamiento y confirmación de citas médicas y control de turnos en sala de espera | 4 | 5 | 4 | 4 | 17 | Prioridad 2 |
-| Lentitud en la emisión manual de récipes médicos, récipe gráfico y justificativos de reposo | 4 | 5 | 4 | 3 | 16 | Prioridad 3 |
+| Lentitud en la emisión manual de récipes médicos, órdenes de laboratorio e informes clínicos | 4 | 5 | 4 | 3 | 16 | Prioridad 3 |
 | Descontrol en la conciliación multimoneda de caja chica, pagos móviles y cobranza de honorarios | 3 | 4 | 3 | 4 | 14 | Prioridad 4 |
 | Ausencia de un inventario automatizado de insumos médicos descartables en la clínica | 3 | 4 | 3 | 3 | 13 | Prioridad 5 |
 
@@ -88,35 +105,28 @@ Mediante mesas de trabajo participativo, se listaron los nudos críticos detecta
 ```mermaid
 flowchart TD
     subgraph Efectos["EFECTOS Y CONSECUENCIAS (COPA)"]
-        E1["Tiempos excesivos de espera y fatiga en pacientes en sala de espera"]
-        E2["Riesgo de mala praxis por antecedentes ginecológicos omitidos o traspapelados"]
-        E3["Pérdida de privacidad y vulnerabilidad de datos médicos confidenciales"]
-        E4["Ineficiencia operativa y desgaste del personal médico y administrativo"]
-        E1 --- E2 --- E3 --- E4
+        direction LR
+        E1["Tiempos excesivos de espera<br/>y fatiga en pacientes"] --- E2["Riesgo clínico por antecedentes<br/>médicos traspapelados"]
+        E3["Vulnerabilidad y pérdida de<br/>privacidad de datos médicos"] --- E4["Ineficiencia operativa y desgaste<br/>del personal clínico-administrativo"]
+        E1 ~~~ E3
+        E2 ~~~ E4
     end
 
     subgraph ProblemaCentral["PROBLEMA CENTRAL (TRONCO)"]
-        PC["INEFICIENTE GESTIÓN Y RESGUARDO DE HISTORIAS CLÍNICAS MÉDICAS MULTIESPECIALIDAD Y CONTROL OPERATIVO en la clínica FemeSalud, VALLE DE LA PASCUA"]
+        PC["INEFICIENTE GESTIÓN Y RESGUARDO DE HISTORIAS CLÍNICAS<br/>MULTIESPECIALIDAD Y CONTROL OPERATIVO EN LA CLÍNICA<br/>FEMESALUD, VALLE DE LA PASCUA"]
     end
 
     subgraph Causas["CAUSAS DIRECTAS E INDIRECTAS (RAÍCES)"]
-        C1["Uso exclusivo de expedientes físicos en papel y carpetas archivadoras"]
-        C2["Inexistencia de un sistema automatizado de citas y turnos en tiempo real"]
-        C3["Redacción manual y repetitiva de prescripciones, récipes y consentimientos"]
-        C4["Carencia de herramientas de respaldo seguro de la información médica"]
-        C1_1["Falta de software especializado en flujos médicos multiespecialidad"]
-        C2_1["Falta de sincronización entre el área de recepción y la clínica"]
-        C3_1["Dependencia de formatos impresos y talonarios comerciales"]
-        C4_1["Ausencia de infraestructura digital criptográfica para custodia de datos"]
-        
-        C1_1 --> C1
-        C2_1 --> C2
-        C3_1 --> C3
-        C4_1 --> C4
+        C1_1["Falta de software especializado<br/>multiespecialidad"] --> C1["Uso exclusivo de expedientes<br/>físicos en papel"]
+        C2_1["Desconexión entre recepción<br/>y consultorios médicos"] --> C2["Ausencia de sala de espera<br/>y agenda en tiempo real"]
+        C3_1["Dependencia de talonarios<br/>y formatos manuscritos"] --> C3["Redacción manual de récipes,<br/>laboratorio e informes"]
+        C4_1["Ausencia de bóveda digital<br/>y trazabilidad contable"] --> C4["Sin respaldo criptográfico<br/>ni arqueo multimoneda"]
+        C1 ~~~ C3
+        C2 ~~~ C4
     end
 
-    Causas --> PC
-    PC --> Efectos
+    Causas --> ProblemaCentral
+    ProblemaCentral --> Efectos
 ```
 
 *Nota.* Elaboración propia (2026), producto del diagnóstico participativo con el personal médico de la clínica.
@@ -130,13 +140,13 @@ flowchart TD
 Para formular con precisión la problemática de investigación, se da respuesta a las siete (07) interrogantes metodológicas exigidas por el manual de la UPTLLJR:
 
 1. **¿Cuál es la situación actual?**  
-   En la clínica de la Clínica FemeSalud, la Dra. Carli Sole (y equipo médico) y su asistente administran las consultas, diagnósticos ecográficos y antecedentes médicos de decenas de pacientes semanales utilizando fichas de papel, libretas de citas y talonarios impresos. Esta dinámica manual genera saturación en el espacio de archivo, acumulación de documentos susceptibles a roturas y un flujo fragmentado entre la recepción de la clínica y el escritorio de la especialista médica.
+   En la Clínica FemeSalud, la Dra. Carli Sole (y equipo médico) y su asistente administran las consultas, diagnósticos ecográficos y antecedentes médicos de decenas de pacientes semanales utilizando fichas de papel, libretas de citas y talonarios impresos. Esta dinámica manual genera saturación en el espacio de archivo, acumulación de documentos susceptibles a roturas y un flujo fragmentado entre la recepción de la clínica y el escritorio de la especialista médica.
 
 2. **¿Desde cuándo ocurre?**  
    Esta situación ha prevalecido desde los inicios operativos de la clínica. Sin embargo, en los últimos dos años, con el crecimiento sostenido de la cartera de pacientes y la complejidad de los controles de gestantes de alto riesgo clínico integral, el volumen documental sobrepasó la capacidad de control manual, haciendo urgente la adopción de un sistema automatizado.
 
 3. **¿A quiénes afecta y cómo?**  
-   Afecta principalmente a la especialista médica (Dra. Carli Sole (y equipo médico)), quien debe destinar minutos valiosos de la consulta a buscar hojas de evolución previas o redactar a mano tratamientos repetitivos; al personal de recepción, sobrecargado por la búsqueda de expedientes físicos en archivadores; y a las pacientes, quienes padecen retrasos innecesarios en la sala de espera y corren el riesgo de que sus prescripciones manuales resulten difíciles de descifrar en farmacia.
+   Afecta principalmente a la especialista médica (Dra. Carli Sole y equipo médico), quien debe destinar minutos valiosos de la consulta a buscar hojas de evolución previas o redactar a mano tratamientos repetitivos; al personal de recepción, sobrecargado por la búsqueda de expedientes físicos en archivadores; y a las pacientes, quienes padecen retrasos innecesarios en la sala de espera y corren el riesgo de que sus prescripciones manuales resulten difíciles de descifrar en farmacia.
 
 4. **¿Qué se ha hecho al respecto?**  
    Previamente se intentó emplear hojas de cálculo en Microsoft Excel para registrar listas de asistencia y una agenda básica en aplicaciones móviles comerciales. No obstante, dichas herramientas son aisladas, carecen de formatos clínicos especializados (antecedentes patológicos, exámenes físicos y estudios complementarios), no permiten el trabajo colaborativo simultáneo y representan una grave vulnerabilidad de seguridad al no estar cifradas ni contar con control de acceso por roles.
@@ -148,40 +158,36 @@ Para formular con precisión la problemática de investigación, se da respuesta
    La motivación principal radica en el compromiso social y la formación académica como estudiantes del Trayecto III del PNF en Informática de la UPTLLJR, aplicando los avances de la ingeniería web moderna (arquitecturas reactivas, bases de datos PostgreSQL en tiempo real y criptografía local) para dotar a un centro de salud de nuestra propia localidad con una herramienta de categoría profesional que optimice el ejercicio de la medicina.
 
 7. **¿Cuál es la interrogante central que el proyecto busca responder? (Hipótesis)**  
-   *¿De qué manera el desarrollo e implementación de un sistema web integral permitirá optimizar la gestión de historias clínicas médicas multiespecialidad y el control operativo en la clínica FemeSalud de la ciudad de Valle de la Pascua, estado Guárico?*
+   *¿De qué manera el desarrollo e implementación de un sistema web integral permitirá optimizar la gestión de historias clínicas médicas multiespecialidad y el control operativo en la Clínica FemeSalud de la ciudad de Valle de la Pascua, estado Guárico?*
 
 ---
 
 ### Árbol de Objetivos
 
+**Figura 3**  
+*Árbol de Objetivos del Sistema Web MediZen*
+
 ```mermaid
 flowchart TD
     subgraph Fines["FINES Y METAS ESTRATÉGICAS (COPA)"]
-        F1["Disminución de tiempos de espera y confort de las pacientes"]
-        F2["Garantía de precisión diagnóstica con acceso inmediato al historial médico"]
-        F3["Confidencialidad absoluta y blindaje de datos bajo estándares criptográficos"]
-        F4["Máxima eficiencia operativa y sincronización integral de la clínica"]
-        F1 --- F2 --- F3 --- F4
+        direction LR
+        F1["Disminución de tiempos de espera<br/>en Sala de Espera Kanban"] --- F2["Precisión diagnóstica con acceso<br/>en 0 ms al historial y curvas"]
+        F3["Confidencialidad absoluta con<br/>aislamiento RBAC y cifrado"] --- F4["Eficiencia operativa, cobro<br/>multimoneda y Reporte Z exacto"]
+        F1 ~~~ F3
+        F2 ~~~ F4
     end
 
     subgraph ObjetivoCentral["OBJETIVO CENTRAL (TRONCO)"]
-        OC["DESARROLLAR UN SISTEMA WEB MEDIZEN PARA LA GESTIÓN DE HISTORIAS CLÍNICAS MULTIESPECIALIDAD Y CONTROL OPERATIVO EN LA CLÍNICA FEMESALUD, VALLE DE LA PASCUA ESTADO GUÁRICO"]
+        OC["DESARROLLAR UN SISTEMA WEB MEDIZEN PARA LA GESTIÓN DE<br/>HISTORIAS CLÍNICAS MULTIESPECIALIDAD Y CONTROL OPERATIVO<br/>EN LA CLÍNICA FEMESALUD, VALLE DE LA PASCUA"]
     end
 
     subgraph Medios["MEDIOS Y ACCIONES OPERATIVAS (RAÍCES)"]
-        M1["Digitalizar y centralizar los expedientes en una base de datos relacional segura"]
-        M2["Implementar un módulo de agenda interactiva y citas con sincronización WebSockets"]
-        M3["Diseñar un generador visual de récipes e indicaciones médicas con exportación PDF"]
-        M4["Incorporar una bóveda de seguridad local con cifrado criptográfico PBKDF2 y AES-GCM"]
-        M1_1["Modelado formal de entidades clínicas de múltiples especialidades médicas"]
-        M2_1["Comunicación en tiempo real entre recepción y consultorio médico"]
-        M3_1["Plantillas configurables de récipe y envío directo vía WhatsApp"]
-        M4_1["Desbloqueo rápido por PIN de 4 dígitos protegiendo la sesión del navegador"]
-        
-        M1_1 --> M1
-        M2_1 --> M2
-        M3_1 --> M3
-        M4_1 --> M4
+        M1_1["Modelado 3FN + JSONB y<br/>curvas longitudinales"] --> M1["Centralizar expedientes en<br/>PostgreSQL con caché L1/L2"]
+        M2_1["Sincronización Realtime<br/>recepción-consultorio"] --> M2["Sala de Espera Kanban<br/>y agenda interactiva"]
+        M3_1["Perfiles 1-clic y envío<br/>directo vía WhatsApp"] --> M3["Generador PDF de récipes,<br/>laboratorio y ecografía"]
+        M4_1["PIN PBKDF2/AES-GCM, RLS<br/>y bitácora /auditoria"] --> M4["Seguridad criptográfica,<br/>honorarios y caja multimoneda"]
+        M1 ~~~ M3
+        M2 ~~~ M4
     end
 
     Medios --> ObjetivoCentral
@@ -200,8 +206,8 @@ flowchart TD
 | Nivel de Objetivos | Resumen Narrativo | Indicadores Objetivamente Verificables | Medios de Verificación | Supuestos Críticos |
 | :--- | :--- | :--- | :--- | :--- |
 | **Fin** | Contribuir a la modernización tecnológica y calidad del servicio asistencial de salud médica multiespecialidad en Valle de la Pascua mediante soluciones informáticas seguras. | 1. Reducción del 50% o más en tiempos de espera general de las pacientes.<br>2. Cero pérdida o daño físico de expedientes médicos. | Encuestas de satisfacción a pacientes e informes semestrales de la clínica. | Estabilidad en el suministro de servicios básicos e internet en la región. |
-| **Propósito** | Optimizar la gestión de historias clínicas y el flujo administrativo-operativo de la clínica FemeSalud mediante un sistema web automatizado. | 1. 100% de las consultas y evoluciones registradas de manera digital.<br>2. Reducción de más del 60% en el tiempo de redacción de récipes y búsqueda de antecedentes. | Registros en la base de datos PostgreSQL y auditoría del sistema web. | Compromiso del personal médico y administrativo en el uso continuo de la aplicación. |
-| **Componentes (Resultados)** | 1. Módulo de Historia Clínica Digital (Múltiples Especialidades Médicas).<br>2. Módulo de Citas y Agenda en Tiempo Real.<br>3. Generador Visual de Récipes en PDF y envíos digitales.<br>4. Módulo de Facturación, Caja Chica e Inventario.<br>5. Bóveda Criptográfica Local de PIN para autenticación rápida. | 1. 5 módulos completamente funcionales e integrados.<br>2. Sistema de autenticación con cifrado PBKDF2/AES-GCM operativo en menos de 1 segundo.<br>3. Exportación de PDF clínicos con alta resolución visual. | Código fuente validado en repositorio Git, pruebas funcionales de caja negra y manuales técnicos. | Aceptación de los prototipos por parte de la especialista Dra. Carli Sole (y equipo médico). |
+| **Propósito** | Optimizar la gestión de historias clínicas y el flujo administrativo-operativo de la Clínica FemeSalud mediante un sistema web automatizado. | 1. 100% de las consultas y evoluciones registradas de manera digital.<br>2. Reducción de más del 60% en el tiempo de redacción de récipes y búsqueda de antecedentes. | Registros en la base de datos PostgreSQL y auditoría del sistema web. | Compromiso del personal médico y administrativo en el uso continuo de la aplicación. |
+| **Componentes (Resultados)** | 1. Expediente Clínico Digital (8 pestañas, Naegele y curva de signos vitales).<br>2. Sala de Espera Kanban (`/sala-espera`) y Agenda en Tiempo Real.<br>3. Emisión PDF de Récipes, Órdenes de Laboratorio e Informes Ecográficos.<br>4. Facturación Multimoneda, Cashea, Reporte Z, Honorarios (`/honorarios`) e Inventario.<br>5. Bóveda Criptográfica PIN, Aislamiento RBAC por Médico y Auditoría (`/auditoria`). | 1. 10 módulos clínicos y administrativos integrados con caché L1/L2 (`0 ms`).<br>2. Autenticación PBKDF2/AES-GCM operativa en < 1 s.<br>3. Calidad estructural certificada en **100/100 (`react-doctor`)**. | Código fuente validado en repositorio Git, auditoría estática `react-doctor`, pruebas de caja negra y manuales técnicos. | Aceptación de los prototipos por parte de la especialista Dra. Carli Sole (y equipo médico). |
 | **Actividades** | 1.1 Diagnóstico de requerimientos mediante entrevistas clínicas.<br>2.1 Modelado de base de datos relacional y diagramas UML.<br>3.1 Codificación frontend en React 19/Tailwind y backend en Supabase.<br>4.1 Ejecución de pruebas unitarias y de integración.<br>5.1 Despliegue en la nube (Vercel) y capacitación del personal. | 1. Cronograma de actividades cumplido al 100%.<br>2. Matriz de pruebas de software con 100% de casos aprobados.<br>3. 100% del personal capacitado satisfactoriamente. | Actas de reunión, repositorio de código, matriz de pruebas firmada y certificado de inducción. | Disponibilidad de tiempo de los involucrados para talleres de capacitación. |
 
 *Nota.* Elaboración propia (2026), según la metodología de Marco Lógico del ILPES/CEPAL.
@@ -211,10 +217,10 @@ flowchart TD
 ## Objetivos del Proyecto
 
 ### Objetivo General
-Desarrollar un sistema web para la gestión de historias clínicas médicas multiespecialidad y control operativo en la clínica FemeSalud, Valle de la Pascua, estado Guárico.
+Desarrollar un sistema web para la gestión de historias clínicas médicas multiespecialidad y control operativo en la Clínica FemeSalud, Valle de la Pascua, estado Guárico.
 
 ### Objetivos Específicos
-1. **Diagnosticar** la situación actual de los procesos de registro de historias clínicas, asignación de citas, prescripción médica y control financiero en la clínica FemeSalud.
+1. **Diagnosticar** la situación actual de los procesos de registro de historias clínicas, asignación de citas, prescripción médica y control financiero en la Clínica FemeSalud.
 2. **Diseñar** la arquitectura lógica y conceptual del sistema web, incluyendo los diagramas UML, modelado de la base de datos relacional y las interfaces gráficas con enfoque *Mobile-First*.
 3. **Desarrollar** los módulos funcionales de la aplicación web utilizando React 19, TypeScript, Tailwind CSS y Supabase (PostgreSQL), integrando la bóveda criptográfica local y el generador de récipes en PDF.
 4. **Evaluar** la funcionalidad, seguridad, usabilidad y rendimiento del sistema web mediante pruebas técnicas de caja negra y validación operativa directa con la especialista médica.

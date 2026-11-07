@@ -9,7 +9,11 @@ type AppointmentForReport = {
   motivo?: string;
 };
 
-export const generateAppointmentsReport = async (appointments: AppointmentForReport[], filterMonth: string = "") => {
+export const generateAppointmentsReport = async (
+  appointments: AppointmentForReport[],
+  filterMonth: string = "",
+  doctorName?: string
+) => {
   const [{ jsPDF }, { default: autoTable }] = await Promise.all([
     import("jspdf"),
     import("jspdf-autotable"),
@@ -42,6 +46,14 @@ export const generateAppointmentsReport = async (appointments: AppointmentForRep
     doc.text(`Reporte Histórico — Generado el: ${new Date().toLocaleDateString()}`, pageWidth / 2, 185, { align: "center" });
   }
 
+  if (doctorName) {
+    doc.setFontSize(10);
+    doc.setFont(config.customFontFamily, "normal");
+    doc.setTextColor(80);
+    doc.text(`Médico: ${doctorName}`, pageWidth / 2, 198, { align: "center" });
+    doc.setTextColor(0);
+  }
+
   const tableData = appointments.map(a => {
     let estadoDisplay = "Desconocido";
     const st = (a.estado || "").toLowerCase();
@@ -62,7 +74,7 @@ export const generateAppointmentsReport = async (appointments: AppointmentForRep
   });
 
   autoTable(doc, {
-    startY: 205,
+    startY: doctorName ? 218 : 205,
     head: [['ID', 'Paciente', 'Médico', 'Fecha y Hora', 'Motivo', 'Estado']],
     body: tableData.length > 0 ? tableData : [['—', 'Sin consultas en este período', '—', '—', '—', '—']],
     theme: 'striped',

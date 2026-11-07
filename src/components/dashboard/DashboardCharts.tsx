@@ -5,6 +5,7 @@ import { Chart as TanStackChart } from "@tanstack/charts/react/tooltip";
 import { tooltip as chartTooltip } from "@tanstack/charts/tooltip";
 import { defineChart, differenceY, rollingWindow } from "@tanstack/charts";
 import { scaleLinear, scaleUtc } from "d3-scale";
+import { cn } from "@/lib/utils";
 
 let rechartsModule: typeof import("recharts") | null = null;
 let rechartsPromise: Promise<typeof import("recharts")> | null = null;
@@ -87,6 +88,277 @@ export const MiniAreaChart = memo(function MiniAreaChart({
         />
       </AreaChart>
     </ResponsiveContainer>
+  );
+});
+
+const getWeekDayLabels = () => {
+  const days = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+  const result: { short: string; full: string }[] = [];
+  const today = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    result.push({
+      short: i === 0 ? "Hoy" : days[d.getDay()],
+      full: d.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "short" }),
+    });
+  }
+  return result;
+};
+
+export const DailyPillBars = memo(function DailyPillBars({
+  data = [0, 0, 0, 0, 0, 0, 0],
+  unit = "pacientes",
+}: {
+  data: number[];
+  unit?: string;
+}) {
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const days = useMemo(() => getWeekDayLabels(), []);
+
+  const values = useMemo(() => {
+    const arr = (data || []).slice(-7);
+    while (arr.length < 7) arr.unshift(0);
+    return arr;
+  }, [data]);
+
+  const maxVal = Math.max(...values, 1);
+  const total = values.reduce((a, b) => a + b, 0);
+
+  return (
+    <div className="w-full h-full flex flex-col justify-between pt-1">
+      <div className="flex justify-between items-center text-[10px] text-muted-foreground px-0.5 mb-1.5 font-medium">
+        <span>Captación diaria</span>
+        <span className="font-semibold text-foreground/80">{total} esta semana</span>
+      </div>
+
+      <div className="flex items-end justify-between gap-1 sm:gap-2 h-18 px-1">
+        {values.map((val, idx) => {
+          const isToday = idx === 6;
+          const isHovered = hoveredIdx === idx;
+          const isPeak = val > 0 && val === maxVal;
+          const heightPct = val === 0 ? 9 : Math.max(20, Math.round((val / maxVal) * 100));
+
+          return (
+            <div
+              key={idx}
+              className="flex-1 flex flex-col items-center h-full justify-end relative group cursor-pointer"
+              onMouseEnter={() => setHoveredIdx(idx)}
+              onMouseLeave={() => setHoveredIdx(null)}
+            >
+              {isHovered && (
+                <div className="absolute -top-7 left-1/2 -translate-x-1/2 z-30 bg-popover text-popover-foreground text-[10px] font-bold py-0.5 px-2 rounded-md shadow-lg border border-border whitespace-nowrap pointer-events-none animate-in fade-in zoom-in-95 duration-150">
+                  <span className="capitalize">{days[idx]?.short}:</span> {val} {unit}
+                </div>
+              )}
+
+              <div className="w-full max-w-[14px] h-full flex items-end justify-center rounded-full bg-muted/25 p-0.5">
+                <div
+                  style={{ height: `${heightPct}%` }}
+                  className={cn(
+                    "w-full rounded-full transition-all duration-300",
+                    isToday
+                      ? "bg-gradient-to-t from-primary to-blue-400 shadow-sm shadow-primary/40 ring-1 ring-primary/40"
+                      : isPeak
+                      ? "bg-blue-500/80"
+                      : val > 0
+                      ? "bg-blue-400/50 hover:bg-blue-400/80"
+                      : "bg-muted-foreground/20"
+                  )}
+                />
+              </div>
+
+              <span
+                className={cn(
+                  "text-[9px] mt-1.5 font-medium transition-colors",
+                  isToday
+                    ? "font-bold text-primary"
+                    : isHovered
+                    ? "text-foreground font-semibold"
+                    : "text-muted-foreground/70"
+                )}
+              >
+                {days[idx]?.short}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+});
+
+export const PeakSparklineWithBaseline = memo(function PeakSparklineWithBaseline({
+  data = [0, 0, 0, 0, 0, 0, 0],
+  unit = "consultas",
+}: {
+  data: number[];
+  unit?: string;
+}) {
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const days = useMemo(() => getWeekDayLabels(), []);
+
+  const values = useMemo(() => {
+    const arr = (data || []).slice(-7);
+    while (arr.length < 7) arr.unshift(0);
+    return arr;
+  }, [data]);
+
+  const maxVal = Math.max(...values, 1);
+  const total = values.reduce((a, b) => a + b, 0);
+  const avg = Math.round((total / 7) * 10) / 10;
+
+  const width = 280;
+  const height = 75;
+  const padX = 14;
+  const padTop = 10;
+  const padBottom = 16;
+  const plotH = height - padTop - padBottom;
+  const stepX = (width - padX * 2) / 6;
+
+  const points = useMemo(() => {
+    return values.map((v, i) => {
+      const x = padX + i * stepX;
+      const y = padTop + plotH - (v / maxVal) * plotH;
+      return { x, y, value: v, day: days[i]?.short || "" };
+    });
+  }, [values, maxVal, plotH, stepX, days]);
+
+  const pathD = useMemo(() => {
+    if (points.length < 2) return "";
+    let d = `M ${points[0].x} ${points[0].y}`;
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[i];
+      const p1 = points[i + 1];
+      const cp1x = p0.x + (p1.x - p0.x) / 2;
+      const cp1y = p0.y;
+      const cp2x = p0.x + (p1.x - p0.x) / 2;
+      const cp2y = p1.y;
+      d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p1.x} ${p1.y}`;
+    }
+    return d;
+  }, [points]);
+
+  const areaD = useMemo(() => {
+    if (!pathD) return "";
+    const lastP = points[points.length - 1];
+    const firstP = points[0];
+    const baseY = padTop + plotH;
+    return `${pathD} L ${lastP.x} ${baseY} L ${firstP.x} ${baseY} Z`;
+  }, [pathD, points, padTop, plotH]);
+
+  const avgY = padTop + plotH - (avg / maxVal) * plotH;
+
+  return (
+    <div className="w-full h-full flex flex-col justify-between pt-1">
+      <div className="flex justify-between items-center text-[10px] text-muted-foreground px-0.5 mb-0.5 font-medium">
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-2.5 h-0.5 border-t border-dashed border-amber-500" />
+          <span>Promedio: <strong className="text-foreground">{avg}</strong>/día</span>
+        </span>
+        <span className="font-semibold text-foreground/80">{total} total</span>
+      </div>
+
+      <div className="relative w-full h-20">
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          className="w-full h-full overflow-visible"
+          preserveAspectRatio="none"
+        >
+          <defs>
+            <linearGradient id="consultationsGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.38" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.02" />
+            </linearGradient>
+            <filter id="glowAmber" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#f59e0b" floodOpacity="0.4" />
+            </filter>
+          </defs>
+
+          <line
+            x1={padX}
+            y1={avgY}
+            x2={width - padX}
+            y2={avgY}
+            stroke="#f59e0b"
+            strokeDasharray="3 3"
+            strokeOpacity="0.5"
+            strokeWidth="1"
+          />
+
+          <path d={areaD} fill="url(#consultationsGradient)" />
+
+          <path
+            d={pathD}
+            fill="none"
+            stroke="#f59e0b"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            filter="url(#glowAmber)"
+          />
+
+          {points.map((p, i) => {
+            const isToday = i === 6;
+            const isHovered = hoveredIdx === i;
+            const isAboveAvg = p.value >= avg;
+            return (
+              <g key={i}>
+                {isToday && (
+                  <circle
+                    cx={p.x}
+                    cy={p.y}
+                    r="6.5"
+                    fill="none"
+                    stroke="#f59e0b"
+                    strokeWidth="1.5"
+                    className="animate-ping opacity-75 origin-center"
+                  />
+                )}
+                <circle
+                  cx={p.x}
+                  cy={p.y}
+                  r={isHovered ? "5" : isToday ? "4" : "3"}
+                  fill={isAboveAvg ? "#f59e0b" : "#d97706"}
+                  stroke="var(--color-card, #ffffff)"
+                  strokeWidth="1.5"
+                  className="transition-all duration-150 cursor-pointer"
+                  onMouseEnter={() => setHoveredIdx(i)}
+                  onMouseLeave={() => setHoveredIdx(null)}
+                />
+              </g>
+            );
+          })}
+        </svg>
+
+        {hoveredIdx !== null && points[hoveredIdx] && (
+          <div
+            style={{
+              left: `${(points[hoveredIdx].x / width) * 100}%`,
+              top: `${Math.max(0, (points[hoveredIdx].y / height) * 100 - 35)}%`,
+            }}
+            className="absolute -translate-x-1/2 -translate-y-full z-30 bg-popover text-popover-foreground text-[10px] font-bold py-0.5 px-2 rounded-md shadow-lg border border-border whitespace-nowrap pointer-events-none animate-in fade-in zoom-in-95 duration-150"
+          >
+            <span>{days[hoveredIdx]?.short}: </span>
+            <span className="text-amber-500 font-extrabold">{points[hoveredIdx].value}</span> {unit}
+          </div>
+        )}
+
+        <div className="flex justify-between px-2 text-[9px] text-muted-foreground/70 font-medium -mt-2">
+          {days.map((d, i) => (
+            <span
+              key={i}
+              className={cn(
+                "transition-colors",
+                i === 6 ? "font-bold text-amber-500" : hoveredIdx === i ? "text-foreground font-semibold" : ""
+              )}
+            >
+              {d.short}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 });
 

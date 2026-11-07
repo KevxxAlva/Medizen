@@ -9,7 +9,11 @@ type PatientForReport = {
   creado_en: string;
 };
 
-export const generatePatientsReport = async (patients: PatientForReport[], filterMonth: string = "") => {
+export const generatePatientsReport = async (
+  patients: PatientForReport[],
+  filterMonth: string = "",
+  doctorName?: string
+) => {
   const [{ jsPDF }, { default: autoTable }] = await Promise.all([
     import("jspdf"),
     import("jspdf-autotable"),
@@ -42,6 +46,14 @@ export const generatePatientsReport = async (patients: PatientForReport[], filte
     doc.text(`Reporte Histórico — Generado el: ${new Date().toLocaleDateString()}`, pageWidth / 2, 185, { align: "center" });
   }
 
+  if (doctorName) {
+    doc.setFontSize(10);
+    doc.setFont(config.customFontFamily, "normal");
+    doc.setTextColor(80);
+    doc.text(`Médico: ${doctorName}`, pageWidth / 2, 198, { align: "center" });
+    doc.setTextColor(0);
+  }
+
   const tableData = patients.map(p => {
     return [
       `PAT-${(p.id_paciente || 0).toString().padStart(4, '0')}`,
@@ -53,7 +65,7 @@ export const generatePatientsReport = async (patients: PatientForReport[], filte
   });
 
   autoTable(doc, {
-    startY: 205,
+    startY: doctorName ? 212 : 205,
     head: [['ID', 'Paciente', 'Documento', 'Teléfono', 'Fecha de Registro']],
     body: tableData.length > 0 ? tableData : [['—', 'Sin pacientes registrados en este período', '—', '—', '—']],
     theme: 'striped',

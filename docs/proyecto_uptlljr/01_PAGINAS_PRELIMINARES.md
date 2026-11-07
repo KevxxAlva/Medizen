@@ -98,14 +98,14 @@ Hacemos constar que, una vez evaluado el informe escrito definitivo y presenciad
 
 En fe de lo cual firman en la ciudad de Valle de la Pascua, a los ______ días del mes de ____________ del año 2026.
 
-<br><br>
+<br>
 
 __________________________________________  
 **Prof. Jose Alfredo Sanchez**  
 C.I.: __________________  
 *Tutor Académico*  
 
-<br><br>
+<br>
 
 __________________________________________ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; __________________________________________  
 **Jurado Evaluador 1** &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; **Jurado Evaluador 2**  
@@ -150,91 +150,90 @@ A nuestros profesores y facilitadores universitarios, que con su vocación y eje
 ### **ÍNDICE GENERAL**
 
 ```text
-ACTA DE APROBACIÓN DEFINITIVA DEL PROYECTO ..................................... iii
-DEDICATORIA .................................................................... iv
-AGRADECIMIENTO ................................................................. v
-ÍNDICE GENERAL ................................................................. vi
-ÍNDICE DE TABLAS ............................................................... vii
-ÍNDICE DE FIGURAS .............................................................. viii
-ÍNDICE DE ANEXOS ............................................................... ix
-RESUMEN ........................................................................ x
-INTRODUCCIÓN ................................................................... 1
+ACTA DE APROBACIÓN DEFINITIVA DEL PROYECTO ...................................... 3
+DEDICATORIA ..................................................................... 4
+AGRADECIMIENTO .................................................................. 5
+ÍNDICE GENERAL .................................................................. 6
+ÍNDICE DE TABLAS ................................................................ 8
+ÍNDICE DE FIGURAS ............................................................... 9
+ÍNDICE DE ANEXOS ............................................................... 10
+RESUMEN ........................................................................ 11
+INTRODUCCIÓN ................................................................... 12
 
-FASE I: DIAGNÓSTICO PARTICIPATIVO .............................................. 3
-  Descripción del Contexto ..................................................... 3
-    Localización Geográfica .................................................... 3
-    Dimensión Histórica ........................................................ 4
-    Dimensión Comunitaria ...................................................... 4
-    Dimensión Económica ........................................................ 5
-    Dimensión Social ........................................................... 5
-    Dimensión Cultural ......................................................... 5
-    Dimensión Ambiental ........................................................ 6
-    Dimensión Institucional .................................................... 6
-    Actores Involucrados ....................................................... 6
-  Diagnóstico Situacional ...................................................... 7
-    Descripción del Diagnóstico Participativo (Matriz FODA simple) ............. 7
-    Jerarquización e Identificación de las Necesidades ......................... 8
-      Tabla de Priorización de Problemas ....................................... 8
-      Árbol de Problemas ....................................................... 9
-  Planteamiento del Problema ................................................... 10
-    Descripción Narrativa de la Problemática ................................... 10
-    Árbol de Objetivos ......................................................... 12
-    Matriz de Marco Lógico ..................................................... 13
-  Objetivos del Proyecto ....................................................... 15
-    Objetivo General ........................................................... 15
-    Objetivos Específicos ...................................................... 15
-  Justificación de la Investigación ............................................ 16
-    Aportes de la Investigación (Económico, Social, Práctico, Teórico) ......... 16
-    Vinculación con el Plan de la Patria y Líneas del PNFI ..................... 17
+FASE I: DIAGNÓSTICO PARTICIPATIVO .............................................. 14
+  Descripción del Contexto ..................................................... 14
+    Localización Geográfica .................................................... 14
+    Dimensión Histórica ........................................................ 15
+    Dimensión Comunitaria ...................................................... 15
+    Dimensión Económica ........................................................ 15
+    Dimensión Social ........................................................... 16
+    Dimensión Cultural ......................................................... 16
+    Dimensión Ambiental ........................................................ 16
+    Dimensión Institucional .................................................... 16
+    Actores Involucrados ....................................................... 16
+  Diagnóstico Situacional ...................................................... 17
+    Descripción del Diagnóstico Participativo (Matriz FODA simple) ............. 17
+    Jerarquización e Identificación de las Necesidades ......................... 17
+      Tabla de Priorización de Problemas ....................................... 18
+      Árbol de Problemas ....................................................... 18
+  Planteamiento del Problema ................................................... 19
+    Descripción Narrativa de la Problemática ................................... 19
+    Árbol de Objetivos ......................................................... 20
+    Matriz de Marco Lógico ..................................................... 21
+  Objetivos del Proyecto ....................................................... 21
+    Objetivo General ........................................................... 21
+    Objetivos Específicos ...................................................... 21
+  Justificación de la Investigación ............................................ 22
+    Aportes de la Investigación (Económico, Social, Práctico, Teórico) ......... 22
+    Vinculación con el Plan de la Patria y Líneas del PNFI ..................... 22
 
-FASE II: REVISIÓN LITERARIA (EL SOPORTE CIENTÍFICO) ............................. 19
-  Antecedentes de la Investigación ............................................. 19
-    Antecedentes Internacionales ............................................... 19
-    Antecedentes Nacionales y Regionales ....................................... 21
-  Bases Teóricas ............................................................... 23
-    Sistemas de Información en Salud y Expedientes Clínicos Electrónicos ....... 23
-    Flujos Especializados en Múltiples Especialidades Médicas ......................... 24
-    Arquitectura Web Moderna: React 19, TypeScript y Vite ...................... 25
-    Backend-as-a-Service, PostgreSQL y Políticas de Seguridad RLS .............. 26
+FASE II: REVISIÓN LITERARIA (EL SOPORTE CIENTÍFICO) ............................ 24
+  Antecedentes de la Investigación ............................................. 24
+    Antecedentes Internacionales ............................................... 24
+    Antecedentes Nacionales y Regionales ....................................... 25
+  Bases Teóricas ............................................................... 26
+    Sistemas de Información en Salud y Expedientes Clínicos Electrónicos ....... 26
+    Flujos Especializados en Múltiples Especialidades Médicas .................. 26
+    Arquitectura Web Moderna: React 19, Caché L1/L2 y TypeScript ............... 26
+    Backend-as-a-Service, PostgreSQL, RBAC por Alcance y Políticas RLS ......... 27
     Seguridad Criptográfica en Clientes: Web Crypto API, PBKDF2 y AES-GCM ...... 27
-    Generación Automatizada de Documentos Clínicos y Récipes ................... 28
-  Bases Legales (Pirámide de Kelsen) ........................................... 29
-  Sistema de Variables y Operacionalización .................................... 32
+  Bases Legales (Pirámide de Kelsen) ........................................... 27
+  Sistema de Variables y Operacionalización .................................... 29
 
-FASE III: MARCO METODOLÓGICO Y PLANIFICACIÓN .................................... 34
-  Metodología .................................................................. 34
-    Paradigma de la Investigación .............................................. 34
-    Metodología de la Investigación ............................................ 35
-    Diseño y Tipo de la Investigación .......................................... 35
-  Población y Muestra .......................................................... 36
-  Técnicas e Instrumentos de Recolección de Datos .............................. 37
-  Validez y Confiabilidad del Instrumento ...................................... 38
-  Técnicas de Análisis de los Datos ............................................ 39
-  Plan de Acción Operativo ..................................................... 40
+FASE III: MARCO METODOLÓGICO Y PLANIFICACIÓN ................................... 31
+  Metodología .................................................................. 31
+    Paradigma de la Investigación .............................................. 31
+    Metodología de la Investigación ............................................ 31
+    Diseño y Tipo de la Investigación .......................................... 31
+  Población y Muestra .......................................................... 31
+  Técnicas e Instrumentos de Recolección de Datos .............................. 32
+  Validez y Confiabilidad del Instrumento ...................................... 33
+  Técnicas de Análisis de los Datos ............................................ 34
+  Plan de Acción Operativo ..................................................... 34
 
-FASE IV: EJECUCIÓN TÉCNICA (DESARROLLO DE LA PROPUESTA) ......................... 42
-  Propuesta Técnica ............................................................ 42
-    Diseño de los Instrumentos de Recolección de Datos Técnicos ................ 42
-    Descripción de los Procesos Involucrados en el Sistema ...................... 43
-    Diagramación según la Metodología Utilizada (UML) ........................... 45
-    Diseño de la Base de Datos ................................................. 48
-    Diseño de los Escenarios a Utilizar (Mockups y Prototipos de UI) ........... 52
-    Desarrollo de la Aplicación ................................................ 55
-      Arquitectura de Seguridad y Privacidad de Datos (RLS, AES-GCM) ............ 57
-    Pruebas de la Aplicación ................................................... 58
-    Instalación y Despliegue de la Aplicación .................................. 60
-    Adiestramiento y Capacitación .............................................. 61
-  Memoria Descriptiva .......................................................... 62
-  Análisis de Resultados ....................................................... 64
-    Matriz Comparativa de Tiempos Operativos (Antes vs. Después) ................ 64
-    Evaluación de Calidad de Software (ISO/IEC 25010 y Escala SUS) ............. 66
+FASE IV: EJECUCIÓN TÉCNICA (DESARROLLO DE LA PROPUESTA) ........................ 36
+  Propuesta Técnica ............................................................ 36
+    Requerimientos del Sistema (Funcionales y No Funcionales) .................. 36
+    Descripción de los Procesos Involucrados en el Sistema ..................... 37
+    Diagramación según la Metodología Utilizada (UML) .......................... 39
+    Diseño de la Base de Datos ................................................. 41
+    Diseño de los Escenarios a Utilizar (Mockups y Prototipos de UI) ........... 43
+    Desarrollo de la Aplicación ................................................ 45
+      Arquitectura de Seguridad, RBAC por Alcance y Caché L1/L2 ................ 47
+    Pruebas de la Aplicación ................................................... 49
+    Instalación y Despliegue de la Aplicación .................................. 50
+    Adiestramiento y Capacitación .............................................. 51
+  Memoria Descriptiva .......................................................... 51
+  Análisis de Resultados ....................................................... 51
+    Matriz Comparativa de Tiempos Operativos (Antes vs. Después) ............... 52
+    Evaluación de Calidad de Software (ISO/IEC 25010, react-doctor y SUS) ...... 53
 
-CONCLUSIONES Y RECOMENDACIONES ................................................. 67
-  Conclusiones ................................................................. 67
-  Recomendaciones ............................................................. 69
+CONCLUSIONES Y RECOMENDACIONES ................................................. 54
+  Conclusiones ................................................................. 54
+  Recomendaciones .............................................................. 55
 
-REFERENCIAS BIBLIOGRÁFICAS ..................................................... 71
-ANEXOS ......................................................................... 76
+REFERENCIAS BIBLIOGRÁFICAS ..................................................... 57
+ANEXOS ......................................................................... 59
 ```
 
 <div style="page-break-after: always;"></div>
@@ -247,20 +246,20 @@ ANEXOS .........................................................................
 
 | Número | Título | Pág. |
 | :--- | :--- | :---: |
-| **Tabla 1** | *Matriz FODA de la clínica FemeSalud* | 7 |
-| **Tabla 2** | *Tabla de Priorización y Jerarquización de Necesidades* | 8 |
-| **Tabla 3** | *Matriz de Marco Lógico (MML) del Proyecto* | 13 |
-| **Tabla 4** | *Matriz de Operacionalización de Variables* | 33 |
-| **Tabla 5** | *Distribución de la Población y Muestra de Estudio* | 36 |
-| **Tabla 6** | *Validez de Contenido del Instrumento por Juicio de Expertos* | 38 |
-| **Tabla 7** | *Plan de Acción Operativo del Proyecto Socio-Integrador* | 40 |
-| **Tabla 8** | *Especificación de Requerimientos Funcionales y No Funcionales* | 43 |
-| **Tabla 9** | *Diccionario de Datos: Tablas pacientes e historias_clinicas (Expediente Clínico)* | 49 |
-| **Tabla 10** | *Diccionario de Datos: Tabla consultas (Consultas y Evoluciones Médicas)* | 50 |
-| **Tabla 11** | *Diccionario de Datos: Tablas citas, facturas e inventario (Control Operativo)* | 51 |
-| **Tabla 12** | *Matriz de Casos de Prueba Funcional de Caja Negra* | 59 |
-| **Tabla 13** | *Matriz Comparativa de Tiempos Operativos Antes y Después* | 65 |
-| **Tabla 14** | *Evaluación de Calidad del Software bajo la Norma ISO/IEC 25010 y Métricas de Usabilidad* | 66 |
+| **Tabla 1** | *Matriz FODA de la Clínica FemeSalud* | 17 |
+| **Tabla 2** | *Tabla de Priorización y Jerarquización de Necesidades* | 18 |
+| **Tabla 3** | *Matriz de Marco Lógico (MML) del Proyecto* | 21 |
+| **Tabla 4** | *Matriz de Operacionalización de Variables* | 30 |
+| **Tabla 5** | *Distribución de la Población y Muestra de Estudio* | 32 |
+| **Tabla 6** | *Validez de Contenido del Instrumento por Juicio de Expertos* | 33 |
+| **Tabla 7** | *Plan de Acción Operativo del Proyecto Socio-Integrador* | 34 |
+| **Tabla 8** | *Especificación de Requerimientos Funcionales y No Funcionales* | 36 |
+| **Tabla 9** | *Diccionario de Datos: Tablas `pacientes` e `historias_clinicas` (Expediente Clínico Integral)* | 42 |
+| **Tabla 10** | *Diccionario de Datos: Tabla `consultas` (Evoluciones Médicas y Especialidades)* | 43 |
+| **Tabla 11** | *Diccionario de Datos: Tabla `citas` (Control de Agenda y Turnos en Tiempo Real)* | 43 |
+| **Tabla 12** | *Matriz de Casos de Prueba Funcional de Caja Negra* | 49 |
+| **Tabla 13** | *Matriz Comparativa de Tiempos Operativos Antes y Después del Sistema* | 52 |
+| **Tabla 14** | *Evaluación de Calidad del Software bajo la Norma ISO/IEC 25010 y Métricas de Usabilidad* | 53 |
 
 <div style="page-break-after: always;"></div>
 
@@ -272,20 +271,20 @@ ANEXOS .........................................................................
 
 | Número | Título | Pág. |
 | :--- | :--- | :---: |
-| **Figura 1** | *Croquis de Ubicación Geográfica de la Clínica FemeSalud* | 4 |
-| **Figura 2** | *Árbol de Problemas del Control Clínico en FemeSalud* | 9 |
-| **Figura 3** | *Árbol de Objetivos del Sistema Web MediZen* | 12 |
-| **Figura 4** | *Pirámide de Kelsen Aplicada al Marco Legal del Software Clínico* | 29 |
-| **Figura 5** | *Diagrama de Casos de Uso General del Sistema MediZen* | 46 |
-| **Figura 6** | *Diagrama de Actividades: Flujo Integral de Consulta Médica Multiespecialidad* | 47 |
-| **Figura 7** | *Diagrama de Secuencia: Desbloqueo Seguro mediante Bóveda PIN Cifrada* | 48 |
-| **Figura 8** | *Diagrama Entidad-Relación de la Base de Datos (PostgreSQL / Supabase)* | 52 |
-| **Figura 9** | *Interfaz de Desbloqueo Rápido por PIN de 4 Dígitos y Bloqueo por Inactividad* | 53 |
-| **Figura 10** | *Tablero de Control Operativo y Estadísticas Clínicas en Tiempo Real* | 54 |
-| **Figura 11** | *Módulo de Expediente Clínico Digital Integral Multiespecialidad* | 54 |
-| **Figura 12** | *Agenda Médica Interactiva con Sincronización WebSockets en Tiempo Real* | 55 |
-| **Figura 13** | *Diseñador Visual y Generador de Documentos Médicos Oficiales en PDF* | 55 |
-| **Figura 14** | *Diagrama de Arquitectura de Software en Capas de la Solución Web* | 56 |
+| **Figura 1** | *Croquis de Ubicación Geográfica de la Clínica FemeSalud* | 15 |
+| **Figura 2** | *Árbol de Problemas del Control Clínico en la Clínica FemeSalud* | 18 |
+| **Figura 3** | *Árbol de Objetivos del Sistema Web MediZen* | 20 |
+| **Figura 4** | *Pirámide de Kelsen Aplicada al Marco Legal del Software Clínico MediZen* | 28 |
+| **Figura 5** | *Diagrama de Casos de Uso General del Sistema MediZen* | 39 |
+| **Figura 6** | *Diagrama de Actividades: Flujo Integral de Consulta Médica Multiespecialidad* | 40 |
+| **Figura 7** | *Diagrama de Secuencia: Desbloqueo Seguro, Rate-Limiting y Bóveda PIN Cifrada* | 40 |
+| **Figura 8** | *Diagrama Entidad-Relación de la Base de Datos (PostgreSQL / Supabase)* | 41 |
+| **Figura 9** | *Interfaz de Desbloqueo Rápido por PIN de 4 Dígitos y Pantalla de Bloqueo por Inactividad* | 44 |
+| **Figura 10** | *Tablero de Control Operativo y Analítica Clínica en Tiempo Real (Dashboard)* | 44 |
+| **Figura 11** | *Módulo de Historia Clínica Digital Especializada con Banner Clínico y 8 Pestañas* | 45 |
+| **Figura 12** | *Sala de Espera Kanban y Agenda Médica con Sincronización WebSockets en Tiempo Real* | 45 |
+| **Figura 13** | *Generador de Récipes, Órdenes de Laboratorio e Informes Ecográficos en PDF* | 45 |
+| **Figura 14** | *Diagrama de Arquitectura de Software en Capas de la Solución Web MediZen* | 46 |
 
 <div style="page-break-after: always;"></div>
 
@@ -297,11 +296,11 @@ ANEXOS .........................................................................
 
 | Número | Título | Pág. |
 | :--- | :--- | :---: |
-| **Anexo A** | *Guía de Entrevista Aplicada a la Especialista Médica (Dra. Carli Sole y equipo médico)* | 76 |
-| **Anexo B** | *Cuestionario de Usabilidad y Evaluación Tecnológica (Escala Likert)* | 78 |
-| **Anexo C** | *Instrumento de Validación por Juicio de Expertos de la UPTLLJR* | 80 |
-| **Anexo D** | *Carta de Aceptación y Aval Comunitario de la Clínica FemeSalud* | 82 |
-| **Anexo E** | *Manual Rápido de Usuario del Sistema Web MediZen* | 83 |
+| **Anexo A** | *Guía de Entrevista Aplicada a la Especialista Médica (Dra. Carli Sole y equipo médico)* | 59 |
+| **Anexo B** | *Cuestionario de Usabilidad y Evaluación Tecnológica (Escala Likert)* | 59 |
+| **Anexo C** | *Instrumento de Validación por Juicio de Expertos de la UPTLLJR* | 60 |
+| **Anexo D** | *Carta de Aceptación y Aval Comunitario de la Clínica FemeSalud* | 60 |
+| **Anexo E** | *Manual Rápido de Usuario del Sistema Web FemeSalud (MediZen)* | 61 |
 
 <div style="page-break-after: always;"></div>
 
@@ -332,7 +331,7 @@ ANEXOS .........................................................................
 
 </div>
 
-El presente proyecto socio-integrador tuvo como propósito fundamental desarrollar un sistema web progresivo (PWA) para la gestión integral de historias clínicas multiespecialidad y el control operativo en el centro asistencial privado Clínica FemeSalud, bajo la dirección de la Dra. Carli Sole (y equipo médico) en Valle de la Pascua, estado Guárico. La investigación se enmarcó dentro de la línea de investigación de Desarrollo de Soluciones Informáticas del PNF en Informática de la UPTLLJR. Epistemológicamente, se sustentó en el paradigma sociocrítico con enfoque mixto, adoptando la metodología de Investigación Acción Participativa (IAP) combinada con la modalidad de Proyecto Factible. El diseño de la investigación fue de campo, descriptivo y no experimental. La población y muestra se constituyó bajo un criterio no probabilístico intencional conformada por el personal médico y administrativo de la clínica, así como una muestra representativa de pacientes ($n=32$). Como técnicas de recolección de datos se emplearon la entrevista semiestructurada, la observación directa participante y la revisión documental, utilizando instrumentos validados mediante juicio de tres expertos ($\alpha = 0,89$). El sistema fue desarrollado sobre una arquitectura reactiva utilizando React 19, TypeScript, TanStack Start/Router, TanStack Query v5, Tailwind CSS v4 y Supabase (PostgreSQL 15, políticas RLS, Storage y WebSockets en tiempo real), complementado con una bóveda criptográfica local (Web Crypto API, PBKDF2 con 100.000 iteraciones SHA-256, AES-GCM de 256 bits, protección contra fuerza bruta y bloqueo por inactividad), expediente clínico normado (numeración correlativa `HC`, grupo sanguíneo, alergias, medicación activa, transfusiones, calculadora obstétrica automática por regla de Naegele, estudios adjuntos y línea de tiempo evolutiva), control de inventario con kárdex, módulo de tesorería y cuentas vinculadas a los métodos de pago venezolanos (**Efectivo Bs., Pago Móvil, Transferencia Bancaria, Divisas USD/EUR, Binance Pay USDT y financiamiento Cashea** con calculadora de inicial 40%/50%/60% + 3 cuotas sin interés), facturación multimoneda en vivo (USD BCV, EUR BCV, USDT Binance P2P y VES) con tarjetas KPI interactivas, cobros mixtos y exportación documental en PDF bajo demanda. La evaluación funcional evidenció una reducción superior al 70% en los tiempos operativos, erradicación total del extravío de expedientes físicos y un puntaje de usabilidad SUS de 88,5/100 (Grado A).
+El presente proyecto socio-integrador tuvo como propósito fundamental desarrollar un sistema web progresivo (PWA) para la gestión integral de historias clínicas multiespecialidad y el control operativo en el centro asistencial privado Clínica FemeSalud, bajo la dirección de la Dra. Carli Sole (y equipo médico) en Valle de la Pascua, estado Guárico. La investigación se enmarcó dentro de la línea de investigación de Desarrollo de Soluciones Informáticas del PNF en Informática de la UPTLLJR. Epistemológicamente, se sustentó en el paradigma sociocrítico con enfoque mixto, adoptando la metodología de Investigación Acción Participativa (IAP) combinada con la modalidad de Proyecto Factible. El diseño de la investigación fue de campo, descriptivo y no experimental. La población y muestra se constituyó bajo un criterio no probabilístico intencional conformada por el personal médico y administrativo de la clínica, así como una muestra representativa de pacientes ($n=32$). Como técnicas de recolección de datos se emplearon la entrevista semiestructurada, la observación directa participante y la revisión documental, utilizando instrumentos validados mediante juicio de tres expertos ($\alpha = 0,89$). El sistema fue desarrollado sobre una arquitectura reactiva con Bun, React 19, TypeScript, TanStack Start/Router, TanStack Query v5 con caché multinivel L1/L2 (`0 ms`), `@tanstack/charts`, Tailwind CSS v4 y Supabase (PostgreSQL 15, políticas RLS, Storage y WebSockets con *debounce* de `350 ms`), complementado con una bóveda criptográfica local (Web Crypto API, PBKDF2 con 100.000 iteraciones SHA-256, AES-GCM de 256 bits, protección contra fuerza bruta y bloqueo por inactividad), aislamiento estricto de alcance por rol médico (`useUserRoleScope`), Sala de Espera Kanban en vivo (`/sala-espera`), expediente clínico normado en 8 pestañas (código `HC-XXXXX`, alertas críticas, regla de Naegele, curva evolutiva de signos vitales, órdenes de laboratorio con perfiles rápidos e informes ecográficos en PDF), facturación automática post-consulta en estado `Pendiente`, tesorería venezolana (**Efectivo Bs., Pago Móvil, Transferencia Bancaria, Divisas USD/EUR, Binance Pay USDT y Cashea**), tasas en vivo (USD BCV, EUR BCV y USDT), Arqueo Diario de Caja (Reporte Z), Liquidación de Honorarios Médicos (`/honorarios`), Centro de Reportes (`/reportes`), kárdex de inventario y Bitácora Visual de Auditoría (`/auditoria`). La evaluación evidenció una reducción superior al 70% en tiempos operativos, cero extravíos documentales, puntaje de usabilidad SUS de 88,5/100 (Grado A) y calificación perfecta de **100/100 en calidad arquitectónica (`react-doctor`)**.
 
 *Palabras clave:* historias clínicas electrónicas, múltiples especialidades médicas, aplicación web progresiva, criptografía local, supabase, react 19.
 
@@ -346,9 +345,9 @@ El presente proyecto socio-integrador tuvo como propósito fundamental desarroll
 
 En la contemporaneidad, la integración de las tecnologías de la información y la comunicación (TIC) ha redefinido radicalmente la gestión operativa y asistencial de los servicios de salud a escala global. Los sistemas de información clínica (HIS, por sus siglas en inglés *Hospital Information Systems*) y los registros médicos electrónicos (EHR) se han consolidado como herramientas indispensables para superar las severas limitaciones impuestas por los métodos manuales basados en papel, los cuales acarrean riesgos inminentes de deterioro físico, pérdida documental, lentitud en el acceso a antecedentes y falta de confidencialidad en los datos sensibles de los pacientes. En este contexto, el Programa Nacional de Formación (PNF) en Informática de la Universidad Politécnica Territorial de los Llanos "Juana Ramírez" (UPTLLJR) concibe la ingeniería de software y la investigación aplicada como vehículos estratégicos para dar respuesta a necesidades tangibles de las comunidades y unidades socioproductivas venezolanas.
 
-Dentro del ámbito de la medicina privada en la ciudad de Valle de la Pascua, estado Guárico, la Clínica FemeSalud, encabezada por la especialista Dra. Carli Sole (y equipo médico), brinda atención médica integral a un significativo número de pacientes de la entidad llanera. No obstante, las dinámicas operativas diarias vinculadas al agendamiento de turnos, el registro de evoluciones médicas multiespecialidad y prenatales, la redacción manual de prescripciones y la conciliación de honorarios médicos se ven afectadas por la dispersión de la información y la carencia de una plataforma tecnológica centralizada, flexible y adaptada a la velocidad exigida durante el acto médico.
+Dentro del ámbito de la medicina privada en la ciudad de Valle de la Pascua, estado Guárico, la Clínica FemeSalud, encabezada por la especialista Dra. Carli Sole (y equipo médico), brinda atención médica integral a un significativo número de pacientes de la entidad llanera. No obstante, las dinámicas operativas diarias vinculadas al agendamiento de turnos, el control del flujo de espera, el registro de evoluciones médicas multiespecialidad y prenatales, la redacción manual de récipes u órdenes paraclínicas y la conciliación de caja y honorarios médicos se ven afectadas por la dispersión de la información y la carencia de una plataforma tecnológica centralizada, flexible y adaptada a la velocidad exigida durante el acto médico.
 
-Frente a este escenario, surge la presente investigación cuyo propósito general es desarrollar un sistema web de vanguardia para la gestión de historias clínicas médicas multiespecialidad y el control operativo en la Clínica FemeSalud. La solución tecnológica no solo automatiza el flujo documental, clínico, financiero y de inventario de la clínica, sino que incorpora estándares contemporáneos de experiencia de usuario (*Mobile-First* y PWA), sincronización en tiempo real mediante WebSockets, trazabilidad médico-legal en bitácoras de auditoría (`auditoria_logs`) y un robusto mecanismo de autenticación rápida mediante bóveda local criptográfica cifrada con los estándares `PBKDF2` y `AES-GCM` de 256 bits, garantizando la inviolabilidad del secreto médico y facilitando la labor diaria del personal médico-asistencial.
+Frente a este escenario, surge la presente investigación cuyo propósito general es desarrollar un sistema web de vanguardia para la gestión de historias clínicas médicas multiespecialidad y el control operativo en la Clínica FemeSalud. La solución tecnológica automatiza de extremo a extremo el flujo asistencial, financiero y administrativo de la clínica —integrando tablero Kanban de Sala de Espera en vivo, expediente electrónico con curvas evolutivas de signos vitales, generación en PDF de récipes, órdenes de laboratorio e informes ecográficos, facturación post-consulta multimoneda, arqueo diario Reporte Z, liquidación de honorarios por especialista, kárdex de inventario y bitácora visual de auditoría— bajo estándares contemporáneos de experiencia *Mobile-First* y PWA, caché multinivel L1/L2 de hidratación instantánea (`0 ms`), aislamiento estricto de datos por rol médico, sincronización en tiempo real mediante WebSockets, calidad de código certificada en **100/100 (`react-doctor`)** y autenticación rápida mediante bóveda local criptográfica cifrada con `PBKDF2` y `AES-GCM` de 256 bits, garantizando la inviolabilidad del secreto médico.
 
 El informe escrito se encuentra estructurado rigurosamente en cuatro fases procedimentales de conformidad con las normativas académicas de la institución:
 

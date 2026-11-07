@@ -211,6 +211,7 @@ export function Dashboard() {
             stats={stats}
             monthlyData={monthlyData}
             isDoctorOnly={isDoctorOnly}
+            doctorId={doctorScopeId}
           />
           <DashboardGoalsAndEvents
             stats={stats}

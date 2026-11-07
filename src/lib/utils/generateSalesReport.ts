@@ -19,7 +19,8 @@ type InvoiceForReport = {
 export const generateSalesReport = async (
   facturas: InvoiceForReport[],
   filterMonth: string = "",
-  customRate?: number
+  customRate?: number,
+  doctorName?: string
 ) => {
   const [{ jsPDF }, { default: autoTable }] = await Promise.all([
     import("jspdf"),
@@ -71,6 +72,14 @@ export const generateSalesReport = async (
     );
   }
 
+  if (doctorName) {
+    doc.setFontSize(9.5);
+    doc.setFont(config.customFontFamily, "bold");
+    doc.setTextColor(80);
+    doc.text(`Médico: ${doctorName}`, pageWidth / 2, 198, { align: "center" });
+    doc.setTextColor(0);
+  }
+
   const tableData = facturas.map((f) => {
     let estado = "Desconocido";
     const st = (f.estado_pago || "").toLowerCase();
@@ -94,7 +103,7 @@ export const generateSalesReport = async (
   });
 
   autoTable(doc, {
-    startY: 205,
+    startY: doctorName ? 212 : 202,
     head: [
       [
         "ID Factura",
