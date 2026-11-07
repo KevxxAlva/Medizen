@@ -270,13 +270,24 @@ export function ExchangeRateToolbarPill({
             className="flex items-center gap-2.5 rounded-2xl bg-primary/10 hover:bg-primary/15 border border-primary/20 px-3.5 py-2 transition-colors cursor-pointer"
             title="Configurar Tasas (BCV, Euro, USDT) y Calculadora Multimoneda"
           >
-            <div className="h-7 w-7 rounded-xl bg-primary text-primary-foreground flex items-center justify-center">
+            <div className="h-7 w-7 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shrink-0">
               <ArrowRightLeft className="h-3.5 w-3.5" />
             </div>
             <div className="text-left">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block leading-none">
-                {RATE_LABELS[activeType].full} {isManual ? "(Manual)" : ""}
-              </span>
+              <div className="flex items-center gap-1.5 leading-none mb-0.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                  {RATE_LABELS[activeType].full} {isManual ? "(Manual)" : ""}
+                </span>
+                {!isManual && (
+                  <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-600 dark:text-emerald-400">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                    </span>
+                    En vivo
+                  </span>
+                )}
+              </div>
               <span className="text-xs font-extrabold text-foreground">
                 Bs.{" "}
                 {rate.toLocaleString("es-VE", {
@@ -300,14 +311,25 @@ export function ExchangeRateToolbarPill({
                 <h4 className="font-bold text-xs uppercase tracking-wider text-primary flex items-center gap-1.5">
                   <Calculator className="h-3.5 w-3.5" /> Multimoneda: BCV · EUR · USDT
                 </h4>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
-                  {updatedAt
-                    ? `Actualizado: ${new Date(updatedAt).toLocaleTimeString(APP_LOCALE, {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        timeZone: APP_TIME_ZONE,
-                      })}`
-                    : "Tasas referenciales activas"}
+                <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1.5">
+                  {!isManual && (
+                    <span className="relative flex h-1.5 w-1.5 shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                    </span>
+                  )}
+                  <span>
+                    {isManual
+                      ? "Modo manual activo"
+                      : updatedAt
+                      ? `En vivo · ${new Date(updatedAt).toLocaleTimeString(APP_LOCALE, {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                          timeZone: APP_TIME_ZONE,
+                        })}`
+                      : "Sincronización en tiempo real activa"}
+                  </span>
                 </p>
               </div>
               <Button
