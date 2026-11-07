@@ -93,12 +93,13 @@ export const MiniAreaChart = memo(function MiniAreaChart({
 
 const getWeekDayLabels = () => {
   const days = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
-  const result: { short: string; full: string }[] = [];
+  const result: { id: string; short: string; full: string }[] = [];
   const today = new Date();
   for (let i = 6; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(today.getDate() - i);
     result.push({
+      id: d.toISOString().slice(0, 10),
       short: i === 0 ? "Hoy" : days[d.getDay()],
       full: d.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "short" }),
     });
@@ -116,14 +117,18 @@ export const DailyPillBars = memo(function DailyPillBars({
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const days = useMemo(() => getWeekDayLabels(), []);
 
-  const values = useMemo(() => {
+  const items = useMemo(() => {
     const arr = (data || []).slice(-7);
     while (arr.length < 7) arr.unshift(0);
-    return arr;
-  }, [data]);
+    return days.map((day, idx) => ({
+      ...day,
+      val: arr[idx],
+      idx,
+    }));
+  }, [data, days]);
 
-  const maxVal = Math.max(...values, 1);
-  const total = values.reduce((a, b) => a + b, 0);
+  const maxVal = Math.max(...items.map((it) => it.val), 1);
+  const total = items.reduce((a, b) => a + b.val, 0);
 
   return (
     <div className="w-full h-full flex flex-col justify-between pt-1">
@@ -133,22 +138,22 @@ export const DailyPillBars = memo(function DailyPillBars({
       </div>
 
       <div className="flex items-end justify-between gap-1 sm:gap-2 h-18 px-1">
-        {values.map((val, idx) => {
-          const isToday = idx === 6;
-          const isHovered = hoveredIdx === idx;
-          const isPeak = val > 0 && val === maxVal;
-          const heightPct = val === 0 ? 9 : Math.max(20, Math.round((val / maxVal) * 100));
+        {items.map((item) => {
+          const isToday = item.idx === 6;
+          const isHovered = hoveredIdx === item.idx;
+          const isPeak = item.val > 0 && item.val === maxVal;
+          const heightPct = item.val === 0 ? 9 : Math.max(20, Math.round((item.val / maxVal) * 100));
 
           return (
             <div
-              key={idx}
+              key={item.id}
               className="flex-1 flex flex-col items-center h-full justify-end relative group cursor-pointer"
-              onMouseEnter={() => setHoveredIdx(idx)}
+              onMouseEnter={() => setHoveredIdx(item.idx)}
               onMouseLeave={() => setHoveredIdx(null)}
             >
               {isHovered && (
                 <div className="absolute -top-7 left-1/2 -translate-x-1/2 z-30 bg-popover text-popover-foreground text-[10px] font-bold py-0.5 px-2 rounded-md shadow-lg border border-border whitespace-nowrap pointer-events-none animate-in fade-in zoom-in-95 duration-150">
-                  <span className="capitalize">{days[idx]?.short}:</span> {val} {unit}
+                  <span className="capitalize">{item.short}:</span> {item.val} {unit}
                 </div>
               )}
 
@@ -156,12 +161,12 @@ export const DailyPillBars = memo(function DailyPillBars({
                 <div
                   style={{ height: `${heightPct}%` }}
                   className={cn(
-                    "w-full rounded-full transition-all duration-300",
+                    "w-full rounded-full transition-colors duration-300",
                     isToday
                       ? "bg-gradient-to-t from-primary to-blue-400 shadow-sm shadow-primary/40 ring-1 ring-primary/40"
                       : isPeak
                       ? "bg-blue-500/80"
-                      : val > 0
+                      : item.val > 0
                       ? "bg-blue-400/50 hover:bg-blue-400/80"
                       : "bg-muted-foreground/20"
                   )}
@@ -178,7 +183,7 @@ export const DailyPillBars = memo(function DailyPillBars({
                     : "text-muted-foreground/70"
                 )}
               >
-                {days[idx]?.short}
+                {item.short}
               </span>
             </div>
           );
@@ -220,7 +225,7 @@ export const PeakSparklineWithBaseline = memo(function PeakSparklineWithBaseline
     return values.map((v, i) => {
       const x = padX + i * stepX;
       const y = padTop + plotH - (v / maxVal) * plotH;
-      return { x, y, value: v, day: days[i]?.short || "" };
+      return { id: days[i]?.id || `consultation-day-${i}`, x, y, value: v, day: days[i]?.short || "" };
     });
   }, [values, maxVal, plotH, stepX, days]);
 
@@ -303,7 +308,7 @@ export const PeakSparklineWithBaseline = memo(function PeakSparklineWithBaseline
             const isHovered = hoveredIdx === i;
             const isAboveAvg = p.value >= avg;
             return (
-              <g key={i}>
+              <g key={p.id}>
                 {isToday && (
                   <circle
                     cx={p.x}
@@ -322,7 +327,7 @@ export const PeakSparklineWithBaseline = memo(function PeakSparklineWithBaseline
                   fill={isAboveAvg ? "#f59e0b" : "#d97706"}
                   stroke="var(--color-card, #ffffff)"
                   strokeWidth="1.5"
-                  className="transition-all duration-150 cursor-pointer"
+                  className="transition-colors duration-150 cursor-pointer"
                   onMouseEnter={() => setHoveredIdx(i)}
                   onMouseLeave={() => setHoveredIdx(null)}
                 />
