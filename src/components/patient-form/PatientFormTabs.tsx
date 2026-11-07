@@ -1,4 +1,5 @@
 import React from "react";
+import { Stethoscope } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -55,6 +56,8 @@ export interface PatientIdTabProps {
   assigned_doctor_id: string;
   setDoctor: (v: string) => void;
   doctors: any[];
+  isDoctorOnly?: boolean;
+  doctorName?: string | null;
   STATUSES: string[];
   statusLabel: (s: string) => string;
   consultation_reason: string;
@@ -357,6 +360,8 @@ function PatientAdministrativeFields({
   assigned_doctor_id,
   setDoctor,
   doctors,
+  isDoctorOnly,
+  doctorName,
   STATUSES,
   statusLabel,
   consultation_reason,
@@ -376,6 +381,8 @@ function PatientAdministrativeFields({
   | "assigned_doctor_id"
   | "setDoctor"
   | "doctors"
+  | "isDoctorOnly"
+  | "doctorName"
   | "STATUSES"
   | "statusLabel"
   | "consultation_reason"
@@ -385,6 +392,9 @@ function PatientAdministrativeFields({
   | "notes"
   | "setNotes"
 >) {
+  const currentAssignedDoctor = doctors.find(
+    (d) => String(d.id) === String(assigned_doctor_id)
+  );
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -426,19 +436,31 @@ function PatientAdministrativeFields({
       </div>
 
       <div className="grid gap-2">
-        <Label>Médico asignado</Label>
-        <Select value={assigned_doctor_id} onValueChange={setDoctor}>
-          <SelectTrigger className="rounded-xl">
-            <SelectValue placeholder="Seleccione médico…" />
-          </SelectTrigger>
-          <SelectContent className="rounded-2xl">
-            {doctors.map((d) => (
-              <SelectItem key={d.id} value={d.id}>
-                {d.full_name ?? d.email}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Label>{isDoctorOnly ? "Médico tratante" : "Médico asignado"}</Label>
+        {isDoctorOnly ? (
+          <div className="flex items-center gap-2.5 h-10 px-3.5 py-2 rounded-xl border border-primary/30 bg-primary/[0.07] text-sm font-bold text-foreground">
+            <Stethoscope className="h-4 w-4 text-primary shrink-0" />
+            <span className="truncate">
+              Dr(a). {currentAssignedDoctor?.full_name || doctorName || "Especialista"}
+            </span>
+            <span className="ml-auto text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 rounded-full bg-primary/15 text-primary shrink-0">
+              Tú
+            </span>
+          </div>
+        ) : (
+          <Select value={assigned_doctor_id} onValueChange={setDoctor}>
+            <SelectTrigger className="rounded-xl">
+              <SelectValue placeholder="Seleccione médico…" />
+            </SelectTrigger>
+            <SelectContent className="rounded-2xl">
+              {doctors.map((d) => (
+                <SelectItem key={d.id} value={d.id}>
+                  {d.full_name ?? d.email}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

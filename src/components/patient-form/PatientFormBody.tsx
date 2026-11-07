@@ -19,6 +19,8 @@ export interface PatientFormBodyProps {
   statusLabel: (s: string) => string;
   busy: boolean;
   isEdit: boolean;
+  isDoctorOnly?: boolean;
+  doctorName?: string | null;
   onCancel: () => void;
 }
 
@@ -29,6 +31,8 @@ export function PatientFormBody({
   statusLabel,
   busy,
   isEdit,
+  isDoctorOnly,
+  doctorName,
   onCancel,
 }: PatientFormBodyProps) {
   return (
@@ -113,6 +117,8 @@ export function PatientFormBody({
               assigned_doctor_id={formState.assigned_doctor_id}
               setDoctor={formState.setDoctor}
               doctors={doctors}
+              isDoctorOnly={isDoctorOnly}
+              doctorName={doctorName}
               STATUSES={STATUSES}
               statusLabel={statusLabel}
               consultation_reason={formState.consultation_reason}

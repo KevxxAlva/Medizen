@@ -225,20 +225,39 @@ export function useRecentPatients(
     queryFn: async (): Promise<Patient[]> => {
       if (isDoctorOnly && !doctorId) return [];
       if (doctorId) {
-        const { data: citas } = await supabase
-          .from("citas")
-          .select("id_paciente")
-          .eq("id_medico", doctorId);
+        const [citasRes, consultasRes, hcRes, medicosCountRes] = await Promise.all([
+          supabase.from("citas").select("id_paciente").eq("id_medico", doctorId),
+          supabase.from("consultas").select("id_paciente").eq("id_medico", doctorId),
+          supabase.from("historias_clinicas").select("id_paciente, datos_extras"),
+          supabase.from("medicos").select("id_medico", { count: "exact", head: true }),
+        ]);
 
-        const uniquePatientIds = Array.from(
-          new Set((citas || []).map((c) => c.id_paciente).filter(Boolean))
-        );
-        if (uniquePatientIds.length === 0) return [];
+        const uniquePatientIds = new Set<number>();
+        (citasRes.data || []).forEach((c) => {
+          if (c.id_paciente) uniquePatientIds.add(Number(c.id_paciente));
+        });
+        (consultasRes.data || []).forEach((c) => {
+          if (c.id_paciente) uniquePatientIds.add(Number(c.id_paciente));
+        });
+        (hcRes.data || []).forEach((hc: any) => {
+          const assigned = hc.datos_extras?.assigned_doctor_id;
+          if (assigned && String(assigned) === String(doctorId) && hc.id_paciente) {
+            uniquePatientIds.add(Number(hc.id_paciente));
+          }
+        });
+
+        const totalMedicos = medicosCountRes.count ?? 0;
+        if (totalMedicos <= 1) {
+          const { data: allP } = await supabase.from("pacientes").select("id_paciente");
+          (allP || []).forEach((p) => uniquePatientIds.add(Number(p.id_paciente)));
+        }
+
+        if (uniquePatientIds.size === 0) return [];
 
         const { data, error } = await supabase
           .from("pacientes")
           .select(PATIENT_LIST_SELECT)
-          .in("id_paciente", uniquePatientIds)
+          .in("id_paciente", Array.from(uniquePatientIds))
           .order("creado_en", { ascending: false })
           .limit(limit);
 

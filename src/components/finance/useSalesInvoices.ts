@@ -271,11 +271,12 @@ export function useSalesInvoices() {
         }
       }
 
-      await logAuditAction({
-        action: "UPDATE",
-        table_name: "facturas",
-        record_id: id.toString(),
-        new_data: { estado_pago: status, metodo_pago: method, referencia: reference },
+      await logAuditAction("UPDATE", "INVOICE", id.toString(), {
+        message: `Factura INV-${id.toString().padStart(4, "0")} actualizada a ${status}`,
+        estado_pago: status,
+        metodo_pago: method || null,
+        referencia: reference || null,
+        monto_usd: usdAmount || null,
       });
     },
     onSuccess: () => {
@@ -296,6 +297,9 @@ export function useSalesInvoices() {
     mutationFn: async (id: number) => {
       const { error } = await supabase.from("facturas").delete().eq("id_factura", id);
       if (error) throw error;
+      await logAuditAction("DELETE", "INVOICE", id.toString(), {
+        message: `Factura INV-${id.toString().padStart(4, "0")} eliminada`,
+      });
       return id;
     },
     onSuccess: (id) => {

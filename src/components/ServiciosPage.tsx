@@ -1,12 +1,48 @@
-import { useState, useMemo, useEffect } from "react";
-import { Search, Plus, X, Pencil, Trash2, ChevronLeft, Loader2, Stethoscope, ChevronRight, Filter, Sparkles } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useServices, useDeleteService, useSpecialties, Service } from "@/lib/api/services";
+import { useState, useMemo } from "react";
+import { useServices, useDeleteService, useSpecialties, type Service } from "@/lib/api/services";
 import { useUserRoleScope } from "@/hooks/useUserRoleScope";
 import { useDoctors } from "@/lib/api/profiles";
 import { ServiceForm } from "@/components/ServiceForm";
 import { TablePagination } from "@/components/ui/table-pagination";
-import { getSpecialtyBadgeStyle } from "@/lib/constants/specialtyForms";
+import { ServiciosHeader } from "@/components/services/ServiciosHeader";
+import { ServiciosSpecialtyPills } from "@/components/services/ServiciosSpecialtyPills";
+import { ServiciosTable } from "@/components/services/ServiciosTable";
+
+const ITEMS_PER_PAGE = 8;
+
+function matchesSpecialtyFilter(s: Service, specialtyFilter: string): boolean {
+  if (specialtyFilter === "all") return true;
+  if (specialtyFilter === "none") {
+    return s.id_especialidad === null || s.id_especialidad === undefined;
+  }
+  return String(s.id_especialidad) === specialtyFilter;
+}
+
+function matchesSearchQuery(s: Service, term: string): boolean {
+  if (!term) return true;
+  const haystack = [
+    s.nombre_servicio,
+    s.descripcion || "",
+    s.codigo_medico || "",
+    s.especialidades?.nombre || "",
+  ]
+    .join(" ")
+    .toLowerCase();
+  return haystack.includes(term);
+}
+
+function countServicesBySpecialty(services: Service[]): Record<string, number> {
+  const map: Record<string, number> = { all: services.length, none: 0 };
+  for (const s of services) {
+    if (s.id_especialidad) {
+      const key = String(s.id_especialidad);
+      map[key] = (map[key] || 0) + 1;
+    } else {
+      map.none = (map.none || 0) + 1;
+    }
+  }
+  return map;
+}
 
 export function ServiciosPage() {
   const { data: services = [], isLoading } = useServices();
@@ -15,316 +51,97 @@ export function ServiciosPage() {
   const {
     isDoctorOnly,
     doctorId,
-    doctorName,
     doctorSpecialtyId: scopedSpecialtyId,
     doctorSpecialtyName: scopedSpecialtyName,
-    canViewAllDoctors,
   } = useUserRoleScope();
   const deleteService = useDeleteService();
-  
-  const currentDoctorProfile = useMemo(() => {
-    if (!doctorId) return null;
-    return doctors.find((d) => d.id === doctorId) || null;
-  }, [doctors, doctorId]);
+
+  const currentDoctorProfile = useMemo(
+    () => (doctorId ? doctors.find((d) => d.id === doctorId) || null : null),
+    [doctors, doctorId],
+  );
 
   const doctorSpecialtyId = scopedSpecialtyId || currentDoctorProfile?.specialty_id;
   const doctorSpecialtyName = scopedSpecialtyName || currentDoctorProfile?.specialty;
 
   const [q, setQ] = useState("");
-  const [specialtyFilter, setSpecialtyFilter] = useState<string>("all");
+  const [userSelectedFilter, setUserSelectedFilter] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Service | null>(null);
-
-  useEffect(() => {
-    if (isDoctorOnly && doctorSpecialtyId) {
-      setSpecialtyFilter(String(doctorSpecialtyId));
-    }
-  }, [isDoctorOnly, doctorSpecialtyId]);
-
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
 
-  // Filter by search query AND specialty filter
+  const specialtyFilter =
+    userSelectedFilter ??
+    (isDoctorOnly && doctorSpecialtyId ? String(doctorSpecialtyId) : "all");
+
   const filtered = useMemo(() => {
-    return services.filter((s) => {
-      // 1. Specialty filter
-      if (specialtyFilter === "none") {
-        if (s.id_especialidad !== null && s.id_especialidad !== undefined) return false;
-      } else if (specialtyFilter !== "all") {
-        if (String(s.id_especialidad) !== specialtyFilter) return false;
-      }
-
-      // 2. Search query filter
-      if (!q.trim()) return true;
-      const term = q.toLowerCase();
-      const espName = s.especialidades?.nombre?.toLowerCase() || "";
-      return s.nombre_servicio.toLowerCase().includes(term) || 
-             (s.descripcion && s.descripcion.toLowerCase().includes(term)) ||
-             (s.codigo_medico && s.codigo_medico.toLowerCase().includes(term)) ||
-             espName.includes(term);
-    });
+    const term = q.trim().toLowerCase();
+    return services.filter(
+      (s) => matchesSpecialtyFilter(s, specialtyFilter) && matchesSearchQuery(s, term),
+    );
   }, [services, q, specialtyFilter]);
 
-  // Counts per specialty for pills
-  const countsBySpecialty = useMemo(() => {
-    const map: Record<string, number> = { all: services.length, none: 0 };
-    services.forEach((s) => {
-      if (s.id_especialidad) {
-        const key = String(s.id_especialidad);
-        map[key] = (map[key] || 0) + 1;
-      } else {
-        map.none = (map.none || 0) + 1;
-      }
-    });
-    return map;
-  }, [services]);
+  const countsBySpecialty = useMemo(() => countServicesBySpecialty(services), [services]);
 
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const paginated = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginated = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
+  );
 
   const handleDelete = (s: Service) => {
-    if (confirm(`¿Estás seguro de que deseas eliminar el servicio médico "${s.nombre_servicio}"?`)) {
+    if (
+      confirm(`¿Estás seguro de que deseas eliminar el servicio médico "${s.nombre_servicio}"?`)
+    ) {
       deleteService.mutate(s.id_servicio);
     }
   };
 
   return (
     <div className="bg-card border border-border rounded-3xl p-3.5 sm:p-6 shadow-xs min-h-[calc(100vh-8rem)] font-sans flex flex-col w-full min-w-0 overflow-hidden">
-      {/* TOP HEADER */}
-      <header className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-3">
-          <button type="button" aria-label="Volver" className="text-muted-foreground hover:text-foreground"><ChevronLeft className="h-5 w-5" /></button>
-          <div>
-            <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-              <Stethoscope className="w-5 h-5 text-primary" /> Servicios Médicos
-            </h1>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Catálogo de servicios, procedimientos clínicos y tarifas organizados por especialidad.
-            </p>
-          </div>
-        </div>
-        <div className="flex-1 max-w-xl mx-auto w-full sm:w-auto">
-          <div className="flex items-center gap-2 rounded-full bg-muted border border-border px-4 py-2.5 w-full">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <input
-              value={q}
-              onChange={(e) => { setQ(e.target.value); setCurrentPage(1); }}
-              placeholder="Buscar por servicio, código o especialidad…"
-              aria-label="Buscar por servicio, código o especialidad"
-              className="w-full bg-transparent text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/40 rounded-lg px-1 placeholder:text-muted-foreground text-foreground"
-            />
-            {q && <button type="button" aria-label="Limpiar búsqueda" onClick={() => setQ("")} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={() => { setEditing(null); setFormOpen(true); }} 
-            className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-xl text-xs font-bold shadow-md hover:opacity-95 transition"
-          >
-            <Plus className="h-4 w-4" /> Añadir Servicio
-          </button>
-        </div>
-      </header>
+      <ServiciosHeader
+        q={q}
+        onSearchChange={(val) => {
+          setQ(val);
+          setCurrentPage(1);
+        }}
+        onClearSearch={() => setQ("")}
+        onAddService={() => {
+          setEditing(null);
+          setFormOpen(true);
+        }}
+      />
 
-      {/* SPECIALTY FILTER CHIPS / PILLS */}
-      <div className="flex items-center gap-2 pb-3 mb-2 overflow-x-auto no-scrollbar border-b border-border/40">
-        {isDoctorOnly && doctorSpecialtyId ? (
-          <>
-            <button
-              onClick={() => { setSpecialtyFilter(String(doctorSpecialtyId)); setCurrentPage(1); }}
-              className={cn(
-                "text-xs font-semibold px-3.5 py-1.5 rounded-xl shrink-0 transition-colors border flex items-center gap-2",
-                specialtyFilter === String(doctorSpecialtyId)
-                  ? "bg-primary text-primary-foreground border-primary font-bold shadow-sm"
-                  : "bg-muted/60 text-muted-foreground border-transparent hover:bg-muted"
-              )}
-            >
-              <Sparkles className="w-3.5 h-3.5 opacity-80" />
-              <span>Mi Rama: {doctorSpecialtyName || "Mi Especialidad"}</span>
-              <span className={cn("text-[10px] px-1.5 py-0.2 rounded-full", specialtyFilter === String(doctorSpecialtyId) ? "bg-white/20 text-white" : "bg-background text-muted-foreground")}>
-                {countsBySpecialty[String(doctorSpecialtyId)] || 0}
-              </span>
-            </button>
+      <ServiciosSpecialtyPills
+        isDoctorOnly={isDoctorOnly}
+        doctorSpecialtyId={doctorSpecialtyId}
+        doctorSpecialtyName={doctorSpecialtyName}
+        specialtyFilter={specialtyFilter}
+        onSelectFilter={(next) => {
+          setUserSelectedFilter(next);
+          setCurrentPage(1);
+        }}
+        specialties={specialties}
+        countsBySpecialty={countsBySpecialty}
+        totalServicesCount={services.length}
+        filteredCount={filtered.length}
+      />
 
-            {countsBySpecialty.none > 0 && (
-              <button
-                onClick={() => { setSpecialtyFilter("none"); setCurrentPage(1); }}
-                className={cn(
-                  "text-xs font-semibold px-3 py-1.5 rounded-xl shrink-0 transition-colors border",
-                  specialtyFilter === "none"
-                    ? "bg-primary text-primary-foreground border-primary font-bold shadow-sm"
-                    : "bg-muted/60 text-muted-foreground border-transparent hover:bg-muted"
-                )}
-              >
-                Multidisciplinarios ({countsBySpecialty.none})
-              </button>
-            )}
-
-            <button
-              onClick={() => { setSpecialtyFilter("all"); setCurrentPage(1); }}
-              className={cn(
-                "text-xs font-semibold px-3 py-1.5 rounded-xl shrink-0 transition-colors border",
-                specialtyFilter === "all"
-                  ? "bg-foreground text-background border-foreground font-bold shadow-sm"
-                  : "bg-muted/60 text-muted-foreground border-transparent hover:bg-muted"
-              )}
-            >
-              Ver Todas las Especialidades ({services.length})
-            </button>
-          </>
-        ) : (
-          <>
-            <button
-              onClick={() => { setSpecialtyFilter("all"); setCurrentPage(1); }}
-              className={cn(
-                "text-xs font-semibold px-3 py-1.5 rounded-xl shrink-0 transition-colors border",
-                specialtyFilter === "all"
-                  ? "bg-foreground text-background border-foreground font-bold shadow-sm"
-                  : "bg-muted/60 text-muted-foreground border-transparent hover:bg-muted"
-              )}
-            >
-              Todas ({services.length})
-            </button>
-
-            {specialties.map((esp) => {
-              const count = countsBySpecialty[String(esp.id_especialidad)] || 0;
-              if (count === 0 && specialtyFilter !== String(esp.id_especialidad)) return null;
-              const active = specialtyFilter === String(esp.id_especialidad);
-
-              return (
-                <button
-                  key={esp.id_especialidad}
-                  onClick={() => { setSpecialtyFilter(String(esp.id_especialidad)); setCurrentPage(1); }}
-                  className={cn(
-                    "text-xs font-semibold px-3 py-1.5 rounded-xl shrink-0 transition-colors border flex items-center gap-1.5",
-                    active
-                      ? "bg-primary text-primary-foreground border-primary font-bold shadow-sm"
-                      : "bg-muted/60 text-muted-foreground border-transparent hover:bg-muted"
-                  )}
-                >
-                  <span>{esp.nombre}</span>
-                  <span className={cn("text-[10px] px-1.5 py-0.2 rounded-full", active ? "bg-white/20 text-white" : "bg-background text-muted-foreground")}>
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
-
-            {countsBySpecialty.none > 0 && (
-              <button
-                onClick={() => { setSpecialtyFilter("none"); setCurrentPage(1); }}
-                className={cn(
-                  "text-xs font-semibold px-3 py-1.5 rounded-xl shrink-0 transition-colors border",
-                  specialtyFilter === "none"
-                    ? "bg-foreground text-background border-foreground font-bold shadow-sm"
-                    : "bg-muted/60 text-muted-foreground border-transparent hover:bg-muted"
-                )}
-              >
-                Multidisciplinarios ({countsBySpecialty.none})
-              </button>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* SECONDARY TOOLBAR */}
-      <div className="flex flex-wrap items-center justify-between mb-4 pb-2">
-        <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
-          <span>Mostrando {filtered.length} servicios</span>
-          {isDoctorOnly && doctorSpecialtyName && specialtyFilter === String(doctorSpecialtyId) && (
-            <span className="text-[11px] font-semibold text-primary bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
-              <Stethoscope className="w-3 h-3" />
-              Rama: {doctorSpecialtyName} (compartida con tus colegas)
-            </span>
-          )}
-          {specialtyFilter !== "all" && (
-            <button 
-              onClick={() => setSpecialtyFilter("all")} 
-              className="text-primary hover:underline text-xs ml-1 flex items-center gap-0.5"
-            >
-              <X className="w-3 h-3" /> Limpiar filtro
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* TABLE */}
-      <div className="flex-1 w-full min-w-0 overflow-x-auto border border-border rounded-2xl bg-card shadow-xs">
-        <table className="w-full text-left border-collapse min-w-[650px]">
-          <thead>
-            <tr className="bg-muted/70 text-[10px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border">
-              <th className="p-4 rounded-tl-xl">Nombre del Servicio</th>
-              <th className="p-4">Especialidad</th>
-              <th className="p-4">Código Médico</th>
-              <th className="p-4">Descripción</th>
-              <th className="p-4">Costo Base</th>
-              <th className="p-4 rounded-tr-xl text-right">Acción</th>
-            </tr>
-          </thead>
-          <tbody className="text-sm">
-            {isLoading ? (
-              <tr><td colSpan={6} className="p-12 text-center"><Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" /></td></tr>
-            ) : paginated.length === 0 ? (
-              <tr><td colSpan={6} className="p-12 text-center text-muted-foreground font-medium">No se encontraron servicios médicos para el filtro seleccionado.</td></tr>
-            ) : (
-              paginated.map((s) => {
-                const espName = s.especialidades?.nombre || "Multidisciplinario";
-                const badge = getSpecialtyBadgeStyle(espName);
-
-                return (
-                  <tr key={s.id_servicio} className="border-b border-border last:border-0 hover:bg-muted/30 transition group">
-                    <td className="p-4 font-bold text-foreground">
-                      {s.nombre_servicio}
-                    </td>
-                    <td className="p-4">
-                      <span className={cn("text-[10px] font-extrabold px-2.5 py-1 rounded-lg border uppercase tracking-wider inline-flex items-center gap-1", badge.className)}>
-                        <Sparkles className="w-2.5 h-2.5 opacity-70" />
-                        {espName}
-                      </span>
-                    </td>
-                    <td className="p-4 text-muted-foreground font-medium">
-                      {s.codigo_medico ? <span className="bg-muted px-2 py-1 rounded-md text-xs font-mono font-semibold">{s.codigo_medico}</span> : "—"}
-                    </td>
-                    <td className="p-4 text-muted-foreground text-xs max-w-[240px] truncate" title={s.descripcion || ""}>
-                      {s.descripcion || "Sin descripción"}
-                    </td>
-                    <td className="p-4">
-                      <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 font-extrabold px-2.5 py-1 text-xs rounded-full border border-emerald-200 dark:border-emerald-800">
-                        ${Number(s.costo_base || 0).toFixed(2)}
-                      </span>
-                    </td>
-                    <td className="p-4 text-right">
-                      <div className="flex items-center justify-end gap-3 text-muted-foreground">
-                        <button 
-                          onClick={() => { setEditing(s); setFormOpen(true); }} 
-                          className="hover:text-primary transition-colors p-1"
-                          title="Editar servicio"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button 
-                          onClick={() => handleDelete(s)} 
-                          className="hover:text-destructive transition-colors p-1"
-                          title="Eliminar servicio"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+      <ServiciosTable
+        isLoading={isLoading}
+        services={paginated}
+        onEdit={(s) => {
+          setEditing(s);
+          setFormOpen(true);
+        }}
+        onDelete={handleDelete}
+      />
 
       <TablePagination
         currentPage={currentPage}
         totalPages={totalPages}
         totalItems={filtered.length}
-        itemsPerPage={itemsPerPage}
+        itemsPerPage={ITEMS_PER_PAGE}
         entityLabel="servicios"
         onPageChange={setCurrentPage}
       />

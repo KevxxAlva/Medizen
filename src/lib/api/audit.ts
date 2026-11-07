@@ -1,6 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 export type AuditLog = {
   id: string;
@@ -13,6 +12,7 @@ export type AuditLog = {
   perfiles?: {
     full_name: string | null;
     email: string | null;
+    role?: string | null;
   } | null;
 };
 
@@ -24,7 +24,9 @@ export async function logAuditAction(
   details: any = {}
 ) {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return null;
 
     const { data, error } = await supabase
@@ -51,9 +53,13 @@ export async function logAuditAction(
 }
 
 // Hook to fetch logs for admin
-export function useAuditLogs(limit = 100) {
+export function useAuditLogs(limit = 200) {
   return useQuery({
     queryKey: ["audit_logs", limit],
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchInterval: 8000,
     queryFn: async (): Promise<AuditLog[]> => {
       const { data, error } = await supabase
         .from("audit_logs")
@@ -65,12 +71,15 @@ export function useAuditLogs(limit = 100) {
       const logs = data ?? [];
 
       const userIds = [...new Set(logs.map((l) => l.user_id).filter(Boolean))] as string[];
-      const userMap = new Map<string, { full_name: string | null; email: string | null }>();
+      const userMap = new Map<
+        string,
+        { full_name: string | null; email: string | null; role?: string | null }
+      >();
 
       if (userIds.length > 0) {
         const { data: users } = await supabase
           .from("usuarios")
-          .select("auth_id, nombre_usuario, medicos(nombre, apellido, email)")
+          .select("auth_id, nombre_usuario, rol, medicos(nombre, apellido, email)")
           .in("auth_id", userIds);
 
         (users ?? []).forEach((u: any) => {
@@ -78,7 +87,7 @@ export function useAuditLogs(limit = 100) {
           const doc = Array.isArray(u.medicos) ? u.medicos[0] : u.medicos;
           const fullName = doc ? `${doc.nombre} ${doc.apellido}`.trim() : u.nombre_usuario;
           const email = doc?.email || u.nombre_usuario || null;
-          userMap.set(u.auth_id, { full_name: fullName, email });
+          userMap.set(u.auth_id, { full_name: fullName, email, role: u.rol || null });
         });
       }
 

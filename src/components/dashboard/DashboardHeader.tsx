@@ -92,7 +92,7 @@ export function DashboardHeader({ notifications }: DashboardHeaderProps) {
         <button
           type="button"
           onClick={() => setCalcOpen(true)}
-          className="flex items-center gap-2 h-10 px-3 sm:px-3.5 bg-card hover:bg-muted/50 border border-border hover:border-primary/40 rounded-full shadow-sm text-xs font-bold text-foreground transition-all cursor-pointer group"
+          className="flex items-center gap-2 h-10 px-3 sm:px-3.5 bg-card hover:bg-muted/50 border border-border hover:border-primary/40 rounded-full shadow-sm text-xs font-bold text-foreground transition-colors cursor-pointer group"
           title="Abrir Calculadora y Conversor BCV"
         >
           <Calculator className="h-4 w-4 text-primary group-hover:scale-110 transition-transform" />

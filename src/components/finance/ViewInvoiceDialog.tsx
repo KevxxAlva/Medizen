@@ -379,8 +379,11 @@ export function ViewInvoiceDialog({
           </span>
           {invoice.items && invoice.items.length > 0 ? (
             <div className="space-y-2">
-              {invoice.items.map((item, idx) => (
-                <div key={idx} className="flex items-center justify-between font-semibold text-foreground">
+              {invoice.items.map((item) => (
+                <div
+                  key={item.id ?? `${item.descripcion}-${item.cantidad}-${item.precio_unitario}`}
+                  className="flex items-center justify-between font-semibold text-foreground"
+                >
                   <div className="flex items-center gap-1.5">
                     {item.cantidad > 1 && (
                       <span className="text-[10px] bg-primary/10 text-primary font-bold px-1.5 py-0.5 rounded">

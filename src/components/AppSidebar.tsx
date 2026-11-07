@@ -3,10 +3,12 @@ import {
   LayoutGrid, Calendar, UserRound, Stethoscope, Users,
   Wallet, ReceiptText, CreditCard,
   Box, RotateCw, Settings,
+  Clock, HandCoins, ShieldCheck,
   LogOut, ChevronLeft, ChevronRight, X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsAdmin } from "@/hooks/useAuth";
+import { useUserRoleScope } from "@/hooks/useUserRoleScope";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useClinicInfo } from "@/lib/api/clinic";
@@ -22,11 +24,13 @@ type ModuleDef = {
   icon?: any;
   badge?: number;
   adminOnly?: boolean;
+  receptionOrAdminOnly?: boolean;
 };
 
 const navigation: ModuleDef[] = [
   { title: "Dashboard", url: "/", icon: LayoutGrid },
   { category: "CLÍNICA" },
+  { title: "Sala de Espera", url: "/sala-espera", icon: Clock, receptionOrAdminOnly: true },
   { title: "Agenda", url: "/agenda", icon: Calendar },
   { title: "Pacientes", url: "/pacientes", icon: UserRound },
   { title: "Servicios Médicos", url: "/servicios", icon: Stethoscope },
@@ -34,17 +38,20 @@ const navigation: ModuleDef[] = [
   { category: "FINANZAS" },
   { title: "Cuentas", url: "/cuentas", icon: Wallet, adminOnly: true },
   { title: "Ventas", url: "/facturacion", icon: ReceiptText },
+  { title: "Honorarios Médicos", url: "/honorarios", icon: HandCoins, adminOnly: true },
   { title: "Métodos de Pago", url: "/metodos-pago", icon: CreditCard, adminOnly: true },
   { category: "ACTIVOS FÍSICOS", adminOnly: true },
   { title: "Inventario", url: "/stocks", icon: Box, adminOnly: true },
   { category: "OTROS" },
   { title: "Reportes", url: "/reportes", icon: RotateCw },
+  { title: "Auditoría", url: "/auditoria", icon: ShieldCheck, adminOnly: true },
   { title: "Configuración", url: "/configuracion", icon: Settings },
 ];
 
 function SidebarBody({ onNavigate, isCollapsed }: { onNavigate?: () => void; isCollapsed?: boolean }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAdmin = useIsAdmin();
+  const { canViewAllDoctors } = useUserRoleScope();
   const router = useRouter();
   const qc = useQueryClient();
   const { data: clinic } = useClinicInfo();
@@ -77,6 +84,7 @@ function SidebarBody({ onNavigate, isCollapsed }: { onNavigate?: () => void; isC
         <nav className="flex-1 w-full overflow-y-auto overscroll-contain no-scrollbar px-3 pt-3 pb-4 flex flex-col gap-1">
           {navigation.map((m) => {
             if (m.adminOnly && !isAdmin) return null;
+            if (m.receptionOrAdminOnly && !canViewAllDoctors) return null;
 
             if (m.category) {
               if (isCollapsed) {

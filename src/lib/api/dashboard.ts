@@ -35,12 +35,23 @@ export function useDashboardStats(options?: {
           labWork: { total: 0, change: 0, sparkline: [0, 0, 0, 0, 0, 0, 0] },
           scheduledEvents: {
             consultations: 0,
+            patients: 0,
             labs: 0,
             invoices: 0,
             donutPercentage: 0,
-            week: { consultations: 0, labs: 0, invoices: 0, donutPercentage: 0 },
+            week: { consultations: 0, patients: 0, labs: 0, invoices: 0, donutPercentage: 0 },
           },
-          plansDone: { done: 0, total: 0, percentage: 0, change: 0 },
+          plansDone: {
+            consultations: 0,
+            patients: 0,
+            labs: 0,
+            invoices: 0,
+            done: 0,
+            total: 0,
+            percentage: 0,
+            change: 0,
+            week: { consultations: 0, patients: 0, labs: 0, invoices: 0 },
+          },
         };
       }
 
@@ -66,9 +77,37 @@ export function useDashboardStats(options?: {
         (c) => !["cancelada", "cancelado", "cancelled"].includes((c.estado || "").toLowerCase())
       );
 
-      const doctorPatientIds = doctorId
-        ? new Set(citas.map((c) => c.id_paciente).filter(Boolean))
-        : null;
+      // Obtener todos los IDs de pacientes vinculados a este doctor (citas históricas/futuras, consultas o médico asignado)
+      let doctorPatientIds: Set<number> | null = null;
+      if (doctorId) {
+        doctorPatientIds = new Set<number>();
+        const [allCitasRes, allConsultasRes, allHcRes, medicosCountRes] = await Promise.all([
+          supabase.from("citas").select("id_paciente").eq("id_medico", doctorId),
+          supabase.from("consultas").select("id_paciente").eq("id_medico", doctorId),
+          supabase.from("historias_clinicas").select("id_paciente, datos_extras"),
+          supabase.from("medicos").select("id_medico", { count: "exact", head: true }),
+        ]);
+
+        (allCitasRes.data || []).forEach((c) => {
+          if (c.id_paciente) doctorPatientIds!.add(Number(c.id_paciente));
+        });
+        (allConsultasRes.data || []).forEach((c) => {
+          if (c.id_paciente) doctorPatientIds!.add(Number(c.id_paciente));
+        });
+        (allHcRes.data || []).forEach((hc: any) => {
+          const assigned = hc.datos_extras?.assigned_doctor_id;
+          if (assigned && String(assigned) === String(doctorId) && hc.id_paciente) {
+            doctorPatientIds!.add(Number(hc.id_paciente));
+          }
+        });
+
+        // Si la clínica tiene solo 1 médico registrado, todos los pacientes le corresponden
+        const totalMedicos = medicosCountRes.count ?? 0;
+        if (totalMedicos <= 1) {
+          const { data: allP } = await supabase.from("pacientes").select("id_paciente");
+          (allP || []).forEach((p) => doctorPatientIds!.add(Number(p.id_paciente)));
+        }
+      }
 
       // Invoices
       let invoices: any[] = [];
@@ -87,29 +126,21 @@ export function useDashboardStats(options?: {
         invoices = invoicesData || [];
       }
 
-      // Labs
-      let labs: any[] = [];
+      // New Patients registered in last 7 days
+      let newPatients: any[] = [];
       if (!isDoctorOnly && !doctorId) {
-        const { data: labsData } = await supabase
-          .from("examenes_laboratorio")
-          .select("fecha_resultado")
-          .gte("fecha_resultado", `${sevenDaysAgo}T00:00:00.000Z`);
-        labs = labsData || [];
-      } else if (doctorId) {
-        const { data: consultasData } = await supabase
-          .from("consultas")
-          .select("id_consulta")
-          .eq("id_medico", doctorId);
-
-        const consultaIds = (consultasData || []).map((c) => c.id_consulta).filter(Boolean);
-        if (consultaIds.length > 0) {
-          const { data: labsData } = await supabase
-            .from("examenes_laboratorio")
-            .select("fecha_resultado")
-            .in("id_consulta", consultaIds)
-            .gte("fecha_resultado", `${sevenDaysAgo}T00:00:00.000Z`);
-          labs = labsData || [];
-        }
+        const { data: patientsData } = await supabase
+          .from("pacientes")
+          .select("id_paciente, creado_en")
+          .gte("creado_en", `${sevenDaysAgo}T00:00:00.000Z`);
+        newPatients = patientsData || [];
+      } else if (doctorPatientIds && doctorPatientIds.size > 0) {
+        const { data: patientsData } = await supabase
+          .from("pacientes")
+          .select("id_paciente, creado_en")
+          .in("id_paciente", Array.from(doctorPatientIds))
+          .gte("creado_en", `${sevenDaysAgo}T00:00:00.000Z`);
+        newPatients = patientsData || [];
       }
 
       // Helper to count by day
@@ -122,7 +153,7 @@ export function useDashboardStats(options?: {
       const citasByDay = countByDay(citas, "fecha_hora");
       const completedCitas = citas.filter((c) => (c.estado || "").toLowerCase() === "completada");
       const completedByDay = countByDay(completedCitas, "fecha_hora");
-      const labsByDay = countByDay(labs, "fecha_resultado");
+      const patientsByDay = countByDay(newPatients, "creado_en");
       const invoicesByDay = countByDay(invoices, "fecha_emision");
 
       const getChange = (today: number, yesterday: number) => {
@@ -141,16 +172,16 @@ export function useDashboardStats(options?: {
       const completedYesterday = completedByDay[5];
       const completedChange = getChange(completedToday, completedYesterday);
 
-      // LAB WORK
-      const labToday = labsByDay[6];
-      const labYesterday = labsByDay[5];
-      const labChange = getChange(labToday, labYesterday);
+      // PATIENTS WORK (New registered patients)
+      const patientsToday = patientsByDay[6];
+      const patientsYesterday = patientsByDay[5];
+      const patientsChange = getChange(patientsToday, patientsYesterday);
 
       const DAILY_SLOT_CAPACITY = 10;
       const todayOccupationPct = Math.min(100, Math.round((offlineToday / DAILY_SLOT_CAPACITY) * 100));
 
       const weekConsultations = citasByDay.reduce((a, b) => a + b, 0);
-      const weekLabs = labsByDay.reduce((a, b) => a + b, 0);
+      const weekPatients = patientsByDay.reduce((a, b) => a + b, 0);
       const weekInvoices = invoicesByDay.reduce((a, b) => a + b, 0);
       const weekOccupationPct = Math.min(
         100,
@@ -160,23 +191,67 @@ export function useDashboardStats(options?: {
       // SCHEDULED EVENTS (Today & 7-Day counts)
       const scheduledEvents = {
         consultations: offlineToday,
-        labs: labToday,
+        patients: patientsToday,
+        labs: patientsToday,
         invoices: invoicesByDay[6],
         donutPercentage: todayOccupationPct,
         week: {
           consultations: weekConsultations,
-          labs: weekLabs,
+          patients: weekPatients,
+          labs: weekPatients,
           invoices: weekInvoices,
           donutPercentage: weekOccupationPct,
         }
       };
 
+      // Invoices calculations for today and week
+      const invoicesToday = invoices.filter(
+        (i) => i.fecha_emision && i.fecha_emision.startsWith(todayStr)
+      );
+      const paidInvoicesToday = invoicesToday.filter((i) =>
+        ["pagado", "pagada", "paid"].includes((i.estado_pago || "").toLowerCase())
+      );
+      const todayInvoicesPct = invoicesToday.length > 0
+        ? Math.min(100, Math.round((paidInvoicesToday.length / invoicesToday.length) * 100))
+        : (paidInvoicesToday.length > 0 ? 100 : 0);
+
+      const paidInvoicesWeek = invoices.filter((i) =>
+        ["pagado", "pagada", "paid"].includes((i.estado_pago || "").toLowerCase())
+      );
+      const weekInvoicesPct = invoices.length > 0
+        ? Math.min(100, Math.round((paidInvoicesWeek.length / invoices.length) * 100))
+        : 0;
+
+      // Consultations calculations
+      const todayConsultationsPct = offlineToday > 0
+        ? Math.min(100, Math.round((completedToday / offlineToday) * 100))
+        : (completedToday > 0 ? 100 : 0);
+
+      const weekConsultationsPct = weekConsultations > 0
+        ? Math.min(100, Math.round((completedWeekTotal / weekConsultations) * 100))
+        : (completedWeekTotal > 0 ? 100 : 0);
+
+      // Patients calculations (Meta: 2 pacientes/día o 10/semana)
+      const DAILY_PATIENT_TARGET = 2;
+      const todayPatientsPct = Math.min(100, Math.round((patientsToday / DAILY_PATIENT_TARGET) * 100));
+      const weekPatientsPct = Math.min(100, Math.round((weekPatients / (DAILY_PATIENT_TARGET * 7)) * 100));
+
       // REAL CLINICAL PLANS DONE
       const plansDone = {
+        consultations: todayConsultationsPct,
+        patients: todayPatientsPct,
+        labs: todayPatientsPct,
+        invoices: todayInvoicesPct,
         done: completedWeekTotal,
         total: Math.max(completedWeekTotal, weekConsultations),
         percentage: weekConsultations > 0 ? Math.round((completedWeekTotal / weekConsultations) * 100) : 0,
         change: completedChange,
+        week: {
+          consultations: weekConsultationsPct,
+          patients: weekPatientsPct,
+          labs: weekPatientsPct,
+          invoices: weekInvoicesPct,
+        },
       };
 
       return {
@@ -191,9 +266,9 @@ export function useDashboardStats(options?: {
           sparkline: completedByDay,
         },
         labWork: {
-          total: labToday,
-          change: labChange,
-          sparkline: labsByDay,
+          total: patientsToday,
+          change: patientsChange,
+          sparkline: patientsByDay,
         },
         scheduledEvents,
         plansDone

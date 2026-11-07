@@ -442,6 +442,7 @@ function DoctoresAdmin() {
       />
 
       <EditUserModal
+        key={toEdit?.id ?? "closed"}
         profile={toEdit}
         onOpenChange={(open) => !open && setToEdit(null)}
         updateProfile={updateProfile}
@@ -744,18 +745,7 @@ function EditUserModal({
   const [fullName, setFullName] = useState(profile?.full_name || "");
   const [specialty, setSpecialty] = useState(profile?.specialty || "");
   const [mpps, setMpps] = useState(profile?.mpps || "");
-  const [university, setUniversity] = useState(profile?.university || "");
   const [cmc, setCmc] = useState(profile?.cmc || "");
-
-  useMemo(() => {
-    if (profile) {
-      setFullName(profile.full_name || "");
-      setSpecialty(profile.specialty || "");
-      setMpps(profile.mpps || "");
-      setUniversity(profile.university || "");
-      setCmc(profile.cmc || "");
-    }
-  }, [profile]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -766,7 +756,7 @@ function EditUserModal({
         fullName,
         specialty,
         mpps: mpps || null,
-        university: university || null,
+        university: profile.university || null,
         cmc: cmc || null,
       });
       toast.success("Perfil y especialidades actualizadas correctamente");

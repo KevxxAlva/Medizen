@@ -14,12 +14,15 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DescargarRouteImport } from './routes/descargar'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
+import { Route as AuthenticatedAuditoriaRouteImport } from './routes/_authenticated/auditoria'
 import { Route as AuthenticatedConfiguracionRouteImport } from './routes/_authenticated/configuracion'
 import { Route as AuthenticatedCuentasRouteImport } from './routes/_authenticated/cuentas'
 import { Route as AuthenticatedDoctoresRouteImport } from './routes/_authenticated/doctores'
 import { Route as AuthenticatedFacturacionRouteImport } from './routes/_authenticated/facturacion'
+import { Route as AuthenticatedHonorariosRouteImport } from './routes/_authenticated/honorarios'
 import { Route as AuthenticatedMetodosPagoRouteImport } from './routes/_authenticated/metodos-pago'
 import { Route as AuthenticatedReportesRouteImport } from './routes/_authenticated/reportes'
+import { Route as AuthenticatedSalaEsperaRouteImport } from './routes/_authenticated/sala-espera'
 import { Route as AuthenticatedServiciosRouteImport } from './routes/_authenticated/servicios'
 import { Route as AuthenticatedStocksRouteImport } from './routes/_authenticated/stocks'
 import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
@@ -50,6 +53,11 @@ const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
   path: '/agenda',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAuditoriaRoute = AuthenticatedAuditoriaRouteImport.update({
+  id: '/auditoria',
+  path: '/auditoria',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedConfiguracionRoute =
   AuthenticatedConfiguracionRouteImport.update({
     id: '/configuracion',
@@ -72,6 +80,11 @@ const AuthenticatedFacturacionRoute =
     path: '/facturacion',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedHonorariosRoute = AuthenticatedHonorariosRouteImport.update({
+  id: '/honorarios',
+  path: '/honorarios',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedMetodosPagoRoute =
   AuthenticatedMetodosPagoRouteImport.update({
     id: '/metodos-pago',
@@ -81,6 +94,11 @@ const AuthenticatedMetodosPagoRoute =
 const AuthenticatedReportesRoute = AuthenticatedReportesRouteImport.update({
   id: '/reportes',
   path: '/reportes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSalaEsperaRoute = AuthenticatedSalaEsperaRouteImport.update({
+  id: '/sala-espera',
+  path: '/sala-espera',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedServiciosRoute = AuthenticatedServiciosRouteImport.update({
@@ -116,12 +134,15 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/descargar': typeof DescargarRoute
   '/agenda': typeof AuthenticatedAgendaRoute
+  '/auditoria': typeof AuthenticatedAuditoriaRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
   '/cuentas': typeof AuthenticatedCuentasRoute
   '/doctores': typeof AuthenticatedDoctoresRoute
   '/facturacion': typeof AuthenticatedFacturacionRoute
+  '/honorarios': typeof AuthenticatedHonorariosRoute
   '/metodos-pago': typeof AuthenticatedMetodosPagoRoute
   '/reportes': typeof AuthenticatedReportesRoute
+  '/sala-espera': typeof AuthenticatedSalaEsperaRoute
   '/servicios': typeof AuthenticatedServiciosRoute
   '/stocks': typeof AuthenticatedStocksRoute
   '/support': typeof AuthenticatedSupportRoute
@@ -132,12 +153,15 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/descargar': typeof DescargarRoute
   '/agenda': typeof AuthenticatedAgendaRoute
+  '/auditoria': typeof AuthenticatedAuditoriaRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
   '/cuentas': typeof AuthenticatedCuentasRoute
   '/doctores': typeof AuthenticatedDoctoresRoute
   '/facturacion': typeof AuthenticatedFacturacionRoute
+  '/honorarios': typeof AuthenticatedHonorariosRoute
   '/metodos-pago': typeof AuthenticatedMetodosPagoRoute
   '/reportes': typeof AuthenticatedReportesRoute
+  '/sala-espera': typeof AuthenticatedSalaEsperaRoute
   '/servicios': typeof AuthenticatedServiciosRoute
   '/stocks': typeof AuthenticatedStocksRoute
   '/support': typeof AuthenticatedSupportRoute
@@ -151,12 +175,15 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/descargar': typeof DescargarRoute
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
+  '/_authenticated/auditoria': typeof AuthenticatedAuditoriaRoute
   '/_authenticated/configuracion': typeof AuthenticatedConfiguracionRoute
   '/_authenticated/cuentas': typeof AuthenticatedCuentasRoute
   '/_authenticated/doctores': typeof AuthenticatedDoctoresRoute
   '/_authenticated/facturacion': typeof AuthenticatedFacturacionRoute
+  '/_authenticated/honorarios': typeof AuthenticatedHonorariosRoute
   '/_authenticated/metodos-pago': typeof AuthenticatedMetodosPagoRoute
   '/_authenticated/reportes': typeof AuthenticatedReportesRoute
+  '/_authenticated/sala-espera': typeof AuthenticatedSalaEsperaRoute
   '/_authenticated/servicios': typeof AuthenticatedServiciosRoute
   '/_authenticated/stocks': typeof AuthenticatedStocksRoute
   '/_authenticated/support': typeof AuthenticatedSupportRoute
@@ -171,12 +198,15 @@ export interface FileRouteTypes {
     | '/auth'
     | '/descargar'
     | '/agenda'
+    | '/auditoria'
     | '/configuracion'
     | '/cuentas'
     | '/doctores'
     | '/facturacion'
+    | '/honorarios'
     | '/metodos-pago'
     | '/reportes'
+    | '/sala-espera'
     | '/servicios'
     | '/stocks'
     | '/support'
@@ -187,12 +217,15 @@ export interface FileRouteTypes {
     | '/auth'
     | '/descargar'
     | '/agenda'
+    | '/auditoria'
     | '/configuracion'
     | '/cuentas'
     | '/doctores'
     | '/facturacion'
+    | '/honorarios'
     | '/metodos-pago'
     | '/reportes'
+    | '/sala-espera'
     | '/servicios'
     | '/stocks'
     | '/support'
@@ -205,12 +238,15 @@ export interface FileRouteTypes {
     | '/auth'
     | '/descargar'
     | '/_authenticated/agenda'
+    | '/_authenticated/auditoria'
     | '/_authenticated/configuracion'
     | '/_authenticated/cuentas'
     | '/_authenticated/doctores'
     | '/_authenticated/facturacion'
+    | '/_authenticated/honorarios'
     | '/_authenticated/metodos-pago'
     | '/_authenticated/reportes'
+    | '/_authenticated/sala-espera'
     | '/_authenticated/servicios'
     | '/_authenticated/stocks'
     | '/_authenticated/support'
@@ -262,6 +298,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAgendaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/auditoria': {
+      id: '/_authenticated/auditoria'
+      path: '/auditoria'
+      fullPath: '/auditoria'
+      preLoaderRoute: typeof AuthenticatedAuditoriaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/configuracion': {
       id: '/_authenticated/configuracion'
       path: '/configuracion'
@@ -290,6 +333,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFacturacionRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/honorarios': {
+      id: '/_authenticated/honorarios'
+      path: '/honorarios'
+      fullPath: '/honorarios'
+      preLoaderRoute: typeof AuthenticatedHonorariosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/metodos-pago': {
       id: '/_authenticated/metodos-pago'
       path: '/metodos-pago'
@@ -302,6 +352,13 @@ declare module '@tanstack/react-router' {
       path: '/reportes'
       fullPath: '/reportes'
       preLoaderRoute: typeof AuthenticatedReportesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sala-espera': {
+      id: '/_authenticated/sala-espera'
+      path: '/sala-espera'
+      fullPath: '/sala-espera'
+      preLoaderRoute: typeof AuthenticatedSalaEsperaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/servicios': {
@@ -344,12 +401,15 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAgendaRoute: typeof AuthenticatedAgendaRoute
+  AuthenticatedAuditoriaRoute: typeof AuthenticatedAuditoriaRoute
   AuthenticatedConfiguracionRoute: typeof AuthenticatedConfiguracionRoute
   AuthenticatedCuentasRoute: typeof AuthenticatedCuentasRoute
   AuthenticatedDoctoresRoute: typeof AuthenticatedDoctoresRoute
   AuthenticatedFacturacionRoute: typeof AuthenticatedFacturacionRoute
+  AuthenticatedHonorariosRoute: typeof AuthenticatedHonorariosRoute
   AuthenticatedMetodosPagoRoute: typeof AuthenticatedMetodosPagoRoute
   AuthenticatedReportesRoute: typeof AuthenticatedReportesRoute
+  AuthenticatedSalaEsperaRoute: typeof AuthenticatedSalaEsperaRoute
   AuthenticatedServiciosRoute: typeof AuthenticatedServiciosRoute
   AuthenticatedStocksRoute: typeof AuthenticatedStocksRoute
   AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
@@ -360,12 +420,15 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAgendaRoute: AuthenticatedAgendaRoute,
+  AuthenticatedAuditoriaRoute: AuthenticatedAuditoriaRoute,
   AuthenticatedConfiguracionRoute: AuthenticatedConfiguracionRoute,
   AuthenticatedCuentasRoute: AuthenticatedCuentasRoute,
   AuthenticatedDoctoresRoute: AuthenticatedDoctoresRoute,
   AuthenticatedFacturacionRoute: AuthenticatedFacturacionRoute,
+  AuthenticatedHonorariosRoute: AuthenticatedHonorariosRoute,
   AuthenticatedMetodosPagoRoute: AuthenticatedMetodosPagoRoute,
   AuthenticatedReportesRoute: AuthenticatedReportesRoute,
+  AuthenticatedSalaEsperaRoute: AuthenticatedSalaEsperaRoute,
   AuthenticatedServiciosRoute: AuthenticatedServiciosRoute,
   AuthenticatedStocksRoute: AuthenticatedStocksRoute,
   AuthenticatedSupportRoute: AuthenticatedSupportRoute,

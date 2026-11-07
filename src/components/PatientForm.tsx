@@ -9,7 +9,8 @@ import {
 } from "@/components/ui/dialog";
 import { useCreatePatient, useUpdatePatient, usePatient, type Patient } from "@/lib/api/patients";
 import { useDoctors } from "@/lib/api/profiles";
-import { useAuthSession, useIsAdmin } from "@/hooks/useAuth";
+import { useAuthSession } from "@/hooks/useAuth";
+import { useUserRoleScope } from "@/hooks/useUserRoleScope";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { usePatientFormState } from "./patient-form/usePatientFormState";
@@ -39,13 +40,18 @@ export function PatientForm({
   const { data: fullPatient, isLoading: isPatientDetailLoading } = usePatient(initialPatient?.id);
   const patient = isEdit ? fullPatient : null;
   const { user } = useAuthSession();
-  const isAdmin = useIsAdmin();
+  const { isDoctorOnly, doctorId: currentDoctorId, doctorName } = useUserRoleScope();
   const { data: doctors = [] } = useDoctors();
 
-  const defaultDoctor = useMemo(
-    () => patient?.assigned_doctor_id ?? (isAdmin ? (doctors[0]?.id ?? "") : (user?.id ?? "")),
-    [patient, isAdmin, doctors, user],
-  );
+  const defaultDoctor = useMemo(() => {
+    if (isDoctorOnly) {
+      return currentDoctorId ? String(currentDoctorId) : "";
+    }
+    if (patient?.assigned_doctor_id && doctors.some((d) => String(d.id) === String(patient.assigned_doctor_id))) {
+      return String(patient.assigned_doctor_id);
+    }
+    return doctors[0]?.id ? String(doctors[0].id) : "";
+  }, [patient?.assigned_doctor_id, isDoctorOnly, currentDoctorId, doctors]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -65,12 +71,14 @@ export function PatientForm({
           </div>
         ) : (
           <PatientFormContent
-            key={open ? (patient?.id ?? "new") : "closed"}
+            key={open ? `${patient?.id ?? "new"}-${defaultDoctor}` : "closed"}
             patient={patient}
             defaultDoctor={defaultDoctor}
             isEdit={isEdit}
             doctors={doctors}
             user={user}
+            isDoctorOnly={isDoctorOnly}
+            doctorName={doctorName}
             onOpenChange={onOpenChange}
           />
         )}
@@ -85,6 +93,8 @@ function PatientFormContent({
   isEdit,
   doctors,
   user,
+  isDoctorOnly,
+  doctorName,
   onOpenChange,
 }: {
   patient?: Patient | null;
@@ -92,6 +102,8 @@ function PatientFormContent({
   isEdit: boolean;
   doctors: any[];
   user: any;
+  isDoctorOnly?: boolean;
+  doctorName?: string | null;
   onOpenChange: (v: boolean) => void;
 }) {
   const formState = usePatientFormState(patient, defaultDoctor);
@@ -106,10 +118,11 @@ function PatientFormContent({
       toast.error("Por favor ingrese el nombre completo del paciente");
       return;
     }
-    const doctorId =
-      formState.assigned_doctor_id ||
-      defaultDoctor ||
-      (doctors[0]?.id ? String(doctors[0].id) : (user?.id ?? ""));
+    const doctorId = isDoctorOnly
+      ? defaultDoctor || formState.assigned_doctor_id
+      : formState.assigned_doctor_id ||
+        defaultDoctor ||
+        (doctors[0]?.id ? String(doctors[0].id) : (user?.id ?? ""));
     if (!doctorId) {
       toast.error("Por favor seleccione un médico asignado");
       return;
@@ -237,6 +250,8 @@ function PatientFormContent({
         statusLabel={statusLabel}
         busy={busy}
         isEdit={isEdit}
+        isDoctorOnly={isDoctorOnly}
+        doctorName={doctorName}
         onCancel={() => onOpenChange(false)}
       />
     </form>

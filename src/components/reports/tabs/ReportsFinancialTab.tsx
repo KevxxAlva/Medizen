@@ -17,6 +17,9 @@ const MONTHS_ES = [
   "Diciembre",
 ];
 
+const amountCompactFmt = new Intl.NumberFormat("es-VE");
+const amountDecimalFmt = new Intl.NumberFormat("es-VE", { minimumFractionDigits: 2 });
+
 export interface ReportsFinancialTabProps {
   monthlyData: Array<{ month: string; amount: number }>;
   maxAmount: number;
@@ -72,11 +75,11 @@ export function ReportsFinancialTab({
                   className="flex-1 flex flex-col items-center gap-2 group h-full justify-end"
                 >
                   <div className="text-[10px] font-extrabold text-primary opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                    ${d.amount.toLocaleString("es-VE")}
+                    ${amountCompactFmt.format(d.amount)}
                   </div>
                   <div
                     style={{ height: `${pct}%` }}
-                    className="w-full max-w-[44px] bg-gradient-to-t from-primary to-primary/75 rounded-t-xl transition-all duration-300 group-hover:brightness-110 shadow-xs"
+                    className="w-full max-w-[44px] bg-gradient-to-t from-primary to-primary/75 rounded-t-xl transition-[height,filter] duration-300 group-hover:brightness-110 shadow-xs"
                   />
                   <div className="text-[10px] text-muted-foreground font-bold truncate w-full text-center pb-1">
                     {label}
@@ -113,7 +116,7 @@ export function ReportsFinancialTab({
                         {MONTHS_ES[parseInt(mn, 10) - 1] || mn} {yr}
                       </td>
                       <td className="px-3.5 py-2.5 text-right font-extrabold text-emerald-600 dark:text-emerald-400">
-                        ${d.amount.toLocaleString("es-VE", { minimumFractionDigits: 2 })}
+                        ${amountDecimalFmt.format(d.amount)}
                       </td>
                       <td className="px-3.5 py-2.5 text-right font-medium text-muted-foreground">
                         {formatBs(d.amount, rate)}
