@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { Link } from "@tanstack/react-router";
 import { MoreHorizontal } from "lucide-react";
 import {
@@ -60,10 +60,10 @@ function PatientsMetricCard({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              aria-label="Más opciones"
-              className="text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg cursor-pointer transition-colors"
+              aria-label="Más opciones de la métrica"
+              className="min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 -mr-2 -mt-2 flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg cursor-pointer transition-[transform,colors] duration-150"
             >
-              <MoreHorizontal className="h-4 w-4" />
+              <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 rounded-xl overscroll-contain">
@@ -127,10 +127,10 @@ function ConsultationsMetricCard({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              aria-label="Más opciones"
-              className="text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg cursor-pointer transition-colors"
+              aria-label="Más opciones de la métrica"
+              className="min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 -mr-2 -mt-2 flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg cursor-pointer transition-[transform,colors] duration-150"
             >
-              <MoreHorizontal className="h-4 w-4" />
+              <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 rounded-xl overscroll-contain">
@@ -200,10 +200,10 @@ function MonthlyRevenueMetricCard({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              aria-label="Más opciones"
-              className="text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg cursor-pointer transition-colors"
+              aria-label="Más opciones de la métrica"
+              className="min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 -mr-2 -mt-2 flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg cursor-pointer transition-[transform,colors] duration-150"
             >
-              <MoreHorizontal className="h-4 w-4" />
+              <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 rounded-xl overscroll-contain">
@@ -261,7 +261,7 @@ function MonthlyRevenueMetricCard({
   );
 }
 
-export function DashboardMetricsCards({
+export const DashboardMetricsCards = memo(function DashboardMetricsCards({
   totalPatients,
   stats,
   monthlyData,
@@ -298,4 +298,4 @@ export function DashboardMetricsCards({
       />
     </div>
   );
-}
+});

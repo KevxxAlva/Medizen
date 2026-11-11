@@ -1,5 +1,5 @@
 import { APP_TIME_ZONE } from "@/lib/constants/locale";
-import React from "react";
+import React, { memo } from "react";
 import { HeroDateTimeBadge } from "./DashboardCharts";
 
 export interface DashboardHeroProps {
@@ -7,7 +7,10 @@ export interface DashboardHeroProps {
   today: Date;
 }
 
-export function DashboardHero({ displayName, today }: DashboardHeroProps) {
+export const DashboardHero = memo(function DashboardHero({
+  displayName,
+  today,
+}: DashboardHeroProps) {
   return (
     <div className="relative bg-gradient-to-br from-primary to-primary/80 rounded-3xl p-8 overflow-hidden text-primary-foreground shadow-xl shadow-primary/20 flex justify-between items-center h-48 border border-white/10">
       <div className="relative z-10">
@@ -49,4 +52,4 @@ export function DashboardHero({ displayName, today }: DashboardHeroProps) {
       </div>
     </div>
   );
-}
+});

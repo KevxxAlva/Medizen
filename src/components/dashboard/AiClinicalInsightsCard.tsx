@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, memo } from "react";
 import { Sparkles, TrendingUp, AlertTriangle, CheckCircle2, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useStocks } from "@/lib/api/inventory";
 
-export function AiClinicalInsightsCard() {
+export const AiClinicalInsightsCard = memo(function AiClinicalInsightsCard() {
   const { data: stocks = [], refetch: refetchStocks, isFetching: fetchingStocks } = useStocks();
 
   const { data: metrics, refetch: refetchMetrics, isFetching: fetchingMetrics } = useQuery({
@@ -168,12 +168,14 @@ export function AiClinicalInsightsCard() {
           </div>
         </div>
         <button
+          type="button"
           onClick={handleRefresh}
           disabled={isRefreshing}
-          className="text-muted-foreground hover:text-foreground transition p-1 rounded-lg hover:bg-muted/50"
+          aria-label="Actualizar indicadores clínicos"
+          className="min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 flex items-center justify-center text-muted-foreground hover:text-foreground transition-[transform,colors] duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:pointer-events-none rounded-lg hover:bg-muted/50 cursor-pointer"
           title="Actualizar análisis"
         >
-          <RefreshCw className={cn("h-3.5 w-3.5", isRefreshing && "animate-spin text-primary")} />
+          <RefreshCw className={cn("h-3.5 w-3.5", isRefreshing && "animate-spin text-primary")} aria-hidden="true" />
         </button>
       </div>
 
@@ -214,5 +216,5 @@ export function AiClinicalInsightsCard() {
       </div>
     </div>
   );
-}
+});
 

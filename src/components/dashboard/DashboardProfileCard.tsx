@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { Link } from "@tanstack/react-router";
 import { MapPin, Edit2 } from "lucide-react";
 
@@ -9,7 +9,7 @@ export interface DashboardProfileCardProps {
   clinic: any;
 }
 
-export function DashboardProfileCard({
+export const DashboardProfileCard = memo(function DashboardProfileCard({
   displayName,
   profile,
   roleDisplay,
@@ -30,9 +30,10 @@ export function DashboardProfileCard({
         <span className="text-xs font-bold tracking-widest uppercase">Mi Perfil</span>
         <Link
           to="/configuracion"
-          className="bg-black/20 p-1.5 rounded-lg hover:bg-black/30 transition border border-white/10"
+          aria-label="Editar perfil y configuración"
+          className="bg-black/20 min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 flex items-center justify-center rounded-lg hover:bg-black/30 transition-[transform,colors] duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 border border-white/10"
         >
-          <Edit2 className="h-3 w-3" />
+          <Edit2 className="h-3.5 w-3.5" aria-hidden="true" />
         </Link>
       </div>
 
@@ -76,4 +77,4 @@ export function DashboardProfileCard({
       </div>
     </div>
   );
-}
+});

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, memo } from "react";
 import { ChevronDown, Plus, Check } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -24,7 +24,7 @@ function DashboardScheduledEventsCard({ stats }: { stats: any }) {
         <button
           type="button"
           onClick={() => setEventsRange(isToday ? "week" : "today")}
-          className="flex items-center gap-1 text-primary font-bold text-xs bg-primary/10 px-3 py-1.5 rounded-lg hover:bg-primary/20 transition cursor-pointer"
+          className="flex items-center gap-1 min-h-11 sm:min-h-8 text-primary font-bold text-xs bg-primary/10 px-3 py-1.5 rounded-lg hover:bg-primary/20 transition-[transform,colors] duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
         >
           {isToday ? "Hoy" : "7 Días"} <ChevronDown className="h-3 w-3" />
         </button>
@@ -145,7 +145,7 @@ function DashboardGoalsCard({
         <button
           type="button"
           onClick={() => setGoalsRange(isToday ? "week" : "today")}
-          className="flex items-center gap-1 text-primary font-bold text-xs bg-primary/10 px-3 py-1.5 rounded-lg hover:bg-primary/20 transition cursor-pointer"
+          className="flex items-center gap-1 min-h-11 sm:min-h-8 text-primary font-bold text-xs bg-primary/10 px-3 py-1.5 rounded-lg hover:bg-primary/20 transition-[transform,colors] duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
         >
           {isToday ? "Hoy" : "7 Días"} <ChevronDown className="h-3 w-3" />
         </button>
@@ -275,8 +275,11 @@ function DashboardGoalsCard({
 
       <Dialog open={isGoalModalOpen} onOpenChange={setIsGoalModalOpen}>
         <DialogTrigger asChild>
-          <button className="mt-6 w-full py-2.5 border-2 border-dashed border-border text-muted-foreground font-bold text-xs rounded-xl hover:bg-muted transition flex items-center justify-center gap-2">
-            <Plus className="h-4 w-4" /> Añadir meta
+          <button
+            type="button"
+            className="mt-6 w-full min-h-11 py-2.5 border-2 border-dashed border-border text-muted-foreground font-bold text-xs rounded-xl hover:bg-muted transition-[transform,colors] duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" /> Añadir meta
           </button>
         </DialogTrigger>
         <DialogContent>
@@ -324,7 +327,7 @@ export interface DashboardGoalsAndEventsProps {
   incrementDailyGoal: any;
 }
 
-export function DashboardGoalsAndEvents({
+export const DashboardGoalsAndEvents = memo(function DashboardGoalsAndEvents({
   stats,
   dailyGoals,
   todayStr,
@@ -343,4 +346,4 @@ export function DashboardGoalsAndEvents({
       />
     </div>
   );
-}
+});

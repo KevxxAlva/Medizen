@@ -1,11 +1,17 @@
-import { createFileRoute, Outlet, redirect, useRouter, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import {
+  createFileRoute,
+  Outlet,
+  redirect,
+  useRouter,
+  Link,
+  useLocation,
+} from "@tanstack/react-router";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppSidebar } from "@/components/AppSidebar";
 import { CommandMenu } from "@/components/CommandMenu";
 import { BottomNavBar } from "@/components/BottomNavBar";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
-import { useLocation } from "@tanstack/react-router";
 import { Menu, Lock } from "lucide-react";
 import { useClinicInfo } from "@/lib/api/clinic";
 import { useAuthSession, useRoles } from "@/hooks/useAuth";
@@ -17,6 +23,32 @@ import { useInactivityLock } from "@/hooks/useInactivityLock";
 import { InactivityLockOverlay } from "@/components/InactivityLockOverlay";
 
 const ADMIN_ONLY_PATHS = ["/doctores", "/cuentas", "/metodos-pago", "/stocks"];
+
+function AdminPathGuard({
+  authLoading,
+  user,
+  rolesLoading,
+  roles,
+}: {
+  authLoading: boolean;
+  user: unknown;
+  rolesLoading: boolean;
+  roles?: string[];
+}) {
+  const location = useLocation();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!authLoading && user && !rolesLoading && roles) {
+      const isAdminPath = ADMIN_ONLY_PATHS.some((p) => location.pathname.startsWith(p));
+      if (isAdminPath && !roles.includes("admin")) {
+        router.navigate({ to: "/", replace: true });
+      }
+    }
+  }, [authLoading, user, rolesLoading, roles, location.pathname, router]);
+
+  return null;
+}
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
@@ -45,7 +77,6 @@ function AuthenticatedLayout() {
   const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const location = useLocation();
   const { data: clinic } = useClinicInfo();
   const { user, loading: authLoading } = useAuthSession();
   const { data: roles, isLoading: rolesLoading } = useRoles();
@@ -56,20 +87,23 @@ function AuthenticatedLayout() {
 
   useRealtimeSync();
 
+  const handleToggleSidebar = useCallback(() => {
+    setIsCollapsed((prev) => !prev);
+  }, []);
+
+  const handleOpenMobileMenu = useCallback(() => {
+    setMobileMenuOpen(true);
+  }, []);
+
+  const handleCloseMobileMenu = useCallback(() => {
+    setMobileMenuOpen(false);
+  }, []);
+
   useEffect(() => {
     if (!authLoading && !user) {
       router.navigate({ to: "/auth", replace: true });
     }
   }, [authLoading, user, router]);
-
-  useEffect(() => {
-    if (!authLoading && user && !rolesLoading && roles) {
-      const isAdminPath = ADMIN_ONLY_PATHS.some((p) => location.pathname.startsWith(p));
-      if (isAdminPath && !roles.includes("admin")) {
-        router.navigate({ to: "/", replace: true });
-      }
-    }
-  }, [authLoading, user, rolesLoading, roles, location.pathname, router]);
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
@@ -86,11 +120,12 @@ function AuthenticatedLayout() {
       <header className="sticky top-0 z-40 md:hidden flex items-center justify-between px-3 sm:px-4 h-16 bg-card/95 backdrop-blur-md border-b border-border shadow-xs">
         <div className="flex items-center gap-2.5">
           <button
-            onClick={() => setMobileMenuOpen(true)}
-            className="p-2 -ml-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
+            type="button"
+            onClick={handleOpenMobileMenu}
+            className="h-11 w-11 -ml-1.5 flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-[background-color,color,transform] duration-150 active:scale-95 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
             aria-label="Abrir menú"
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="h-5 w-5" aria-hidden="true" />
           </button>
           <div className="flex items-center gap-2.5">
             <MedizenLogo className="h-7 w-7 flex-shrink-0 transition-transform duration-300" />
@@ -107,17 +142,18 @@ function AuthenticatedLayout() {
               type="button"
               onClick={lockScreen}
               aria-label="Bloquear pantalla"
-              className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
+              className="h-11 w-11 sm:h-9 sm:w-9 flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-[background-color,color,transform] duration-150 active:scale-95 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
               title="Bloquear pantalla (Privacidad médica)"
             >
-              <Lock className="h-4 w-4" />
+              <Lock className="h-4 w-4" aria-hidden="true" />
             </button>
           )}
           <ThemeCustomizer />
           <ThemeToggle />
           <Link
             to="/configuracion"
-            className="h-8 w-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shadow-xs hover:bg-primary/20 transition-colors"
+            aria-label="Mi Perfil"
+            className="h-11 w-11 sm:h-8 sm:w-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shadow-xs hover:bg-primary/20 transition-[background-color,transform] duration-150 active:scale-95 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             title="Mi Perfil"
           >
             {profile?.full_name ? profile.full_name.slice(0, 2).toUpperCase() : "U"}
@@ -144,21 +180,25 @@ function AuthenticatedLayout() {
         </aside>
       )}
 
+      <AdminPathGuard
+        authLoading={authLoading}
+        user={user}
+        rolesLoading={rolesLoading}
+        roles={roles}
+      />
+
       <AppSidebar
         isCollapsed={isCollapsed}
-        onToggle={() => setIsCollapsed(!isCollapsed)}
+        onToggle={handleToggleSidebar}
         mobileOpen={mobileMenuOpen}
-        onMobileClose={() => setMobileMenuOpen(false)}
+        onMobileClose={handleCloseMobileMenu}
       />
 
       <main
         id="main-content"
         className={`px-3 sm:px-4 md:px-6 pt-3 sm:pt-4 md:pt-6 pb-6 h-full flex-1 min-w-0 max-w-full transition-[margin] duration-300 ${isCollapsed ? "md:ml-[80px]" : "md:ml-[260px]"}`}
       >
-        <div
-          key={location.pathname}
-          className="max-w-7xl mx-auto w-full min-w-0 animate-in fade-in duration-150"
-        >
+        <div className="max-w-7xl mx-auto w-full min-w-0">
           <Outlet />
         </div>
       </main>

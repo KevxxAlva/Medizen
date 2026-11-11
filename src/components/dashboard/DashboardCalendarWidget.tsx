@@ -1,5 +1,5 @@
 import { APP_TIME_ZONE } from "@/lib/constants/locale";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, memo } from "react";
 import { ChevronLeft, ChevronRight, CalendarClock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -8,7 +8,10 @@ export interface DashboardCalendarWidgetProps {
   today: Date;
 }
 
-export function DashboardCalendarWidget({ appointments, today }: DashboardCalendarWidgetProps) {
+export const DashboardCalendarWidget = memo(function DashboardCalendarWidget({
+  appointments,
+  today,
+}: DashboardCalendarWidgetProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [appointmentPage, setAppointmentPage] = useState(1);
   const itemsPerPage = 8;
@@ -60,32 +63,37 @@ export function DashboardCalendarWidget({ appointments, today }: DashboardCalend
         <span className="text-xs font-bold uppercase tracking-widest">Mi Calendario</span>
         <div className="flex items-center gap-1.5">
           <button
+            type="button"
+            aria-label="Semana anterior"
             onClick={() => {
               const prev = new Date(selectedDate);
               prev.setDate(prev.getDate() - 7);
               setSelectedDate(prev);
             }}
-            className="p-1 hover:bg-black/20 rounded-lg transition border border-white/10 cursor-pointer"
+            className="min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 flex items-center justify-center hover:bg-black/20 rounded-lg transition-[transform,colors] duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 border border-white/10 cursor-pointer"
             title="Semana anterior"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
           </button>
           <button
+            type="button"
             onClick={() => setSelectedDate(new Date())}
-            className="bg-black/20 px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-black/30 transition capitalize border border-white/10 cursor-pointer"
+            className="min-h-11 sm:min-h-8 bg-black/20 px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-black/30 transition-[transform,colors] duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 capitalize border border-white/10 cursor-pointer"
           >
             {selectedDate.toLocaleString("es-ES", { month: "long" })} {selectedDate.getFullYear()}
           </button>
           <button
+            type="button"
+            aria-label="Semana siguiente"
             onClick={() => {
               const next = new Date(selectedDate);
               next.setDate(next.getDate() + 7);
               setSelectedDate(next);
             }}
-            className="p-1 hover:bg-black/20 rounded-lg transition border border-white/10 cursor-pointer"
+            className="min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 flex items-center justify-center hover:bg-black/20 rounded-lg transition-[transform,colors] duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 border border-white/10 cursor-pointer"
             title="Semana siguiente"
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -96,9 +104,11 @@ export function DashboardCalendarWidget({ appointments, today }: DashboardCalend
           {currentWeek.map((d) => (
             <button
               key={d.dateStr}
+              type="button"
+              aria-pressed={d.active}
               onClick={() => setSelectedDate(d.fullDate)}
               className={cn(
-                "flex flex-col items-center justify-center w-12 py-2 rounded-[1rem] transition-transform cursor-pointer hover:scale-105",
+                "flex flex-col items-center justify-center min-h-11 w-12 py-2 rounded-[1rem] transition-transform duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer hover:scale-105",
                 d.active
                   ? "bg-primary text-primary-foreground shadow-md font-bold"
                   : "text-muted-foreground bg-transparent hover:bg-background/60 hover:text-foreground",
@@ -188,9 +198,10 @@ export function DashboardCalendarWidget({ appointments, today }: DashboardCalend
               {selectedDateAppointments.length > itemsPerPage && (
                 <div className="flex justify-between items-center mt-4 pt-4 border-t border-border/40">
                   <button
+                    type="button"
                     onClick={() => setAppointmentPage((p) => Math.max(1, p - 1))}
                     disabled={appointmentPage === 1}
-                    className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider bg-muted hover:bg-muted/80 rounded-lg disabled:opacity-50 transition cursor-pointer text-foreground"
+                    className="min-h-11 sm:min-h-8 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider bg-muted hover:bg-muted/80 rounded-lg disabled:opacity-50 disabled:pointer-events-none transition-[transform,colors] duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer text-foreground"
                   >
                     Anterior
                   </button>
@@ -199,6 +210,7 @@ export function DashboardCalendarWidget({ appointments, today }: DashboardCalend
                     {Math.ceil(selectedDateAppointments.length / itemsPerPage)}
                   </span>
                   <button
+                    type="button"
                     onClick={() =>
                       setAppointmentPage((p) =>
                         Math.min(Math.ceil(selectedDateAppointments.length / itemsPerPage), p + 1),
@@ -207,7 +219,7 @@ export function DashboardCalendarWidget({ appointments, today }: DashboardCalend
                     disabled={
                       appointmentPage === Math.ceil(selectedDateAppointments.length / itemsPerPage)
                     }
-                    className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider bg-muted hover:bg-muted/80 rounded-lg disabled:opacity-50 transition cursor-pointer text-foreground"
+                    className="min-h-11 sm:min-h-8 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider bg-muted hover:bg-muted/80 rounded-lg disabled:opacity-50 disabled:pointer-events-none transition-[transform,colors] duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer text-foreground"
                   >
                     Siguiente
                   </button>
@@ -216,7 +228,7 @@ export function DashboardCalendarWidget({ appointments, today }: DashboardCalend
             </>
           ) : (
             <div className="flex flex-col items-center justify-center py-10 text-center opacity-60">
-              <CalendarClock className="h-10 w-10 text-muted-foreground mb-2" />
+              <CalendarClock className="h-10 w-10 text-muted-foreground mb-2" aria-hidden="true" />
               <p className="text-sm font-bold text-foreground">Sin eventos para este día</p>
               <p className="text-xs text-muted-foreground font-medium">
                 No hay citas programadas para esta fecha
@@ -227,4 +239,4 @@ export function DashboardCalendarWidget({ appointments, today }: DashboardCalend
       </div>
     </div>
   );
-}
+});

@@ -171,6 +171,7 @@
 
   html {
     -webkit-tap-highlight-color: transparent;
+    scrollbar-gutter: stable;
   }
 
   @media (pointer: fine) {

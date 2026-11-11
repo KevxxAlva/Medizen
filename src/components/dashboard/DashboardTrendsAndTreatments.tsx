@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, memo } from "react";
 import { TrendsBarChart } from "./DashboardCharts";
 import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -8,7 +8,7 @@ export interface DashboardTrendsAndTreatmentsProps {
   topTreatments: any[];
 }
 
-export function DashboardTrendsAndTreatments({
+export const DashboardTrendsAndTreatments = memo(function DashboardTrendsAndTreatments({
   trends,
   topTreatments,
 }: DashboardTrendsAndTreatmentsProps) {
@@ -123,4 +123,4 @@ export function DashboardTrendsAndTreatments({
       </div>
     </div>
   );
-}
+});

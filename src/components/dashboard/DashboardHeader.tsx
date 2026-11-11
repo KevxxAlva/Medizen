@@ -1,11 +1,18 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useTransition, lazy, Suspense, memo } from "react";
 import { Link } from "@tanstack/react-router";
-import { Search, Bell, Settings, Calculator } from "lucide-react";
+import { Search, Bell, Settings, Calculator, Loader2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { LiveClockBadge } from "./DashboardCharts";
-import { useExchangeRate } from "@/hooks/useExchangeRate";
-import { BcvCalculatorDialog } from "./BcvCalculatorDialog";
+import { useExchangeRate, type ExchangeRates } from "@/hooks/useExchangeRate";
+
+const BcvCalculatorDialog = lazy(() =>
+  import("./BcvCalculatorDialog").then((m) => ({ default: m.BcvCalculatorDialog }))
+);
+
+const preloadBcvDialog = () => {
+  void import("./BcvCalculatorDialog");
+};
 
 export interface DashboardNotification {
   id: string;
@@ -21,10 +28,73 @@ export interface DashboardHeaderProps {
   notifications: DashboardNotification[];
 }
 
-export function DashboardHeader({ notifications }: DashboardHeaderProps) {
+const BcvQuickConverter = memo(function BcvQuickConverter({
+  rate,
+  rates,
+}: {
+  rate: number;
+  rates: ExchangeRates;
+}) {
+  const [hasMountedDialog, setHasMountedDialog] = useState(false);
+  const [calcOpen, setCalcOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  const handleOpenCalculator = () => {
+    startTransition(() => {
+      setHasMountedDialog(true);
+      setCalcOpen(true);
+    });
+  };
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={handleOpenCalculator}
+        onPointerEnter={preloadBcvDialog}
+        onFocus={preloadBcvDialog}
+        aria-busy={isPending}
+        aria-label={`Abrir conversor BCV, tasa actual ${rate.toFixed(2)} bolívares`}
+        className="flex items-center gap-2 min-h-11 sm:min-h-10 px-3.5 bg-card hover:bg-muted/50 border border-border hover:border-primary/40 rounded-full shadow-sm text-xs font-bold text-foreground transition-[transform,colors] duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:pointer-events-none cursor-pointer group"
+        title="Abrir Calculadora y Conversor BCV (Actualizado en tiempo real)"
+      >
+        {isPending ? (
+          <Loader2 className="h-4 w-4 text-primary animate-spin shrink-0" aria-hidden="true" />
+        ) : (
+          <Calculator
+            className="h-4 w-4 text-primary group-hover:scale-110 transition-transform duration-150 shrink-0"
+            aria-hidden="true"
+          />
+        )}
+        <span className="hidden sm:inline">Conversor</span>
+        <span>BCV</span>
+        <span className="text-[11px] font-semibold text-muted-foreground tabular-nums">
+          Bs. {rate.toFixed(2)}
+        </span>
+        <span className="relative flex h-1.5 w-1.5 shrink-0" aria-hidden="true">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+        </span>
+      </button>
+
+      {hasMountedDialog && (
+        <Suspense fallback={null}>
+          <BcvCalculatorDialog
+            open={calcOpen}
+            onOpenChange={setCalcOpen}
+            rates={rates}
+          />
+        </Suspense>
+      )}
+    </>
+  );
+});
+
+export const DashboardHeader = memo(function DashboardHeader({
+  notifications,
+}: DashboardHeaderProps) {
   const [open, setOpen] = useState(false);
   const [readKeys, setReadKeys] = useState<string[]>([]);
-  const [calcOpen, setCalcOpen] = useState(false);
   const { rate, rates } = useExchangeRate();
 
   useEffect(() => {
@@ -42,9 +112,10 @@ export function DashboardHeader({ notifications }: DashboardHeaderProps) {
 
   const readKeySet = useMemo(() => new Set(readKeys), [readKeys]);
 
-  const unreadCount = notifications.filter(
-    (n) => !readKeySet.has(getNotificationKey(n))
-  ).length;
+  const unreadCount = useMemo(
+    () => notifications.filter((n) => !readKeySet.has(getNotificationKey(n))).length,
+    [notifications, readKeySet]
+  );
 
   const handleMarkAllAsRead = () => {
     const allKeys = notifications.map(getNotificationKey);
@@ -74,10 +145,13 @@ export function DashboardHeader({ notifications }: DashboardHeaderProps) {
         id="search-bar"
         type="button"
         onClick={handleOpenSearch}
-        className="relative w-full max-w-sm flex items-center justify-between bg-card border border-border rounded-full px-4 py-2.5 shadow-sm text-left hover:border-primary/40 hover:bg-muted/40 transition-colors cursor-pointer group focus:outline-none focus:ring-2 focus:ring-primary/20"
+        className="relative w-full max-w-sm min-h-11 flex items-center justify-between bg-card border border-border rounded-full px-4 py-2.5 shadow-sm text-left hover:border-primary/40 hover:bg-muted/40 transition-[transform,colors] duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer group"
       >
         <div className="flex items-center gap-2.5 min-w-0">
-          <Search className="h-4 w-4 text-muted-foreground shrink-0 group-hover:text-primary transition-colors" />
+          <Search
+            className="h-4 w-4 text-muted-foreground shrink-0 group-hover:text-primary transition-colors"
+            aria-hidden="true"
+          />
           <span className="text-sm text-muted-foreground truncate">
             Buscar pacientes, citas o acciones…
           </span>
@@ -88,24 +162,8 @@ export function DashboardHeader({ notifications }: DashboardHeaderProps) {
       </button>
 
       <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-        {/* Conversor BCV Directo */}
-        <button
-          type="button"
-          onClick={() => setCalcOpen(true)}
-          className="flex items-center gap-2 h-10 px-3 sm:px-3.5 bg-card hover:bg-muted/50 border border-border hover:border-primary/40 rounded-full shadow-sm text-xs font-bold text-foreground transition-colors cursor-pointer group"
-          title="Abrir Calculadora y Conversor BCV (Actualizado en tiempo real)"
-        >
-          <Calculator className="h-4 w-4 text-primary group-hover:scale-110 transition-transform" />
-          <span className="hidden sm:inline">Conversor</span>
-          <span>BCV</span>
-          <span className="text-[11px] font-semibold text-muted-foreground tabular-nums">
-            Bs. {rate.toFixed(2)}
-          </span>
-          <span className="relative flex h-1.5 w-1.5 shrink-0" title="En vivo">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-          </span>
-        </button>
+        {/* Conversor BCV Directo aislado para no re-renderizar el header */}
+        <BcvQuickConverter rate={rate} rates={rates} />
 
         {/* Reloj en Tiempo Real aislado para evitar re-renders del Dashboard */}
         <LiveClockBadge />
@@ -114,15 +172,22 @@ export function DashboardHeader({ notifications }: DashboardHeaderProps) {
           <PopoverTrigger asChild>
             <button
               type="button"
-              aria-label="Notificaciones"
+              aria-label={
+                unreadCount > 0
+                  ? `Notificaciones (${unreadCount} sin leer)`
+                  : "Notificaciones"
+              }
               className={cn(
-                "flex items-center justify-center h-10 w-10 bg-card border border-border rounded-full shadow-sm text-muted-foreground relative transition hover:bg-muted/50 hover:text-primary hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer",
+                "flex items-center justify-center h-11 w-11 sm:h-10 sm:w-10 bg-card border border-border rounded-full shadow-sm text-muted-foreground relative transition-[transform,colors] duration-150 active:scale-95 hover:bg-muted/50 hover:text-primary hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer",
                 open && "text-primary bg-muted/50 border-primary/40"
               )}
             >
-              <Bell className="h-5 w-5" />
+              <Bell className="h-5 w-5" aria-hidden="true" />
               {unreadCount > 0 && (
-                <span className="absolute top-2 right-2 h-2.5 w-2.5 bg-destructive rounded-full border-2 border-card ring-0" />
+                <span
+                  aria-hidden="true"
+                  className="absolute top-2.5 right-2.5 sm:top-2 sm:right-2 h-2.5 w-2.5 bg-destructive rounded-full border-2 border-card ring-0"
+                />
               )}
             </button>
           </PopoverTrigger>
@@ -145,9 +210,9 @@ export function DashboardHeader({ notifications }: DashboardHeaderProps) {
                   const itemContent = (
                     <div
                       className={cn(
-                        "flex items-start gap-3 p-3 rounded-xl transition text-left",
+                        "flex items-start gap-3 p-3 rounded-xl transition-colors text-left",
                         n.href
-                          ? "hover:bg-muted/70 cursor-pointer group"
+                          ? "hover:bg-muted/70 active:bg-muted cursor-pointer group"
                           : "hover:bg-muted/40 cursor-default"
                       )}
                     >
@@ -158,7 +223,7 @@ export function DashboardHeader({ notifications }: DashboardHeaderProps) {
                           n.color
                         )}
                       >
-                        <Icon className="h-4 w-4" strokeWidth={2.5} />
+                        <Icon className="h-4 w-4" strokeWidth={2.5} aria-hidden="true" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors leading-snug">
@@ -176,7 +241,7 @@ export function DashboardHeader({ notifications }: DashboardHeaderProps) {
                       key={n.id}
                       to={n.href}
                       onClick={() => setOpen(false)}
-                      className="block outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-xl"
+                      className="block min-h-11 outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl"
                     >
                       {itemContent}
                     </Link>
@@ -196,17 +261,11 @@ export function DashboardHeader({ notifications }: DashboardHeaderProps) {
         <Link
           to="/configuracion"
           aria-label="Configuración"
-          className="flex items-center justify-center h-10 w-10 bg-card border border-border rounded-full shadow-sm text-muted-foreground transition hover:bg-muted/50 hover:text-primary hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex items-center justify-center h-11 w-11 sm:h-10 sm:w-10 bg-card border border-border rounded-full shadow-sm text-muted-foreground transition-[transform,colors] duration-150 active:scale-95 hover:bg-muted/50 hover:text-primary hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <Settings className="h-5 w-5" />
+          <Settings className="h-5 w-5" aria-hidden="true" />
         </Link>
       </div>
-
-      <BcvCalculatorDialog
-        open={calcOpen}
-        onOpenChange={setCalcOpen}
-        rates={rates}
-      />
     </header>
   );
-}
+});

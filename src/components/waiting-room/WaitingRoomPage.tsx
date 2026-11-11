@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Clock, Loader2 } from "lucide-react";
+import { Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { type AppointmentWithPatient } from "@/lib/api/appointments";
 import { useDoctors } from "@/lib/api/profiles";
@@ -71,10 +71,48 @@ export function WaitingRoomPage() {
     facturas,
   });
 
+  const handleOpenNewAppointment = useCallback(() => {
+    setNewAppointmentOpen(true);
+  }, []);
+
+  const handleOpenConsultation = useCallback((app: AppointmentWithPatient) => {
+    setConsultationApp(app);
+    setConsultationOpen(true);
+  }, []);
+
+  const handleGoToSales = useCallback(() => {
+    navigate({ to: "/facturacion" });
+  }, [navigate]);
+
   if (isLoading) {
     return (
-      <div className="flex h-full items-center justify-center min-h-[50vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div
+        className="bg-card border border-border rounded-3xl p-4 sm:p-6 shadow-xs min-h-[calc(100vh-8rem)] flex flex-col gap-6 animate-pulse"
+        aria-busy="true"
+        aria-label="Cargando sala de espera"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="space-y-2">
+            <div className="h-3 w-44 rounded bg-muted" />
+            <div className="h-7 w-60 rounded-lg bg-muted" />
+            <div className="h-3 w-72 rounded bg-muted" />
+          </div>
+          <div className="flex gap-2">
+            <div className="h-10 w-28 rounded-xl bg-muted" />
+            <div className="h-10 w-36 rounded-xl bg-muted" />
+            <div className="h-10 w-32 rounded-xl bg-muted" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {Array.from({ length: 4 }).map((_, idx) => (
+            <div key={idx} className="h-20 rounded-2xl border border-border/60 bg-muted/30" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 flex-1">
+          {Array.from({ length: 4 }).map((_, idx) => (
+            <div key={idx} className="rounded-2xl border border-border bg-muted/20 min-h-[380px]" />
+          ))}
+        </div>
       </div>
     );
   }
@@ -82,7 +120,7 @@ export function WaitingRoomPage() {
   if (!canViewAllDoctors) {
     return (
       <div className="bg-card border border-border rounded-3xl p-8 text-center flex flex-col items-center justify-center min-h-[50vh] gap-3">
-        <Clock className="h-10 w-10 text-muted-foreground/50" />
+        <Clock className="h-10 w-10 text-muted-foreground/50" aria-hidden="true" />
         <h2 className="text-lg font-bold text-foreground">
           Módulo exclusivo de Recepción y Administración
         </h2>
@@ -91,8 +129,9 @@ export function WaitingRoomPage() {
           consultas directamente desde tu Agenda.
         </p>
         <Button
+          type="button"
           onClick={() => navigate({ to: "/agenda" })}
-          className="rounded-xl text-xs font-bold mt-1"
+          className="min-h-11 sm:min-h-9 rounded-xl text-xs font-bold mt-1 transition-[transform,colors] duration-150 active:scale-95 focus-visible:ring-2"
         >
           Ir a mi Agenda
         </Button>
@@ -113,7 +152,7 @@ export function WaitingRoomPage() {
         selectedDoctorId={selectedDoctorId}
         onSelectDoctor={setSelectedDoctorId}
         doctors={doctors}
-        onOpenNewAppointment={() => setNewAppointmentOpen(true)}
+        onOpenNewAppointment={handleOpenNewAppointment}
         columns={columns}
         pendingCashCount={pendingCashCount}
       />
@@ -128,11 +167,8 @@ export function WaitingRoomPage() {
         clinicName={clinic?.name || "FemeSalud"}
         nowMs={nowMs}
         onStageChange={handleStageTransition}
-        onOpenConsultation={(app) => {
-          setConsultationApp(app);
-          setConsultationOpen(true);
-        }}
-        onGoToSales={() => navigate({ to: "/facturacion" })}
+        onOpenConsultation={handleOpenConsultation}
+        onGoToSales={handleGoToSales}
       />
 
       {consultationOpen && consultationApp && (

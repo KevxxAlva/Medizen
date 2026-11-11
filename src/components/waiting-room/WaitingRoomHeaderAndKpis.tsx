@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Calendar, Clock, Plus, ReceiptText, Stethoscope } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +29,7 @@ interface WaitingRoomHeaderAndKpisProps {
   pendingCashCount: number;
 }
 
-export function WaitingRoomHeaderAndKpis({
+export const WaitingRoomHeaderAndKpis = memo(function WaitingRoomHeaderAndKpis({
   isDoctorOnly,
   doctorName,
   canViewAllDoctors,
@@ -48,7 +49,10 @@ export function WaitingRoomHeaderAndKpis({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span
+              aria-hidden="true"
+              className="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"
+            />
             <span className="text-[11px] font-extrabold uppercase tracking-wider text-primary">
               Recepción y Flujo Clínico en Vivo
             </span>
@@ -64,12 +68,17 @@ export function WaitingRoomHeaderAndKpis({
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          <div className="flex items-center rounded-xl bg-muted/60 p-1 border border-border/60">
+          <div
+            role="group"
+            aria-label="Selector rápido de fecha"
+            className="flex items-center rounded-xl bg-muted/60 p-1 border border-border/60"
+          >
             <button
               type="button"
+              aria-pressed={selectedDate === todayYmd}
               onClick={() => onSelectDate(todayYmd)}
               className={cn(
-                "px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer",
+                "min-h-11 sm:min-h-8 px-3.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-[background-color,color,transform] duration-150 active:scale-95 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer",
                 selectedDate === todayYmd
                   ? "bg-primary text-primary-foreground shadow-xs"
                   : "text-muted-foreground hover:text-foreground",
@@ -79,9 +88,10 @@ export function WaitingRoomHeaderAndKpis({
             </button>
             <button
               type="button"
+              aria-pressed={selectedDate === tomorrowYmd}
               onClick={() => onSelectDate(tomorrowYmd)}
               className={cn(
-                "px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer",
+                "min-h-11 sm:min-h-8 px-3.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-[background-color,color,transform] duration-150 active:scale-95 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer",
                 selectedDate === tomorrowYmd
                   ? "bg-primary text-primary-foreground shadow-xs"
                   : "text-muted-foreground hover:text-foreground",
@@ -96,12 +106,15 @@ export function WaitingRoomHeaderAndKpis({
             aria-label="Fecha de sala de espera"
             value={selectedDate}
             onChange={(e) => e.target.value && onSelectDate(e.target.value)}
-            className="w-[155px] h-9 rounded-xl text-xs font-semibold"
+            className="w-[155px] h-11 sm:h-9 rounded-xl text-xs font-semibold"
           />
 
           {canViewAllDoctors && (
             <Select value={selectedDoctorId} onValueChange={onSelectDoctor}>
-              <SelectTrigger className="w-[200px] h-9 rounded-xl text-xs font-semibold">
+              <SelectTrigger
+                aria-label="Filtrar por especialista"
+                className="w-[200px] h-11 sm:h-9 rounded-xl text-xs font-semibold"
+              >
                 <SelectValue placeholder="Todos los médicos" />
               </SelectTrigger>
               <SelectContent className="rounded-xl">
@@ -116,10 +129,11 @@ export function WaitingRoomHeaderAndKpis({
           )}
 
           <Button
+            type="button"
             onClick={onOpenNewAppointment}
-            className="h-9 rounded-xl text-xs font-bold gap-1.5"
+            className="h-11 sm:h-9 rounded-xl text-xs font-bold gap-1.5 active:scale-95 transition-[background-color,color,transform] duration-150"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4" aria-hidden="true" />
             Agendar Turno
           </Button>
         </div>
@@ -189,4 +203,4 @@ export function WaitingRoomHeaderAndKpis({
       </div>
     </>
   );
-}
+});

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import {
   AlertCircle,
   ArrowRight,
@@ -94,6 +95,7 @@ function PorLlegarColumn({
 
                 <div className="flex items-center gap-1.5 pt-1">
                   <Button
+                    type="button"
                     size="sm"
                     variant="outline"
                     onClick={() =>
@@ -107,19 +109,20 @@ function PorLlegarColumn({
                         clinicName,
                       })
                     }
-                    className="h-8 px-2.5 rounded-xl text-[11px] font-bold gap-1 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10"
+                    className="h-11 sm:h-8 px-2.5 rounded-xl text-[11px] font-bold gap-1 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10 active:scale-95 transition-[background-color,color,transform] duration-150"
                     title="Enviar recordatorio de cita por WhatsApp"
                   >
-                    <MessageCircle className="h-3.5 w-3.5" />
+                    <MessageCircle className="h-3.5 w-3.5" aria-hidden="true" />
                     WhatsApp
                   </Button>
 
                   <Button
+                    type="button"
                     size="sm"
                     onClick={() => onStageChange(app, "en_espera")}
-                    className="h-8 flex-1 rounded-xl text-[11px] font-bold gap-1"
+                    className="h-11 sm:h-8 flex-1 rounded-xl text-[11px] font-bold gap-1 active:scale-95 transition-[background-color,color,transform] duration-150"
                   >
-                    <UserCheck className="h-3.5 w-3.5" />
+                    <UserCheck className="h-3.5 w-3.5" aria-hidden="true" />
                     Llegó
                   </Button>
                 </div>
@@ -198,22 +201,24 @@ function EnEsperaColumn({
 
                 <div className="flex items-center gap-1.5 pt-1">
                   <Button
+                    type="button"
                     size="sm"
                     variant="ghost"
                     aria-label="Devolver a Por Llegar"
                     onClick={() => onStageChange(app, "por_llegar")}
-                    className="h-8 px-2 rounded-xl text-xs text-muted-foreground"
+                    className="h-11 sm:h-8 px-3 sm:px-2 rounded-xl text-xs text-muted-foreground active:scale-95 transition-[background-color,color,transform] duration-150"
                     title="Devolver a Por Llegar"
                   >
-                    <RotateCcw className="h-3.5 w-3.5" />
+                    <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
                   </Button>
                   <Button
+                    type="button"
                     size="sm"
                     onClick={() => onStageChange(app, "en_consulta")}
-                    className="h-8 flex-1 rounded-xl text-[11px] font-bold gap-1 bg-purple-600 hover:bg-purple-700 text-white"
+                    className="h-11 sm:h-8 flex-1 rounded-xl text-[11px] font-bold gap-1 bg-purple-600 hover:bg-purple-700 text-white active:scale-95 transition-[background-color,color,transform] duration-150"
                   >
                     Pasar a Consulta
-                    <ArrowRight className="h-3.5 w-3.5" />
+                    <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                   </Button>
                 </div>
               </div>
@@ -290,21 +295,23 @@ function EnConsultaColumn({
 
                 <div className="flex items-center gap-1.5 pt-1">
                   <Button
+                    type="button"
                     size="sm"
                     variant="ghost"
                     aria-label="Devolver a Sala de Espera"
                     onClick={() => onStageChange(app, "en_espera")}
-                    className="h-8 px-2 rounded-xl text-xs text-muted-foreground"
+                    className="h-11 sm:h-8 px-3 sm:px-2 rounded-xl text-xs text-muted-foreground active:scale-95 transition-[background-color,color,transform] duration-150"
                     title="Devolver a Sala de Espera"
                   >
-                    <RotateCcw className="h-3.5 w-3.5" />
+                    <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
                   </Button>
                   <Button
+                    type="button"
                     size="sm"
                     onClick={() => onOpenConsultation(app)}
-                    className="h-8 flex-1 rounded-xl text-[11px] font-bold gap-1 bg-primary text-primary-foreground"
+                    className="h-11 sm:h-8 flex-1 rounded-xl text-[11px] font-bold gap-1 bg-primary text-primary-foreground active:scale-95 transition-[background-color,color,transform] duration-150"
                   >
-                    <Stethoscope className="h-3.5 w-3.5" />
+                    <Stethoscope className="h-3.5 w-3.5" aria-hidden="true" />
                     Abrir / Finalizar Consulta
                   </Button>
                 </div>
@@ -400,12 +407,13 @@ function AtendidosColumn({
 
                 {!isPaid && (
                   <Button
+                    type="button"
                     size="sm"
                     variant="outline"
                     onClick={onGoToSales}
-                    className="h-8 rounded-xl text-[11px] font-bold gap-1.5 border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10"
+                    className="h-11 sm:h-8 rounded-xl text-[11px] font-bold gap-1.5 border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10 active:scale-95 transition-[background-color,color,transform] duration-150"
                   >
-                    <ReceiptText className="h-3.5 w-3.5" />
+                    <ReceiptText className="h-3.5 w-3.5" aria-hidden="true" />
                     Confirmar Pago en Ventas
                   </Button>
                 )}
@@ -432,7 +440,7 @@ interface WaitingRoomBoardProps {
   onGoToSales: () => void;
 }
 
-export function WaitingRoomBoard({
+export const WaitingRoomBoard = memo(function WaitingRoomBoard({
   columns,
   patientContactMap,
   doctorMap,
@@ -476,4 +484,4 @@ export function WaitingRoomBoard({
       />
     </div>
   );
-}
+});

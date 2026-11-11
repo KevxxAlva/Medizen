@@ -105,49 +105,61 @@ export function Dashboard() {
   }, [facturas, isDoctorOnly, rawAppointments, currentDoctorId]);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const isTourDone = localStorage.getItem("femesalud_tour_done");
-      if (!isTourDone) {
-        const driverObj = driver({
-          showProgress: true,
-          steps: [
-            {
-              element: "aside",
-              popover: {
-                title: "Menú Principal",
-                description: "Accede a todas las herramientas de la clínica desde aquí.",
-              },
-            },
-            {
-              element: "#search-bar",
-              popover: {
-                title: "Buscador",
-                description: "Encuentra rápidamente pacientes, citas o acciones.",
-              },
-            },
-            {
-              element: "#calendar-widget",
-              popover: {
-                title: "Tu Agenda",
-                description: "Controla tus citas diarias y mantente al día con tu calendario.",
-              },
-            },
-          ],
-          onDestroyStarted: () => {
-            if (!driverObj.hasNextStep() || confirm("¿Estás seguro de saltar el tour?")) {
-              localStorage.setItem("femesalud_tour_done", "true");
-              driverObj.destroy();
-            }
+    if (typeof window === "undefined" || !scopeReady || statsLoading) return;
+    const isTourDone = localStorage.getItem("femesalud_tour_done");
+    if (isTourDone) return;
+
+    const driverObj = driver({
+      showProgress: true,
+      steps: [
+        {
+          element: "aside",
+          popover: {
+            title: "Menú Principal",
+            description: "Accede a todas las herramientas de la clínica desde aquí.",
           },
-        });
-        const timerId = setTimeout(() => driverObj.drive(), 1000);
-        return () => {
-          clearTimeout(timerId);
-          driverObj.destroy();
-        };
-      }
+        },
+        {
+          element: "#search-bar",
+          popover: {
+            title: "Buscador",
+            description: "Encuentra rápidamente pacientes, citas o acciones.",
+          },
+        },
+        {
+          element: "#calendar-widget",
+          popover: {
+            title: "Tu Agenda",
+            description: "Controla tus citas diarias y mantente al día con tu calendario.",
+          },
+        },
+      ],
+      onDestroyStarted: () => {
+        localStorage.setItem("femesalud_tour_done", "true");
+        driverObj.destroy();
+      },
+    });
+
+    const startTour = () => driverObj.drive();
+    let idleId: number | undefined;
+    let timerId: ReturnType<typeof setTimeout> | undefined;
+
+    if ("requestIdleCallback" in window) {
+      idleId = window.requestIdleCallback(startTour, { timeout: 1800 });
+    } else {
+      timerId = setTimeout(startTour, 1200);
     }
-  }, []);
+
+    return () => {
+      if (idleId !== undefined && "cancelIdleCallback" in window) {
+        window.cancelIdleCallback(idleId);
+      }
+      if (timerId !== undefined) {
+        clearTimeout(timerId);
+      }
+      driverObj.destroy();
+    };
+  }, [scopeReady, statsLoading]);
 
   const todaysAppointments = useMemo(() => {
     return appointments

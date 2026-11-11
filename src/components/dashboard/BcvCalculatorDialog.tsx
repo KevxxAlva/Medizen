@@ -146,14 +146,20 @@ export function BcvCalculatorDialog({ open, onOpenChange, rates }: BcvCalculator
 
         {/* Currency Tabs */}
         <div className="space-y-4 pt-1">
-          <div className="flex rounded-xl bg-muted/60 p-1 border border-border/60">
+          <div
+            className="flex gap-1 rounded-xl bg-muted/60 p-1 border border-border/60"
+            role="tablist"
+            aria-label="Moneda de entrada"
+          >
             {CURRENCIES.map((c) => (
               <button
                 key={c.id}
                 type="button"
+                role="tab"
+                aria-selected={mode === c.id}
                 onClick={() => handleSelectMode(c.id)}
                 className={cn(
-                  "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer",
+                  "flex-1 min-h-11 sm:min-h-9 px-2 text-xs font-bold rounded-lg transition-[transform,colors] duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer",
                   mode === c.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 )}
               >
@@ -185,8 +191,8 @@ export function BcvCalculatorDialog({ open, onOpenChange, rates }: BcvCalculator
           </div>
 
           {/* Preset Buttons */}
-          <div className="flex flex-wrap gap-1.5">
-            <span className="text-[10px] font-bold text-muted-foreground uppercase self-center mr-1">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase mr-1">
               Atajos:
             </span>
             {PRESETS[mode].map((amt) => (
@@ -194,7 +200,7 @@ export function BcvCalculatorDialog({ open, onOpenChange, rates }: BcvCalculator
                 key={amt}
                 type="button"
                 onClick={() => setInputValue(amt.toString())}
-                className="px-2.5 py-1 text-xs font-semibold bg-muted hover:bg-primary/10 hover:text-primary rounded-lg transition-colors cursor-pointer tabular-nums"
+                className="min-h-11 sm:min-h-8 px-3 text-xs font-semibold bg-muted hover:bg-primary/10 hover:text-primary rounded-lg transition-[transform,colors] duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer tabular-nums"
               >
                 {mode === "usd" ? `$${amt}` : mode === "eur" ? `€${amt}` : `Bs. ${amt.toLocaleString("es-VE")}`}
               </button>
@@ -230,15 +236,15 @@ export function BcvCalculatorDialog({ open, onOpenChange, rates }: BcvCalculator
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-between items-center pt-2">
+        <div className="flex justify-between items-center pt-2 gap-2">
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={handleCopy}
-            className="gap-1.5 rounded-xl font-bold text-xs cursor-pointer"
+            className="min-h-11 sm:min-h-9 px-3.5 gap-1.5 rounded-xl font-bold text-xs cursor-pointer transition-[transform,colors] duration-150 active:scale-95 focus-visible:ring-2"
           >
-            {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+            {copied ? <Check className="h-4 w-4 text-emerald-500" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}
             {copied ? "Copiado" : "Copiar detalle"}
           </Button>
 
@@ -246,7 +252,7 @@ export function BcvCalculatorDialog({ open, onOpenChange, rates }: BcvCalculator
             type="button"
             size="sm"
             onClick={() => onOpenChange(false)}
-            className="rounded-xl font-bold text-xs cursor-pointer"
+            className="min-h-11 sm:min-h-9 px-4 rounded-xl font-bold text-xs cursor-pointer transition-[transform,colors] duration-150 active:scale-95 focus-visible:ring-2"
           >
             Listo
           </Button>

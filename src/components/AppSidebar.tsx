@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Link, useRouterState, useRouter } from "@tanstack/react-router";
 import {
   LayoutGrid, Calendar, UserRound, Stethoscope, Users,
@@ -48,7 +49,13 @@ const navigation: ModuleDef[] = [
   { title: "Configuración", url: "/configuracion", icon: Settings },
 ];
 
-function SidebarBody({ onNavigate, isCollapsed }: { onNavigate?: () => void; isCollapsed?: boolean }) {
+const SidebarBody = memo(function SidebarBody({
+  onNavigate,
+  isCollapsed,
+}: {
+  onNavigate?: () => void;
+  isCollapsed?: boolean;
+}) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAdmin = useIsAdmin();
   const { canViewAllDoctors } = useUserRoleScope();
@@ -114,22 +121,29 @@ function SidebarBody({ onNavigate, isCollapsed }: { onNavigate?: () => void; isC
               <Link
                 key={m.title}
                 to={isDummy ? "/" : m.url!}
+                aria-current={active ? "page" : undefined}
+                aria-label={isCollapsed ? m.title : undefined}
                 onClick={(e) => {
                   if (isDummy) e.preventDefault();
                   else if (onNavigate) onNavigate();
                 }}
                 className={cn(
-                  "flex items-center rounded-xl transition-colors duration-150 group text-sm font-semibold",
-                  isCollapsed ? "justify-center h-10 w-10 mx-auto" : "gap-3 px-3 py-2.5",
+                  "flex items-center rounded-xl transition-[background-color,color,transform] duration-150 group text-sm font-semibold active:scale-[0.98] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  isCollapsed
+                    ? "justify-center h-11 w-11 sm:h-10 sm:w-10 mx-auto"
+                    : "gap-3 px-3 py-2.5 min-h-11 sm:min-h-10",
                   active
                     ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                    : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent",
                 )}
               >
                 <Icon
+                  aria-hidden="true"
                   className={cn(
                     "h-4 w-4 flex-shrink-0",
-                    active ? "text-primary-foreground" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                    active
+                      ? "text-primary-foreground"
+                      : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground",
                   )}
                   strokeWidth={2.2}
                 />
@@ -163,18 +177,29 @@ function SidebarBody({ onNavigate, isCollapsed }: { onNavigate?: () => void; isC
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
+                  type="button"
                   onClick={handleLogout}
                   aria-label="Cerrar sesión"
                   className={cn(
-                    "flex items-center rounded-xl transition-colors duration-150 group text-xs font-semibold text-destructive hover:bg-destructive/10 cursor-pointer",
-                    isCollapsed ? "justify-center h-8 w-8" : "gap-2 px-2.5 py-1.5 bg-destructive/10 text-destructive"
+                    "flex items-center rounded-xl transition-[background-color,color,transform] duration-150 group text-xs font-semibold text-destructive hover:bg-destructive/10 active:scale-95 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer",
+                    isCollapsed
+                      ? "justify-center h-11 w-11 sm:h-8 sm:w-8"
+                      : "gap-2 px-3 sm:px-2.5 py-2 sm:py-1.5 min-h-11 sm:min-h-8 bg-destructive/10 text-destructive",
                   )}
                 >
-                  <LogOut className="h-4 w-4 text-destructive flex-shrink-0" strokeWidth={2.2} />
+                  <LogOut
+                    className="h-4 w-4 text-destructive flex-shrink-0"
+                    strokeWidth={2.2}
+                    aria-hidden="true"
+                  />
                   {!isCollapsed && <span>Cerrar sesión</span>}
                 </button>
               </TooltipTrigger>
-              {isCollapsed && <TooltipContent side="right" sideOffset={10} className="font-semibold">Cerrar Sesión</TooltipContent>}
+              {isCollapsed && (
+                <TooltipContent side="right" sideOffset={10} className="font-semibold">
+                  Cerrar Sesión
+                </TooltipContent>
+              )}
             </Tooltip>
 
             {/* Theme & Palette Controls */}
@@ -187,18 +212,18 @@ function SidebarBody({ onNavigate, isCollapsed }: { onNavigate?: () => void; isC
       </div>
     </TooltipProvider>
   );
-}
+});
 
-export function AppSidebar({ 
-  isCollapsed, 
+export const AppSidebar = memo(function AppSidebar({
+  isCollapsed,
   onToggle,
   mobileOpen,
-  onMobileClose
-}: { 
-  isCollapsed?: boolean; 
-  onToggle?: () => void; 
-  mobileOpen?: boolean; 
-  onMobileClose?: () => void; 
+  onMobileClose,
+}: {
+  isCollapsed?: boolean;
+  onToggle?: () => void;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }) {
   return (
     <>
@@ -215,11 +240,12 @@ export function AppSidebar({
           {/* Sliding Drawer */}
           <div className="relative w-[280px] max-w-[85vw] h-[100dvh] max-h-[100dvh] bg-sidebar border-r border-sidebar-border shadow-2xl z-[72] flex flex-col overscroll-contain animate-in slide-in-from-left duration-300">
             <button
+              type="button"
               onClick={onMobileClose}
-              className="absolute right-3 top-5 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors z-[73] cursor-pointer"
+              className="absolute right-3 top-4 h-11 w-11 flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-[background-color,color,transform] duration-150 active:scale-95 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring z-[73] cursor-pointer"
               aria-label="Cerrar menú"
             >
-              <X className="h-5 w-5" />
+              <X className="h-5 w-5" aria-hidden="true" />
             </button>
             <SidebarBody onNavigate={onMobileClose} isCollapsed={false} />
           </div>
@@ -227,25 +253,27 @@ export function AppSidebar({
       )}
 
       {/* Desktop Sidebar with crisp right border line matching react.doctor */}
-      <aside className={cn(
-        "fixed left-0 top-0 bottom-0 z-30 hidden flex-col bg-sidebar border-r border-sidebar-border md:flex transition-[width] duration-300",
-        isCollapsed ? "w-[80px]" : "w-[260px]"
-      )}>
+      <aside
+        className={cn(
+          "fixed left-0 top-0 bottom-0 z-30 hidden flex-col bg-sidebar border-r border-sidebar-border md:flex transition-[width] duration-300",
+          isCollapsed ? "w-[80px]" : "w-[260px]",
+        )}
+      >
         {/* Collapse Button placed cleanly at the intersection of the header line and right border */}
         <button
           type="button"
           aria-label={isCollapsed ? "Expandir barra lateral" : "Colapsar barra lateral"}
           onClick={onToggle}
-          className="absolute -right-3 top-5 h-6 w-6 bg-sidebar border border-sidebar-border rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground shadow-xs z-40 transition hover:scale-110 cursor-pointer"
+          className="absolute -right-3 top-5 h-6 w-6 bg-sidebar border border-sidebar-border rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground shadow-xs z-40 transition duration-150 hover:scale-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
         >
           {isCollapsed ? (
-            <ChevronRight className="h-3 w-3" strokeWidth={2.5} />
+            <ChevronRight className="h-3 w-3" strokeWidth={2.5} aria-hidden="true" />
           ) : (
-            <ChevronLeft className="h-3 w-3" strokeWidth={2.5} />
+            <ChevronLeft className="h-3 w-3" strokeWidth={2.5} aria-hidden="true" />
           )}
         </button>
         <SidebarBody isCollapsed={isCollapsed} />
       </aside>
     </>
   );
-}
+});
