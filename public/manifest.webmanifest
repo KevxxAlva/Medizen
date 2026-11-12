@@ -8,7 +8,7 @@
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "orientation": "any",
-  "background_color": "#090d16",
+  "background_color": "#000000",
   "theme_color": "#4361ee",
   "categories": ["medical", "health", "productivity", "business"],
   "icons": [

@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { applySavedThemeColor } from "@/components/ThemeCustomizer";
+import { AppSplashScreen } from "@/components/AppSplashScreen";
 import "../styles.css";
 
 function NotFoundComponent() {
@@ -178,11 +179,12 @@ function RootComponent() {
         <HeadContent />
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{window.__medizenInstallPrompt=null;window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__medizenInstallPrompt=e;});window.addEventListener('appinstalled',function(){window.__medizenInstallPrompt=null;});var map={blue:'#4361EE',emerald:'#059669',purple:'#7C3AED',teal:'#0D9488',rose:'#E11D48'};var saved=localStorage.getItem('medizen-accent-color');var hex=map[saved]||'#4361EE';var r=document.documentElement.style;r.setProperty('--primary',hex);r.setProperty('--sidebar-primary',hex);r.setProperty('--ring',hex);r.setProperty('--sidebar-ring',hex);}catch(e){}})();`,
+            __html: `(function(){try{var root=document.documentElement;var savedTheme=localStorage.getItem('theme')||'system';var resolvedTheme=savedTheme==='system'?(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):savedTheme;root.classList.remove('light','dark');root.classList.add(resolvedTheme==='dark'?'dark':'light');if(sessionStorage.getItem('medizen_splash_seen')==='1'){root.dataset.splash='skip';}window.__medizenInstallPrompt=null;window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__medizenInstallPrompt=e;});window.addEventListener('appinstalled',function(){window.__medizenInstallPrompt=null;});var map={blue:'#4361EE',emerald:'#059669',purple:'#7C3AED',teal:'#0D9488',rose:'#E11D48'};var saved=localStorage.getItem('medizen-accent-color');var hex=map[saved]||'#4361EE';var r=root.style;r.setProperty('--primary',hex);r.setProperty('--sidebar-primary',hex);r.setProperty('--ring',hex);r.setProperty('--sidebar-ring',hex);}catch(e){}})();`,
           }}
         />
       </head>
       <body>
+        <AppSplashScreen />
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-xl focus:shadow-md focus:outline-none"

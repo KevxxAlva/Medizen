@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import { toast } from "sonner";
 
 export type RateType = "bcv" | "eur" | "usdt";
@@ -290,8 +290,8 @@ function initExchangeRatePoller() {
     }
   };
 
-  // 1. Chequeo inicial inmediato al abrir la app
-  checkAndSync();
+  // 1. Chequeo inicial al abrir la app (diferido al microtask para no notificar durante subscribe)
+  queueMicrotask(checkAndSync);
 
   // 2. Polling recurrente en vivo cada 60 segundos
   setInterval(checkAndSync, REALTIME_POLL_INTERVAL_MS);
@@ -339,6 +339,7 @@ function setActiveTypeInStore(type: RateType) {
 }
 
 function subscribe(callback: () => void) {
+  initExchangeRatePoller();
   listeners.add(callback);
   return () => {
     listeners.delete(callback);
@@ -355,10 +356,6 @@ function getServerSnapshot() {
 
 export function useExchangeRate() {
   const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-
-  useEffect(() => {
-    initExchangeRatePoller();
-  }, []);
 
   const setActiveType = useCallback((type: RateType) => {
     setActiveTypeInStore(type);

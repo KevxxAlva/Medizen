@@ -5,6 +5,7 @@ import {
   useRouter,
   Link,
   useLocation,
+  Navigate,
 } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,16 +37,11 @@ function AdminPathGuard({
   roles?: string[];
 }) {
   const location = useLocation();
-  const router = useRouter();
+  const isAdminPath = ADMIN_ONLY_PATHS.some((p) => location.pathname.startsWith(p));
 
-  useEffect(() => {
-    if (!authLoading && user && !rolesLoading && roles) {
-      const isAdminPath = ADMIN_ONLY_PATHS.some((p) => location.pathname.startsWith(p));
-      if (isAdminPath && !roles.includes("admin")) {
-        router.navigate({ to: "/", replace: true });
-      }
-    }
-  }, [authLoading, user, rolesLoading, roles, location.pathname, router]);
+  if (!authLoading && user && !rolesLoading && roles && isAdminPath && !roles.includes("admin")) {
+    return <Navigate to="/" replace />;
+  }
 
   return null;
 }

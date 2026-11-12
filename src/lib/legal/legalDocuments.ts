@@ -225,7 +225,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
         title: "2. Récipes Digitales y Verificación de Autenticidad",
         paragraphs: [
           "Los récipes emitidos desde el diseñador oficial incorporan la identificación del centro médico configurada en el sistema, los datos de registro sanitario del médico tratante (MPPS / CMC) y un código oficial o QR de verificación.",
-          "Cualquier farmacia, paciente o institución receptora puede comprobar la autenticidad del código emitido mediante la herramienta «Verificar Récipe» disponible desde la pantalla de acceso o el menú de comandos.",
+          "Cualquier farmacia, paciente o institución receptora puede comprobar la autenticidad del código emitido mediante la herramienta «Verificar Récipe» disponible desde el menú de comandos.",
         ],
       },
       {

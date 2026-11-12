@@ -161,7 +161,7 @@ export function AuthQuickLoginForm({
           type="button"
           disabled={loading || pin.length !== 4}
           onClick={() => onPinUnlock(pin)}
-          className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm shadow-md shadow-primary/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer"
+          className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm shadow-md shadow-primary/20 active:scale-[0.99] transition-[background-color,transform,box-shadow] flex items-center justify-center gap-2 cursor-pointer"
         >
           {loading ? (
             <>
@@ -290,7 +290,7 @@ export function AuthStandardLoginForm({
             <Input
               id="email"
               type="email"
-              placeholder="doctora@femesalud.com"
+              placeholder="doctora@clinica.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -356,7 +356,7 @@ export function AuthStandardLoginForm({
         <Button
           type="submit"
           disabled={loading}
-          className="w-full h-12 mt-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm shadow-md shadow-primary/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer"
+          className="w-full h-12 mt-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm shadow-md shadow-primary/20 active:scale-[0.99] transition-[background-color,transform,box-shadow] flex items-center justify-center gap-2 cursor-pointer"
         >
           {loading ? (
             <>
@@ -411,7 +411,7 @@ export function AuthRecoveryForm({
             <Input
               id="recovery-email"
               type="email"
-              placeholder="doctora@femesalud.com"
+              placeholder="doctora@clinica.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -423,7 +423,7 @@ export function AuthRecoveryForm({
         <Button
           type="submit"
           disabled={loading}
-          className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm shadow-md shadow-primary/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer"
+          className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm shadow-md shadow-primary/20 active:scale-[0.99] transition-[background-color,transform,box-shadow] flex items-center justify-center gap-2 cursor-pointer"
         >
           {loading ? (
             <>
@@ -507,7 +507,7 @@ export function AuthResetPasswordForm({
         <Button
           type="submit"
           disabled={loading}
-          className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm shadow-md shadow-primary/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer"
+          className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm shadow-md shadow-primary/20 active:scale-[0.99] transition-[background-color,transform,box-shadow] flex items-center justify-center gap-2 cursor-pointer"
         >
           {loading ? (
             <>
@@ -586,7 +586,7 @@ export function AuthBootstrapForm({
             <Input
               id="bem"
               type="email"
-              placeholder="admin@femesalud.com"
+              placeholder="admin@clinica.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -625,7 +625,7 @@ export function AuthBootstrapForm({
         <Button
           type="submit"
           disabled={loading}
-          className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm shadow-md shadow-primary/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer"
+          className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm shadow-md shadow-primary/20 active:scale-[0.99] transition-[background-color,transform,box-shadow] flex items-center justify-center gap-2 cursor-pointer"
         >
           {loading ? (
             <>
@@ -654,10 +654,8 @@ export function AuthBootstrapForm({
 
 export const AuthCarouselBanner = memo(function AuthCarouselBanner({
   slides,
-  onVerifyRecipe,
 }: {
   slides: AuthSlide[];
-  onVerifyRecipe?: () => void;
 }) {
   const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -689,24 +687,16 @@ export const AuthCarouselBanner = memo(function AuthCarouselBanner({
       <div className="flex items-center justify-between gap-4 z-10">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.06] border border-white/10 text-xs font-medium text-zinc-200 backdrop-blur-md">
           <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Suite Clínica FemeSalud • En línea</span>
+          <span>Suite Clínica Medizen • En línea</span>
         </div>
 
         <div className="flex items-center gap-2">
-          {onVerifyRecipe && (
-            <button
-              type="button"
-              onClick={onVerifyRecipe}
-              className="flex items-center gap-2 h-9 px-3.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 transition-colors text-xs font-semibold text-zinc-100 cursor-pointer"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Verificar Récipe</span>
-            </button>
-          )}
           <button
             type="button"
             onClick={() =>
-              toast.success("Soporte FemeSalud activo. Escríbenos a soporte@femesalud.com")
+              toast.success(
+                "Soporte técnico Medizen activo. Inicia sesión para gestionar tus tickets o contacta a tu administrador.",
+              )
             }
             className="flex items-center gap-2 h-9 px-3.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 transition-colors text-xs font-semibold text-zinc-100 cursor-pointer"
           >
@@ -820,7 +810,7 @@ export const AuthCarouselBanner = memo(function AuthCarouselBanner({
               aria-label={`Ir a la diapositiva ${i + 1}: ${slide.badge}`}
             >
               <span
-                className={`h-2 rounded-full transition-all duration-200 ${i === currentSlide ? "w-7 bg-blue-400" : "w-2 bg-white/25 group-hover:bg-white/50"
+                className={`h-2 rounded-full transition-[width,background-color] duration-200 ${i === currentSlide ? "w-7 bg-blue-400" : "w-2 bg-white/25 group-hover:bg-white/50"
                   }`}
               />
             </button>

@@ -264,3 +264,167 @@
 .animate-shake {
   animation: shake 0.4s ease-in-out;
 }
+
+/* Medizen launch splash preloader */
+#medizen-app-splash {
+  --splash-track: rgba(255, 255, 255, 0.08);
+  --splash-arc-head: #ffffff;
+  --splash-halo: #ffffff;
+  --splash-glow-max: 0.28;
+  --splash-glow-rest: 0.22;
+}
+
+html[data-splash="skip"] #medizen-app-splash {
+  display: none !important;
+}
+
+@keyframes medizen-splash-stage-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.76);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes medizen-splash-emblem-spin {
+  0% {
+    transform: perspective(700px) rotateY(-180deg) rotateZ(-22deg) scale(0.86);
+  }
+  45% {
+    transform: perspective(700px) rotateY(195deg) rotateZ(8deg) scale(1.04);
+  }
+  75% {
+    transform: perspective(700px) rotateY(360deg) rotateZ(0deg) scale(1);
+  }
+  100% {
+    transform: perspective(700px) rotateY(360deg) rotateZ(0deg) scale(1);
+  }
+}
+
+@keyframes medizen-splash-orbit-spin {
+  0% {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.88);
+  }
+  20% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 0.9;
+    transform: rotate(270deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(340deg) scale(1.06);
+  }
+}
+
+@keyframes medizen-splash-orbit-track {
+  0% {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  85% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes medizen-splash-pulse-beam {
+  0% {
+    stroke-dashoffset: 1;
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.85;
+  }
+  80% {
+    opacity: 0.85;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+
+@keyframes medizen-splash-halo {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  30% {
+    opacity: 0.75;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.1);
+  }
+}
+
+@keyframes medizen-splash-glow {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  50% {
+    opacity: var(--splash-glow-max, 0.28);
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: var(--splash-glow-rest, 0.22);
+    transform: scale(1);
+  }
+}
+
+.medizen-splash-glow {
+  animation: medizen-splash-glow 1.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.medizen-splash-stage {
+  animation: medizen-splash-stage-in 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.medizen-splash-emblem {
+  transform-origin: center;
+  will-change: transform;
+  animation: medizen-splash-emblem-spin 1.35s cubic-bezier(0.22, 1, 0.36, 1) 0.05s both;
+}
+
+.medizen-splash-orbit-track {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: medizen-splash-orbit-track 1.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.medizen-splash-orbit-arc {
+  transform-box: fill-box;
+  transform-origin: center;
+  stroke-dasharray: 0.28 0.72;
+  animation: medizen-splash-orbit-spin 1.45s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.medizen-splash-pulse-beam {
+  stroke-dasharray: 0.22 0.78;
+  stroke-dashoffset: 1;
+  animation: medizen-splash-pulse-beam 1.05s cubic-bezier(0.35, 0, 0.25, 1) 0.35s both;
+}
+
+.medizen-splash-halo {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: medizen-splash-halo 0.75s cubic-bezier(0.22, 1, 0.36, 1) 1.02s both;
+}

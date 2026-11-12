@@ -6,7 +6,6 @@ import { setAuthSessionManually } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { MedizenLogo } from "@/components/MedizenLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { RecipeVerificationModal } from "@/components/RecipeVerificationModal";
 import {
   getQuickAccessAccounts,
   getLastQuickAccessAccount,
@@ -375,8 +374,6 @@ function AuthPage() {
     handleBootstrap,
   } = useAuthPageLogic();
 
-  const [verifyModalOpen, setVerifyModalOpen] = useState(false);
-
   return (
     <div className="min-h-screen w-full flex bg-background font-sans">
       {/* Left Column: Auth Workspace */}
@@ -396,15 +393,6 @@ function AuthPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setVerifyModalOpen(true)}
-              className="md:hidden inline-flex items-center gap-1.5 h-8 px-2.5 rounded-xl bg-muted/60 hover:bg-muted border border-border/60 text-[11px] font-semibold text-foreground transition-colors cursor-pointer"
-              title="Verificar autenticidad de récipe médico"
-            >
-              <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-              <span>Verificar</span>
-            </button>
             <ThemeToggle />
           </div>
         </header>
@@ -540,9 +528,7 @@ function AuthPage() {
       </div>
 
       {/* Right Column: Clinical Showcase Banner */}
-      <AuthCarouselBanner slides={slides} onVerifyRecipe={() => setVerifyModalOpen(true)} />
-
-      <RecipeVerificationModal open={verifyModalOpen} onOpenChange={setVerifyModalOpen} />
+      <AuthCarouselBanner slides={slides} />
     </div>
   );
 }

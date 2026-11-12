@@ -2,6 +2,12 @@ import { useEffect, useState, useDeferredValue } from "react";
 import { Command } from "cmdk";
 import { Search, X } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { RecipeVerificationModal } from "@/components/RecipeVerificationModal";
 import { CommandQuickActions } from "./command/CommandQuickActions";
 import { CommandSearchResults } from "./command/CommandSearchResults";
@@ -17,47 +23,43 @@ export function CommandMenu() {
   const { q, hasResults, filteredPatients, filteredAppointments, filteredInvoices } =
     useCommandMenuData(open, deferredSearch);
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+    if (!nextOpen) {
+      setSearch("");
+    }
+  };
+
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        setOpen((prev) => !prev);
-      }
-      if (e.key === "Escape" && open) {
-        setOpen(false);
+        setOpen((prev) => {
+          const next = !prev;
+          if (!next) setSearch("");
+          return next;
+        });
       }
     };
 
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) {
-      setSearch("");
-    }
-  }, [open]);
-
-  if (!open && !isVerificationOpen) return null;
+  }, []);
 
   return (
     <>
-      {open && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Buscador global"
-          className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] p-4"
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent
+          hideCloseButton
+          className="top-[15vh] translate-y-0 p-0 gap-0 max-w-lg bg-card text-card-foreground rounded-2xl shadow-2xl border border-border overflow-hidden"
         >
-          <button
-            type="button"
-            aria-label="Cerrar menú de comandos"
-            className="fixed inset-0 z-0 bg-background/80 backdrop-blur-sm border-none cursor-default"
-            onClick={() => setOpen(false)}
-          />
+          <DialogTitle className="sr-only">Buscador global</DialogTitle>
+          <DialogDescription className="sr-only">
+            Busca pacientes, citas, facturas o ejecuta acciones rápidas.
+          </DialogDescription>
           <Command
             shouldFilter={false}
-            className="relative z-10 w-full max-w-lg bg-card text-card-foreground rounded-2xl shadow-2xl border border-border overflow-hidden overscroll-contain flex flex-col animate-in fade-in-0 zoom-in-95 duration-150"
+            className="w-full overscroll-contain flex flex-col"
             label="Global Command Menu"
           >
             <div className="flex items-center px-4 py-3 border-b border-border/30 gap-3">
@@ -91,19 +93,19 @@ export function CommandMenu() {
                 <CommandQuickActions
                   onNewAppointment={() => {
                     navigate({ to: "/agenda" });
-                    setOpen(false);
+                    handleOpenChange(false);
                   }}
                   onNewPatient={() => {
                     navigate({ to: "/pacientes" });
-                    setOpen(false);
+                    handleOpenChange(false);
                   }}
                   onOpenVerification={() => {
-                    setOpen(false);
+                    handleOpenChange(false);
                     setIsVerificationOpen(true);
                   }}
                   onOpenLegal={() => {
                     navigate({ to: "/legal", search: { doc: "terminos" } });
-                    setOpen(false);
+                    handleOpenChange(false);
                   }}
                 />
               )}
@@ -117,21 +119,21 @@ export function CommandMenu() {
                 filteredInvoices={filteredInvoices}
                 onSelectPatient={(id) => {
                   navigate({ to: "/pacientes/$patientId", params: { patientId: id } });
-                  setOpen(false);
+                  handleOpenChange(false);
                 }}
                 onSelectAppointment={() => {
                   navigate({ to: "/agenda" });
-                  setOpen(false);
+                  handleOpenChange(false);
                 }}
                 onSelectInvoice={() => {
                   navigate({ to: "/facturacion" });
-                  setOpen(false);
+                  handleOpenChange(false);
                 }}
               />
             </Command.List>
           </Command>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       <RecipeVerificationModal open={isVerificationOpen} onOpenChange={setIsVerificationOpen} />
     </>
