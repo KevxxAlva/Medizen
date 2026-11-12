@@ -1,19 +1,24 @@
 import { Command } from "cmdk";
-import { CalendarPlus, UserPlus, ShieldCheck } from "lucide-react";
+import { CalendarPlus, UserPlus, ShieldCheck, Scale } from "lucide-react";
 
 interface CommandQuickActionsProps {
   onNewAppointment: () => void;
   onNewPatient: () => void;
   onOpenVerification: () => void;
+  onOpenLegal?: () => void;
 }
 
 export function CommandQuickActions({
   onNewAppointment,
   onNewPatient,
   onOpenVerification,
+  onOpenLegal,
 }: CommandQuickActionsProps) {
   return (
-    <Command.Group heading="Acciones Rápidas" className="text-xs font-bold text-muted-foreground px-2 py-2">
+    <Command.Group
+      heading="Acciones Rápidas"
+      className="text-xs font-bold text-muted-foreground px-2 py-2"
+    >
       <Command.Item
         onSelect={onNewAppointment}
         className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer aria-selected:bg-primary/10 aria-selected:text-primary text-foreground transition-colors mt-1"
@@ -41,6 +46,17 @@ export function CommandQuickActions({
         </div>
         <span className="text-sm font-semibold flex-1">Validar Récipe / Código QR Oficial</span>
       </Command.Item>
+      {onOpenLegal && (
+        <Command.Item
+          onSelect={onOpenLegal}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer aria-selected:bg-primary/10 aria-selected:text-primary text-foreground transition-colors mt-1"
+        >
+          <div className="h-8 w-8 bg-muted rounded-full flex items-center justify-center text-muted-foreground shrink-0">
+            <Scale className="w-4 h-4" />
+          </div>
+          <span className="text-sm font-semibold flex-1">Centro Legal y Privacidad</span>
+        </Command.Item>
+      )}
     </Command.Group>
   );
 }

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DescargarRouteImport } from './routes/descargar'
+import { Route as LegalRouteImport } from './routes/legal'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as AuthenticatedAuditoriaRouteImport } from './routes/_authenticated/auditoria'
@@ -41,6 +42,11 @@ const AuthRoute = AuthRouteImport.update({
 const DescargarRoute = DescargarRouteImport.update({
   id: '/descargar',
   path: '/descargar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalRoute = LegalRouteImport.update({
+  id: '/legal',
+  path: '/legal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
@@ -133,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
   '/descargar': typeof DescargarRoute
+  '/legal': typeof LegalRoute
   '/agenda': typeof AuthenticatedAgendaRoute
   '/auditoria': typeof AuthenticatedAuditoriaRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/descargar': typeof DescargarRoute
+  '/legal': typeof LegalRoute
   '/agenda': typeof AuthenticatedAgendaRoute
   '/auditoria': typeof AuthenticatedAuditoriaRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
@@ -174,6 +182,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/descargar': typeof DescargarRoute
+  '/legal': typeof LegalRoute
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
   '/_authenticated/auditoria': typeof AuthenticatedAuditoriaRoute
   '/_authenticated/configuracion': typeof AuthenticatedConfiguracionRoute
@@ -197,6 +206,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/descargar'
+    | '/legal'
     | '/agenda'
     | '/auditoria'
     | '/configuracion'
@@ -216,6 +226,7 @@ export interface FileRouteTypes {
   to:
     | '/auth'
     | '/descargar'
+    | '/legal'
     | '/agenda'
     | '/auditoria'
     | '/configuracion'
@@ -237,6 +248,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/descargar'
+    | '/legal'
     | '/_authenticated/agenda'
     | '/_authenticated/auditoria'
     | '/_authenticated/configuracion'
@@ -259,6 +271,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   DescargarRoute: typeof DescargarRoute
+  LegalRoute: typeof LegalRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -282,6 +295,13 @@ declare module '@tanstack/react-router' {
       path: '/descargar'
       fullPath: '/descargar'
       preLoaderRoute: typeof DescargarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal': {
+      id: '/legal'
+      path: '/legal'
+      fullPath: '/legal'
+      preLoaderRoute: typeof LegalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/': {
@@ -444,6 +464,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   DescargarRoute: DescargarRoute,
+  LegalRoute: LegalRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

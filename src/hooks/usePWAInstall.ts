@@ -1,7 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+}
+
+declare global {
+  interface Window {
+    __medizenInstallPrompt?: BeforeInstallPromptEvent | null;
+  }
+}
+
 // Global holder for deferred prompt so any component can trigger install without re-binding
-let deferredPrompt: any = null;
+let deferredPrompt: BeforeInstallPromptEvent | null = null;
 const listeners = new Set<() => void>();
 
 function notifyListeners() {
@@ -9,15 +20,21 @@ function notifyListeners() {
 }
 
 if (typeof window !== "undefined") {
-  window.addEventListener("beforeinstallprompt", (e: any) => {
-    // Prevent default mini-infobar on mobile
+  if (window.__medizenInstallPrompt) {
+    deferredPrompt = window.__medizenInstallPrompt;
+  }
+
+  window.addEventListener("beforeinstallprompt", (e: Event) => {
     e.preventDefault();
-    deferredPrompt = e;
+    const promptEvent = e as BeforeInstallPromptEvent;
+    deferredPrompt = promptEvent;
+    window.__medizenInstallPrompt = promptEvent;
     notifyListeners();
   });
 
   window.addEventListener("appinstalled", () => {
     deferredPrompt = null;
+    window.__medizenInstallPrompt = null;
     notifyListeners();
   });
 }
@@ -25,24 +42,31 @@ if (typeof window !== "undefined") {
 export type PlatformType = "windows" | "android" | "ios" | "mac" | "other";
 
 export function usePWAInstall() {
-  const [canInstall, setCanInstall] = useState<boolean>(!!deferredPrompt);
+  const [canInstall, setCanInstall] = useState<boolean>(
+    () => !!deferredPrompt || (typeof window !== "undefined" && !!window.__medizenInstallPrompt),
+  );
   const [isInstalled, setIsInstalled] = useState<boolean>(false);
   const [platform, setPlatform] = useState<PlatformType>("other");
 
   useEffect(() => {
-    // Check if running in standalone / installed mode
+    if (!deferredPrompt && window.__medizenInstallPrompt) {
+      deferredPrompt = window.__medizenInstallPrompt;
+    }
+
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone === true ||
+      (window.navigator as Navigator & { standalone?: boolean }).standalone === true ||
       document.referrer.includes("android-app://");
 
     setIsInstalled(isStandalone);
 
-    // Detect user platform
     const ua = navigator.userAgent;
     if (/Android/i.test(ua)) {
       setPlatform("android");
-    } else if (/iPad|iPhone|iPod/i.test(ua) && !(window as any).MSStream) {
+    } else if (
+      /iPad|iPhone|iPod/i.test(ua) &&
+      !(window as Window & { MSStream?: unknown }).MSStream
+    ) {
       setPlatform("ios");
     } else if (/Win/i.test(ua)) {
       setPlatform("windows");
@@ -53,7 +77,7 @@ export function usePWAInstall() {
     }
 
     const updateState = () => {
-      setCanInstall(!!deferredPrompt);
+      setCanInstall(!!deferredPrompt || !!window.__medizenInstallPrompt);
     };
 
     listeners.add(updateState);
@@ -65,15 +89,18 @@ export function usePWAInstall() {
   }, []);
 
   const installApp = useCallback(async (): Promise<"accepted" | "dismissed" | "unsupported"> => {
-    if (!deferredPrompt) {
+    const promptToUse =
+      deferredPrompt || (typeof window !== "undefined" ? window.__medizenInstallPrompt : null);
+    if (!promptToUse) {
       return "unsupported";
     }
 
     try {
-      deferredPrompt.prompt();
-      const choiceResult = await deferredPrompt.userChoice;
+      await promptToUse.prompt();
+      const choiceResult = await promptToUse.userChoice;
       if (choiceResult.outcome === "accepted") {
         deferredPrompt = null;
+        window.__medizenInstallPrompt = null;
         notifyListeners();
         return "accepted";
       }

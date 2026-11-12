@@ -1,23 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { setAuthSessionManually } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { MedizenLogo } from "@/components/MedizenLogo";
-import { 
-  getQuickAccessAccounts, 
-  getLastQuickAccessAccount, 
-  verifyUserPin, 
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { RecipeVerificationModal } from "@/components/RecipeVerificationModal";
+import {
+  getQuickAccessAccounts,
+  getLastQuickAccessAccount,
+  verifyUserPin,
   saveQuickAccessAccount,
   removeQuickAccessAccount,
-  type QuickAccessProfile 
+  type QuickAccessProfile,
 } from "@/lib/auth/quickAccess";
-import {
-  Activity,
-  Sparkles,
-  CreditCard,
-} from "lucide-react";
+import { Activity, Sparkles, CreditCard, ShieldCheck } from "lucide-react";
 import {
   AuthQuickLoginForm,
   AuthStandardLoginForm,
@@ -25,49 +23,78 @@ import {
   AuthResetPasswordForm,
   AuthBootstrapForm,
   AuthCarouselBanner,
+  type AuthSlide,
 } from "@/components/auth/AuthForms";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
-const slides = [
+const slides: AuthSlide[] = [
   {
-    badge: "Plataforma Integral de Salud",
-    title: "Gestión médica de alta precisión",
-    desc: "Optimiza la administración de tu consultorio con historiales clínicos completos, agenda médica sincronizada y facturación inteligente.",
+    badge: "Operación Clínica Integral",
+    title: "Gestión médica de alta precisión y sala de espera en vivo",
+    desc: "Coordina recepción, consultorios y expedientes médicos con sincronización en tiempo real y aislamiento por especialista.",
     featureIcon: Activity,
-    featureTitle: "Historial Clínico Inteligente",
-    featureDesc: "Evolución cronológica de pacientes, antecedentes gineco-obstétricos y emisión rápida de recetas con firma digital.",
+    featureTitle: "Expediente Clínico y Récipes Digitales",
+    featureDesc:
+      "Evolución cronológica de pacientes, notas clínicas con dictado por voz y emisión de récipes con código verificable y envío por WhatsApp.",
+    metricValue: "Realtime",
+    metricLabel: "WebSockets Sync",
+    highlights: [
+      "Sala de espera y turnos en vivo",
+      "Historias gineco-obstétricas y generales",
+      "Diseñador de récipes y envío WhatsApp",
+      "Alcance seguro por rol médico",
+    ],
   },
   {
-    badge: "Control Financiero y Facturación",
-    title: "Facturación clara, sin complicaciones",
-    desc: "Emite recibos profesionales en PDF al instante, controla los cobros en divisas o moneda local y mantén tus cuentas al día.",
+    badge: "Control Financiero Multimoneda",
+    title: "Facturación clara y tesorería sincronizada sin fricción",
+    desc: "Emite comprobantes en PDF al instante, concilia cobros en divisas o Bolívares y ejecuta cierres de caja con Reporte Z.",
     featureIcon: CreditCard,
-    featureTitle: "Recibos y Comprobantes en PDF",
-    featureDesc: "Generación automática de recibos con logo de la clínica y control en tiempo real de ingresos por paciente o período.",
+    featureTitle: "Tasas BCV, EUR y USDT en Tiempo Real",
+    featureDesc:
+      "Conversión automática multimoneda, partición estricta de facturas por médico, control de honorarios y reportes ejecutivos PDF/CSV.",
+    metricValue: "BCV / USDT",
+    metricLabel: "Tasa sincronizada",
+    highlights: [
+      "Conversor BCV, Euro y USDT integrado",
+      "Cierre de caja diario (Reporte Z)",
+      "Liquidación de honorarios médicos",
+      "Recibos e informes en PDF y CSV",
+    ],
   },
   {
-    badge: "Seguridad y Accesibilidad Médica",
-    title: "Tus datos siempre seguros y a mano",
-    desc: "Cumplimiento con estándares de protección de datos médicos, respaldos automáticos continuos y acceso rápido con PIN de 4 dígitos.",
+    badge: "Seguridad y Velocidad Clínica",
+    title: "Tus datos protegidos con desbloqueo instantáneo por PIN",
+    desc: "Bóveda criptográfica en el dispositivo, bloqueo automático por inactividad y caché multinivel L1/L2 para respuesta inmediata.",
     featureIcon: Sparkles,
-    featureTitle: "Métricas y Análisis de Crecimiento",
-    featureDesc: "Toma decisiones basadas en datos reales. Analiza el rendimiento de tu clínica y optimiza la atención.",
+    featureTitle: "Bóveda Local AES-256 y Caché L1/L2",
+    featureDesc:
+      "Desbloqueo en 1 segundo mediante PIN de 4 dígitos, políticas Row Level Security (RLS) en PostgreSQL y auditoría de operaciones.",
+    metricValue: "AES-256",
+    metricLabel: "Bóveda local",
+    highlights: [
+      "Acceso rápido con PIN de 4 dígitos",
+      "Bloqueo automático por inactividad",
+      "Aplicación instalable PWA multiplataforma",
+      "Auditoría de seguridad administrativa",
+    ],
   },
 ];
 
 function useAuthPageLogic() {
   const router = useRouter();
   const qc = useQueryClient();
-  const [mode, setMode] = useState<"login" | "quick-login" | "bootstrap" | "recovery" | "reset-password">("login");
+  const [mode, setMode] = useState<
+    "login" | "quick-login" | "bootstrap" | "recovery" | "reset-password"
+  >("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [currentSlide, setCurrentSlide] = useState(0);
 
   const [quickAccounts, setQuickAccounts] = useState<QuickAccessProfile[]>([]);
   const [selectedAccount, setSelectedAccount] = useState<QuickAccessProfile | null>(null);
@@ -100,13 +127,6 @@ function useAuthPageLogic() {
     });
   }, [router, mode]);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 6000);
-    return () => clearInterval(timer);
-  }, []);
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -135,7 +155,9 @@ function useAuthPageLogic() {
             });
           }
         }
-      } catch {}
+      } catch {
+        // Ignorar si la tabla o el PIN opcional no están disponibles al iniciar sesión
+      }
 
       if (data.session) {
         setAuthSessionManually(data.session);
@@ -279,8 +301,6 @@ function useAuthPageLogic() {
     loading,
     showPassword,
     setShowPassword,
-    currentSlide,
-    setCurrentSlide,
     quickAccounts,
     selectedAccount,
     setSelectedAccount,
@@ -312,8 +332,6 @@ function AuthPage() {
     loading,
     showPassword,
     setShowPassword,
-    currentSlide,
-    setCurrentSlide,
     quickAccounts,
     selectedAccount,
     setSelectedAccount,
@@ -331,17 +349,42 @@ function AuthPage() {
     handleBootstrap,
   } = useAuthPageLogic();
 
+  const [verifyModalOpen, setVerifyModalOpen] = useState(false);
+
   return (
     <div className="min-h-screen w-full flex bg-background font-sans">
-      <div className="w-full md:w-[50%] lg:w-[45%] flex flex-col justify-between p-6 sm:p-10 lg:p-16 bg-card dark:bg-zinc-950 min-h-screen md:min-h-0">
-        <div className="flex items-center gap-3">
-          <MedizenLogo className="h-8 w-8 flex-shrink-0 transition-transform duration-300" />
-          <span className="font-display font-bold text-xl tracking-tight text-foreground">
-            Medi<span className="text-primary">zen</span>
-          </span>
-        </div>
+      {/* Left Column: Auth Workspace */}
+      <div className="w-full md:w-[48%] lg:w-[44%] flex flex-col justify-between p-6 sm:p-10 lg:px-14 lg:py-10 bg-card dark:bg-black border-r border-border min-h-screen md:min-h-0">
+        {/* Top Bar */}
+        <header className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <MedizenLogo className="h-8 w-8 flex-shrink-0 transition-transform duration-300" />
+            <div className="flex flex-col">
+              <span className="font-display font-bold text-lg leading-none tracking-normal text-foreground">
+                Medi<span className="text-primary">zen</span>
+              </span>
+              <span className="text-[10px] font-medium text-muted-foreground mt-0.5">
+                Suite Clínica Inteligente
+              </span>
+            </div>
+          </div>
 
-        <div className="my-auto py-8 max-w-[360px] w-full mx-auto">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setVerifyModalOpen(true)}
+              className="md:hidden inline-flex items-center gap-1.5 h-8 px-2.5 rounded-xl bg-muted/60 hover:bg-muted border border-border/60 text-[11px] font-semibold text-foreground transition-colors cursor-pointer"
+              title="Verificar autenticidad de récipe médico"
+            >
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+              <span>Verificar</span>
+            </button>
+            <ThemeToggle />
+          </div>
+        </header>
+
+        {/* Main Form Container */}
+        <main className="my-auto py-8 max-w-[400px] w-full mx-auto">
           {mode === "quick-login" && selectedAccount && (
             <AuthQuickLoginForm
               selectedAccount={selectedAccount}
@@ -423,18 +466,55 @@ function AuthPage() {
               onBackToLogin={() => setMode("login")}
             />
           )}
-        </div>
+        </main>
 
-        <div className="text-center text-[10px] text-zinc-400 font-medium">
-          © {new Date().getFullYear()} Medizen. Todos los derechos reservados.
-        </div>
+        {/* Footer */}
+        <footer className="flex flex-col gap-2.5 pt-4 border-t border-border/60 text-[11px] text-muted-foreground">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+              <span>Conexión protegida TLS • RLS Activo</span>
+            </div>
+            <nav
+              aria-label="Enlaces legales y descarga"
+              className="flex flex-wrap items-center gap-3 font-medium"
+            >
+              <Link
+                to="/legal"
+                search={{ doc: "terminos" }}
+                className="hover:text-foreground hover:underline transition-colors"
+              >
+                Términos
+              </Link>
+              <Link
+                to="/legal"
+                search={{ doc: "privacidad" }}
+                className="hover:text-foreground hover:underline transition-colors"
+              >
+                Privacidad
+              </Link>
+              <Link
+                to="/legal"
+                search={{ doc: "datos-clinicos" }}
+                className="hover:text-foreground hover:underline transition-colors"
+              >
+                Aviso Médico
+              </Link>
+              <Link to="/descargar" className="text-primary hover:underline transition-colors">
+                Descargar App
+              </Link>
+            </nav>
+          </div>
+          <span className="text-[10px] text-muted-foreground/80">
+            © {new Date().getFullYear()} Medizen. Todos los derechos reservados.
+          </span>
+        </footer>
       </div>
 
-      <AuthCarouselBanner
-        slides={slides}
-        currentSlide={currentSlide}
-        onSlideChange={setCurrentSlide}
-      />
+      {/* Right Column: Clinical Showcase Banner */}
+      <AuthCarouselBanner slides={slides} onVerifyRecipe={() => setVerifyModalOpen(true)} />
+
+      <RecipeVerificationModal open={verifyModalOpen} onOpenChange={setVerifyModalOpen} />
     </div>
   );
 }

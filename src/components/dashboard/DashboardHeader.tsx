@@ -7,7 +7,7 @@ import { LiveClockBadge } from "./DashboardCharts";
 import { useExchangeRate, type ExchangeRates } from "@/hooks/useExchangeRate";
 
 const BcvCalculatorDialog = lazy(() =>
-  import("./BcvCalculatorDialog").then((m) => ({ default: m.BcvCalculatorDialog }))
+  import("./BcvCalculatorDialog").then((m) => ({ default: m.BcvCalculatorDialog })),
 );
 
 const preloadBcvDialog = () => {
@@ -79,11 +79,7 @@ const BcvQuickConverter = memo(function BcvQuickConverter({
 
       {hasMountedDialog && (
         <Suspense fallback={null}>
-          <BcvCalculatorDialog
-            open={calcOpen}
-            onOpenChange={setCalcOpen}
-            rates={rates}
-          />
+          <BcvCalculatorDialog open={calcOpen} onOpenChange={setCalcOpen} rates={rates} />
         </Suspense>
       )}
     </>
@@ -114,7 +110,7 @@ export const DashboardHeader = memo(function DashboardHeader({
 
   const unreadCount = useMemo(
     () => notifications.filter((n) => !readKeySet.has(getNotificationKey(n))).length,
-    [notifications, readKeySet]
+    [notifications, readKeySet],
   );
 
   const handleMarkAllAsRead = () => {
@@ -173,13 +169,11 @@ export const DashboardHeader = memo(function DashboardHeader({
             <button
               type="button"
               aria-label={
-                unreadCount > 0
-                  ? `Notificaciones (${unreadCount} sin leer)`
-                  : "Notificaciones"
+                unreadCount > 0 ? `Notificaciones (${unreadCount} sin leer)` : "Notificaciones"
               }
               className={cn(
                 "flex items-center justify-center h-11 w-11 sm:h-10 sm:w-10 bg-card border border-border rounded-full shadow-sm text-muted-foreground relative transition-[transform,colors] duration-150 active:scale-95 hover:bg-muted/50 hover:text-primary hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer",
-                open && "text-primary bg-muted/50 border-primary/40"
+                open && "text-primary bg-muted/50 border-primary/40",
               )}
             >
               <Bell className="h-5 w-5" aria-hidden="true" />
@@ -213,14 +207,14 @@ export const DashboardHeader = memo(function DashboardHeader({
                         "flex items-start gap-3 p-3 rounded-xl transition-colors text-left",
                         n.href
                           ? "hover:bg-muted/70 active:bg-muted cursor-pointer group"
-                          : "hover:bg-muted/40 cursor-default"
+                          : "hover:bg-muted/40 cursor-default",
                       )}
                     >
                       <div
                         className={cn(
                           "flex h-9 w-9 shrink-0 items-center justify-center rounded-full mt-0.5",
                           n.bg,
-                          n.color
+                          n.color,
                         )}
                       >
                         <Icon className="h-4 w-4" strokeWidth={2.5} aria-hidden="true" />

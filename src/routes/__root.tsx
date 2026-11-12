@@ -6,6 +6,7 @@ import {
   Scripts,
   useRouter,
   Link,
+  type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,12 +35,20 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: any; reset: () => void }) {
+function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error("Root route error:", error);
   const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
+
+  const errorMessage =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : "Se produjo un error inesperado en la aplicación.";
+  const errorStack = error instanceof Error ? error.stack : undefined;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -48,11 +57,9 @@ function ErrorComponent({ error, reset }: { error: any; reset: () => void }) {
         <p className="mt-2 text-sm text-muted-foreground">Error detectado en la aplicación:</p>
 
         <div className="mt-4 p-4 bg-muted rounded-2xl text-left font-mono text-xs overflow-auto max-h-[300px] border border-border/60">
-          <p className="font-bold text-foreground mb-1">
-            {error?.message || "Se produjo un error inesperado en la aplicación."}
-          </p>
-          {import.meta.env.DEV && error?.stack && (
-            <pre className="text-muted-foreground whitespace-pre-wrap">{error.stack}</pre>
+          <p className="font-bold text-foreground mb-1">{errorMessage}</p>
+          {import.meta.env.DEV && errorStack && (
+            <pre className="text-muted-foreground whitespace-pre-wrap">{errorStack}</pre>
           )}
         </div>
 
@@ -111,7 +118,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "apple-touch-icon", href: "/logo.png" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       {
         rel: "preconnect",
@@ -150,23 +157,18 @@ function RootComponent() {
       const isLocalhost =
         window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
 
-      if (import.meta.env.DEV || isLocalhost) {
-        navigator.serviceWorker.getRegistrations().then((regs) => {
-          regs.forEach((r) => r.unregister());
-        });
-        if ("caches" in window) {
-          caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
-        }
-      } else {
-        navigator.serviceWorker
-          .register("/sw.js")
-          .then((reg) => {
-            console.log("[PWA] Service Worker registrado con éxito:", reg.scope);
-          })
-          .catch((err) => {
-            console.warn("[PWA] Error al registrar Service Worker:", err);
-          });
+      if ((import.meta.env.DEV || isLocalhost) && "caches" in window) {
+        caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
       }
+
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then((reg) => {
+          console.log("[PWA] Service Worker registrado con éxito:", reg.scope);
+        })
+        .catch((err) => {
+          console.warn("[PWA] Error al registrar Service Worker:", err);
+        });
     }
   }, []);
 
@@ -176,7 +178,7 @@ function RootComponent() {
         <HeadContent />
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var map={blue:'#4361EE',emerald:'#059669',purple:'#7C3AED',teal:'#0D9488',rose:'#E11D48'};var saved=localStorage.getItem('medizen-accent-color');var hex=map[saved]||'#4361EE';var r=document.documentElement.style;r.setProperty('--primary',hex);r.setProperty('--sidebar-primary',hex);r.setProperty('--ring',hex);r.setProperty('--sidebar-ring',hex);if(location.hostname==='localhost'||location.hostname==='127.0.0.1'){var hadSw=!!(navigator.serviceWorker&&navigator.serviceWorker.controller);var p1=('serviceWorker' in navigator)?navigator.serviceWorker.getRegistrations().then(function(rs){return Promise.all(rs.map(function(reg){return reg.unregister()}))}):Promise.resolve();var p2=('caches' in window)?caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k)}))}):Promise.resolve();if(hadSw&&!sessionStorage.getItem('medizen_sw_cleaned')){Promise.all([p1,p2]).then(function(){sessionStorage.setItem('medizen_sw_cleaned','1');location.reload()})}}}catch(e){}})();`,
+            __html: `(function(){try{window.__medizenInstallPrompt=null;window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__medizenInstallPrompt=e;});window.addEventListener('appinstalled',function(){window.__medizenInstallPrompt=null;});var map={blue:'#4361EE',emerald:'#059669',purple:'#7C3AED',teal:'#0D9488',rose:'#E11D48'};var saved=localStorage.getItem('medizen-accent-color');var hex=map[saved]||'#4361EE';var r=document.documentElement.style;r.setProperty('--primary',hex);r.setProperty('--sidebar-primary',hex);r.setProperty('--ring',hex);r.setProperty('--sidebar-ring',hex);}catch(e){}})();`,
           }}
         />
       </head>

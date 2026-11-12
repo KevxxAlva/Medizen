@@ -1,11 +1,25 @@
 import { memo } from "react";
 import { Link, useRouterState, useRouter } from "@tanstack/react-router";
 import {
-  LayoutGrid, Calendar, UserRound, Stethoscope, Users,
-  Wallet, ReceiptText, CreditCard,
-  Box, RotateCw, Settings,
-  Clock, HandCoins, ShieldCheck,
-  LogOut, ChevronLeft, ChevronRight, X
+  LayoutGrid,
+  Calendar,
+  UserRound,
+  Stethoscope,
+  Users,
+  Wallet,
+  ReceiptText,
+  CreditCard,
+  Box,
+  RotateCw,
+  Settings,
+  Clock,
+  HandCoins,
+  ShieldCheck,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsAdmin } from "@/hooks/useAuth";
@@ -22,7 +36,7 @@ type ModuleDef = {
   category?: string;
   title?: string;
   url?: string;
-  icon?: any;
+  icon?: LucideIcon;
   badge?: number;
   adminOnly?: boolean;
   receptionOrAdminOnly?: boolean;
@@ -74,8 +88,13 @@ const SidebarBody = memo(function SidebarBody({
   return (
     <TooltipProvider delayDuration={150}>
       <div className="flex flex-col h-full bg-sidebar text-sidebar-foreground overflow-hidden">
-        {/* Logo Area (Header with crisp bottom divider line matching react.doctor) */}
-        <div className={cn("h-16 flex items-center border-b border-sidebar-border shrink-0", isCollapsed ? "justify-center px-2" : "px-6 gap-3")}>
+        {/* Logo Area */}
+        <div
+          className={cn(
+            "h-16 flex items-center border-b border-sidebar-border shrink-0",
+            isCollapsed ? "justify-center px-2" : "px-6 gap-3",
+          )}
+        >
           <MedizenLogo className="h-8 w-8 flex-shrink-0 transition-transform duration-300" />
           {!isCollapsed && (
             <span
@@ -113,8 +132,11 @@ const SidebarBody = memo(function SidebarBody({
               );
             }
 
-            const active = pathname === m.url || (m.url !== "/" && !m.url?.startsWith("#") && pathname.startsWith(m.url || ""));
+            const active =
+              pathname === m.url ||
+              (m.url !== "/" && !m.url?.startsWith("#") && pathname.startsWith(m.url || ""));
             const Icon = m.icon;
+            if (!Icon) return null;
             const isDummy = m.url?.startsWith("#");
 
             const linkContent = (
@@ -154,9 +176,7 @@ const SidebarBody = memo(function SidebarBody({
             if (isCollapsed) {
               return (
                 <Tooltip key={m.title}>
-                  <TooltipTrigger asChild>
-                    {linkContent}
-                  </TooltipTrigger>
+                  <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
                   <TooltipContent side="right" sideOffset={10} className="font-semibold">
                     {m.title}
                   </TooltipContent>
@@ -168,11 +188,18 @@ const SidebarBody = memo(function SidebarBody({
         </nav>
 
         {/* Footer Area with crisp top divider line */}
-        <div className={cn(
-          "mt-auto pt-3 pb-[max(env(safe-area-inset-bottom),1rem)] border-t border-sidebar-border flex flex-col gap-2 shrink-0 bg-sidebar",
-          isCollapsed ? "items-center px-1 pb-3" : "px-4"
-        )}>
-          <div className={cn("flex items-center w-full", isCollapsed ? "flex-col gap-2" : "justify-between gap-1")}>
+        <div
+          className={cn(
+            "mt-auto pt-3 pb-[max(env(safe-area-inset-bottom),1rem)] border-t border-sidebar-border flex flex-col gap-2 shrink-0 bg-sidebar",
+            isCollapsed ? "items-center px-1 pb-3" : "px-4",
+          )}
+        >
+          <div
+            className={cn(
+              "flex items-center w-full",
+              isCollapsed ? "flex-col gap-2" : "justify-between gap-1",
+            )}
+          >
             {/* Logout */}
             <Tooltip>
               <TooltipTrigger asChild>
@@ -259,7 +286,7 @@ export const AppSidebar = memo(function AppSidebar({
           isCollapsed ? "w-[80px]" : "w-[260px]",
         )}
       >
-        {/* Collapse Button placed cleanly at the intersection of the header line and right border */}
+        {/* Collapse Button */}
         <button
           type="button"
           aria-label={isCollapsed ? "Expandir barra lateral" : "Colapsar barra lateral"}

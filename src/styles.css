@@ -59,55 +59,55 @@
   color-scheme: light;
   --radius: 1rem;
   --background: oklch(0.995 0.002 200); /* pristine white with very faint cool teal tint */
-  --foreground: oklch(0.20 0.04 220); /* very dark navy instead of pure black */
+  --foreground: oklch(0.2 0.04 220); /* very dark navy instead of pure black */
 
   --card: oklch(1 0 0); /* pure white for glass effects */
-  --card-foreground: oklch(0.20 0.04 220);
+  --card-foreground: oklch(0.2 0.04 220);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.20 0.04 220);
+  --popover-foreground: oklch(0.2 0.04 220);
 
   /* Medizen Blue — matches favicon #4361EE */
-  --primary: #4361EE;
+  --primary: #4361ee;
   --primary-foreground: oklch(0.98 0.01 200);
 
   /* Gold / Champagne accent */
   --secondary: oklch(0.85 0.12 80);
-  --secondary-foreground: oklch(0.30 0.08 80);
+  --secondary-foreground: oklch(0.3 0.08 80);
 
   --muted: oklch(0.97 0.01 200);
   --muted-foreground: oklch(0.55 0.03 200);
 
   --accent: oklch(0.97 0.01 200);
-  --accent-foreground: oklch(0.20 0.04 220);
+  --accent-foreground: oklch(0.2 0.04 220);
 
-  --destructive: oklch(0.60 0.18 20);
+  --destructive: oklch(0.6 0.18 20);
   --destructive-foreground: oklch(0.99 0 0);
 
   --border: oklch(0.93 0.02 200);
   --input: oklch(0.93 0.02 200);
-  --ring: #4361EE;
+  --ring: #4361ee;
 
   --blush: oklch(0.93 0.04 350);
-  --blush-foreground: oklch(0.42 0.10 350);
+  --blush-foreground: oklch(0.42 0.1 350);
   --sage: oklch(0.86 0.06 155);
   --sage-foreground: oklch(0.35 0.08 155);
-  --mauve: oklch(0.60 0.10 240);
+  --mauve: oklch(0.6 0.1 240);
   --mauve-soft: oklch(0.75 0.08 240);
 
-  --chart-1: #4361EE; /* Primary Blue */
-  --chart-2: oklch(0.85 0.12 80);  /* Gold */
-  --chart-3: oklch(0.60 0.10 240); /* Navy/Blue */
-  --chart-4: oklch(0.70 0.14 260);
-  --chart-5: oklch(0.80 0.12 70);
+  --chart-1: #4361ee; /* Primary Blue */
+  --chart-2: oklch(0.85 0.12 80); /* Gold */
+  --chart-3: oklch(0.6 0.1 240); /* Navy/Blue */
+  --chart-4: oklch(0.7 0.14 260);
+  --chart-5: oklch(0.8 0.12 70);
 
   --sidebar: oklch(0.99 0.005 200);
-  --sidebar-foreground: oklch(0.30 0.04 220);
-  --sidebar-primary: #4361EE;
+  --sidebar-foreground: oklch(0.3 0.04 220);
+  --sidebar-primary: #4361ee;
   --sidebar-primary-foreground: oklch(0.98 0.01 200);
   --sidebar-accent: oklch(0.95 0.015 200);
-  --sidebar-accent-foreground: oklch(0.30 0.04 220);
+  --sidebar-accent-foreground: oklch(0.3 0.04 220);
   --sidebar-border: oklch(0.93 0.02 200);
-  --sidebar-ring: #4361EE;
+  --sidebar-ring: #4361ee;
 }
 
 .dark {
@@ -115,45 +115,45 @@
   /* Pure deep black aesthetic matching react.doctor */
   --background: #000000;
   --foreground: #f4f4f5;
-  
+
   --card: #09090b;
   --card-foreground: #f4f4f5;
   --popover: #09090b;
   --popover-foreground: #f4f4f5;
-  
+
   --primary: #3b82f6;
   --primary-foreground: #ffffff;
-  
+
   --secondary: #18181b;
   --secondary-foreground: #fafafa;
-  
+
   --muted: #121215;
   --muted-foreground: #a1a1aa;
-  
+
   --accent: #18181b;
   --accent-foreground: #fafafa;
-  
+
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  
+
   /* Crisp 1px lines and dividers matching react.doctor (#2a2a2a / #27272a) */
   --border: #27272a;
   --input: #27272a;
   --ring: #3b82f6;
-  
+
   --blush: rgba(244, 63, 94, 0.15);
   --blush-foreground: #fb7185;
   --sage: rgba(16, 185, 129, 0.15);
   --sage-foreground: #34d399;
   --mauve: rgba(139, 92, 246, 0.2);
   --mauve-soft: rgba(139, 92, 246, 0.1);
-  
+
   --chart-1: #3b82f6;
   --chart-2: #10b981;
   --chart-3: #8b5cf6;
   --chart-4: #f59e0b;
   --chart-5: #ec4899;
-  
+
   --sidebar: #000000;
   --sidebar-foreground: #f4f4f5;
   --sidebar-primary: #3b82f6;
@@ -180,13 +180,18 @@
     }
   }
 
-  html, body {
+  html,
+  body {
     font-family: var(--font-sans);
     overflow-x: hidden;
     max-width: 100vw;
   }
 
-  button, a, input, select, textarea {
+  button,
+  a,
+  input,
+  select,
+  textarea {
     touch-action: manipulation;
   }
 
@@ -204,9 +209,15 @@
     background-image: none;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
+    word-spacing: 0.02em;
     text-wrap: balance;
   }
 
@@ -236,9 +247,18 @@
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-6px); }
-  40%, 80% { transform: translateX(6px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
 }
 
 .animate-shake {

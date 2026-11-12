@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Link } from "@tanstack/react-router";
 import QRCode from "qrcode";
 import {
   Dialog,
@@ -9,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { usePWAInstall } from "@/hooks/usePWAInstall";
+import { usePWAInstall, type PlatformType } from "@/hooks/usePWAInstall";
 import { MedizenLogo } from "@/components/MedizenLogo";
 import {
   Download,
@@ -17,11 +18,19 @@ import {
   Share2,
   Smartphone,
   Laptop,
+  Monitor,
+  MonitorDown,
+  MoreVertical,
   Apple,
-  ExternalLink,
+  ArrowUpRight,
   Copy,
   QrCode,
-  Sparkles,
+  ShieldCheck,
+  MessageCircle,
+  Search,
+  KeyRound,
+  Star,
+  AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -30,42 +39,64 @@ interface InstallAppModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
+function getPlatformLabel(platform: PlatformType): string {
+  switch (platform) {
+    case "windows":
+      return "Windows PC";
+    case "android":
+      return "Android";
+    case "ios":
+      return "iPhone / iPad";
+    case "mac":
+      return "macOS";
+    default:
+      return "tu dispositivo";
+  }
+}
+
 export function InstallAppModal({ open, onOpenChange }: InstallAppModalProps) {
   const { canInstall, isInstalled, installApp, platform } = usePWAInstall();
   const [installing, setInstalling] = useState(false);
+  const [showManualAlert, setShowManualAlert] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
   const currentUrlRef = useRef<string>("");
 
+  // Reset inline alert whenever modal opens/closes
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const url = `${window.location.origin}/descargar`;
-      currentUrlRef.current = url;
-      QRCode.toDataURL(url, {
-        width: 180,
-        margin: 1.5,
-        color: {
-          dark: "#1e293b",
-          light: "#ffffff",
-        },
-      })
-        .then((dataUrl) => setQrDataUrl(dataUrl))
-        .catch((err) => console.error("Error generating QR code:", err));
+    if (!open) {
+      setShowManualAlert(false);
+      return;
     }
-  }, []);
+    if (typeof window === "undefined") return;
+    const url = `${window.location.origin}/descargar`;
+    currentUrlRef.current = url;
+    if (qrDataUrl) return;
+
+    QRCode.toDataURL(url, {
+      width: 180,
+      margin: 1.5,
+      color: {
+        dark: "#09090b",
+        light: "#ffffff",
+      },
+    })
+      .then((dataUrl) => setQrDataUrl(dataUrl))
+      .catch((err) => console.error("Error generating QR code:", err));
+  }, [open, qrDataUrl]);
 
   const handleInstallClick = async () => {
     setInstalling(true);
     try {
       const result = await installApp();
       if (result === "accepted") {
-        toast.success("¡Medizen se ha instalado con éxito en tu sistema!");
+        setShowManualAlert(false);
+        toast.success("¡Medizen se ha instalado con éxito en tu dispositivo!");
         onOpenChange(false);
       } else if (result === "dismissed") {
-        toast.info("Instalación cancelada. Puedes intentarlo de nuevo cuando desees.");
+        toast.info("Instalación cancelada. Puedes volver a intentarlo en cualquier momento.");
       } else {
-        toast.info(
-          "Tu navegador no soporta instalación automática directa. Sigue los pasos de tu dispositivo a continuación."
-        );
+        setShowManualAlert(true);
+        toast.info("Completa el paso en la barra superior de tu navegador.");
       }
     } finally {
       setInstalling(false);
@@ -74,221 +105,364 @@ export function InstallAppModal({ open, onOpenChange }: InstallAppModalProps) {
 
   const handleCopyLink = () => {
     if (typeof navigator !== "undefined" && navigator.clipboard) {
-      navigator.clipboard.writeText(currentUrlRef.current || window.location.href);
+      const url = currentUrlRef.current || `${window.location.origin}/descargar`;
+      navigator.clipboard.writeText(url);
       toast.success("Enlace de instalación copiado al portapapeles.");
     }
+  };
+
+  const handleShareWhatsApp = () => {
+    const url = currentUrlRef.current || `${window.location.origin}/descargar`;
+    const text = encodeURIComponent(
+      `🏥 *Medizen — Suite Clínica Inteligente*\n\nInstala la aplicación oficial en tu computadora, teléfono o tableta desde este enlace:\n${url}`,
+    );
+    window.open(`https://wa.me/?text=${text}`, "_blank", "noopener,noreferrer");
   };
 
   const defaultTab =
     platform === "ios"
       ? "ios"
       : platform === "android"
-      ? "android"
-      : platform === "mac"
-      ? "mac"
-      : "windows";
+        ? "android"
+        : platform === "mac"
+          ? "mac"
+          : "windows";
+
+  const platformLabel = getPlatformLabel(platform);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl p-0 overflow-hidden rounded-3xl border border-border/60 bg-card shadow-2xl">
+      <DialogContent className="max-w-xl p-0 overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
         {/* Header Hero */}
-        <div className="relative p-6 sm:p-8 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-b border-border/40">
-          <div className="flex items-start justify-between gap-4">
+        <DialogHeader className="relative p-6 border-b border-border bg-muted/30 dark:bg-zinc-950 text-left">
+          <div className="flex items-start justify-between gap-4 pr-6">
             <div className="flex items-center gap-3.5">
-              <div className="h-12 w-12 rounded-2xl bg-primary/15 border border-primary/20 flex items-center justify-center shadow-inner">
-                <MedizenLogo className="h-7 w-7" />
+              {/* Official Medizen App Icon Preview */}
+              <div
+                className="h-13 w-13 rounded-2xl bg-[#090d16] border border-primary/40 flex items-center justify-center shadow-lg shadow-primary/15 shrink-0"
+                title="Ícono oficial de la app Medizen"
+              >
+                <MedizenLogo className="h-8 w-8" color="#607AF6" />
               </div>
               <div>
-                <DialogTitle className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-                  Instalar Medizen App
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary font-semibold">
-                    PWA
+                <div className="flex items-center gap-2 flex-wrap">
+                  <DialogTitle className="font-display text-lg sm:text-xl font-bold tracking-normal text-foreground">
+                    Instalar Medizen en {platformLabel}
+                  </DialogTitle>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/15 border border-primary/30 text-primary font-bold uppercase tracking-wide">
+                    App de Escritorio / Móvil
                   </span>
-                </DialogTitle>
-                <DialogDescription className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                  Usa Medizen en modo aplicación nativa: rápido, sin barras de navegador y con acceso directo.
+                </div>
+                <DialogDescription className="text-xs text-muted-foreground mt-1">
+                  Crea la aplicación independiente de Medizen con su ícono oficial para abrirla en
+                  ventana propia sin pestañas del navegador.
                 </DialogDescription>
               </div>
             </div>
           </div>
 
-          {/* Quick 1-Click Action if available */}
+          {/* Primary Action Banner */}
           {isInstalled ? (
-            <div className="mt-5 p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-3 text-emerald-600 dark:text-emerald-400">
+            <div className="mt-5 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center gap-3 text-emerald-600 dark:text-emerald-400">
               <CheckCircle2 className="h-5 w-5 shrink-0" />
-              <p className="text-xs sm:text-sm font-medium">
-                ¡Medizen ya está instalado en este dispositivo como aplicación!
+              <p className="text-xs sm:text-sm font-semibold">
+                Medizen ya está abierta en modo aplicación instalada en este equipo.
               </p>
             </div>
-          ) : canInstall ? (
-            <div className="mt-5 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          ) : (
+            <div className="mt-5 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
               <Button
+                type="button"
                 onClick={handleInstallClick}
                 disabled={installing}
-                className="flex-1 h-11 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md shadow-primary/25 gap-2 text-sm"
+                className="flex-1 h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md shadow-primary/20 gap-2 text-xs sm:text-sm cursor-pointer"
               >
                 <Download className="h-4 w-4" />
-                {installing ? "Instalando…" : "Instalar en 1 Clic en este equipo"}
+                <span>
+                  {installing
+                    ? "Abriendo instalador…"
+                    : canInstall
+                      ? `Instalar ahora en ${platformLabel}`
+                      : `Instalar Medizen en ${platformLabel}`}
+                </span>
               </Button>
               <Button
+                type="button"
+                variant="outline"
+                onClick={handleShareWhatsApp}
+                className="h-11 rounded-xl border-border gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 cursor-pointer"
+              >
+                <MessageCircle className="h-3.5 w-3.5" />
+                <span>WhatsApp</span>
+              </Button>
+              <Button
+                type="button"
                 variant="outline"
                 onClick={handleCopyLink}
-                className="h-11 rounded-2xl border-border/60 gap-2 text-xs font-semibold"
+                className="h-11 rounded-xl border-border gap-1.5 text-xs font-semibold cursor-pointer"
               >
                 <Copy className="h-3.5 w-3.5" />
-                Copiar Enlace
-              </Button>
-            </div>
-          ) : (
-            <div className="mt-5 flex items-center justify-between gap-3 p-3 rounded-2xl bg-background/60 border border-border/50 text-xs text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary shrink-0" />
-                <span>Instalable en cualquier sistema mediante el navegador.</span>
-              </div>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={handleCopyLink}
-                className="h-8 px-2.5 rounded-xl gap-1.5 text-xs text-foreground font-semibold hover:bg-primary/10"
-              >
-                <Copy className="h-3.5 w-3.5" />
-                Copiar Link
+                <span>Copiar link</span>
               </Button>
             </div>
           )}
-        </div>
 
-        {/* Platform Guidance & QR */}
-        <div className="p-6 sm:p-8 space-y-6 max-h-[60vh] overflow-y-auto no-scrollbar">
+          {/* Contextual Alert when browser blocks programmatic prompt or app was previously installed */}
+          {showManualAlert && !isInstalled && (
+            <div className="mt-4 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs space-y-1.5">
+              <div className="flex items-center gap-2 font-bold text-amber-600 dark:text-amber-400">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>Haz clic en el icono de Chrome arriba a la derecha</span>
+              </div>
+              <p className="text-muted-foreground leading-relaxed">
+                Por seguridad de Chrome/Edge, si el diálogo no abrió automáticamente o si ya tenías
+                una versión previa instalada, usa el icono{" "}
+                <strong className="text-foreground">Instalar Medizen</strong> en la barra de
+                direcciones (señalado abajo) o el menú{" "}
+                <strong className="text-foreground">⋮</strong>.
+              </p>
+            </div>
+          )}
+        </DialogHeader>
+
+        {/* Platform Guidance & Visual Diagram */}
+        <div className="p-6 space-y-5 max-h-[64vh] overflow-y-auto no-scrollbar">
           <Tabs defaultValue={defaultTab} className="w-full">
-            <TabsList className="grid grid-cols-4 h-10 w-full rounded-2xl bg-muted/60 p-1 mb-5">
-              <TabsTrigger value="windows" className="rounded-xl text-xs gap-1.5 font-semibold">
-                <Laptop className="h-3.5 w-3.5" />
-                Windows
+            <TabsList className="grid grid-cols-4 h-10 w-full rounded-xl bg-muted/70 p-1 mb-4 border border-border/60">
+              <TabsTrigger value="windows" className="rounded-lg text-xs gap-1.5 font-semibold">
+                <Monitor className="h-3.5 w-3.5" />
+                <span>Windows</span>
               </TabsTrigger>
-              <TabsTrigger value="android" className="rounded-xl text-xs gap-1.5 font-semibold">
+              <TabsTrigger value="android" className="rounded-lg text-xs gap-1.5 font-semibold">
                 <Smartphone className="h-3.5 w-3.5" />
-                Android
+                <span>Android</span>
               </TabsTrigger>
-              <TabsTrigger value="ios" className="rounded-xl text-xs gap-1.5 font-semibold">
+              <TabsTrigger value="ios" className="rounded-lg text-xs gap-1.5 font-semibold">
                 <Apple className="h-3.5 w-3.5" />
-                iPhone / iPad
+                <span>iOS</span>
               </TabsTrigger>
-              <TabsTrigger value="mac" className="rounded-xl text-xs gap-1.5 font-semibold">
+              <TabsTrigger value="mac" className="rounded-lg text-xs gap-1.5 font-semibold">
                 <Laptop className="h-3.5 w-3.5" />
-                macOS
+                <span>macOS</span>
               </TabsTrigger>
             </TabsList>
 
-            {/* WINDOWS */}
-            <TabsContent value="windows" className="space-y-3.5 focus-visible:outline-none">
-              <div className="p-4 rounded-2xl bg-muted/40 border border-border/50 text-xs sm:text-sm space-y-2.5">
-                <p className="font-semibold text-foreground flex items-center gap-2">
-                  <Laptop className="h-4 w-4 text-primary" />
-                  Instalar en PC (Microsoft Edge o Google Chrome):
+            <TabsContent value="windows" className="focus-visible:outline-none space-y-3">
+              {/* Visual Chrome / Edge Address Bar Diagram */}
+              <div className="p-4 rounded-xl bg-muted/30 dark:bg-zinc-900/70 border border-border space-y-3">
+                <p className="text-xs font-semibold text-foreground">
+                  Dónde hacer clic en Google Chrome o Microsoft Edge:
                 </p>
-                <ol className="list-decimal list-inside space-y-1.5 text-muted-foreground pl-1">
-                  <li>
-                    Haz clic en el botón <strong className="text-foreground">"Instalar en 1 Clic"</strong> arriba si está disponible.
-                  </li>
-                  <li>
-                    O busca el icono de instalar <strong className="text-foreground">(🖥️ o ⊕)</strong> en el extremo derecho de la barra de direcciones de tu navegador.
-                  </li>
-                  <li>
-                    Haz clic en <strong className="text-foreground">"Instalar"</strong>. Se creará un icono directo en tu Escritorio y Menú Inicio.
-                  </li>
-                </ol>
+
+                <div className="rounded-xl bg-background dark:bg-zinc-950 border border-border px-3 py-2 flex items-center justify-between gap-2 text-xs">
+                  <span className="text-muted-foreground truncate font-mono text-[11px]">
+                    app.medizen / auth
+                  </span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="p-1 text-muted-foreground/60">
+                      <Search className="h-3.5 w-3.5" />
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-primary text-primary-foreground font-bold text-[11px] shadow-sm animate-pulse">
+                      <MonitorDown className="h-3.5 w-3.5" />
+                      <span>Instalar aquí</span>
+                    </span>
+                    <span className="p-1 text-muted-foreground/60">
+                      <KeyRound className="h-3.5 w-3.5" />
+                    </span>
+                    <span className="p-1 text-muted-foreground/60">
+                      <Star className="h-3.5 w-3.5" />
+                    </span>
+                    <span className="p-1 text-muted-foreground/80">
+                      <MoreVertical className="h-3.5 w-3.5" />
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                  <div className="p-3 rounded-lg bg-background dark:bg-zinc-950 border border-border space-y-1">
+                    <p className="font-semibold text-foreground">Opción 1: Botón en la barra URL</p>
+                    <p className="text-muted-foreground text-[11px] leading-relaxed">
+                      Haz clic en el monitor con flecha{" "}
+                      <strong className="text-foreground">Instalar Medizen</strong> entre la lupa y
+                      la llave, y pulsa <strong className="text-foreground">Instalar</strong>.
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-background dark:bg-zinc-950 border border-border space-y-1">
+                    <p className="font-semibold text-foreground">
+                      Opción 2: Menú (⋮) arriba a la derecha
+                    </p>
+                    <p className="text-muted-foreground text-[11px] leading-relaxed">
+                      Chrome:{" "}
+                      <strong className="text-foreground">
+                        ⋮ → Guardar y compartir → Instalar página como aplicación…
+                      </strong>
+                      <br />
+                      Edge:{" "}
+                      <strong className="text-foreground">
+                        ⋯ → Aplicaciones → Instalar este sitio como aplicación
+                      </strong>
+                      .
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-muted-foreground pt-1 border-t border-border/60">
+                  <strong className="text-foreground">¿Tenías un ícono anterior?</strong> Si Chrome
+                  dice <em>&ldquo;Abrir en la aplicación&rdquo;</em>, abre{" "}
+                  <strong className="text-foreground">
+                    ⋮ → Guardar y compartir → Desinstalar Medizen…
+                  </strong>{" "}
+                  y vuelve a instalar para actualizar al ícono oficial de Medizen.
+                </p>
               </div>
             </TabsContent>
 
-            {/* ANDROID */}
-            <TabsContent value="android" className="space-y-3.5 focus-visible:outline-none">
-              <div className="p-4 rounded-2xl bg-muted/40 border border-border/50 text-xs sm:text-sm space-y-2.5">
-                <p className="font-semibold text-foreground flex items-center gap-2">
+            <TabsContent value="android" className="focus-visible:outline-none">
+              <div className="p-4 rounded-xl bg-muted/30 dark:bg-zinc-900/70 border border-border space-y-3">
+                <p className="font-semibold text-xs sm:text-sm text-foreground flex items-center gap-2">
                   <Smartphone className="h-4 w-4 text-emerald-500" />
-                  Instalar en Android (Google Chrome):
+                  <span>Google Chrome en Android</span>
                 </p>
-                <ol className="list-decimal list-inside space-y-1.5 text-muted-foreground pl-1">
-                  <li>Abre el enlace de Medizen en Chrome.</li>
-                  <li>
-                    Toca los tres puntos verticales <strong className="text-foreground">(⋮)</strong> en la esquina superior derecha.
-                  </li>
-                  <li>
-                    Selecciona <strong className="text-foreground">"Instalar aplicación"</strong> o "Añadir a la pantalla de inicio".
-                  </li>
-                  <li>Pulsa <strong className="text-foreground">"Instalar"</strong> y se descargará al menú de apps.</li>
-                </ol>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                  <div className="p-3 rounded-lg bg-background dark:bg-zinc-950 border border-border space-y-1">
+                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-emerald-500/15 text-emerald-500 font-bold text-[11px]">
+                      1
+                    </span>
+                    <p className="font-semibold text-foreground">Menú de Chrome</p>
+                    <p className="text-muted-foreground text-[11px] leading-relaxed">
+                      Toca los tres puntos <strong className="text-foreground">(⋮)</strong> arriba a
+                      la derecha.
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-background dark:bg-zinc-950 border border-border space-y-1">
+                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-emerald-500/15 text-emerald-500 font-bold text-[11px]">
+                      2
+                    </span>
+                    <p className="font-semibold text-foreground">Instalar aplicación</p>
+                    <p className="text-muted-foreground text-[11px] leading-relaxed">
+                      Toca <strong className="text-foreground">Instalar aplicación</strong> (o
+                      Añadir a pantalla de inicio).
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-background dark:bg-zinc-950 border border-border space-y-1">
+                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-emerald-500/15 text-emerald-500 font-bold text-[11px]">
+                      3
+                    </span>
+                    <p className="font-semibold text-foreground">App instalada</p>
+                    <p className="text-muted-foreground text-[11px] leading-relaxed">
+                      Confirma y verás el ícono oficial azul de Medizen en tu inicio.
+                    </p>
+                  </div>
+                </div>
               </div>
             </TabsContent>
 
-            {/* IOS */}
-            <TabsContent value="ios" className="space-y-3.5 focus-visible:outline-none">
-              <div className="p-4 rounded-2xl bg-muted/40 border border-border/50 text-xs sm:text-sm space-y-2.5">
-                <p className="font-semibold text-foreground flex items-center gap-2">
-                  <Apple className="h-4 w-4 text-blue-500" />
-                  Instalar en iPhone o iPad (Safari):
+            <TabsContent value="ios" className="focus-visible:outline-none">
+              <div className="p-4 rounded-xl bg-muted/30 dark:bg-zinc-900/70 border border-border space-y-3">
+                <p className="font-semibold text-xs sm:text-sm text-foreground flex items-center gap-2">
+                  <Apple className="h-4 w-4 text-foreground" />
+                  <span>Safari en iPhone o iPad</span>
                 </p>
-                <ol className="list-decimal list-inside space-y-1.5 text-muted-foreground pl-1">
-                  <li>Abre el enlace de Medizen en el navegador <strong className="text-foreground">Safari</strong>.</li>
-                  <li>
-                    Toca el botón <strong className="text-foreground">Compartir</strong> (el ícono del cuadrado con la flecha hacia arriba <Share2 className="inline h-3.5 w-3.5 mx-0.5" /> en la barra inferior).
-                  </li>
-                  <li>
-                    Desliza hacia abajo y presiona <strong className="text-foreground">"Añadir a la pantalla de inicio"</strong>.
-                  </li>
-                  <li>
-                    Toca <strong className="text-foreground">"Añadir"</strong> arriba a la derecha. ¡Aparecerá en tus apps!
-                  </li>
-                </ol>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                  <div className="p-3 rounded-lg bg-background dark:bg-zinc-950 border border-border space-y-1">
+                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary/15 text-primary font-bold text-[11px]">
+                      1
+                    </span>
+                    <p className="font-semibold text-foreground">Botón Compartir</p>
+                    <p className="text-muted-foreground text-[11px] leading-relaxed">
+                      En Safari, toca <strong className="text-foreground">Compartir</strong>{" "}
+                      <Share2 className="inline h-3 w-3" /> abajo.
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-background dark:bg-zinc-950 border border-border space-y-1">
+                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary/15 text-primary font-bold text-[11px]">
+                      2
+                    </span>
+                    <p className="font-semibold text-foreground">Pantalla de inicio</p>
+                    <p className="text-muted-foreground text-[11px] leading-relaxed">
+                      Elige <strong className="text-foreground">Añadir a pantalla de inicio</strong>
+                      .
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-background dark:bg-zinc-950 border border-border space-y-1">
+                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary/15 text-primary font-bold text-[11px]">
+                      3
+                    </span>
+                    <p className="font-semibold text-foreground">Confirmar</p>
+                    <p className="text-muted-foreground text-[11px] leading-relaxed">
+                      Toca <strong className="text-foreground">Añadir</strong> arriba a la derecha.
+                    </p>
+                  </div>
+                </div>
               </div>
             </TabsContent>
 
-            {/* MAC */}
-            <TabsContent value="mac" className="space-y-3.5 focus-visible:outline-none">
-              <div className="p-4 rounded-2xl bg-muted/40 border border-border/50 text-xs sm:text-sm space-y-2.5">
-                <p className="font-semibold text-foreground flex items-center gap-2">
+            <TabsContent value="mac" className="focus-visible:outline-none">
+              <div className="p-4 rounded-xl bg-muted/30 dark:bg-zinc-900/70 border border-border space-y-3">
+                <p className="font-semibold text-xs sm:text-sm text-foreground flex items-center gap-2">
                   <Laptop className="h-4 w-4 text-primary" />
-                  Instalar en Mac (Safari o Chrome):
+                  <span>Safari o Google Chrome en macOS</span>
                 </p>
-                <ol className="list-decimal list-inside space-y-1.5 text-muted-foreground pl-1">
-                  <li>En Safari: ve al menú superior <strong className="text-foreground">Archivo → Añadir al Dock</strong>.</li>
-                  <li>En Chrome: haz clic en el icono de instalar en la barra de direcciones o en Menú → Guardar y compartir → Instalar Medizen.</li>
-                  <li>La app se abrirá en su propia ventana y estará en el Launchpad y Dock.</li>
-                </ol>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                  <div className="p-3 rounded-lg bg-background dark:bg-zinc-950 border border-border space-y-1">
+                    <p className="font-semibold text-foreground">Desde Safari (macOS Sonoma+)</p>
+                    <p className="text-muted-foreground text-[11px] leading-relaxed">
+                      En el menú superior elige{" "}
+                      <strong className="text-foreground">Archivo → Añadir al Dock…</strong> y
+                      confirma Medizen.
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-background dark:bg-zinc-950 border border-border space-y-1">
+                    <p className="font-semibold text-foreground">Desde Google Chrome</p>
+                    <p className="text-muted-foreground text-[11px] leading-relaxed">
+                      Pulsa el ícono <MonitorDown className="inline h-3 w-3" /> en la barra URL o{" "}
+                      <strong className="text-foreground">
+                        ⋮ → Guardar y compartir → Instalar Medizen
+                      </strong>
+                      .
+                    </p>
+                  </div>
+                </div>
               </div>
             </TabsContent>
           </Tabs>
 
-          {/* QR Code Section to install on Mobile */}
-          <div className="p-4 rounded-2xl bg-card border border-border/60 flex flex-col sm:flex-row items-center gap-4">
+          {/* QR Code & Full Page Link */}
+          <div className="p-4 rounded-xl bg-muted/20 dark:bg-zinc-900/40 border border-border flex flex-col sm:flex-row items-center gap-4">
             {qrDataUrl && (
-              <div className="p-2 bg-white rounded-xl shadow-sm border border-slate-200 shrink-0">
+              <div className="p-2 bg-white rounded-xl shadow-xs border border-zinc-200 shrink-0">
                 <img
                   src={qrDataUrl}
                   alt="Código QR de instalación de Medizen"
-                  width={112}
-                  height={112}
-                  className="h-28 w-28 object-contain"
+                  width={104}
+                  height={104}
+                  className="h-24 w-24 object-contain"
                 />
               </div>
             )}
-            <div className="text-center sm:text-left space-y-1.5">
+            <div className="text-center sm:text-left space-y-1.5 flex-1">
               <div className="flex items-center justify-center sm:justify-start gap-1.5 text-foreground font-semibold text-xs sm:text-sm">
                 <QrCode className="h-4 w-4 text-primary" />
-                <span>¿Quieres instalarlo en tu teléfono móvil?</span>
+                <span>Instalar en teléfono o tableta con código QR</span>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Apunta la cámara de tu teléfono al código QR para abrir el enlace directo de descarga e instalación.
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Escanea con la cámara de tu teléfono para abrir esta guía e instalar Medizen en tu
+                pantalla de inicio.
               </p>
-              <div className="pt-1 flex flex-wrap gap-2 justify-center sm:justify-start">
-                <a
-                  href="/descargar"
-                  target="_blank"
-                  rel="noopener noreferrer"
+              <div className="pt-1 flex flex-wrap items-center gap-3 justify-center sm:justify-start">
+                <Link
+                  to="/descargar"
+                  onClick={() => onOpenChange(false)}
                   className="inline-flex items-center gap-1 text-xs text-primary font-semibold hover:underline"
                 >
-                  Ver página completa de descarga <ExternalLink className="h-3 w-3" />
-                </a>
+                  <span>Abrir página completa /descargar</span>
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                </Link>
+                <span className="text-border">•</span>
+                <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                  <span>Ícono oficial Medizen</span>
+                </span>
               </div>
             </div>
           </div>

@@ -14,13 +14,8 @@ export function CommandMenu() {
   const deferredSearch = useDeferredValue(search);
   const navigate = useNavigate();
 
-  const {
-    q,
-    hasResults,
-    filteredPatients,
-    filteredAppointments,
-    filteredInvoices,
-  } = useCommandMenuData(open, deferredSearch);
+  const { q, hasResults, filteredPatients, filteredAppointments, filteredInvoices } =
+    useCommandMenuData(open, deferredSearch);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -37,7 +32,6 @@ export function CommandMenu() {
     return () => document.removeEventListener("keydown", down);
   }, [open]);
 
-  // Limpiar búsqueda al cerrar
   useEffect(() => {
     if (!open) {
       setSearch("");
@@ -57,7 +51,7 @@ export function CommandMenu() {
             onClick={() => setOpen(false)}
           />
           <Command
-            shouldFilter={false} // ¡Desactiva el algoritmo fuzzy de cmdk para eliminar el bloqueo de 408ms!
+            shouldFilter={false}
             className="w-full max-w-lg bg-card rounded-2xl shadow-2xl border border-border/50 overflow-hidden overscroll-contain flex flex-col animate-in fade-in-0 zoom-in-95 duration-150"
             label="Global Command Menu"
           >
@@ -102,6 +96,10 @@ export function CommandMenu() {
                     setOpen(false);
                     setIsVerificationOpen(true);
                   }}
+                  onOpenLegal={() => {
+                    navigate({ to: "/legal", search: { doc: "terminos" } });
+                    setOpen(false);
+                  }}
                 />
               )}
 
@@ -130,10 +128,7 @@ export function CommandMenu() {
         </div>
       )}
 
-      <RecipeVerificationModal
-        open={isVerificationOpen}
-        onOpenChange={setIsVerificationOpen}
-      />
+      <RecipeVerificationModal open={isVerificationOpen} onOpenChange={setIsVerificationOpen} />
     </>
   );
 }

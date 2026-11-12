@@ -1,10 +1,29 @@
 import { APP_LOCALE, APP_TIME_ZONE } from "@/lib/constants/locale";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
-import { 
-  Settings, User as UserIcon, Building, Save, Loader2, Shield, Search, ClipboardList, 
-  FileText, Lock, KeyRound, ShieldCheck, CheckCircle2, AlertCircle, Eye, EyeOff, Trash2, Check, Palette, LogOut 
+import {
+  Settings,
+  User as UserIcon,
+  Building,
+  Save,
+  Loader2,
+  Shield,
+  Search,
+  ClipboardList,
+  FileText,
+  Lock,
+  KeyRound,
+  ShieldCheck,
+  CheckCircle2,
+  AlertCircle,
+  Eye,
+  EyeOff,
+  Trash2,
+  Check,
+  Palette,
+  LogOut,
+  Scale,
 } from "lucide-react";
 import { COLOR_THEMES, type ColorTheme, updateFaviconColor } from "@/components/ThemeCustomizer";
 import { useAuthSession, useIsAdmin, useRoles } from "@/hooks/useAuth";
@@ -42,12 +61,16 @@ function ConfiguracionPage() {
   const [activeTab, setActiveTab] = useState("profile");
 
   return (
-    <div className={cn(
-      "space-y-6 mx-auto py-2 font-sans text-foreground transition-[max-width,padding] duration-300",
-      activeTab === "recipe" ? "max-w-7xl px-2 sm:px-4" : "max-w-4xl"
-    )}>
+    <div
+      className={cn(
+        "space-y-6 mx-auto py-2 font-sans text-foreground transition-[max-width,padding] duration-300",
+        activeTab === "recipe" ? "max-w-7xl px-2 sm:px-4" : "max-w-4xl",
+      )}
+    >
       <header className="flex flex-col gap-1">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ajustes Generales</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Ajustes Generales
+        </p>
         <h1 className="text-2xl font-bold text-primary tracking-tight flex items-center gap-2">
           <Settings className="h-6 w-6 animate-spin-slow" /> Configuración
         </h1>
@@ -55,7 +78,10 @@ function ConfiguracionPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 bg-muted/50 p-1 rounded-2xl mb-6 max-w-2xl h-auto flex-wrap">
-          <TabsTrigger value="profile" className="rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 py-2.5 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground">
+          <TabsTrigger
+            value="profile"
+            className="rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 py-2.5 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground"
+          >
             <UserIcon className="h-4 w-4" /> Mi Perfil
           </TabsTrigger>
           <TabsTrigger
@@ -81,7 +107,12 @@ function ConfiguracionPage() {
         </TabsList>
 
         <TabsContent value="profile" className="outline-none space-y-4">
-          <UserProfileSection profile={profile} loadingProfile={loadingProfile} roles={roles} user={user} />
+          <UserProfileSection
+            profile={profile}
+            loadingProfile={loadingProfile}
+            roles={roles}
+            user={user}
+          />
           <AccentThemeSection />
         </TabsContent>
 
@@ -94,13 +125,54 @@ function ConfiguracionPage() {
             <AuditLogSection />
           </TabsContent>
         )}
-      
+
         {isAdmin && (
           <TabsContent value="recipe" className="outline-none space-y-4">
             <RecipeDesigner />
           </TabsContent>
         )}
       </Tabs>
+
+      {/* Marco Legal y Privacidad */}
+      <section className="rounded-3xl bg-card border border-border p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-start gap-3.5">
+          <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
+            <Scale className="h-5 w-5" />
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-sm font-bold text-foreground">
+              Centro Legal, Privacidad y Cumplimiento Clínico
+            </h2>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Consulta los Términos de Uso, Política de Privacidad, Confidencialidad Médica y
+              Almacenamiento Local PWA de Medizen.
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <Link
+            to="/legal"
+            search={{ doc: "terminos" }}
+            className="inline-flex items-center justify-center h-9 px-3.5 rounded-xl border border-border bg-muted/40 hover:bg-muted text-xs font-semibold text-foreground transition-colors"
+          >
+            Términos
+          </Link>
+          <Link
+            to="/legal"
+            search={{ doc: "privacidad" }}
+            className="inline-flex items-center justify-center h-9 px-3.5 rounded-xl border border-border bg-muted/40 hover:bg-muted text-xs font-semibold text-foreground transition-colors"
+          >
+            Privacidad
+          </Link>
+          <Link
+            to="/legal"
+            search={{ doc: "datos-clinicos" }}
+            className="inline-flex items-center justify-center h-9 px-3.5 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/25 text-xs font-semibold text-primary transition-colors"
+          >
+            Centro Legal
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }
@@ -169,14 +241,16 @@ function UserProfileSection({
   return (
     <div className="bg-card border border-border/40 rounded-[2rem] p-4 sm:p-8 shadow-sm relative overflow-hidden">
       <div className="absolute right-0 top-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl -mr-10 -mt-10" />
-      
+
       <form onSubmit={handleSaveProfile} className="space-y-6">
         <div className="flex flex-col sm:flex-row items-center gap-4 pb-6 border-b border-border/40">
           <div className="h-20 w-20 rounded-[1.25rem] bg-muted/50 text-primary flex items-center justify-center font-black text-2xl shadow-sm border border-border/40">
             {initials(profileName || user?.email || "")}
           </div>
           <div className="text-center sm:text-left">
-            <h3 className="font-bold text-lg text-foreground">{profileName || "Usuario FemeSalud"}</h3>
+            <h3 className="font-bold text-lg text-foreground">
+              {profileName || "Usuario FemeSalud"}
+            </h3>
             <p className="text-xs text-muted-foreground font-medium">{user?.email}</p>
             <div className="flex items-center gap-2 justify-center sm:justify-start mt-2">
               {roles.map((r) => {
@@ -190,8 +264,8 @@ function UserProfileSection({
                       isRAdmin
                         ? "bg-purple-50 text-purple-600 border border-purple-100"
                         : isRRecep
-                        ? "bg-blue-50 text-blue-600 border border-blue-100"
-                        : "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                          ? "bg-blue-50 text-blue-600 border border-blue-100"
+                          : "bg-emerald-50 text-emerald-600 border border-emerald-100",
                     )}
                   >
                     <Shield className="h-3 w-3" />
@@ -205,7 +279,10 @@ function UserProfileSection({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label htmlFor="profile-name" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+            <Label
+              htmlFor="profile-name"
+              className="text-xs font-bold text-muted-foreground uppercase tracking-wider"
+            >
               Nombre Completo
             </Label>
             <Input
@@ -220,7 +297,10 @@ function UserProfileSection({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="profile-specialty" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+            <Label
+              htmlFor="profile-specialty"
+              className="text-xs font-bold text-muted-foreground uppercase tracking-wider"
+            >
               Especialidad / Cargo
             </Label>
             <Input
@@ -234,7 +314,10 @@ function UserProfileSection({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="profile-university" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+            <Label
+              htmlFor="profile-university"
+              className="text-xs font-bold text-muted-foreground uppercase tracking-wider"
+            >
               Universidad / Colegio
             </Label>
             <Input
@@ -249,7 +332,10 @@ function UserProfileSection({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="profile-mpps" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+              <Label
+                htmlFor="profile-mpps"
+                className="text-xs font-bold text-muted-foreground uppercase tracking-wider"
+              >
                 MPPS
               </Label>
               <Input
@@ -263,7 +349,10 @@ function UserProfileSection({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="profile-cmc" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+              <Label
+                htmlFor="profile-cmc"
+                className="text-xs font-bold text-muted-foreground uppercase tracking-wider"
+              >
                 CMC
               </Label>
               <Input
@@ -340,7 +429,9 @@ function AccentThemeSection() {
         </div>
         <div>
           <h3 className="font-bold text-base text-foreground">Color de Acento del Sistema</h3>
-          <p className="text-xs text-muted-foreground">Personaliza el color de botones, gráficos, logotipos e iconos de la plataforma.</p>
+          <p className="text-xs text-muted-foreground">
+            Personaliza el color de botones, gráficos, logotipos e iconos de la plataforma.
+          </p>
         </div>
       </div>
 
@@ -356,7 +447,7 @@ function AccentThemeSection() {
                 "flex items-center justify-between p-3.5 rounded-2xl border transition-colors text-left cursor-pointer",
                 isSelected
                   ? "border-primary bg-primary/10 shadow-sm"
-                  : "border-border/60 hover:border-primary/40 hover:bg-muted/40 bg-card"
+                  : "border-border/60 hover:border-primary/40 hover:bg-muted/40 bg-card",
               )}
             >
               <div className="flex items-center gap-3">
@@ -388,7 +479,8 @@ function AuditLogSection() {
         <Shield className="h-5 w-5" /> Registro de Actividades
       </h2>
       <p className="text-muted-foreground text-sm mb-6">
-        Este es el registro de auditoría de las acciones críticas (como eliminaciones) realizadas por los usuarios.
+        Este es el registro de auditoría de las acciones críticas (como eliminaciones) realizadas
+        por los usuarios.
       </p>
 
       {isLoading ? (
@@ -430,16 +522,18 @@ function AuditLogSection() {
                     <td className="p-3 whitespace-nowrap text-xs text-muted-foreground">
                       {formattedDate}
                     </td>
-                    <td className="p-3 font-medium text-foreground">
-                      {userDisplay}
-                    </td>
+                    <td className="p-3 font-medium text-foreground">{userDisplay}</td>
                     <td className="p-3">
-                      <span className={cn(
-                        "px-2 py-0.5 rounded text-[10px] font-bold uppercase",
-                        isDelete ? "bg-red-500/10 text-red-500" :
-                        isInsert ? "bg-green-500/10 text-green-500" :
-                        "bg-blue-500/10 text-blue-500"
-                      )}>
+                      <span
+                        className={cn(
+                          "px-2 py-0.5 rounded text-[10px] font-bold uppercase",
+                          isDelete
+                            ? "bg-red-500/10 text-red-500"
+                            : isInsert
+                              ? "bg-green-500/10 text-green-500"
+                              : "bg-blue-500/10 text-blue-500",
+                        )}
+                      >
                         {actionName}
                       </span>
                     </td>
@@ -527,10 +621,7 @@ function SecuritySection() {
       });
 
       if (user?.id) {
-        await supabase
-          .from("usuarios")
-          .update({ pin_seguridad: pin })
-          .eq("auth_id", user.id);
+        await supabase.from("usuarios").update({ pin_seguridad: pin }).eq("auth_id", user.id);
 
         await saveUserPinHash(user.id, pin);
 
@@ -561,7 +652,8 @@ function SecuritySection() {
   };
 
   const handleRemovePin = async () => {
-    if (!confirm("¿Estás seguro de que deseas eliminar tu clave de seguridad de 4 dígitos?")) return;
+    if (!confirm("¿Estás seguro de que deseas eliminar tu clave de seguridad de 4 dígitos?"))
+      return;
 
     setLoading(true);
     try {
@@ -570,10 +662,7 @@ function SecuritySection() {
       });
 
       if (user?.id) {
-        await supabase
-          .from("usuarios")
-          .update({ pin_seguridad: null })
-          .eq("auth_id", user.id);
+        await supabase.from("usuarios").update({ pin_seguridad: null }).eq("auth_id", user.id);
 
         removeUserPinHash(user.id);
         removeQuickAccessAccount(user.id);
@@ -619,7 +708,9 @@ function SecuritySection() {
           </div>
           <div>
             <h2 className="text-lg font-bold text-foreground">Clave de Seguridad</h2>
-            <p className="text-xs text-muted-foreground">Protección con PIN numérico de 4 dígitos</p>
+            <p className="text-xs text-muted-foreground">
+              Protección con PIN numérico de 4 dígitos
+            </p>
           </div>
         </div>
 
@@ -688,7 +779,8 @@ function PinStatusView({
             <ShieldCheck className="h-4 w-4 text-emerald-500" /> Clave de 4 dígitos establecida
           </p>
           <p className="text-xs text-muted-foreground">
-            Tu cuenta está protegida. Puedes cambiar tu clave o probar que funcione correctamente en cualquier momento.
+            Tu cuenta está protegida. Puedes cambiar tu clave o probar que funcione correctamente en
+            cualquier momento.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -717,11 +809,7 @@ function PinStatusView({
           Probar mi clave de seguridad
         </p>
         <div className="flex items-center gap-4 flex-wrap">
-          <InputOTP
-            maxLength={4}
-            value={testPin}
-            onChange={onTestPinChange}
-          >
+          <InputOTP maxLength={4} value={testPin} onChange={onTestPinChange}>
             <InputOTPGroup>
               <InputOTPSlot index={0} className="w-11 h-12 text-lg font-bold" />
               <InputOTPSlot index={1} className="w-11 h-12 text-lg font-bold" />
@@ -736,9 +824,7 @@ function PinStatusView({
             </span>
           )}
           {testResult === "error" && (
-            <span className="text-xs font-bold text-destructive">
-              Clave incorrecta
-            </span>
+            <span className="text-xs font-bold text-destructive">Clave incorrecta</span>
           )}
         </div>
         <p className="text-[11px] text-muted-foreground">

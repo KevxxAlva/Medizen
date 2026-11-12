@@ -1,4 +1,5 @@
-import React from "react";
+import React, { memo, useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import {
   Eye,
   EyeOff,
@@ -11,17 +12,33 @@ import {
   ChevronLeft,
   ChevronRight,
   Headphones,
+  Mail,
+  KeyRound,
+  User,
+  Sparkles,
+  CheckCircle2,
+  Zap,
+  Database,
+  type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@/components/ui/input-otp";
-import { QuickAccessProfile } from "@/lib/utils/pinStorage";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import type { QuickAccessProfile } from "@/lib/auth/quickAccess";
+
+export interface AuthSlide {
+  badge: string;
+  title: string;
+  desc: string;
+  featureIcon: LucideIcon;
+  featureTitle: string;
+  featureDesc: string;
+  highlights?: string[];
+  metricLabel?: string;
+  metricValue?: string;
+}
 
 export function AuthQuickLoginForm({
   selectedAccount,
@@ -49,19 +66,23 @@ export function AuthQuickLoginForm({
   onSwitchToLogin: () => void;
 }) {
   return (
-    <div className="space-y-6 text-center animate-in fade-in duration-300">
-      <div className="space-y-1">
-        <h2 className="font-display text-2xl font-bold tracking-tight text-foreground">
+    <div className="space-y-6 text-center animate-in fade-in duration-200">
+      <div className="space-y-2">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-semibold">
+          <ShieldCheck className="h-3.5 w-3.5" />
+          <span>Acceso Rápido Verificado</span>
+        </div>
+        <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-normal text-foreground">
           ¡Hola de nuevo!
-        </h2>
-        <p className="text-xs text-muted-foreground">
-          Ingresa tu clave de 4 dígitos para acceder al sistema
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Ingresa tu PIN de 4 dígitos para desbloquear tu sesión clínica.
         </p>
       </div>
 
-      <div className="p-4 rounded-3xl bg-muted/40 border border-border/40 text-left flex items-center justify-between gap-3 shadow-xs">
+      <div className="p-3.5 rounded-2xl bg-muted/40 dark:bg-zinc-900/70 border border-border text-left flex items-center justify-between gap-3 shadow-2xs">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="h-11 w-11 rounded-2xl bg-primary text-primary-foreground font-black text-sm flex items-center justify-center shadow-sm shadow-primary/20 flex-shrink-0">
+          <div className="h-11 w-11 rounded-xl bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center shadow-sm shadow-primary/20 flex-shrink-0">
             {selectedAccount.fullName
               .split(" ")
               .map((n) => n[0])
@@ -70,19 +91,17 @@ export function AuthQuickLoginForm({
               .toUpperCase()}
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <h3 className="font-bold text-sm text-foreground truncate">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="font-semibold text-sm text-foreground truncate">
                 {selectedAccount.fullName}
-              </h3>
+              </h2>
               {selectedAccount.role && (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-primary/10 text-primary uppercase">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-primary/15 text-primary uppercase tracking-wide">
                   {selectedAccount.role}
                 </span>
               )}
             </div>
-            <p className="text-xs text-muted-foreground truncate">
-              {selectedAccount.email}
-            </p>
+            <p className="text-xs text-muted-foreground truncate mt-0.5">{selectedAccount.email}</p>
           </div>
         </div>
 
@@ -90,15 +109,16 @@ export function AuthQuickLoginForm({
           type="button"
           onClick={() => onForgetAccount(selectedAccount.userId)}
           title="Olvidar esta cuenta en este equipo"
-          className="text-muted-foreground hover:text-destructive p-2 rounded-xl hover:bg-destructive/10 transition-colors"
+          aria-label={`Desvincular cuenta de ${selectedAccount.fullName}`}
+          className="text-muted-foreground hover:text-destructive h-9 w-9 inline-flex items-center justify-center rounded-xl hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors cursor-pointer shrink-0"
         >
           <Trash2 className="h-4 w-4" />
         </button>
       </div>
 
       {quickAccounts.length > 1 && (
-        <div className="flex items-center justify-center gap-1.5 flex-wrap text-xs">
-          <span className="text-muted-foreground text-[11px] font-medium">Otras cuentas:</span>
+        <div className="flex items-center justify-center gap-2 flex-wrap text-xs">
+          <span className="text-muted-foreground text-xs font-medium">Cambiar cuenta:</span>
           {quickAccounts
             .filter((acc) => acc.userId !== selectedAccount.userId)
             .map((acc) => (
@@ -106,7 +126,7 @@ export function AuthQuickLoginForm({
                 key={acc.userId}
                 type="button"
                 onClick={() => onSelectAccount(acc)}
-                className="text-[11px] font-bold text-primary hover:underline bg-primary/5 px-2 py-0.5 rounded-lg transition-colors"
+                className="text-xs font-semibold text-primary hover:bg-primary/15 bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-xl transition-colors cursor-pointer"
               >
                 {acc.fullName.split(" ")[0]}
               </button>
@@ -114,38 +134,27 @@ export function AuthQuickLoginForm({
         </div>
       )}
 
-      <div className={`space-y-4 pt-1 ${isShaking ? "animate-shake" : ""}`}>
-        <div className="flex flex-col items-center justify-center gap-2">
-          <InputOTP
-            maxLength={4}
-            value={pin}
-            onChange={onPinChange}
-            disabled={loading}
-            autoFocus
-          >
-            <InputOTPGroup className="gap-2.5">
-              <InputOTPSlot
-                index={0}
-                className={`w-12 h-14 rounded-2xl text-2xl font-bold bg-card border-2 transition-colors ${pinError ? "border-destructive text-destructive" : "border-border/60 focus:border-primary"}`}
-              />
-              <InputOTPSlot
-                index={1}
-                className={`w-12 h-14 rounded-2xl text-2xl font-bold bg-card border-2 transition-colors ${pinError ? "border-destructive text-destructive" : "border-border/60 focus:border-primary"}`}
-              />
-              <InputOTPSlot
-                index={2}
-                className={`w-12 h-14 rounded-2xl text-2xl font-bold bg-card border-2 transition-colors ${pinError ? "border-destructive text-destructive" : "border-border/60 focus:border-primary"}`}
-              />
-              <InputOTPSlot
-                index={3}
-                className={`w-12 h-14 rounded-2xl text-2xl font-bold bg-card border-2 transition-colors ${pinError ? "border-destructive text-destructive" : "border-border/60 focus:border-primary"}`}
-              />
+      <div className={`space-y-5 pt-1 ${isShaking ? "animate-shake" : ""}`}>
+        <div className="flex flex-col items-center justify-center gap-2.5">
+          <InputOTP maxLength={4} value={pin} onChange={onPinChange} disabled={loading} autoFocus>
+            <InputOTPGroup className="gap-3">
+              {[0, 1, 2, 3].map((index) => (
+                <InputOTPSlot
+                  key={index}
+                  index={index}
+                  className={`w-13 h-15 rounded-2xl text-2xl font-bold bg-background dark:bg-zinc-900/90 border-2 transition-colors ${
+                    pinError
+                      ? "border-destructive text-destructive bg-destructive/5"
+                      : "border-border focus:border-primary"
+                  }`}
+                />
+              ))}
             </InputOTPGroup>
           </InputOTP>
 
-          <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-1">
-            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-            Protegido con clave de 4 dígitos
+          <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+            <span>Bóveda local cifrada con AES-256 GCM</span>
           </p>
         </div>
 
@@ -153,16 +162,16 @@ export function AuthQuickLoginForm({
           type="button"
           disabled={loading || pin.length !== 4}
           onClick={() => onPinUnlock(pin)}
-          className="w-full h-11 rounded-2xl bg-primary hover:bg-[#3451d6] text-primary-foreground font-semibold shadow-md shadow-blue-500/10 hover:shadow-primary/20 active:scale-[0.99] transition-colors flex items-center justify-center gap-2 border-0"
+          className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm shadow-md shadow-primary/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer"
         >
           {loading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin text-primary-foreground" />
-              <span>Verificando...</span>
+              <span>Verificando acceso...</span>
             </>
           ) : (
             <>
-              <span>Continuar</span>
+              <span>Desbloquear sesión</span>
               <ArrowRight className="h-4 w-4" />
             </>
           )}
@@ -171,13 +180,37 @@ export function AuthQuickLoginForm({
         <button
           type="button"
           onClick={onSwitchToLogin}
-          className="w-full flex items-center justify-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground pt-1 bg-transparent border-0 cursor-pointer transition-colors"
+          className="w-full h-10 flex items-center justify-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground rounded-xl hover:bg-muted/50 transition-colors cursor-pointer"
         >
           <Lock className="w-3.5 h-3.5" />
-          Ingresar con otra cuenta o contraseña
+          <span>Ingresar con correo y contraseña</span>
         </button>
       </div>
     </div>
+  );
+}
+
+function AuthLegalNotice() {
+  return (
+    <p className="pt-2 text-center text-[11px] text-muted-foreground leading-relaxed">
+      Al continuar, aceptas nuestros{" "}
+      <Link
+        to="/legal"
+        search={{ doc: "terminos" }}
+        className="font-semibold text-foreground/90 hover:text-primary hover:underline"
+      >
+        Términos de Uso
+      </Link>{" "}
+      y la{" "}
+      <Link
+        to="/legal"
+        search={{ doc: "privacidad" }}
+        className="font-semibold text-foreground/90 hover:text-primary hover:underline"
+      >
+        Política de Privacidad
+      </Link>
+      .
+    </p>
   );
 }
 
@@ -207,46 +240,78 @@ export function AuthStandardLoginForm({
   onForgotPassword: () => void;
 }) {
   return (
-    <>
+    <div className="animate-in fade-in duration-200">
       {quickAccounts.length > 0 && (
         <button
           type="button"
           onClick={() => onSwitchToQuickLogin(quickAccounts[0])}
-          className="w-full flex items-center justify-between p-3 mb-6 rounded-2xl bg-primary/5 hover:bg-primary/10 border border-primary/20 text-xs font-bold text-primary transition-colors group"
+          className="w-full flex items-center justify-between p-3 mb-6 rounded-xl bg-primary/10 hover:bg-primary/15 border border-primary/25 text-xs font-semibold text-primary transition-colors group cursor-pointer"
         >
-          <div className="flex items-center gap-2.5">
-            <div className="h-7 w-7 rounded-xl bg-primary text-primary-foreground text-[11px] font-black flex items-center justify-center shadow-xs">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shadow-2xs shrink-0">
               {quickAccounts[0].fullName.slice(0, 2).toUpperCase()}
             </div>
-            <span>Continuar como {quickAccounts[0].fullName.split(" ")[0]} con PIN</span>
+            <div className="text-left min-w-0">
+              <p className="font-bold text-foreground truncate">
+                Continuar como {quickAccounts[0].fullName.split(" ")[0]}
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                Desbloqueo rápido con PIN de 4 dígitos
+              </p>
+            </div>
           </div>
-          <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
+          <ArrowRight className="h-4 w-4 shrink-0 group-hover:translate-x-0.5 transition-transform" />
         </button>
       )}
 
-      <h2 className="font-display text-2xl font-bold tracking-tight text-foreground">Iniciar sesión</h2>
-      <p className="text-sm text-zinc-400 mt-2">
-        Introduce tus credenciales para acceder a la suite clínica.
-      </p>
+      <div className="space-y-2">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted border border-border text-muted-foreground text-[11px] font-medium">
+          <Lock className="h-3 w-3 text-primary" />
+          <span>Portal Clínico y Administrativo</span>
+        </div>
+        <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-normal text-foreground">
+          Iniciar sesión
+        </h1>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Introduce tus credenciales para acceder a la suite clínica Medizen.
+        </p>
+      </div>
 
-      <form onSubmit={onLogin} className="mt-8 space-y-5">
-        <div className="space-y-1.5 text-left">
-          <Label htmlFor="email" className="text-zinc-500 font-medium text-xs">Correo electrónico</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="ejemplo@gmail.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
-            className="rounded-2xl border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 px-4 py-3 h-11 focus-visible:ring-2 focus-visible:ring-[#4361ee] transition-colors"
-          />
+      <form onSubmit={onLogin} className="mt-7 space-y-4">
+        <div className="space-y-2 text-left">
+          <Label htmlFor="email" className="text-foreground/90 font-medium text-xs">
+            Correo electrónico
+          </Label>
+          <div className="relative">
+            <Mail className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Input
+              id="email"
+              type="email"
+              placeholder="doctora@femesalud.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+              className="rounded-xl border-border bg-muted/30 dark:bg-zinc-900/70 pl-10 pr-4 h-12 text-sm placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-colors"
+            />
+          </div>
         </div>
 
-        <div className="space-y-1.5 text-left">
-          <Label htmlFor="password" className="text-zinc-500 font-medium text-xs">Contraseña</Label>
+        <div className="space-y-2 text-left">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password" className="text-foreground/90 font-medium text-xs">
+              Contraseña
+            </Label>
+            <button
+              type="button"
+              onClick={onForgotPassword}
+              className="text-xs font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md px-1 py-0.5 transition-colors cursor-pointer"
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+          </div>
           <div className="relative">
+            <KeyRound className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
@@ -255,45 +320,51 @@ export function AuthStandardLoginForm({
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
-              className="rounded-2xl border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 px-4 py-3 pr-10 h-11 focus-visible:ring-2 focus-visible:ring-[#4361ee] transition-colors"
+              className="rounded-xl border-border bg-muted/30 dark:bg-zinc-900/70 pl-10 pr-12 h-12 text-sm placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-colors"
             />
             <button
               type="button"
               aria-label={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 p-0 cursor-pointer bg-transparent border-0 flex items-center"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer flex items-center justify-center transition-colors"
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-xs pt-1">
-          <label className="flex items-center gap-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 cursor-pointer select-none">
+        <div className="flex items-center justify-between pt-1">
+          <label className="inline-flex items-center gap-2.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer select-none py-1">
             <input
               type="checkbox"
-              className="rounded border-zinc-300 dark:border-zinc-800 text-primary focus:ring-[#4361ee] w-4 h-4 cursor-pointer"
+              defaultChecked
+              className="rounded border-border bg-background text-primary focus:ring-primary h-4 w-4 cursor-pointer accent-primary"
             />
-            <span>Recordarme</span>
+            <span>Mantener sesión activa en este equipo</span>
           </label>
-          <button
-            type="button"
-            onClick={onForgotPassword}
-            className="font-bold text-zinc-400 hover:text-primary transition-colors bg-transparent border-0 cursor-pointer p-0"
-          >
-            ¿Olvidaste tu contraseña?
-          </button>
         </div>
 
         <Button
           type="submit"
           disabled={loading}
-          className="w-full h-11 rounded-2xl bg-primary hover:bg-[#3451d6] text-primary-foreground font-semibold shadow-md shadow-blue-500/10 hover:shadow-primary/20 active:scale-[0.99] transition-colors flex items-center justify-center gap-2 border-0"
+          className="w-full h-12 mt-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm shadow-md shadow-primary/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer"
         >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin text-primary-foreground" /> : "Iniciar sesión"}
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin text-primary-foreground" />
+              <span>Iniciando sesión...</span>
+            </>
+          ) : (
+            <>
+              <span>Iniciar sesión</span>
+              <ArrowRight className="h-4 w-4" />
+            </>
+          )}
         </Button>
+
+        <AuthLegalNotice />
       </form>
-    </>
+    </div>
   );
 }
 
@@ -311,44 +382,63 @@ export function AuthRecoveryForm({
   onBackToLogin: () => void;
 }) {
   return (
-    <>
-      <h2 className="font-display text-2xl font-bold tracking-tight text-foreground">Recuperar contraseña</h2>
-      <p className="text-sm text-zinc-400 mt-2">
-        Ingresa tu correo y te enviaremos las instrucciones para restablecer tu acceso.
-      </p>
+    <div className="animate-in fade-in duration-200">
+      <div className="space-y-2">
+        <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-normal text-foreground">
+          Recuperar contraseña
+        </h1>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Ingresa tu correo electrónico y te enviaremos un enlace seguro para restablecer tu acceso.
+        </p>
+      </div>
 
-      <form onSubmit={onSubmit} className="mt-8 space-y-5">
-        <div className="space-y-1.5 text-left">
-          <Label htmlFor="recovery-email" className="text-zinc-500 font-medium text-xs">Correo electrónico</Label>
-          <Input
-            id="recovery-email"
-            type="email"
-            placeholder="ejemplo@gmail.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="rounded-2xl border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 px-4 py-3 h-11 focus-visible:ring-2 focus-visible:ring-[#4361ee] transition-colors"
-          />
+      <form onSubmit={onSubmit} className="mt-7 space-y-4">
+        <div className="space-y-2 text-left">
+          <Label htmlFor="recovery-email" className="text-foreground/90 font-medium text-xs">
+            Correo electrónico
+          </Label>
+          <div className="relative">
+            <Mail className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Input
+              id="recovery-email"
+              type="email"
+              placeholder="doctora@femesalud.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="rounded-xl border-border bg-muted/30 dark:bg-zinc-900/70 pl-10 pr-4 h-12 text-sm focus-visible:ring-2 focus-visible:ring-primary transition-colors"
+            />
+          </div>
         </div>
 
         <Button
           type="submit"
           disabled={loading}
-          className="w-full h-11 rounded-2xl bg-primary hover:bg-[#3451d6] text-primary-foreground font-semibold shadow-md shadow-blue-500/10 hover:shadow-primary/20 active:scale-[0.99] transition-colors flex items-center justify-center gap-2 border-0"
+          className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm shadow-md shadow-primary/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer"
         >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin text-primary-foreground" /> : "Enviar enlace"}
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin text-primary-foreground" />
+              <span>Enviando instrucciones...</span>
+            </>
+          ) : (
+            <>
+              <span>Enviar enlace de recuperación</span>
+              <ArrowRight className="h-4 w-4" />
+            </>
+          )}
         </Button>
 
         <button
           type="button"
           onClick={onBackToLogin}
-          className="w-full flex items-center justify-center gap-2 text-xs font-bold text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 mt-4 bg-transparent border-0 cursor-pointer p-0"
+          className="w-full h-10 flex items-center justify-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground rounded-xl hover:bg-muted/50 transition-colors cursor-pointer"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          Volver a iniciar sesión
+          <span>Volver a iniciar sesión</span>
         </button>
       </form>
-    </>
+    </div>
   );
 }
 
@@ -368,16 +458,23 @@ export function AuthResetPasswordForm({
   onSubmit: (e: React.FormEvent) => void;
 }) {
   return (
-    <>
-      <h2 className="font-display text-2xl font-bold tracking-tight text-foreground">Nueva contraseña</h2>
-      <p className="text-sm text-zinc-400 mt-2">
-        Ingresa tu nueva contraseña para reestablecer tu acceso a la plataforma.
-      </p>
+    <div className="animate-in fade-in duration-200">
+      <div className="space-y-2">
+        <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-normal text-foreground">
+          Nueva contraseña
+        </h1>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Define tu nueva contraseña segura para restablecer el acceso a Medizen.
+        </p>
+      </div>
 
-      <form onSubmit={onSubmit} className="mt-8 space-y-5">
-        <div className="space-y-1.5 text-left">
-          <Label htmlFor="new-password" className="text-zinc-500 font-medium text-xs">Nueva contraseña</Label>
+      <form onSubmit={onSubmit} className="mt-7 space-y-4">
+        <div className="space-y-2 text-left">
+          <Label htmlFor="new-password" className="text-foreground/90 font-medium text-xs">
+            Nueva contraseña
+          </Label>
           <div className="relative">
+            <KeyRound className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <Input
               id="new-password"
               type={showPassword ? "text" : "password"}
@@ -385,13 +482,13 @@ export function AuthResetPasswordForm({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="rounded-2xl border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 px-4 py-3 pr-10 h-11 focus-visible:ring-2 focus-visible:ring-[#4361ee] transition-colors"
+              className="rounded-xl border-border bg-muted/30 dark:bg-zinc-900/70 pl-10 pr-12 h-12 text-sm focus-visible:ring-2 focus-visible:ring-primary transition-colors"
             />
             <button
               type="button"
               aria-label={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 p-0 cursor-pointer bg-transparent border-0 flex items-center"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 cursor-pointer flex items-center justify-center transition-colors"
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -401,12 +498,19 @@ export function AuthResetPasswordForm({
         <Button
           type="submit"
           disabled={loading}
-          className="w-full h-11 rounded-2xl bg-primary hover:bg-[#3451d6] text-primary-foreground font-semibold shadow-md shadow-blue-500/10 hover:shadow-primary/20 active:scale-[0.99] transition-colors flex items-center justify-center gap-2 border-0"
+          className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm shadow-md shadow-primary/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer"
         >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin text-primary-foreground" /> : "Actualizar contraseña"}
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin text-primary-foreground" />
+              <span>Actualizando...</span>
+            </>
+          ) : (
+            "Actualizar contraseña"
+          )}
         </Button>
       </form>
-    </>
+    </div>
   );
 }
 
@@ -436,41 +540,58 @@ export function AuthBootstrapForm({
   onBackToLogin: () => void;
 }) {
   return (
-    <>
-      <h2 className="font-display text-2xl font-bold tracking-tight text-foreground">Primer Admin</h2>
-      <p className="text-sm text-zinc-400 mt-2">
-        Crea la primera cuenta del sistema. Quedará automáticamente como administrador.
-      </p>
+    <div className="animate-in fade-in duration-200">
+      <div className="space-y-2">
+        <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-normal text-foreground">
+          Administrador Inicial
+        </h1>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Configura la primera cuenta principal del sistema con permisos de administración total.
+        </p>
+      </div>
 
-      <form onSubmit={onSubmit} className="mt-8 space-y-4">
-        <div className="space-y-1.5 text-left">
-          <Label htmlFor="bfn" className="text-zinc-500 font-medium text-xs">Nombre completo</Label>
-          <Input
-            id="bfn"
-            placeholder="Dra. Katherine Mendoza"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            required
-            className="rounded-2xl border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 px-4 py-3 h-11 focus-visible:ring-2 focus-visible:ring-[#4361ee] transition-colors"
-          />
-        </div>
-
-        <div className="space-y-1.5 text-left">
-          <Label htmlFor="bem" className="text-zinc-500 font-medium text-xs">E-mail</Label>
-          <Input
-            id="bem"
-            type="email"
-            placeholder="admin@femesalud.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="rounded-2xl border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 px-4 py-3 h-11 focus-visible:ring-2 focus-visible:ring-[#4361ee] transition-colors"
-          />
-        </div>
-
-        <div className="space-y-1.5 text-left">
-          <Label htmlFor="bpw" className="text-zinc-500 font-medium text-xs">Contraseña (mín. 8)</Label>
+      <form onSubmit={onSubmit} className="mt-7 space-y-4">
+        <div className="space-y-2 text-left">
+          <Label htmlFor="bfn" className="text-foreground/90 font-medium text-xs">
+            Nombre completo
+          </Label>
           <div className="relative">
+            <User className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Input
+              id="bfn"
+              placeholder="Dra. Katherine Mendoza"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+              className="rounded-xl border-border bg-muted/30 dark:bg-zinc-900/70 pl-10 pr-4 h-12 text-sm focus-visible:ring-2 focus-visible:ring-primary transition-colors"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2 text-left">
+          <Label htmlFor="bem" className="text-foreground/90 font-medium text-xs">
+            Correo electrónico
+          </Label>
+          <div className="relative">
+            <Mail className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Input
+              id="bem"
+              type="email"
+              placeholder="admin@femesalud.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="rounded-xl border-border bg-muted/30 dark:bg-zinc-900/70 pl-10 pr-4 h-12 text-sm focus-visible:ring-2 focus-visible:ring-primary transition-colors"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2 text-left">
+          <Label htmlFor="bpw" className="text-foreground/90 font-medium text-xs">
+            Contraseña (mínimo 8 caracteres)
+          </Label>
+          <div className="relative">
+            <KeyRound className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <Input
               id="bpw"
               type={showPassword ? "text" : "password"}
@@ -479,13 +600,13 @@ export function AuthBootstrapForm({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="rounded-2xl border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 px-4 py-3 pr-10 h-11 focus-visible:ring-2 focus-visible:ring-[#4361ee] transition-colors"
+              className="rounded-xl border-border bg-muted/30 dark:bg-zinc-900/70 pl-10 pr-12 h-12 text-sm focus-visible:ring-2 focus-visible:ring-primary transition-colors"
             />
             <button
               type="button"
               aria-label={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 p-0 cursor-pointer bg-transparent border-0 flex items-center"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 cursor-pointer flex items-center justify-center transition-colors"
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -495,115 +616,223 @@ export function AuthBootstrapForm({
         <Button
           type="submit"
           disabled={loading}
-          className="w-full h-11 rounded-2xl bg-primary hover:bg-[#3451d6] text-primary-foreground font-semibold shadow-md shadow-blue-500/10 hover:shadow-primary/20 active:scale-[0.99] transition-colors flex items-center justify-center gap-2 border-0"
+          className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm shadow-md shadow-primary/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer"
         >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin text-primary-foreground" /> : "Crear administrador"}
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin text-primary-foreground" />
+              <span>Creando cuenta...</span>
+            </>
+          ) : (
+            "Crear administrador"
+          )}
         </Button>
+
+        <AuthLegalNotice />
 
         <button
           type="button"
           onClick={onBackToLogin}
-          className="w-full flex items-center justify-center gap-2 text-xs font-bold text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 mt-4 bg-transparent border-0 cursor-pointer p-0"
+          className="w-full h-10 flex items-center justify-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground rounded-xl hover:bg-muted/50 transition-colors cursor-pointer"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          Volver a iniciar sesión
+          <span>Volver a iniciar sesión</span>
         </button>
       </form>
-    </>
+    </div>
   );
 }
 
-export function AuthCarouselBanner({
+export const AuthCarouselBanner = memo(function AuthCarouselBanner({
   slides,
-  currentSlide,
-  onSlideChange,
+  onVerifyRecipe,
 }: {
-  slides: any[];
-  currentSlide: number;
-  onSlideChange: (idx: number | ((prev: number) => number)) => void;
+  slides: AuthSlide[];
+  onVerifyRecipe?: () => void;
 }) {
-  const SlideIcon = slides[currentSlide].featureIcon;
-  return (
-    <div className="hidden md:flex md:w-[50%] lg:w-[55%] flex-col justify-between p-12 lg:p-16 relative overflow-hidden bg-gradient-to-br from-[#0b1437] via-[#111c44] to-[#1b2559] text-primary-foreground">
-      <div className="absolute top-[-20%] left-[-20%] w-[80%] h-[80%] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-primary/15 rounded-full blur-[100px] pointer-events-none" />
+  const [currentSlide, setCurrentSlide] = useState(0);
 
-      <div className="flex justify-end z-10">
-        <button
-          onClick={() => toast.success("Soporte FemeSalud iniciado. Escríbenos a soporte@femesalud.com")}
-          className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-card/5 hover:bg-card/10 border border-white/10 transition-colors text-xs font-semibold cursor-pointer"
-        >
-          <Headphones className="w-3.5 h-3.5 text-primary" />
-          <span>Support</span>
-        </button>
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 6500);
+    return () => clearInterval(timer);
+  }, [slides.length]);
+
+  const active = slides[currentSlide] ?? slides[0];
+  const SlideIcon = active.featureIcon;
+
+  return (
+    <div className="hidden md:flex md:w-[52%] lg:w-[56%] flex-col justify-between p-10 lg:p-14 xl:p-16 relative overflow-hidden bg-[#070b19] text-white select-none">
+      {/* Architectural Grid & Ambient Radial Glow */}
+      <div
+        className="absolute inset-0 opacity-[0.07] pointer-events-none"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.6) 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
+        }}
+      />
+      <div className="absolute -top-32 -left-32 w-[480px] h-[480px] bg-primary/25 rounded-full blur-[130px] pointer-events-none" />
+      <div className="absolute -bottom-32 -right-24 w-[440px] h-[440px] bg-blue-500/20 rounded-full blur-[120px] pointer-events-none" />
+
+      {/* Top Header Row */}
+      <div className="flex items-center justify-between gap-4 z-10">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.06] border border-white/10 text-xs font-medium text-zinc-200 backdrop-blur-md">
+          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span>Suite Clínica FemeSalud • En línea</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {onVerifyRecipe && (
+            <button
+              type="button"
+              onClick={onVerifyRecipe}
+              className="flex items-center gap-2 h-9 px-3.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 transition-colors text-xs font-semibold text-zinc-100 cursor-pointer"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Verificar Récipe</span>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() =>
+              toast.success("Soporte FemeSalud activo. Escríbenos a soporte@femesalud.com")
+            }
+            className="flex items-center gap-2 h-9 px-3.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 transition-colors text-xs font-semibold text-zinc-100 cursor-pointer"
+          >
+            <Headphones className="w-3.5 h-3.5 text-blue-400" />
+            <span>Soporte Técnico</span>
+          </button>
+        </div>
       </div>
 
-      <div className="my-auto max-w-[440px] mx-auto w-full z-10 flex flex-col items-center">
-        <div className="w-full relative min-h-[300px] flex flex-col items-center justify-center">
-          <div
-            key={currentSlide}
-            className="w-full p-6 rounded-3xl bg-card/5 backdrop-blur-xl border border-white/10 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-500"
+      {/* Center Showcase Card */}
+      <div className="my-auto max-w-[520px] mx-auto w-full z-10 space-y-6">
+        <div className="space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/15 border border-blue-400/30 text-blue-300 text-[11px] font-semibold tracking-wide uppercase">
+            <Sparkles className="w-3 h-3" />
+            <span>{active.badge}</span>
+          </div>
+          <h2
+            key={`title-${currentSlide}`}
+            className="font-display font-bold text-2xl lg:text-3xl text-white tracking-normal leading-tight animate-in fade-in duration-300"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold tracking-wider uppercase px-3 py-1 rounded-full bg-primary/20 text-primary border border-primary/30">
-                {slides[currentSlide].badge}
-              </span>
-              <div className="flex items-center gap-1.5 text-zinc-400">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span className="text-[10px] font-semibold">SSL 256-bit</span>
-              </div>
-            </div>
+            {active.title}
+          </h2>
+          <p
+            key={`desc-${currentSlide}`}
+            className="text-sm text-zinc-300/90 leading-relaxed animate-in fade-in duration-300"
+          >
+            {active.desc}
+          </p>
+        </div>
 
-            <div className="space-y-1">
-              <h3 className="font-display font-bold text-lg text-white">
-                {slides[currentSlide].title}
-              </h3>
-              <p className="text-xs text-zinc-300 leading-relaxed">
-                {slides[currentSlide].desc}
-              </p>
-            </div>
-
-            <div className="pt-2 border-t border-white/10 flex items-start gap-3">
-              <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center text-primary flex-shrink-0 mt-0.5">
-                <SlideIcon className="w-4 h-4" />
+        {/* Glass Feature Card */}
+        <div
+          key={`card-${currentSlide}`}
+          className="w-full p-6 rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/12 shadow-2xl space-y-5 animate-in fade-in zoom-in-98 duration-300"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-primary/25 border border-primary/40 flex items-center justify-center text-blue-300 flex-shrink-0">
+                <SlideIcon className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs font-bold text-white">
-                  {slides[currentSlide].featureTitle}
-                </p>
-                <p className="text-[11px] text-zinc-400 leading-relaxed mt-0.5">
-                  {slides[currentSlide].featureDesc}
+                <h3 className="font-display font-bold text-base text-white tracking-normal">
+                  {active.featureTitle}
+                </h3>
+                <p className="text-xs text-zinc-300/85 leading-relaxed mt-1">
+                  {active.featureDesc}
                 </p>
               </div>
+            </div>
+
+            {active.metricValue && (
+              <div className="hidden sm:flex flex-col items-end px-3 py-1.5 rounded-xl bg-white/[0.05] border border-white/10 shrink-0">
+                <span className="font-display font-bold text-sm text-emerald-400">
+                  {active.metricValue}
+                </span>
+                <span className="text-[10px] text-zinc-400 font-medium">{active.metricLabel}</span>
+              </div>
+            )}
+          </div>
+
+          {active.highlights && active.highlights.length > 0 && (
+            <div className="pt-4 border-t border-white/10 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {active.highlights.map((item) => (
+                <div
+                  key={item}
+                  className="flex items-center gap-2 text-xs text-zinc-200/90 bg-white/[0.03] border border-white/[0.06] rounded-xl px-3 py-2"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span className="truncate">{item}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Architectural System Pillars */}
+        <div className="grid grid-cols-3 gap-3">
+          <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10 flex items-center gap-2.5">
+            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-white truncate">AES-256 & RLS</p>
+              <p className="text-[10px] text-zinc-400 truncate">Bóveda PIN y roles</p>
+            </div>
+          </div>
+          <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10 flex items-center gap-2.5">
+            <Zap className="w-4 h-4 text-amber-400 shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-white truncate">Tiempo Real</p>
+              <p className="text-[10px] text-zinc-400 truncate">Sala, agenda y BCV</p>
+            </div>
+          </div>
+          <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10 flex items-center gap-2.5">
+            <Database className="w-4 h-4 text-blue-400 shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-white truncate">Caché L1/L2</p>
+              <p className="text-[10px] text-zinc-400 truncate">Respuesta instantánea</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex items-center justify-between z-10">
-        <div className="flex gap-2">
+      {/* Bottom Carousel Controls */}
+      <div className="flex items-center justify-between z-10 pt-4">
+        <div className="flex items-center gap-2">
           {slides.map((slide, i) => (
             <button
               key={slide.title}
-              onClick={() => onSlideChange(i)}
-              className={`h-2 rounded-full cursor-pointer transition-[width,background-color] duration-200 border-0 p-0 ${i === currentSlide ? "w-5 bg-primary" : "w-2 bg-card/20 hover:bg-card/40"}`}
-              aria-label={`Ir al slide ${i + 1}`}
-            />
+              type="button"
+              onClick={() => setCurrentSlide(i)}
+              className="group py-2 px-1 cursor-pointer bg-transparent border-0 flex items-center"
+              aria-label={`Ir a la diapositiva ${i + 1}: ${slide.badge}`}
+            >
+              <span
+                className={`h-2 rounded-full transition-all duration-200 ${
+                  i === currentSlide ? "w-7 bg-blue-400" : "w-2 bg-white/25 group-hover:bg-white/50"
+                }`}
+              />
+            </button>
           ))}
         </div>
 
-        <div className="flex items-center gap-1.5 border border-white/5 bg-card/5 rounded-xl p-0.5">
+        <div className="flex items-center gap-1.5 border border-white/10 bg-white/[0.04] rounded-xl p-1">
           <button
-            onClick={() => onSlideChange((prev) => (prev - 1 + slides.length) % slides.length)}
-            className="w-7 h-7 rounded-lg hover:bg-card/10 flex items-center justify-center text-primary-foreground/70 hover:text-primary-foreground transition-colors bg-transparent border-0 cursor-pointer"
-            aria-label="Slide anterior"
+            type="button"
+            onClick={() => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)}
+            className="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center text-zinc-300 hover:text-white transition-colors bg-transparent border-0 cursor-pointer"
+            aria-label="Diapositiva anterior"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
           <button
-            onClick={() => onSlideChange((prev) => (prev + 1) % slides.length)}
-            className="w-7 h-7 rounded-lg hover:bg-card/10 flex items-center justify-center text-primary-foreground/70 hover:text-primary-foreground transition-colors bg-transparent border-0 cursor-pointer"
-            aria-label="Siguiente slide"
+            type="button"
+            onClick={() => setCurrentSlide((prev) => (prev + 1) % slides.length)}
+            className="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center text-zinc-300 hover:text-white transition-colors bg-transparent border-0 cursor-pointer"
+            aria-label="Siguiente diapositiva"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -611,4 +840,4 @@ export function AuthCarouselBanner({
       </div>
     </div>
   );
-}
+});
