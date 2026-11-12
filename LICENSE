@@ -1,0 +1,62 @@
+PROPRIETARY SOFTWARE LICENSE — MEDIZEN (ALL RIGHTS RESERVED)
+LICENCIA DE SOFTWARE PROPIETARIO — MEDIZEN (TODOS LOS DERECHOS RESERVADOS)
+
+Copyright (c) 2026 Kevin Alvarez (KevxxAlva) — Medizen.
+All Rights Reserved / Todos los derechos reservados.
+
+Repository: https://github.com/KevxxAlva/Medizen
+Contact: kevinja1406@gmail.com
+
+--------------------------------------------------------------------------------
+
+1. OWNERSHIP / TITULARIDAD Y PROPIEDAD INTELECTUAL
+
+Este repositorio y todo su contenido —incluyendo, de forma enunciativa mas no
+limitativa, el código fuente, arquitectura de software, interfaces gráficas,
+componentes visuales, documentación, migraciones de base de datos, activos
+gráficos, isotipo, logotipo y marca denominativa «Medizen»— son propiedad
+exclusiva de Kevin Alvarez (KevxxAlva) — Medizen («el Titular»), y están
+protegidos por las leyes aplicables de derechos de autor y propiedad intelectual.
+
+2. RESTRICTIONS / RESTRICCIONES DE USO
+
+Salvo autorización previa, expresa y por escrito otorgada por el Titular, queda
+estrictamente prohibido a cualquier tercero:
+
+  a) Copiar, reproducir, publicar, distribuir, redistribuir, transmitir,
+     alquilar, vender o sublicenciar el código fuente, los compilados o los
+     activos de este proyecto, total o parcialmente, con fines comerciales o no
+     comerciales.
+  b) Modificar, adaptar, traducir o crear obras derivadas basadas en este
+     repositorio para su distribución o explotación por cuenta propia o de
+     terceros.
+  c) Realizar ingeniería inversa, descompilar o extraer componentes con el fin
+     de clonar, replicar o comercializar la plataforma fuera del alcance
+     autorizado por el Titular.
+  d) Eliminar, ocultar o alterar avisos de derechos de autor, marcas o
+     identificadores de licencia presentes en el código o en la interfaz.
+
+3. AUTHORIZED USE / USO AUTORIZADO
+
+El acceso, despliegue, modificación o ejecución de este software queda
+restringido exclusivamente al Titular, a su equipo autorizado y a los centros
+médicos o clientes que cuenten con una licencia o acuerdo operativo vigente
+concedido expresamente por el Titular, sujeto adicionalmente al Marco Legal
+integrado en la aplicación (/legal).
+
+4. NO WARRANTY & LIMITATION OF LIABILITY / EXENCIÓN DE GARANTÍAS
+
+ESTE SOFTWARE SE PROPORCIONA «TAL CUAL» («AS IS»), SIN GARANTÍAS DE NINGÚN
+TIPO, EXPRESAS O IMPLÍCITAS, INCLUYENDO PERO NO LIMITADO A GARANTÍAS DE
+COMERCIABILIDAD, IDONEIDAD PARA UN PROPÓSITO PARTICULAR O NO INFRACCIÓN. EN
+NINGÚN CASO EL TITULAR SERÁ RESPONSABLE POR DAÑOS DIRECTOS, INDIRECTOS,
+INCIDENTALES, ESPECIALES O CONSECUENTES DERIVADOS DEL USO O LA IMPOSIBILIDAD
+DE USO DE ESTE SOFTWARE, SALVO LO EXIGIDO POR LA LEGISLACIÓN IMPERATIVA
+APLICABLE.
+
+5. LICENSING INQUIRIES / SOLICITUDES DE LICENCIA
+
+Para solicitar permisos de uso comercial, implementación clínica o acuerdos de
+licenciamiento, contacte al Titular a través de:
+- Correo: kevinja1406@gmail.com
+- GitHub: https://github.com/KevxxAlva/Medizen

@@ -4,7 +4,7 @@
 
 ![Medizen Logo](public/favicon.svg)
 
-**Plataforma médica integral (_FemeSalud_) para la gestión clínica, operativa y financiera con renderizado híbrido SSR, sincronización en tiempo real y experiencia mobile-first.**
+**Plataforma médica integral (_Medizen_) para la gestión clínica, operativa y financiera con renderizado híbrido SSR, sincronización en tiempo real y experiencia mobile-first.**
 
 [![React](https://img.shields.io/badge/React-19.2-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -13,6 +13,7 @@
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v4.2-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%26%20Realtime-3ECF8E?style=flat-square&logo=supabase&logoColor=white)](https://supabase.com/)
 [![Bun](https://img.shields.io/badge/Bun-Runtime%20%26%20PM-FBF0DF?style=flat-square&logo=bun&logoColor=black)](https://bun.sh/)
+[![Licencia](https://img.shields.io/badge/Licencia-Propietaria%20%7C%20Todos%20los%20derechos%20reservados-1E3A8A?style=flat-square)](LICENSE)
 
 </div>
 
@@ -185,11 +186,22 @@ Medizen/
 │   ├── functions/           # Edge Functions (appointment-reminders, doctor-fees)
 │   ├── migrations/          # Migraciones SQL y políticas RLS
 │   └── config.toml          # Configuración local de Supabase
+├── LICENSE                  # Licencia propietaria (Todos los derechos reservados)
 ├── package.json
 ├── tsconfig.json
 ├── vercel.json              # Configuración de despliegue ("framework": "tanstack-start")
 └── vite.config.ts           # TanStack Start + Nitro (preset vercel)
 ```
+
+---
+
+## 📄 Licencia
+
+Este proyecto es **software propietario** bajo **Todos los derechos reservados**.
+
+- **Titular:** Kevin Alvarez (`KevxxAlva`) — Medizen (`© 2026`)
+- **Documento de licencia:** Consulta el archivo [`LICENSE`](LICENSE) en la raíz del repositorio para conocer los términos completos, restricciones de reproducción/redistribución y contacto de licenciamiento.
+- **Marco legal operativo:** Dentro de la aplicación también está disponible el Centro Legal en `/legal`.
 
 ---
 

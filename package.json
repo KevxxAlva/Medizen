@@ -2,6 +2,8 @@
   "name": "Medizen clinical system",
   "version": "2.0.0",
   "private": true,
+  "license": "SEE LICENSE IN LICENSE",
+  "author": "Kevin Alvarez <kevinja1406@gmail.com> (https://github.com/KevxxAlva)",
   "sideEffects": false,
   "type": "module",
   "scripts": {
