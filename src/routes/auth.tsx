@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { setSessionPersistence, supabase } from "@/integrations/supabase/client";
 import { setAuthSessionManually } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { MedizenLogo } from "@/components/MedizenLogo";
@@ -10,7 +10,7 @@ import { RecipeVerificationModal } from "@/components/RecipeVerificationModal";
 import {
   getQuickAccessAccounts,
   getLastQuickAccessAccount,
-  verifyUserPin,
+  unlockQuickAccessAccount,
   saveQuickAccessAccount,
   removeQuickAccessAccount,
   type QuickAccessProfile,
@@ -95,6 +95,7 @@ function useAuthPageLogic() {
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
 
   const [quickAccounts, setQuickAccounts] = useState<QuickAccessProfile[]>([]);
   const [selectedAccount, setSelectedAccount] = useState<QuickAccessProfile | null>(null);
@@ -130,33 +131,53 @@ function useAuthPageLogic() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setSessionPersistence(rememberMe);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
+        if (!rememberMe) {
+          setSessionPersistence(true);
+        }
         return toast.error(error.message);
       }
 
-      try {
-        const user = data.user;
-        if (user) {
-          const { data: dbUser } = await supabase
-            .from("usuarios")
-            .select("pin_seguridad")
-            .eq("auth_id", user.id)
-            .maybeSingle();
+      if (rememberMe) {
+        try {
+          const user = data.user;
+          if (user) {
+            const { data: dbUser } = await supabase
+              .from("usuarios")
+              .select("pin_seguridad, nombre_usuario, roles(nombre_rol), medicos(nombre, apellido)")
+              .eq("auth_id", user.id)
+              .maybeSingle();
 
-          const userPin = dbUser?.pin_seguridad || user.user_metadata?.security_pin;
-          if (userPin && String(userPin).length === 4) {
-            await saveQuickAccessAccount({
-              userId: user.id,
-              email: user.email || email,
-              fullName: user.user_metadata?.full_name || email.split("@")[0],
-              pin: String(userPin),
-            });
+            const userPin = dbUser?.pin_seguridad || user.user_metadata?.security_pin;
+            if (userPin && /^\d{4}$/.test(String(userPin))) {
+              const roleObj = dbUser?.roles;
+              const dbRole = Array.isArray(roleObj)
+                ? roleObj[0]?.nombre_rol
+                : (roleObj as { nombre_rol?: string } | null)?.nombre_rol;
+              const medObj = dbUser?.medicos;
+              const doc = Array.isArray(medObj) ? medObj[0] : medObj;
+              const docName = doc ? `${doc.nombre} ${doc.apellido}`.trim() : "";
+
+              await saveQuickAccessAccount({
+                userId: user.id,
+                email: user.email || email,
+                fullName:
+                  docName ||
+                  (user.user_metadata?.full_name as string | undefined) ||
+                  dbUser?.nombre_usuario ||
+                  email.split("@")[0],
+                role: dbRole || (user.user_metadata?.role as string | undefined),
+                password,
+                pin: String(userPin),
+              });
+            }
           }
+        } catch {
+          // Ignorar si la tabla o el PIN opcional no están disponibles al iniciar sesión
         }
-      } catch {
-        // Ignorar si la tabla o el PIN opcional no están disponibles al iniciar sesión
       }
 
       if (data.session) {
@@ -174,28 +195,29 @@ function useAuthPageLogic() {
   const handlePinUnlock = async (enteredPin: string) => {
     if (!selectedAccount) return;
     setLoading(true);
+    setSessionPersistence(true);
 
     try {
-      const isValid = await verifyUserPin(selectedAccount.userId, enteredPin);
-      if (isValid) {
-        const { data } = await supabase.auth.getSession();
-        if (data.session && data.session.user.id === selectedAccount.userId) {
-          setAuthSessionManually(data.session);
-          await qc.invalidateQueries();
-          toast.success(`Sesión restaurada como ${selectedAccount.fullName}`);
-          router.navigate({ to: "/" });
-          return;
+      const result = await unlockQuickAccessAccount(selectedAccount.userId, enteredPin);
+      if (result.success) {
+        if (result.session) {
+          setAuthSessionManually(result.session);
         }
+        await qc.invalidateQueries();
+        toast.success(`Sesión restaurada como ${selectedAccount.fullName}`);
+        router.navigate({ to: "/" });
+        return;
+      }
 
-        toast.info("Ingresa tu contraseña para sincronizar este dispositivo.");
+      setPinError(true);
+      setIsShaking(true);
+      setPin("");
+      setTimeout(() => setIsShaking(false), 500);
+      toast.error(result.error || "Clave de 4 dígitos incorrecta.");
+
+      if (result.error?.includes("contraseña") || result.error?.includes("registro")) {
         setEmail(selectedAccount.email);
         setMode("login");
-      } else {
-        setPinError(true);
-        setIsShaking(true);
-        setPin("");
-        setTimeout(() => setIsShaking(false), 500);
-        toast.error("Clave de 4 dígitos incorrecta.");
       }
     } finally {
       setLoading(false);
@@ -301,6 +323,8 @@ function useAuthPageLogic() {
     loading,
     showPassword,
     setShowPassword,
+    rememberMe,
+    setRememberMe,
     quickAccounts,
     selectedAccount,
     setSelectedAccount,
@@ -332,6 +356,8 @@ function AuthPage() {
     loading,
     showPassword,
     setShowPassword,
+    rememberMe,
+    setRememberMe,
     quickAccounts,
     selectedAccount,
     setSelectedAccount,
@@ -418,6 +444,8 @@ function AuthPage() {
               setPassword={setPassword}
               showPassword={showPassword}
               setShowPassword={setShowPassword}
+              rememberMe={rememberMe}
+              setRememberMe={setRememberMe}
               loading={loading}
               onLogin={handleLogin}
               onSwitchToQuickLogin={(acc) => {

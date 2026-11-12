@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { redirect } from "@tanstack/react-router";
 import type { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { setSessionPersistence, supabase } from "@/integrations/supabase/client";
+import { clearScreenLock } from "@/lib/auth/quickAccess";
 import { clearPersistentQueryCache } from "@/lib/cache/persistentQueryCache";
 
 export type AppRole = "admin" | "doctor" | "recepcionista" | "medico";
@@ -57,6 +58,8 @@ function ensureAuthSubscription() {
 
   supabase.auth.onAuthStateChange((event, session) => {
     if (event === "SIGNED_OUT") {
+      setSessionPersistence(true);
+      clearScreenLock();
       clearPersistentQueryCache();
       if (typeof window !== "undefined") {
         try {

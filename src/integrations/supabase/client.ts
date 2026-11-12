@@ -18,6 +18,70 @@ function getEnvVar(name: string, viteAliases: string[]): string {
   );
 }
 
+const SESSION_ONLY_KEY = "medizen_auth_session_only";
+
+/**
+ * Controls whether the Supabase session is persisted across browser restarts (localStorage)
+ * or scoped to the current browser tab/session only (sessionStorage).
+ */
+export function setSessionPersistence(keepActive: boolean): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (keepActive) {
+      window.sessionStorage.removeItem(SESSION_ONLY_KEY);
+    } else {
+      window.sessionStorage.setItem(SESSION_ONLY_KEY, "true");
+    }
+  } catch {
+    // Ignore storage access errors in restricted browser contexts
+  }
+}
+
+export function isSessionPersistenceEnabled(): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    return window.sessionStorage.getItem(SESSION_ONLY_KEY) !== "true";
+  } catch {
+    return true;
+  }
+}
+
+const authStorage = {
+  getItem(key: string): string | null {
+    if (typeof window === "undefined") return null;
+    try {
+      return isSessionPersistenceEnabled()
+        ? window.localStorage.getItem(key)
+        : window.sessionStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  },
+  setItem(key: string, value: string): void {
+    if (typeof window === "undefined") return;
+    try {
+      if (isSessionPersistenceEnabled()) {
+        window.localStorage.setItem(key, value);
+        window.sessionStorage.removeItem(key);
+      } else {
+        window.sessionStorage.setItem(key, value);
+        window.localStorage.removeItem(key);
+      }
+    } catch {
+      // Ignore storage quota or access errors
+    }
+  },
+  removeItem(key: string): void {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.removeItem(key);
+      window.sessionStorage.removeItem(key);
+    } catch {
+      // Ignore storage access errors
+    }
+  },
+};
+
 function createSupabaseClient() {
   const SUPABASE_URL = getEnvVar('SUPABASE_URL', [
     'VITE_SUPABASE_URL',
@@ -30,7 +94,7 @@ function createSupabaseClient() {
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     auth: {
-      storage: typeof window !== 'undefined' ? localStorage : undefined,
+      storage: typeof window !== 'undefined' ? authStorage : undefined,
       persistSession: true,
       autoRefreshToken: true,
     }

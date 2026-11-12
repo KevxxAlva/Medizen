@@ -1,10 +1,14 @@
 import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from "react";
 import { useAuthSession } from "./useAuth";
-import { hasUserPinConfigured, verifyUserPin } from "@/lib/auth/quickAccess";
+import {
+  clearScreenLock,
+  hasUserPinConfigured,
+  SCREEN_LOCK_STORAGE_KEY,
+  verifyUserPin,
+} from "@/lib/auth/quickAccess";
 
 const emptySubscribe = () => () => {};
 const INACTIVITY_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
-const LOCK_STORAGE_KEY = "medizen_screen_locked";
 
 export function useInactivityLock(timeoutMs: number = INACTIVITY_TIMEOUT_MS) {
   const { user } = useAuthSession();
@@ -17,7 +21,10 @@ export function useInactivityLock(timeoutMs: number = INACTIVITY_TIMEOUT_MS) {
   );
 
   useEffect(() => {
-    if (typeof window !== "undefined" && sessionStorage.getItem(LOCK_STORAGE_KEY) === "true") {
+    if (
+      typeof window !== "undefined" &&
+      sessionStorage.getItem(SCREEN_LOCK_STORAGE_KEY) === "true"
+    ) {
       setIsLocked(true);
     }
   }, []);
@@ -36,7 +43,7 @@ export function useInactivityLock(timeoutMs: number = INACTIVITY_TIMEOUT_MS) {
 
     setIsLocked(true);
     if (typeof window !== "undefined") {
-      sessionStorage.setItem(LOCK_STORAGE_KEY, "true");
+      sessionStorage.setItem(SCREEN_LOCK_STORAGE_KEY, "true");
     }
   }, [hasPinConfigured]);
 
@@ -47,7 +54,7 @@ export function useInactivityLock(timeoutMs: number = INACTIVITY_TIMEOUT_MS) {
       const ok = await verifyUserPin(user.id, enteredPin);
       if (ok) {
         setIsLocked(false);
-        sessionStorage.removeItem(LOCK_STORAGE_KEY);
+        clearScreenLock();
         return true;
       }
       return false;

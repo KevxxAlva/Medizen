@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useEffectEvent } from "react";
 import { Lock, ShieldAlert, LogOut, ArrowRight, Delete } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { clearScreenLock } from "@/lib/auth/quickAccess";
 import { useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -90,6 +91,7 @@ function InactivityLockOverlayModal({
   }, []);
 
   const handleSignOut = async () => {
+    clearScreenLock();
     await supabase.auth.signOut();
     navigate({ to: "/auth" });
   };

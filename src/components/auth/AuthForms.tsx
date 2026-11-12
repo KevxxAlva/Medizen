@@ -142,11 +142,10 @@ export function AuthQuickLoginForm({
                 <InputOTPSlot
                   key={index}
                   index={index}
-                  className={`w-13 h-15 rounded-2xl text-2xl font-bold bg-background dark:bg-zinc-900/90 border-2 transition-colors ${
-                    pinError
+                  className={`w-13 h-15 rounded-2xl text-2xl font-bold bg-background dark:bg-zinc-900/90 border-2 transition-colors ${pinError
                       ? "border-destructive text-destructive bg-destructive/5"
                       : "border-border focus:border-primary"
-                  }`}
+                    }`}
                 />
               ))}
             </InputOTPGroup>
@@ -154,7 +153,7 @@ export function AuthQuickLoginForm({
 
           <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
             <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-            <span>Bóveda local cifrada con AES-256 GCM</span>
+            <span>Bóveda local cifrada.</span>
           </p>
         </div>
 
@@ -222,6 +221,8 @@ export function AuthStandardLoginForm({
   setPassword,
   showPassword,
   setShowPassword,
+  rememberMe,
+  setRememberMe,
   loading,
   onLogin,
   onSwitchToQuickLogin,
@@ -234,6 +235,8 @@ export function AuthStandardLoginForm({
   setPassword: (v: string) => void;
   showPassword: boolean;
   setShowPassword: (v: boolean) => void;
+  rememberMe: boolean;
+  setRememberMe: (v: boolean) => void;
   loading: boolean;
   onLogin: (e: React.FormEvent) => void;
   onSwitchToQuickLogin: (acc: QuickAccessProfile) => void;
@@ -334,10 +337,16 @@ export function AuthStandardLoginForm({
         </div>
 
         <div className="flex items-center justify-between pt-1">
-          <label className="inline-flex items-center gap-2.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer select-none py-1">
+          <label
+            htmlFor="remember-session"
+            className="inline-flex items-center gap-2.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer select-none py-1"
+          >
             <input
+              id="remember-session"
               type="checkbox"
-              defaultChecked
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              disabled={loading}
               className="rounded border-border bg-background text-primary focus:ring-primary h-4 w-4 cursor-pointer accent-primary"
             />
             <span>Mantener sesión activa en este equipo</span>
@@ -811,9 +820,8 @@ export const AuthCarouselBanner = memo(function AuthCarouselBanner({
               aria-label={`Ir a la diapositiva ${i + 1}: ${slide.badge}`}
             >
               <span
-                className={`h-2 rounded-full transition-all duration-200 ${
-                  i === currentSlide ? "w-7 bg-blue-400" : "w-2 bg-white/25 group-hover:bg-white/50"
-                }`}
+                className={`h-2 rounded-full transition-all duration-200 ${i === currentSlide ? "w-7 bg-blue-400" : "w-2 bg-white/25 group-hover:bg-white/50"
+                  }`}
               />
             </button>
           ))}

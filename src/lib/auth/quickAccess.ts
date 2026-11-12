@@ -1,3 +1,4 @@
+import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface QuickAccessProfile {
@@ -26,8 +27,18 @@ const LAST_ACCOUNT_KEY = "femesalud_quick_last_user";
 const PIN_HASH_PREFIX = "femesalud_pin_hash_";
 const LEGACY_PIN_PREFIX = "femesalud_pin_";
 const LOCKOUT_KEY_PREFIX = "femesalud_pin_lockout_";
+export const SCREEN_LOCK_STORAGE_KEY = "medizen_screen_locked";
 const MAX_PIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 60 * 1000; // 60 seconds
+
+export function clearScreenLock(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.removeItem(SCREEN_LOCK_STORAGE_KEY);
+  } catch {
+    // ignore storage access errors
+  }
+}
 
 // --- BRUTE-FORCE RATE LIMITING ---
 
@@ -476,7 +487,7 @@ export function removeQuickAccessAccount(userId: string): void {
 export async function unlockQuickAccessAccount(
   userId: string,
   pin: string
-): Promise<{ success: boolean; user?: any; error?: string }> {
+): Promise<{ success: boolean; user?: User; session?: Session | null; error?: string }> {
   const lockout = checkPinLockout(userId);
   if (lockout.locked) {
     return {
@@ -524,7 +535,7 @@ export async function unlockQuickAccessAccount(
     setStoredVault(vault);
     localStorage.setItem(LAST_ACCOUNT_KEY, userId);
 
-    return { success: true, user: data.user };
+    return { success: true, user: data.user, session: data.session };
   } catch (err: any) {
     const status = recordFailedPinAttempt(userId);
     if (status.locked) {
