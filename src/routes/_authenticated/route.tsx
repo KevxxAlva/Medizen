@@ -40,7 +40,7 @@ function AdminPathGuard({
   const isAdminPath = ADMIN_ONLY_PATHS.some((p) => location.pathname.startsWith(p));
 
   if (!authLoading && user && !rolesLoading && roles && isAdminPath && !roles.includes("admin")) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return null;

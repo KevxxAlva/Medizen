@@ -9,15 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DescargarRouteImport } from './routes/descargar'
 import { Route as LegalRouteImport } from './routes/legal'
-import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as AuthenticatedAuditoriaRouteImport } from './routes/_authenticated/auditoria'
 import { Route as AuthenticatedConfiguracionRouteImport } from './routes/_authenticated/configuracion'
 import { Route as AuthenticatedCuentasRouteImport } from './routes/_authenticated/cuentas'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDoctoresRouteImport } from './routes/_authenticated/doctores'
 import { Route as AuthenticatedFacturacionRouteImport } from './routes/_authenticated/facturacion'
 import { Route as AuthenticatedHonorariosRouteImport } from './routes/_authenticated/honorarios'
@@ -30,6 +31,11 @@ import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedPacientesIndexRouteImport } from './routes/_authenticated/pacientes.index'
 import { Route as AuthenticatedPacientesPatientIdRouteImport } from './routes/_authenticated/pacientes.$patientId'
 
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
@@ -48,11 +54,6 @@ const LegalRoute = LegalRouteImport.update({
   id: '/legal',
   path: '/legal',
   getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
   id: '/agenda',
@@ -73,6 +74,11 @@ const AuthenticatedConfiguracionRoute =
 const AuthenticatedCuentasRoute = AuthenticatedCuentasRouteImport.update({
   id: '/cuentas',
   path: '/cuentas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDoctoresRoute = AuthenticatedDoctoresRouteImport.update({
@@ -136,7 +142,7 @@ const AuthenticatedPacientesPatientIdRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AuthenticatedIndexRoute
+  '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/descargar': typeof DescargarRoute
   '/legal': typeof LegalRoute
@@ -144,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/auditoria': typeof AuthenticatedAuditoriaRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
   '/cuentas': typeof AuthenticatedCuentasRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/doctores': typeof AuthenticatedDoctoresRoute
   '/facturacion': typeof AuthenticatedFacturacionRoute
   '/honorarios': typeof AuthenticatedHonorariosRoute
@@ -157,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/pacientes/': typeof AuthenticatedPacientesIndexRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/descargar': typeof DescargarRoute
   '/legal': typeof LegalRoute
@@ -164,6 +172,7 @@ export interface FileRoutesByTo {
   '/auditoria': typeof AuthenticatedAuditoriaRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
   '/cuentas': typeof AuthenticatedCuentasRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/doctores': typeof AuthenticatedDoctoresRoute
   '/facturacion': typeof AuthenticatedFacturacionRoute
   '/honorarios': typeof AuthenticatedHonorariosRoute
@@ -173,12 +182,12 @@ export interface FileRoutesByTo {
   '/servicios': typeof AuthenticatedServiciosRoute
   '/stocks': typeof AuthenticatedStocksRoute
   '/support': typeof AuthenticatedSupportRoute
-  '/': typeof AuthenticatedIndexRoute
   '/pacientes/$patientId': typeof AuthenticatedPacientesPatientIdRoute
   '/pacientes': typeof AuthenticatedPacientesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/descargar': typeof DescargarRoute
@@ -187,6 +196,7 @@ export interface FileRoutesById {
   '/_authenticated/auditoria': typeof AuthenticatedAuditoriaRoute
   '/_authenticated/configuracion': typeof AuthenticatedConfiguracionRoute
   '/_authenticated/cuentas': typeof AuthenticatedCuentasRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/doctores': typeof AuthenticatedDoctoresRoute
   '/_authenticated/facturacion': typeof AuthenticatedFacturacionRoute
   '/_authenticated/honorarios': typeof AuthenticatedHonorariosRoute
@@ -196,7 +206,6 @@ export interface FileRoutesById {
   '/_authenticated/servicios': typeof AuthenticatedServiciosRoute
   '/_authenticated/stocks': typeof AuthenticatedStocksRoute
   '/_authenticated/support': typeof AuthenticatedSupportRoute
-  '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/pacientes/$patientId': typeof AuthenticatedPacientesPatientIdRoute
   '/_authenticated/pacientes/': typeof AuthenticatedPacientesIndexRoute
 }
@@ -211,6 +220,7 @@ export interface FileRouteTypes {
     | '/auditoria'
     | '/configuracion'
     | '/cuentas'
+    | '/dashboard'
     | '/doctores'
     | '/facturacion'
     | '/honorarios'
@@ -224,6 +234,7 @@ export interface FileRouteTypes {
     | '/pacientes/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/auth'
     | '/descargar'
     | '/legal'
@@ -231,6 +242,7 @@ export interface FileRouteTypes {
     | '/auditoria'
     | '/configuracion'
     | '/cuentas'
+    | '/dashboard'
     | '/doctores'
     | '/facturacion'
     | '/honorarios'
@@ -240,11 +252,11 @@ export interface FileRouteTypes {
     | '/servicios'
     | '/stocks'
     | '/support'
-    | '/'
     | '/pacientes/$patientId'
     | '/pacientes'
   id:
     | '__root__'
+    | '/'
     | '/_authenticated'
     | '/auth'
     | '/descargar'
@@ -253,6 +265,7 @@ export interface FileRouteTypes {
     | '/_authenticated/auditoria'
     | '/_authenticated/configuracion'
     | '/_authenticated/cuentas'
+    | '/_authenticated/dashboard'
     | '/_authenticated/doctores'
     | '/_authenticated/facturacion'
     | '/_authenticated/honorarios'
@@ -262,12 +275,12 @@ export interface FileRouteTypes {
     | '/_authenticated/servicios'
     | '/_authenticated/stocks'
     | '/_authenticated/support'
-    | '/_authenticated/'
     | '/_authenticated/pacientes/$patientId'
     | '/_authenticated/pacientes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   DescargarRoute: typeof DescargarRoute
@@ -276,6 +289,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
@@ -304,13 +324,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LegalRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/': {
-      id: '/_authenticated/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/agenda': {
       id: '/_authenticated/agenda'
       path: '/agenda'
@@ -337,6 +350,13 @@ declare module '@tanstack/react-router' {
       path: '/cuentas'
       fullPath: '/cuentas'
       preLoaderRoute: typeof AuthenticatedCuentasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/doctores': {
@@ -424,6 +444,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAuditoriaRoute: typeof AuthenticatedAuditoriaRoute
   AuthenticatedConfiguracionRoute: typeof AuthenticatedConfiguracionRoute
   AuthenticatedCuentasRoute: typeof AuthenticatedCuentasRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDoctoresRoute: typeof AuthenticatedDoctoresRoute
   AuthenticatedFacturacionRoute: typeof AuthenticatedFacturacionRoute
   AuthenticatedHonorariosRoute: typeof AuthenticatedHonorariosRoute
@@ -433,7 +454,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedServiciosRoute: typeof AuthenticatedServiciosRoute
   AuthenticatedStocksRoute: typeof AuthenticatedStocksRoute
   AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
-  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedPacientesPatientIdRoute: typeof AuthenticatedPacientesPatientIdRoute
   AuthenticatedPacientesIndexRoute: typeof AuthenticatedPacientesIndexRoute
 }
@@ -443,6 +463,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAuditoriaRoute: AuthenticatedAuditoriaRoute,
   AuthenticatedConfiguracionRoute: AuthenticatedConfiguracionRoute,
   AuthenticatedCuentasRoute: AuthenticatedCuentasRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDoctoresRoute: AuthenticatedDoctoresRoute,
   AuthenticatedFacturacionRoute: AuthenticatedFacturacionRoute,
   AuthenticatedHonorariosRoute: AuthenticatedHonorariosRoute,
@@ -452,7 +473,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedServiciosRoute: AuthenticatedServiciosRoute,
   AuthenticatedStocksRoute: AuthenticatedStocksRoute,
   AuthenticatedSupportRoute: AuthenticatedSupportRoute,
-  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedPacientesPatientIdRoute: AuthenticatedPacientesPatientIdRoute,
   AuthenticatedPacientesIndexRoute: AuthenticatedPacientesIndexRoute,
 }
@@ -461,6 +481,7 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   DescargarRoute: DescargarRoute,

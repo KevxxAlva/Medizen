@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Dashboard } from "@/components/Dashboard";
 
-export const Route = createFileRoute("/_authenticated/")({
+export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "Inicio — Medizen" },
+      { title: "Dashboard — Medizen" },
       { name: "description", content: "Panel de inicio del profesional de la salud." },
     ],
   }),

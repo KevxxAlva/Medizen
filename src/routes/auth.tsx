@@ -122,7 +122,7 @@ function useAuthPageLogic() {
 
     supabase.auth.getSession().then(({ data }) => {
       if (data.session && !hash.includes("type=recovery") && mode !== "reset-password") {
-        router.navigate({ to: "/", replace: true });
+        router.navigate({ to: "/dashboard", replace: true });
       }
     });
   }, [router, mode]);
@@ -185,7 +185,7 @@ function useAuthPageLogic() {
       await qc.invalidateQueries();
 
       toast.success("¡Bienvenido/a de nuevo!");
-      router.navigate({ to: "/" });
+      router.navigate({ to: "/dashboard" });
     } finally {
       setLoading(false);
     }
@@ -204,7 +204,7 @@ function useAuthPageLogic() {
         }
         await qc.invalidateQueries();
         toast.success(`Sesión restaurada como ${selectedAccount.fullName}`);
-        router.navigate({ to: "/" });
+        router.navigate({ to: "/dashboard" });
         return;
       }
 
@@ -300,7 +300,7 @@ function useAuthPageLogic() {
         setAuthSessionManually(data.session);
         await qc.invalidateQueries();
         toast.success("¡Administrador creado con éxito!");
-        router.navigate({ to: "/" });
+        router.navigate({ to: "/dashboard" });
       } else {
         toast.success("Cuenta creada. Revisa tu correo o inicia sesión.");
         setMode("login");

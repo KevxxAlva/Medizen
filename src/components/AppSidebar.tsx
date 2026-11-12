@@ -43,7 +43,7 @@ type ModuleDef = {
 };
 
 const navigation: ModuleDef[] = [
-  { title: "Dashboard", url: "/", icon: LayoutGrid },
+  { title: "Dashboard", url: "/dashboard", icon: LayoutGrid },
   { category: "CLÍNICA" },
   { title: "Sala de Espera", url: "/sala-espera", icon: Clock, receptionOrAdminOnly: true },
   { title: "Agenda", url: "/agenda", icon: Calendar },

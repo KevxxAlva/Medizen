@@ -33,7 +33,7 @@ export async function requireAdminAccess() {
   const roleObj = data?.roles;
   const roleName = Array.isArray(roleObj) ? roleObj[0]?.nombre_rol : (roleObj as any)?.nombre_rol;
   if ((roleName || "").toLowerCase() !== "admin") {
-    throw redirect({ to: "/" });
+    throw redirect({ to: "/dashboard" });
   }
 
   return { user };
