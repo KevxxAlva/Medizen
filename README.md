@@ -4,14 +4,15 @@
 
 ![Medizen Logo](public/favicon.svg)
 
-**Plataforma de alta resolución para la gestión médica integral, administración clínica y flujo de trabajo sin fricción.**
+**Plataforma médica integral (_FemeSalud_) para la gestión clínica, operativa y financiera con renderizado híbrido SSR, sincronización en tiempo real y experiencia mobile-first.**
 
-[![React](https://img.shields.io/badge/React-19.0-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vite.dev/)
-[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v4.0-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Supabase](https://img.shields.io/badge/Supabase-Database%20%26%20Auth-3ECF8E?style=flat-square&logo=supabase&logoColor=white)](https://supabase.com/)
-[![Bun](https://img.shields.io/badge/Bun-Package%20Manager-FBF0DF?style=flat-square&logo=bun&logoColor=black)](https://bun.sh/)
+[![React](https://img.shields.io/badge/React-19.2-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![TanStack Start](https://img.shields.io/badge/TanStack%20Start-1.168-FF4154?style=flat-square&logo=react&logoColor=white)](https://tanstack.com/start)
+[![Vite](https://img.shields.io/badge/Vite-7.3-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vite.dev/)
+[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v4.2-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%26%20Realtime-3ECF8E?style=flat-square&logo=supabase&logoColor=white)](https://supabase.com/)
+[![Bun](https://img.shields.io/badge/Bun-Runtime%20%26%20PM-FBF0DF?style=flat-square&logo=bun&logoColor=black)](https://bun.sh/)
 
 </div>
 
@@ -19,168 +20,182 @@
 
 ## 🌟 Acerca de Medizen
 
-**Medizen** (*Medicina + Zen Flow*) nace para transformar la gestión clínica tradicional eliminando el caos de papeles, la lentitud y los sistemas rígidos. Diseñada con una estética moderna, minimalista y ultra fluida, permite a médicos, administradores y personal de recepción coordinar citas, expedientes, facturación e inventario con la máxima velocidad y seguridad.
+**Medizen** (_Medicina + Zen Flow_) centraliza la operación diaria de consultorios y clínicas (**FemeSalud**) en una aplicación web instalable (PWA) construida sobre **TanStack Start**, **React 19** y **Supabase**. Permite a médicos, recepcionistas y administradores coordinar sala de espera, agenda, expedientes clínicos, facturación multimoneda, honorarios médicos, inventario y reportes ejecutivos con baja latencia y aislamiento estricto por rol.
 
 ---
 
-## 🚀 Módulos y Características Principales
+## 🚀 Módulos y Rutas del Sistema
 
-### 🔒 Acceso Rápido con PIN de 4 Dígitos & Bóveda Local
-* **Bóveda Cifrada en el Dispositivo**: Una vez que un usuario inicia sesión con sus credenciales, el dispositivo queda vinculado de forma segura.
-* **Cifrado Robusto**: Utiliza la Web Cryptography API (`PBKDF2` + `AES-GCM` de 256 bits) con un **cifrador criptográfico puro de respaldo** compatible universalmente con navegadores móviles en conexiones locales HTTP y HTTPS.
-* **Entrada Rápida OTP**: Desbloqueo inmediato en 1 segundo con teclado visual de 4 dígitos, selector de cuentas múltiples y animaciones hápticas de error.
+### 🩺 Operación Clínica
 
-### 📱 Experiencia Mobile-First 100% Responsiva
-* **Barra Superior Flotante (`md:hidden`)**: Con acceso al menú lateral, isotipo de Medizen, nombre de la clínica en tiempo real y selector de temas.
-* **Menú Lateral Deslizable (Mobile Drawer)**: Panel táctil con efecto *backdrop-blur* y cierre automático al navegar.
-* **Barra de Navegación Inferior (Bottom Nav)**: Acceso directo con el pulgar a las áreas más utilizadas: *Dashboard, Agenda, Pacientes, Servicios y Facturación*.
-* **Tarjetas y Formularios Adaptables**: Espaciados y tamaños de toque optimizados para pantallas táctiles de cualquier tamaño.
+- **Dashboard Ejecutivo (`/`)**: KPIs clínicos y financieros en vivo, gráficas interactivas (`@tanstack/charts` y `recharts`), metas y eventos programados (`DashboardGoalsAndEvents`), widget de calendario (`DashboardCalendarWidget`), tesorería diaria (`DashboardDailyTreasuryCard`), perspectivas clínicas (`AiClinicalInsightsCard`), calculadora cambiaria y reportes PDF.
+- **Sala de Espera y Turnos (`/sala-espera`)**: Tablero operativo en tiempo real entre recepción, consultorios y caja (_Citados / Por Llegar_, _En Sala de Espera_ y _En Consultorio_), habilitado para roles **Recepción** y **Admin**.
+- **Agenda Inteligente (`/agenda`)**: Gestión de citas sincronizada por WebSockets con recordatorios automatizados mediante Supabase Edge Function (`appointment-reminders`).
+- **Pacientes y Expedientes (`/pacientes`, `/pacientes/$patientId`)**: Ficha demográfica y antecedentes clínicos, timeline cronológico (`PatientTimeline`), notas clínicas (`ClinicalNotesPanel`), archivos adjuntos (`PatientFilesTab`), calculadoras médicas (`medicalCalculators.ts`), dictado por voz (`VoiceDictationButton`) y exportación de historia médica completa en PDF (`generateFullHistoryPdf.ts`).
+- **Servicios Médicos (`/servicios`) y Personal (`/doctores`)**: Catálogo centralizado de consultas, ecografías y procedimientos con costos base; administración de personal médico y perfiles _(ruta `/doctores` restringida a `admin`)_.
 
-### 📅 Agenda Inteligente & Citas en Tiempo Real
-* **Calendario Interactivo**: Visualización por día, semana y mes con resolución visual en cascada para turnos solapados.
-* **Sincronización WebSocket**: Los cambios de estado (Pendiente, En Consulta, Completada, Cancelada) se reflejan instantáneamente en todos los dispositivos conectados mediante Supabase Realtime.
-* **Filtros por Especialidad y Doctor**: Búsqueda rápida de citas por paciente o médico tratante.
+### 💳 Finanzas Multimoneda e Inventario
 
-### 🩺 Pacientes y Expedientes Clínicos
-* **Ficha Médica Digital Unificada**: Información demográfica, antecedentes patológicos, familiares, alergias y tipo de sangre.
-* **Historial de Consultas**: Evoluciones médicas cronológicas, motivos de consulta, exámenes físicos y diagnósticos.
-* **Especialidades Médicas Multiversales**: Soporte adaptativo para Ginecología, Obstetricia, Medicina General, Pediatría y múltiples ramas médicas.
+- **Tasas Cambiarias en Tiempo Real (`useExchangeRate`)**: Sincronización periódica (cada 60 s) para conversión entre **Dólar BCV ($)**, **Euro BCV (€)**, **USDT Binance P2P** y **Bolívares (Bs.)**, con calculadora integrada (`BcvCalculatorDialog`).
+- **Ventas y Facturación (`/facturacion`)**: Emisión y cobro de facturas con partición por médico (`invoiceDoctorPartition.ts`), comprobantes individuales en PDF (`generateIndividualInvoice.ts`) y **Cierre de Caja / Reporte Z** (`CashCloseDialog`, `generateCashCloseReport.ts`).
+- **Cuentas (`/cuentas`), Honorarios Médicos (`/honorarios`) y Métodos de Pago (`/metodos-pago`)**: Tesorería, conciliación de cuentas, cálculo de honorarios (con apoyo de la Edge Function `doctor-fees`) y configuración de métodos de pago _(restringidos a `admin`)_.
+- **Inventario y Activos Físicos (`/stocks`)**: Control de existencias, insumos y stock _(restringido a `admin`)_.
 
-### 💊 Servicios y Procedimientos Médicos
-* **Catálogo Centralizado**: Registro de consultas, ecografías, procedimientos quirúrgicos y análisis clínicos.
-* **Honorarios y Duración Estimada**: Configuración de costos base y tiempos estándar por servicio.
+### 📊 Reportes, Récipes, Auditoría y PWA
 
-### 💳 Finanzas, Facturación & Caja Chica
-* **Cuentas Financieras**: Gestión de cuentas bancarias, bóvedas en efectivo y caja chica en tiempo real.
-* **Métodos de Pago Multimoneda**: Registro y conciliación de cobros en Dólares (USD), Bolívares (VES), Zelle, Pago Móvil, Tarjetas y Transferencias.
-* **Cálculo Automático de Costos**: Vinculación directa con el catálogo de servicios médicos (`costo_base`) al agendar o actualizar citas, garantizando facturación precisa sin montos en $0.00.
-* **Facturación Profesional**: Emisión de facturas electrónicas con cálculo de subtotales, coberturas de seguro y descarga de recibos individuales en PDF.
+- **Centro de Reportes (`/reportes`)**: Análisis financiero, operativo y de captación filtrable por rango de fechas y médico, con exportación a **PDF** y **CSV** (`generateExecutiveReport.ts`).
+- **Récipes Médicos, Configuración y Soporte (`/configuracion`, `/support`)**: Diseñador visual de récipes (`RecipeDesigner`, `RecipeLivePreview`), verificación por código (`RecipeVerificationModal`), envío directo por **WhatsApp** (`sendRecipeViaWhatsApp`), y personalización de temas (modo claro, modo oscuro negro puro y paletas de acento).
+- **Auditoría (`/auditoria`)**: Registro de trazabilidad administrativa de operaciones _(restringido a `admin`)_.
+- **Instalación PWA (`/descargar`) y Navegación Rápida (`/auth`, `/descargar`)**: Página dedicada de instalación para Windows, macOS, Android e iOS con código QR (`sw.js`, `manifest.webmanifest`), paleta de comandos (`Ctrl+K` / `CommandMenu`), barra lateral colapsable (`AppSidebar`) y barra inferior móvil (`BottomNavBar`).
 
-### 🎨 Personalización de Temas y Branding Clínico
-* **Paletas de Acento Especializadas**: Selector en vivo de combinaciones visuales médicas (Azul Medizen, Verde Esmeralda, Púrpura Real, Teal Quirúrgico, Rosa Obstétrico).
-* **Isotipo Reactivo SVG (`MedizenLogo`)**: Logo vectorial estilizado con cinta de Möbius que se sincroniza instantáneamente con las variables CSS activas (`--primary`).
-* **Favicon Dinámico**: Actualización en tiempo real del icono de la pestaña del navegador según el color de acento elegido.
-* **Modo Claro / Oscuro**: Alternador ergonómico de contraste con persistencia y transiciones visuales de alto rendimiento.
+---
 
-### ⚡ Rendimiento de Grado Médico & Core Web Vitals (INP < 50ms)
-* **Eliminación de Renderizado Redundante**: Desacoplamiento del reloj de cabecera mediante el micro-componente aislado `LiveClock`, liberando el hilo principal de ejecuciones por segundo en el Tablero.
-* **Memoización de Visualizaciones**: Componentes gráficos de Recharts (`MiniAreaChart`, `DonutChart`) memoizados para responder sin recálculos pesados.
-* **Renderizado Concurrente**: Integración de `startTransition` y diferimiento con `requestIdleCallback` para interacción a siguiente pintura (*Interaction to Next Paint*) ultra veloz.
+## 🔒 Seguridad, Roles y Rendimiento
 
-### 🤖 Asistente Clínico Inteligente
-* **Tarjetas de Perspectiva Médica**: Widgets interactivos en el Dashboard (`AiClinicalInsightsCard`) con alertas operativas y métricas de flujo de pacientes.
-* **Asistente Clínico en Consulta**: Panel de apoyo inteligente integrado (`AiClinicalAssistant`) para resumir evoluciones y agilizar la atención.
-
-### 📄 Generador de Récipes y Documentos Clínicos
-* **Diseñador Visual de Récipes**: Personalización de logotipos, colores institucionales, membretes, tipografías y pies de página.
-* **Exportación en Alta Definición (PDF)**: Descarga directa de recetas médicas, justificativos de asistencia y reposos médicos oficiales.
-* **Envío Instantáneo por WhatsApp**: Envío directo de la prescripción al número del paciente en un solo toque.
+- **Aislamiento Estricto por Rol (`useUserRoleScope` + `AdminPathGuard` + RLS)**: Soporta los perfiles `admin`, `recepcionista` y `doctor`. Los médicos acceden exclusivamente a sus propios pacientes, citas, métricas y partición de facturas.
+- **Acceso Rápido con PIN y Bloqueo por Inactividad**: Bóveda local en cliente cifrada con Web Cryptography API (`PBKDF2` + `AES-GCM` de 256 bits) para desbloqueo por PIN de 4 dígitos y bloqueo automático de pantalla tras 10 minutos de inactividad (`useInactivityLock`, `InactivityLockOverlay`).
+- **Caché Multinivel L1/L2 (`setupPersistentQueryCache`)**: Caché en memoria con TanStack React Query v5 hidratada instantáneamente desde `localStorage` (ventana L2 de 30 minutos para catálogos y métricas) bajo estrategia _Stale-While-Revalidate_, combinada con `useRealtimeSync`.
+- **Optimización INP & SSR Híbrido**: Renderizado con TanStack Start + Nitro (`src/server.ts`), precarga de rutas por intención (`defaultPreload: "intent"`), aislamiento de estado y transiciones concurrentes (`startTransition`, `useSyncExternalStore`) para mantener fluida la respuesta en escritorio y móvil.
 
 ---
 
 ## 🛠️ Stack Tecnológico
 
-| Capa | Tecnologías |
-| :--- | :--- |
-| **Frontend Framework** | [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/) |
-| **Build Tool & Bundler** | [Vite 6](https://vite.dev/) |
-| **Enrutamiento** | [TanStack Router](https://tanstack.com/router) *(Type-safe routing)* |
-| **Estado y Caché Servidor** | [TanStack React Query v5](https://tanstack.com/query) |
-| **Estilos & UI** | [TailwindCSS v4](https://tailwindcss.com/) + [Radix UI](https://www.radix-ui.com/) + [Framer Motion](https://www.framer.com/motion/) |
-| **Backend & Base de Datos** | [Supabase](https://supabase.com/) *(PostgreSQL, RLS, Auth, WebSockets Realtime)* |
-| **Generación de Documentos** | [jsPDF](https://github.com/parallax/jsPDF) + `jspdf-autotable` |
-| **Motor de Ejecución / Paquetes** | [Bun](https://bun.sh/) *(o Node.js / npm)* |
+| Capa                           | Tecnologías                                                                                                                                                                             |
+| :----------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Framework Full-Stack & SSR** | [TanStack Start](https://tanstack.com/start) (`src/start.ts`, `src/server.ts`) + [Nitro](https://nitro.build/) _(preset Vercel)_                                                        |
+| **UI & Lenguaje**              | [React 19](https://react.dev/) + [TypeScript 5.8](https://www.typescriptlang.org/)                                                                                                      |
+| **Build Tool**                 | [Vite 7](https://vite.dev/) (`@lovable.dev/vite-tanstack-config`)                                                                                                                       |
+| **Enrutamiento & Estado**      | [TanStack Router](https://tanstack.com/router) + [TanStack React Query v5](https://tanstack.com/query)                                                                                  |
+| **Visualización de Datos**     | [TanStack Charts](https://tanstack.com/charts) + [Recharts](https://recharts.org/)                                                                                                      |
+| **Estilos & Componentes**      | [Tailwind CSS v4](https://tailwindcss.com/) + [Radix UI / shadcn/ui](https://www.radix-ui.com/) + [Framer Motion](https://www.framer.com/motion/) + [Lucide Icons](https://lucide.dev/) |
+| **Backend & Base de Datos**    | [Supabase](https://supabase.com/) _(PostgreSQL, RLS, Auth, WebSockets Realtime, Edge Functions)_                                                                                        |
+| **Documentos & Utilidades**    | [jsPDF](https://github.com/parallax/jsPDF) + `jspdf-autotable` + `xlsx` + `qrcode` + `zod` + `react-hook-form`                                                                          |
+| **Runtime & Paquetes**         | [Bun](https://bun.sh/)                                                                                                                                                                  |
 
 ---
 
 ## 💻 Instalación y Puesta en Marcha
 
-Sigue estos pasos para levantar el entorno de desarrollo en tu máquina local:
-
 ### 1. Clonar el repositorio
+
 ```bash
-git clone https://github.com/KevxxAlva/femesalud-zen-flow.git
-cd femesalud-zen-flow
+git clone https://github.com/KevxxAlva/Medizen.git
+cd Medizen
 ```
 
 ### 2. Instalar dependencias
-Recomendamos utilizar **Bun** para máxima velocidad:
+
 ```bash
 bun install
 ```
-*(O alternativamente: `npm install`)*
 
 ### 3. Variables de Entorno
+
 Crea un archivo `.env` en la raíz del proyecto con las credenciales de tu proyecto Supabase:
+
 ```env
+# Cliente (navegador / Vite)
 VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
-VITE_SUPABASE_ANON_KEY=tu-anon-key-de-supabase
+VITE_SUPABASE_PUBLISHABLE_KEY=tu-publishable-o-anon-key
+
+# Servidor SSR / Funciones de Administrador (TanStack Start)
+SUPABASE_URL=https://tu-proyecto.supabase.co
+SUPABASE_PUBLISHABLE_KEY=tu-publishable-o-anon-key
+SUPABASE_SERVICE_ROLE_KEY=tu-service-role-key
 ```
 
-### 4. Iniciar el Servidor de Desarrollo
+> Nota: `src/integrations/supabase/client.ts` también acepta `VITE_SUPABASE_ANON_KEY` como alias de respaldo en cliente. `SUPABASE_SERVICE_ROLE_KEY` solo debe configurarse en el entorno del servidor.
+
+### 4. Comandos Disponibles
+
 ```bash
+# Servidor de desarrollo (Vite + TanStack Start)
 bun run dev
-```
-La aplicación iniciará en `http://localhost:5173` (o `http://localhost:8080`).
 
-### 5. Compilar para Producción
-```bash
+# Compilar para producción
 bun run build
+
+# Compilar en modo desarrollo
+bun run build:dev
+
+# Previsualizar compilación de producción
+bun run preview
+
+# Linter y formateo de código
+bun run lint
+bun run format
 ```
+
+La aplicación iniciará en el puerto configurado por Vite (por defecto `http://localhost:5173`).
 
 ---
 
 ## 📁 Estructura del Proyecto
 
 ```text
-femesalud-zen-flow/
-├── .agents/
-│   └── skills/commit/       # Skill de commits convencionales automáticos
-├── public/
-│   ├── favicon.svg          # Isotipo oficial Medizen (Möbius Zen)
-│   └── ...
+Medizen/
+├── .agents/skills/          # Skills de agente (auditoría UI/INP, commits, web guidelines, media)
+├── public/                  # Activos estáticos, favicons SVG adaptativos, manifest y sw.js (PWA)
 ├── src/
-│   ├── components/          # Componentes de UI, diálogos y vistas de módulos
-│   │   ├── consultation/    # Formularios y asistente clínico con IA
-│   │   ├── dashboard/       # Widgets analíticos y métricas operativas
-│   │   ├── finance/         # Cuentas bancarias y métodos de pago
-│   │   ├── physical-asset/  # Inventario y control de stocks
-│   │   ├── settings/        # Diseñador visual de récipes
-│   │   ├── ui/              # Componentes base Radix UI / Tailwind
-│   │   ├── AppSidebar.tsx   # Barra lateral con menú drawer móvil
+│   ├── components/          # Componentes y vistas por dominio
+│   │   ├── agenda/          # Calendario y vistas de agenda
+│   │   ├── appointment/     # Formularios y gestión de citas
+│   │   ├── audit/           # Visor de logs de auditoría
+│   │   ├── auth/            # Formularios de login, PIN, recuperación y bootstrap
+│   │   ├── command/         # Acciones de la paleta de comandos (Ctrl+K)
+│   │   ├── consultation/    # Historia clínica y asistente en consulta
+│   │   ├── dashboard/       # Métricas, gráficas, calculadora BCV y tesorería diaria
+│   │   ├── facturacion/     # Componentes auxiliares de facturación
+│   │   ├── finance/         # Ventas, cuentas, honorarios, métodos de pago y Reporte Z
+│   │   ├── patient-detail/  # Secciones del expediente clínico del paciente
+│   │   ├── patient-form/    # Formulario modular de registro de pacientes
+│   │   ├── physical-asset/  # Módulo de inventario y existencias
+│   │   ├── reports/         # Centro de descargas PDF/CSV y analítica
+│   │   ├── services/        # Catálogo y gestión de servicios médicos
+│   │   ├── settings/        # Diseñador visual de récipes y configuración clínica
+│   │   ├── skeletons/       # Estados de carga progresiva
+│   │   ├── support/         # Centro de soporte
+│   │   ├── ui/              # Primitivas Radix UI / Tailwind CSS v4
+│   │   ├── waiting-room/    # Tablero en vivo de sala de espera y turnos
+│   │   ├── AppSidebar.tsx   # Navegación lateral responsiva con drawer móvil
 │   │   ├── BottomNavBar.tsx # Barra de navegación inferior táctil
-│   │   ├── MedizenLogo.tsx  # Isotipo reactivo SVG sincronizado con el tema
-│   │   ├── ThemeCustomizer.tsx # Personalizador de paletas y colores clínicos
-│   │   ├── ThemeToggle.tsx  # Alternador de modo claro / oscuro
-│   │   └── ...
-│   ├── hooks/               # Hooks personalizados (autenticación, sync realtime)
-│   ├── integrations/        # Cliente de Supabase y esquemas tipados
+│   │   ├── InactivityLockOverlay.tsx # Bloqueo de sesión por inactividad con PIN
+│   │   └── MedizenLogo.tsx  # Isotipo SVG sincronizado con el tema activo
+│   ├── hooks/               # Hooks (auth, alcance por rol, tasas BCV/USDT, Realtime, PWA, PIN lock, voz)
+│   ├── integrations/        # Cliente Supabase cliente/servidor, auth-middleware y tipos DB
 │   ├── lib/
-│   │   ├── api/             # Capa de servicios y consultas API
-│   │   ├── auth/            # Bóveda cifrada y autenticación rápida por PIN
-│   │   └── pdf/             # Motores de generación de récipes y reportes PDF
-│   ├── routes/              # Árbol de rutas TanStack Router
-│   │   ├── _authenticated/  # Rutas protegidas por sesión
-│   │   └── auth.tsx         # Pantalla de acceso, PIN y recuperación
-│   ├── App.css              # Variables CSS y tokens de diseño
-│   └── main.tsx             # Punto de entrada de la aplicación
-├── index.html               # Plantilla HTML con branding oficial Medizen
-└── package.json
+│   │   ├── api/             # Capa de consultas y mutaciones hacia Supabase
+│   │   ├── auth/            # Bóveda criptográfica local y acceso rápido por PIN
+│   │   ├── cache/           # Caché multinivel L1/L2 (persistentQueryCache.ts)
+│   │   ├── constants/       # Constantes de dominio
+│   │   ├── pdf/             # Generadores de historia clínica completa en PDF
+│   │   └── utils/           # Generadores de PDF/CSV (récipes, facturas, Reporte Z) y WhatsApp
+│   ├── routes/              # Enrutamiento basado en archivos (TanStack Start / Router)
+│   │   ├── _authenticated/  # Rutas protegidas por sesión y guardia de administrador
+│   │   ├── __root.tsx       # Shell HTML raíz, PWA SW, tema y QueryClientProvider
+│   │   ├── auth.tsx         # Acceso estándar, PIN rápido y recuperación
+│   │   └── descargar.tsx    # Landing de instalación PWA con QR multiplataforma
+│   ├── types/               # Definiciones TypeScript compartidas
+│   ├── router.tsx           # Configuración de Router + QueryClient + caché persistente
+│   ├── start.ts             # Middlewares globales de TanStack Start
+│   ├── server.ts            # Punto de entrada SSR con captura y renderizado de errores
+│   └── styles.css           # Tailwind CSS v4 y tokens de diseño
+├── supabase/
+│   ├── functions/           # Edge Functions (appointment-reminders, doctor-fees)
+│   ├── migrations/          # Migraciones SQL y políticas RLS
+│   └── config.toml          # Configuración local de Supabase
+├── package.json
+├── tsconfig.json
+├── vercel.json              # Configuración de despliegue ("framework": "tanstack-start")
+└── vite.config.ts           # TanStack Start + Nitro (preset vercel)
 ```
-
----
-
-## 🔒 Seguridad y Privacidad
-
-* **Row Level Security (RLS)**: Cada consulta a la base de datos está validada a nivel de fila según el rol y pertenencia del usuario (`admin`, `doctor`, `recepcionista`).
-* **Bóveda Criptográfica en Cliente**: Las claves de seguridad de 4 dígitos derivan llaves de cifrado independientes sin exponer contraseñas en texto plano.
-* **Control de Auditoría**: Trazabilidad de accesos y modificaciones en registros médicos y financieros.
 
 ---
 
 <div align="center">
 
-Desarrollado con dedicación para profesionales de la salud.  
+Desarrollado para la gestión clínica de alta eficiencia.  
 **Medizen — Medicina en Flujo Continuo.**
 
 </div>
