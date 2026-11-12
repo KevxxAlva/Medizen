@@ -1,4 +1,3 @@
-import { APP_LOCALE, APP_TIME_ZONE } from "@/lib/constants/locale";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
@@ -10,7 +9,6 @@ import {
   Loader2,
   Shield,
   Search,
-  ClipboardList,
   FileText,
   Lock,
   KeyRound,
@@ -28,7 +26,6 @@ import {
 import { COLOR_THEMES, type ColorTheme, updateFaviconColor } from "@/components/ThemeCustomizer";
 import { useAuthSession, useIsAdmin, useRoles } from "@/hooks/useAuth";
 import { useMyProfile, useUpdateProfile } from "@/lib/api/profiles";
-import { useAuditLogs } from "@/lib/api/audit";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -77,7 +74,7 @@ function ConfiguracionPage() {
       </header>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 bg-muted/50 p-1 rounded-2xl mb-6 max-w-2xl h-auto flex-wrap">
+        <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1 rounded-2xl mb-6 max-w-xl h-auto">
           <TabsTrigger
             value="profile"
             className="rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 py-2.5 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground"
@@ -89,13 +86,6 @@ function ConfiguracionPage() {
             className="rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 py-2.5 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground"
           >
             <Lock className="h-4 w-4" /> Seguridad
-          </TabsTrigger>
-          <TabsTrigger
-            value="audit"
-            className="rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 py-2.5 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground"
-            disabled={!isAdmin && !loadingProfile}
-          >
-            <ClipboardList className="h-4 w-4" /> Auditoría
           </TabsTrigger>
           <TabsTrigger
             value="recipe"
@@ -119,12 +109,6 @@ function ConfiguracionPage() {
         <TabsContent value="security" className="outline-none space-y-4">
           <SecuritySection />
         </TabsContent>
-
-        {isAdmin && (
-          <TabsContent value="audit" className="outline-none space-y-4">
-            <AuditLogSection />
-          </TabsContent>
-        )}
 
         {isAdmin && (
           <TabsContent value="recipe" className="outline-none space-y-4">
@@ -466,90 +450,6 @@ function AccentThemeSection() {
           );
         })}
       </div>
-    </div>
-  );
-}
-
-function AuditLogSection() {
-  const { data: logs = [], isLoading } = useAuditLogs(100);
-
-  return (
-    <div className="bg-card border border-border/40 rounded-[2rem] p-4 sm:p-8 shadow-sm">
-      <h2 className="text-xl font-bold text-primary mb-4 flex items-center gap-2">
-        <Shield className="h-5 w-5" /> Registro de Actividades
-      </h2>
-      <p className="text-muted-foreground text-sm mb-6">
-        Este es el registro de auditoría de las acciones críticas (como eliminaciones) realizadas
-        por los usuarios.
-      </p>
-
-      {isLoading ? (
-        <div className="flex justify-center p-8">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      ) : logs.length === 0 ? (
-        <div className="text-center p-8 text-muted-foreground">
-          No hay registros de auditoría disponibles.
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-border/40 text-muted-foreground">
-                <th className="p-3">Fecha y Hora</th>
-                <th className="p-3">Usuario</th>
-                <th className="p-3">Acción</th>
-                <th className="p-3">Entidad</th>
-                <th className="p-3">Detalles</th>
-              </tr>
-            </thead>
-            <tbody>
-              {logs.map((log) => {
-                const actionName = (log as any).action_type || (log as any).action || "INFO";
-                const isDelete = actionName === "DELETE";
-                const isInsert = actionName === "INSERT";
-                const formattedDate = log.created_at
-                  ? new Date(log.created_at).toLocaleString(APP_LOCALE, { timeZone: APP_TIME_ZONE })
-                  : "-";
-                const userDisplay =
-                  (log as any).perfiles?.full_name ||
-                  (log as any).perfiles?.email ||
-                  (log as any).user_email ||
-                  (log.user_id ? String(log.user_id).slice(0, 8) : "Sistema");
-
-                return (
-                  <tr key={log.id} className="border-b border-border/20 hover:bg-muted/30">
-                    <td className="p-3 whitespace-nowrap text-xs text-muted-foreground">
-                      {formattedDate}
-                    </td>
-                    <td className="p-3 font-medium text-foreground">{userDisplay}</td>
-                    <td className="p-3">
-                      <span
-                        className={cn(
-                          "px-2 py-0.5 rounded text-[10px] font-bold uppercase",
-                          isDelete
-                            ? "bg-red-500/10 text-red-500"
-                            : isInsert
-                              ? "bg-green-500/10 text-green-500"
-                              : "bg-blue-500/10 text-blue-500",
-                        )}
-                      >
-                        {actionName}
-                      </span>
-                    </td>
-                    <td className="p-3 text-muted-foreground capitalize">
-                      {(log as any).entity_type || (log as any).entity_name || "-"}
-                    </td>
-                    <td className="p-3 text-xs max-w-xs truncate text-muted-foreground font-mono">
-                      {log.details ? JSON.stringify(log.details) : "-"}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
     </div>
   );
 }

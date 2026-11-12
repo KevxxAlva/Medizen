@@ -43,16 +43,21 @@ export function CommandMenu() {
   return (
     <>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] p-4">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Buscador global"
+          className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] p-4"
+        >
           <button
             type="button"
             aria-label="Cerrar menú de comandos"
-            className="fixed inset-0 bg-background/80 backdrop-blur-sm border-none cursor-default"
+            className="fixed inset-0 z-0 bg-background/80 backdrop-blur-sm border-none cursor-default"
             onClick={() => setOpen(false)}
           />
           <Command
             shouldFilter={false}
-            className="w-full max-w-lg bg-card rounded-2xl shadow-2xl border border-border/50 overflow-hidden overscroll-contain flex flex-col animate-in fade-in-0 zoom-in-95 duration-150"
+            className="relative z-10 w-full max-w-lg bg-card text-card-foreground rounded-2xl shadow-2xl border border-border overflow-hidden overscroll-contain flex flex-col animate-in fade-in-0 zoom-in-95 duration-150"
             label="Global Command Menu"
           >
             <div className="flex items-center px-4 py-3 border-b border-border/30 gap-3">
