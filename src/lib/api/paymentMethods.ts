@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 import type { RateType } from "@/hooks/useExchangeRate";
 
 export type VePaymentCategory =
@@ -302,13 +303,21 @@ export function formatPaymentMethodCopyText(
 }
 
 export function usePaymentMethods() {
+  const { user } = useAuthSession();
   return useQuery({
-    queryKey: ["payment_methods"],
+    queryKey: ["payment_methods", user?.id],
+    enabled: !!user,
     queryFn: async (): Promise<PaymentMethod[]> => {
-      const { data, error } = await supabase
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
+      let query = supabase
         .from("payment_methods")
         .select("*")
         .order("created_at", { ascending: true });
+      if (clinicId) {
+        query = (query as any).eq("id_clinica", clinicId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return (data || []).map(decodeMethodRow);
@@ -318,32 +327,39 @@ export function usePaymentMethods() {
 
 export function useCreatePaymentMethod() {
   const qc = useQueryClient();
+  const { user } = useAuthSession();
   return useMutation({
     mutationFn: async (method: Omit<PaymentMethod, "id">) => {
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
       const encodedCategory = encodeCategoryWithDetails(method.category, method.details);
       writeLocalDetails(method.name, method.details);
 
+      const basePayload: Record<string, any> = {
+        name: method.name,
+        category: encodedCategory,
+        account_id: method.account_id || null,
+        status: method.status,
+      };
+      if (clinicId) basePayload.id_clinica = clinicId;
+
       let result = await supabase
         .from("payment_methods")
-        .insert({
-          name: method.name,
-          category: encodedCategory,
-          account_id: method.account_id || null,
-          status: method.status,
-        })
+        .insert(basePayload as any)
         .select()
         .single();
 
       if (result.error) {
         // Fallback if category column has a length constraint
+        const fallbackPayload: Record<string, any> = {
+          name: method.name,
+          category: method.category.split(CATEGORY_DELIMITER)[0].trim(),
+          account_id: method.account_id || null,
+          status: method.status,
+        };
+        if (clinicId) fallbackPayload.id_clinica = clinicId;
         result = await supabase
           .from("payment_methods")
-          .insert({
-            name: method.name,
-            category: method.category.split(CATEGORY_DELIMITER)[0].trim(),
-            account_id: method.account_id || null,
-            status: method.status,
-          })
+          .insert(fallbackPayload as any)
           .select()
           .single();
       }

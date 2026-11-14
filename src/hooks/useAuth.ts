@@ -6,12 +6,48 @@ import { setSessionPersistence, supabase } from "@/integrations/supabase/client"
 import { clearScreenLock } from "@/lib/auth/quickAccess";
 import { clearPersistentQueryCache } from "@/lib/cache/persistentQueryCache";
 
-export type AppRole = "admin" | "doctor" | "recepcionista" | "medico";
+export type AppRole = "admin" | "doctor" | "recepcionista" | "medico" | "superadmin";
 
 export interface AuthState {
   session: Session | null;
   user: User | null;
   loading: boolean;
+}
+
+export const PRIMARY_CLINIC_ID = "c0000000-0000-0000-0000-000000000001";
+
+export function useCurrentClinicId() {
+  const { user } = useAuthSession();
+  const { data } = useQuery({
+    queryKey: ["current_clinic_id", user?.id],
+    enabled: !!user?.id,
+    staleTime: 1000 * 60 * 10,
+    queryFn: async (): Promise<string | null> => {
+      if (!user?.id) return null;
+      const { data: userData } = await supabase
+        .from("usuarios")
+        .select("id_clinica")
+        .eq("auth_id", user.id)
+        .maybeSingle();
+      return userData?.id_clinica ?? PRIMARY_CLINIC_ID;
+    },
+  });
+  return data ?? null;
+}
+
+export async function resolveCurrentUserClinicId(userId?: string): Promise<string | null> {
+  let uid = userId;
+  if (!uid) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    uid = sessionData.session?.user?.id;
+  }
+  if (!uid) return null;
+  const { data } = await supabase
+    .from("usuarios")
+    .select("id_clinica")
+    .eq("auth_id", uid)
+    .maybeSingle();
+  return data?.id_clinica ?? PRIMARY_CLINIC_ID;
 }
 
 export async function requireAdminAccess() {
@@ -136,7 +172,7 @@ export function useRoles() {
 
       const { data, error } = await supabase
         .from("usuarios")
-        .select("roles(nombre_rol)")
+        .select("es_superadmin, roles(nombre_rol)")
         .eq("auth_id", user!.id)
         .maybeSingle();
 
@@ -145,12 +181,25 @@ export function useRoles() {
         throw error;
       }
 
-      if (!data || !data.roles) {
+      if (!data) {
         return defaultRoles;
       }
 
-      const roleName = Array.isArray(data.roles) ? data.roles[0]?.nombre_rol : (data.roles as any).nombre_rol;
-      const roles: AppRole[] = roleName ? [roleName.toLowerCase() as AppRole] : defaultRoles;
+      const rawRole = Array.isArray(data.roles) ? data.roles[0]?.nombre_rol : (data.roles as any)?.nombre_rol;
+      const roleName = (rawRole || "").toLowerCase();
+      const roles: AppRole[] = [];
+
+      if (data.es_superadmin || roleName.includes("super")) {
+        roles.push("superadmin", "admin");
+      } else if (roleName.includes("admin")) {
+        roles.push("admin");
+      } else if (roleName.includes("recep")) {
+        roles.push("recepcionista");
+      } else if (roleName.includes("medic") || roleName.includes("doctor")) {
+        roles.push("doctor");
+      } else if (defaultRoles.length > 0) {
+        roles.push(...defaultRoles);
+      }
       if (typeof window !== "undefined" && user?.id) {
         try {
           localStorage.setItem(`medizen_cached_roles_${user.id}`, JSON.stringify(roles));
@@ -165,5 +214,11 @@ export function useRoles() {
 
 export function useIsAdmin() {
   const { data } = useRoles();
-  return (data ?? []).includes("admin");
+  return (data ?? []).includes("admin") || (data ?? []).includes("superadmin");
 }
+
+export function useIsSuperAdmin() {
+  const { data } = useRoles();
+  return (data ?? []).includes("superadmin");
+}
+

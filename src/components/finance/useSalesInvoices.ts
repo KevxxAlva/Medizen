@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { logAuditAction } from "@/lib/api/audit";
 import { inferCategoryFromMethod } from "@/lib/api/paymentMethods";
@@ -63,44 +64,57 @@ async function creditAccountForMethod(targetMethodName: string, usdAmount: numbe
 
 export function useSalesInvoices() {
   const queryClient = useQueryClient();
+  const { user } = useAuthSession();
 
   const { data: facturas = [], isLoading, isFetching, refetch } = useQuery({
-    queryKey: ["facturas"],
+    queryKey: ["facturas", user?.id],
+    enabled: !!user,
     staleTime: 0, // Inmediato: siempre evaluar datos frescos
     refetchOnMount: "always", // Cada vez que el usuario abre Ventas, consultar de inmediato a Supabase
     refetchOnWindowFocus: true, // Si regresa a la pestaña o ventana, refresca
     refetchInterval: 5000, // Sincronización en tiempo real cada 5 segundos
     queryFn: async () => {
-      const [{ data, error }, { data: allServices }, { data: recentCitas }] = await Promise.all([
-        supabase
-          .from("facturas")
-          .select(`
-            id_factura, 
-            id_paciente,
-            fecha_emision,
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
+      let fQuery = supabase
+        .from("facturas")
+        .select(`
+          id_factura, 
+          id_paciente,
+          fecha_emision,
+          subtotal,
+          monto_paciente,
+          total_general,
+          estado_pago,
+          pacientes (nombre, apellido),
+          pagos (id_pago, metodo_pago, referencia, monto_pagado, fecha_pago),
+          detalles_factura (
+            id_detalle,
+            id_servicio,
+            cantidad,
+            precio_unitario,
             subtotal,
-            monto_paciente,
-            total_general,
-            estado_pago,
-            pacientes (nombre, apellido),
-            pagos (id_pago, metodo_pago, referencia, monto_pagado, fecha_pago),
-            detalles_factura (
-              id_detalle,
-              id_servicio,
-              cantidad,
-              precio_unitario,
-              subtotal,
-              servicios (nombre_servicio)
-            )
-          `)
-          .order("id_factura", { ascending: false }),
-        supabase.from("servicios").select("id_servicio, nombre_servicio, costo_base"),
-        supabase
-          .from("citas")
-          .select("id_cita, id_paciente, id_medico, fecha_hora, motivo, medicos(nombre, apellido, especialidades(nombre))")
-          .or("motivo.is.null,motivo.not.ilike.%[TEST-LOAD]%")
-          .order("fecha_hora", { ascending: false })
-          .limit(500),
+            servicios (nombre_servicio)
+          )
+        `)
+        .order("id_factura", { ascending: false });
+      let sQuery = supabase.from("servicios").select("id_servicio, nombre_servicio, costo_base");
+      let cQuery = supabase
+        .from("citas")
+        .select("id_cita, id_paciente, id_medico, fecha_hora, motivo, medicos(nombre, apellido, especialidades(nombre))")
+        .or("motivo.is.null,motivo.not.ilike.%[TEST-LOAD]%")
+        .order("fecha_hora", { ascending: false })
+        .limit(500);
+
+      if (clinicId) {
+        fQuery = (fQuery as any).eq("id_clinica", clinicId);
+        sQuery = (sQuery as any).eq("id_clinica", clinicId);
+        cQuery = (cQuery as any).eq("id_clinica", clinicId);
+      }
+
+      const [{ data, error }, { data: allServices }, { data: recentCitas }] = await Promise.all([
+        fQuery,
+        sQuery,
+        cQuery,
       ]);
 
       if (error) throw error;

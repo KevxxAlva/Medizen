@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuthSession } from "@/hooks/useAuth";
+import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { logAuditAction } from "@/lib/api/audit";
 
@@ -113,6 +113,7 @@ export function useAppointments(filters?: AppointmentFilters, options?: { enable
     refetchOnMount: "always",
     refetchOnWindowFocus: true,
     queryFn: async (): Promise<AppointmentWithPatient[]> => {
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
       const ascending = filters?.ascending ?? true;
       const PAGE_SIZE = 1000;
       let allResults: any[] = [];
@@ -132,6 +133,10 @@ export function useAppointments(filters?: AppointmentFilters, options?: { enable
             consultas(id_consulta)
           `)
           .order("fecha_hora", { ascending });
+
+        if (clinicId) {
+          query = (query as any).eq("id_clinica", clinicId);
+        }
 
         if (!filters?.includeTestLoad) {
           query = query.or("motivo.is.null,motivo.not.ilike.%[TEST-LOAD]%");
@@ -174,9 +179,13 @@ export function useAppointments(filters?: AppointmentFilters, options?: { enable
       const patientIds = [...new Set(results.map((a: any) => a.id_paciente).filter(Boolean))];
       const invoicesByPatient = new Map<number, any[]>();
 
-      const { data: allServices } = await supabase
+      let servQuery = supabase
         .from("servicios")
         .select("id_servicio, nombre_servicio, costo_base");
+      if (clinicId) {
+        servQuery = (servQuery as any).eq("id_clinica", clinicId);
+      }
+      const { data: allServices } = await servQuery;
       const servicesList = allServices || [];
 
       // Only fetch invoices if explicitly requested (e.g. in Facturación), avoids dozens of queries in Agenda
@@ -189,6 +198,10 @@ export function useAppointments(filters?: AppointmentFilters, options?: { enable
             .select("id_factura, id_paciente, total_general, estado_pago, fecha_emision, pagos(metodo_pago, referencia)")
             .in("id_paciente", chunk)
             .order("id_factura", { ascending: false });
+
+          if (clinicId) {
+            fQuery = (fQuery as any).eq("id_clinica", clinicId);
+          }
 
           if (filters?.from) {
             fQuery = fQuery.gte("fecha_emision", filters.from);
@@ -268,17 +281,24 @@ export function useAppointments(filters?: AppointmentFilters, options?: { enable
 
 export function useCreateAppointment() {
   const qc = useQueryClient();
+  const { user } = useAuthSession();
   return useMutation({
     mutationFn: async (input: AppointmentInput) => {
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
+      const citaInsertPayload: Record<string, any> = {
+        id_paciente: parseInt(input.patient_id),
+        id_medico: parseInt(input.doctor_id),
+        fecha_hora: input.scheduled_at,
+        motivo: input.reason,
+        estado: input.status || 'Programada',
+      };
+      if (clinicId) {
+        citaInsertPayload.id_clinica = clinicId;
+      }
+
       const { error, data: citaData } = await supabase
         .from("citas")
-        .insert({ 
-          id_paciente: parseInt(input.patient_id),
-          id_medico: parseInt(input.doctor_id),
-          fecha_hora: input.scheduled_at,
-          motivo: input.reason,
-          estado: input.status || 'Programada'
-        })
+        .insert(citaInsertPayload as any)
         .select()
         .single();
         
@@ -296,10 +316,14 @@ export function useCreateAppointment() {
         let finalPrice = Number(input.price) || 0;
         let matchedServiceId: number | null = null;
 
-        const { data: allServices } = await supabase
+        let servQuery = supabase
           .from("servicios")
           .select("id_servicio, nombre_servicio, costo_base")
           .order("id_servicio", { ascending: true });
+        if (clinicId) {
+          servQuery = (servQuery as any).eq("id_clinica", clinicId);
+        }
+        const { data: allServices } = await servQuery;
         const servicesList = allServices || [];
 
         const matchedServ = resolveServiceFromReason(input.reason, servicesList);
@@ -323,37 +347,50 @@ export function useCreateAppointment() {
         }
 
         const invoiceDate = input.scheduled_at || new Date().toISOString();
+        const facturaInsertPayload: Record<string, any> = {
+          id_paciente: parseInt(input.patient_id),
+          total_general: finalPrice,
+          subtotal: finalPrice,
+          monto_paciente: finalPrice,
+          estado_pago: input.payment_method ? 'Pagada' : 'Pendiente',
+          fecha_emision: invoiceDate,
+        };
+        if (clinicId) {
+          facturaInsertPayload.id_clinica = clinicId;
+        }
 
         const { data: newF } = await supabase
           .from("facturas")
-          .insert({
-            id_paciente: parseInt(input.patient_id),
-            total_general: finalPrice,
-            subtotal: finalPrice,
-            monto_paciente: finalPrice,
-            estado_pago: input.payment_method ? 'Pagada' : 'Pendiente',
-            fecha_emision: invoiceDate,
-          })
+          .insert(facturaInsertPayload as any)
           .select("id_factura")
           .single();
 
         if (newF?.id_factura && matchedServiceId) {
-          await supabase.from("detalles_factura").insert({
+          const detPayload: Record<string, any> = {
             id_factura: newF.id_factura,
             id_servicio: matchedServiceId,
             cantidad: 1,
             precio_unitario: finalPrice,
             subtotal: finalPrice,
-          });
+          };
+          if (clinicId) {
+            detPayload.id_clinica = clinicId;
+          }
+          await supabase.from("detalles_factura").insert(detPayload as any);
         }
       }
       
+      await logAuditAction("CREATE", "APPOINTMENT", String(citaData.id_cita), {
+        message: `Cita agendada: ${input.title || "Consulta médica"} (${input.status || "pendiente"})`,
+      });
+
       return citaData;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["appointments"] });
       qc.invalidateQueries({ queryKey: ["facturas"] });
       qc.invalidateQueries({ queryKey: ["dashboard_top_treatments"] });
+      qc.invalidateQueries({ queryKey: ["audit_logs"] });
     },
   });
 }
@@ -556,6 +593,10 @@ export function useUpdateAppointment() {
         }
       }
       
+      await logAuditAction("UPDATE", "APPOINTMENT", String(id), {
+        message: `Cita #${id} actualizada${patch.status ? ` — Estado: ${patch.status}` : ""}`,
+      });
+
       return { id };
     },
     onSuccess: () => {
@@ -564,6 +605,7 @@ export function useUpdateAppointment() {
       qc.invalidateQueries({ queryKey: ["financial_accounts"], refetchType: "all" });
       qc.invalidateQueries({ queryKey: ["dashboard_stats"], refetchType: "all" });
       qc.invalidateQueries({ queryKey: ["monthly_payments"], refetchType: "all" });
+      qc.invalidateQueries({ queryKey: ["audit_logs"], refetchType: "all" });
     },
   });
 }

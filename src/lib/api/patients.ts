@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { logAuditAction } from "@/lib/api/audit";
-import { useAuthSession } from "@/hooks/useAuth";
+import { getSaasPlanConfig } from "@/lib/api/clinic";
+import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 
 export type PatientStatus = "activo" | "en_tratamiento" | "alta" | "nuevo";
 
@@ -132,13 +133,20 @@ const PATIENT_LIST_SELECT =
   "id_paciente, nombre, apellido, email, telefono, fecha_nacimiento, genero, contacto_emergencia, direccion, creado_en, documento_identidad, historias_clinicas(id_historia, tipo_sangre, actualizado_en, datos_extras, alergias, enfermedades_cronicas, antecedentes_familiares)";
 
 export function usePatients() {
+  const { user } = useAuthSession();
   return useQuery({
-    queryKey: ["patients"],
+    queryKey: ["patients", user?.id],
+    enabled: !!user,
     queryFn: async (): Promise<Patient[]> => {
-      const { data, error } = await supabase
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
+      let query = supabase
         .from("pacientes")
         .select(PATIENT_LIST_SELECT)
         .order("creado_en", { ascending: false });
+      if (clinicId) {
+        query = (query as any).eq("id_clinica", clinicId);
+      }
+      const { data, error } = await query;
       if (error) throw error;
       return (data ?? []).map(mapPatient);
     },
@@ -146,12 +154,19 @@ export function usePatients() {
 }
 
 export function usePatientCount() {
+  const { user } = useAuthSession();
   return useQuery({
-    queryKey: ["patients_count"],
+    queryKey: ["patients_count", user?.id],
+    enabled: !!user,
     queryFn: async (): Promise<number> => {
-      const { count, error } = await supabase
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
+      let query = supabase
         .from("pacientes")
         .select("id_paciente", { count: "exact", head: true });
+      if (clinicId) {
+        query = (query as any).eq("id_clinica", clinicId);
+      }
+      const { count, error } = await query;
       if (error) throw error;
       return count ?? 0;
     },
@@ -159,15 +174,22 @@ export function usePatientCount() {
 }
 
 export function usePatientsGrowth() {
+  const { user } = useAuthSession();
   return useQuery({
-    queryKey: ["patients_growth"],
+    queryKey: ["patients_growth", user?.id],
+    enabled: !!user,
     queryFn: async (): Promise<{ created_at: string }[]> => {
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
       const fourteenDaysAgo = new Date();
       fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-      const { data, error } = await supabase
+      let query = supabase
         .from("pacientes")
         .select("creado_en")
         .gte("creado_en", fourteenDaysAgo.toISOString());
+      if (clinicId) {
+        query = (query as any).eq("id_clinica", clinicId);
+      }
+      const { data, error } = await query;
       if (error) throw error;
       return (data ?? []).map(d => ({ created_at: d.creado_en || "" }));
     },
@@ -187,11 +209,16 @@ export function usePatientsCountByDateRange(
     enabled: (options?.enabled ?? true) && !!user,
     queryFn: async (): Promise<number> => {
       if (isDoctorOnly && !doctorId) return 0;
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
       if (doctorId) {
-        const { data: citas } = await supabase
+        let citasQ = supabase
           .from("citas")
           .select("id_paciente")
           .eq("id_medico", doctorId);
+        if (clinicId) {
+          citasQ = (citasQ as any).eq("id_clinica", clinicId);
+        }
+        const { data: citas } = await citasQ;
 
         const uniquePatientIds = new Set((citas || []).map((c) => c.id_paciente).filter(Boolean));
         return uniquePatientIds.size;
@@ -199,6 +226,9 @@ export function usePatientsCountByDateRange(
       let query = supabase
         .from("pacientes")
         .select("id_paciente", { count: "exact", head: true });
+      if (clinicId) {
+        query = (query as any).eq("id_clinica", clinicId);
+      }
       if (from) {
         query = query.gte("creado_en", from);
       }
@@ -224,12 +254,23 @@ export function useRecentPatients(
     enabled: (options?.enabled ?? true) && !!user,
     queryFn: async (): Promise<Patient[]> => {
       if (isDoctorOnly && !doctorId) return [];
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
       if (doctorId) {
+        let citasQ = supabase.from("citas").select("id_paciente").eq("id_medico", doctorId);
+        let consQ = supabase.from("consultas").select("id_paciente").eq("id_medico", doctorId);
+        let hcQ = supabase.from("historias_clinicas").select("id_paciente, datos_extras");
+        let medQ = supabase.from("medicos").select("id_medico", { count: "exact", head: true });
+        if (clinicId) {
+          citasQ = (citasQ as any).eq("id_clinica", clinicId);
+          consQ = (consQ as any).eq("id_clinica", clinicId);
+          hcQ = (hcQ as any).eq("id_clinica", clinicId);
+          medQ = (medQ as any).eq("id_clinica", clinicId);
+        }
         const [citasRes, consultasRes, hcRes, medicosCountRes] = await Promise.all([
-          supabase.from("citas").select("id_paciente").eq("id_medico", doctorId),
-          supabase.from("consultas").select("id_paciente").eq("id_medico", doctorId),
-          supabase.from("historias_clinicas").select("id_paciente, datos_extras"),
-          supabase.from("medicos").select("id_medico", { count: "exact", head: true }),
+          citasQ,
+          consQ,
+          hcQ,
+          medQ,
         ]);
 
         const uniquePatientIds = new Set<number>();
@@ -248,28 +289,40 @@ export function useRecentPatients(
 
         const totalMedicos = medicosCountRes.count ?? 0;
         if (totalMedicos <= 1) {
-          const { data: allP } = await supabase.from("pacientes").select("id_paciente");
+          let allPQ = supabase.from("pacientes").select("id_paciente");
+          if (clinicId) {
+            allPQ = (allPQ as any).eq("id_clinica", clinicId);
+          }
+          const { data: allP } = await allPQ;
           (allP || []).forEach((p) => uniquePatientIds.add(Number(p.id_paciente)));
         }
 
         if (uniquePatientIds.size === 0) return [];
 
-        const { data, error } = await supabase
+        let pQuery = supabase
           .from("pacientes")
           .select(PATIENT_LIST_SELECT)
           .in("id_paciente", Array.from(uniquePatientIds))
           .order("creado_en", { ascending: false })
           .limit(limit);
+        if (clinicId) {
+          pQuery = (pQuery as any).eq("id_clinica", clinicId);
+        }
 
+        const { data, error } = await pQuery;
         if (error) throw error;
         return (data ?? []).map(mapPatient);
       }
 
-      const { data, error } = await supabase
+      let pQuery = supabase
         .from("pacientes")
         .select(PATIENT_LIST_SELECT)
         .order("creado_en", { ascending: false })
         .limit(limit);
+      if (clinicId) {
+        pQuery = (pQuery as any).eq("id_clinica", clinicId);
+      }
+      const { data, error } = await pQuery;
       if (error) throw error;
       return (data ?? []).map(mapPatient);
     },
@@ -282,9 +335,12 @@ export function usePaginatedPatients(
   search?: string,
   status?: PatientStatus | string
 ) {
+  const { user } = useAuthSession();
   return useQuery({
-    queryKey: ["patients_paginated", page, pageSize, search, status],
+    queryKey: ["patients_paginated", user?.id, page, pageSize, search, status],
+    enabled: !!user,
     queryFn: async (): Promise<{ data: Patient[]; count: number }> => {
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
 
@@ -292,6 +348,10 @@ export function usePaginatedPatients(
         .from("pacientes")
         .select(PATIENT_LIST_SELECT, { count: "exact" })
         .order("creado_en", { ascending: false });
+
+      if (clinicId) {
+        query = (query as any).eq("id_clinica", clinicId);
+      }
 
       if (search) {
         query = query.or(
@@ -340,8 +400,27 @@ export function usePatient(id: string | undefined | null) {
   });
 }
 
+function withTimeout<T>(promise: PromiseLike<T>, ms = 20000, label = "La operación"): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(`${label} tardó demasiado en responder. Verifica tu conexión o recarga la página.`));
+    }, ms);
+    Promise.resolve(promise).then(
+      (val) => {
+        clearTimeout(timer);
+        resolve(val);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      }
+    );
+  });
+}
+
 export function useCreatePatient() {
   const qc = useQueryClient();
+  const { user } = useAuthSession();
   return useMutation({
     mutationFn: async (input: Partial<PatientInput> & { full_name: string; assigned_doctor_id: string }) => {
       const names = (input.full_name || "").trim().split(/\s+/);
@@ -356,21 +435,60 @@ export function useCreatePatient() {
       const cleanGender = input.gender?.trim() || null;
       const cleanEmergency = input.emergency_contact?.trim() || null;
 
-      const { error: patientError, data: patientData } = await supabase
-        .from("pacientes")
-        .insert({ 
-          nombre, 
-          apellido, 
-          email: cleanEmail, 
-          telefono: cleanPhone,
-          documento_identidad: cleanDocId,
-          fecha_nacimiento: cleanBirth,
-          genero: cleanGender,
-          contacto_emergencia: cleanEmergency,
-          direccion: cleanAddress
-        })
-        .select()
-        .single();
+      let idClinica: string | undefined;
+      if (user?.id) {
+        const { data: userData } = await withTimeout<any>(
+          (supabase.from("usuarios") as any)
+            .select("id_clinica")
+            .eq("auth_id", user.id)
+            .maybeSingle(),
+          10000,
+          "La verificación de clínica"
+        );
+        if (userData?.id_clinica) {
+          idClinica = userData.id_clinica;
+          const [{ data: clinicaRow }, { count: currentPatientCount }] = await Promise.all([
+            (supabase.from("clinicas") as any)
+              .select("plan_suscripcion")
+              .eq("id_clinica", idClinica)
+              .maybeSingle(),
+            (supabase.from("pacientes") as any)
+              .select("id_paciente", { count: "exact", head: true })
+              .eq("id_clinica", idClinica),
+          ]);
+          const planCfg = getSaasPlanConfig(clinicaRow?.plan_suscripcion);
+          if (planCfg.maxPatients !== null && (currentPatientCount ?? 0) >= planCfg.maxPatients) {
+            throw new Error(
+              `El Plan ${planCfg.name} ($${planCfg.priceMonthlyUsd}/mes) permite hasta ${planCfg.maxPatients} pacientes. Actualiza tu suscripción a Plan Pro o Enterprise para pacientes ilimitados.`,
+            );
+          }
+        }
+      }
+
+      const patientPayload: Record<string, any> = {
+        nombre,
+        apellido,
+        email: cleanEmail,
+        telefono: cleanPhone,
+        documento_identidad: cleanDocId,
+        fecha_nacimiento: cleanBirth,
+        genero: cleanGender,
+        contacto_emergencia: cleanEmergency,
+        direccion: cleanAddress,
+      };
+      if (idClinica) {
+        patientPayload.id_clinica = idClinica;
+      }
+
+      const { error: patientError, data: patientData } = await withTimeout(
+        supabase
+          .from("pacientes")
+          .insert(patientPayload as any)
+          .select()
+          .single(),
+        20000,
+        "El registro del paciente"
+      );
       if (patientError) {
         console.error("Error creating patient in pacientes:", patientError);
         throw patientError;
@@ -392,22 +510,36 @@ export function useCreatePatient() {
         consultation_reason, current_illness
       };
 
-      const { error: hcError, data: hcData } = await supabase
-        .from("historias_clinicas")
-        .insert({
-          id_paciente: patientData.id_paciente,
-          tipo_sangre: input.blood_type?.trim() || null,
-          alergias: input.personal_history?.allergies || null,
-          enfermedades_cronicas: input.personal_history?.base_pathology || null,
-          antecedentes_familiares: input.family_history?.children || null,
-          datos_extras
-        })
-        .select()
-        .single();
+      const hcPayload: Record<string, any> = {
+        id_paciente: patientData.id_paciente,
+        tipo_sangre: input.blood_type?.trim() || null,
+        alergias: input.personal_history?.allergies || null,
+        enfermedades_cronicas: input.personal_history?.base_pathology || null,
+        antecedentes_familiares: input.family_history?.children || null,
+        datos_extras,
+      };
+      if (idClinica || (patientData as any)?.id_clinica) {
+        hcPayload.id_clinica = idClinica || (patientData as any).id_clinica;
+      }
+
+      const { error: hcError, data: hcData } = await withTimeout(
+        supabase
+          .from("historias_clinicas")
+          .insert(hcPayload as any)
+          .select()
+          .single(),
+        20000,
+        "El guardado de la historia clínica"
+      );
       if (hcError) {
         console.error("Error creating historia clinica", hcError);
         throw hcError;
       }
+
+      await logAuditAction("CREATE", "PATIENT", String(patientData.id_paciente), {
+        message: `Paciente registrado: ${nombre} ${apellido} (${cleanDocId})`,
+        id_clinica: idClinica || (patientData as any)?.id_clinica || null,
+      });
 
       return mapPatient({ ...patientData, historias_clinicas: hcData });
     },
@@ -416,6 +548,7 @@ export function useCreatePatient() {
       qc.invalidateQueries({ queryKey: ["patients_count"] });
       qc.invalidateQueries({ queryKey: ["patients_paginated"] });
       qc.invalidateQueries({ queryKey: ["patients_recent"] });
+      qc.invalidateQueries({ queryKey: ["audit_logs"] });
     },
   });
 }

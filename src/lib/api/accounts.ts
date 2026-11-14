@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 import {
   VE_PAYMENT_PRESETS,
   inferCategoryFromMethod,
@@ -184,13 +185,21 @@ function decodeAccountRow(row: any): FinancialAccount {
 }
 
 export function useAccounts() {
+  const { user } = useAuthSession();
   return useQuery({
-    queryKey: ["financial_accounts"],
+    queryKey: ["financial_accounts", user?.id],
+    enabled: !!user,
     queryFn: async (): Promise<FinancialAccount[]> => {
-      const { data, error } = await supabase
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
+      let query = supabase
         .from("financial_accounts")
         .select("*")
         .order("created_at", { ascending: true });
+      if (clinicId) {
+        query = (query as any).eq("id_clinica", clinicId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return (data || []).map(decodeAccountRow);
@@ -200,19 +209,24 @@ export function useAccounts() {
 
 export function useCreateAccount() {
   const qc = useQueryClient();
+  const { user } = useAuthSession();
   return useMutation({
     mutationFn: async (acc: Omit<FinancialAccount, "id">) => {
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
       const encodedType = encodeTypeWithMeta(acc.type, acc.meta);
       writeLocalAccountMeta(acc.name, acc.meta);
 
+      const basePayload: Record<string, any> = {
+        name: acc.name,
+        type: encodedType,
+        balance: acc.balance,
+        status: acc.status,
+      };
+      if (clinicId) basePayload.id_clinica = clinicId;
+
       let res = await supabase
         .from("financial_accounts")
-        .insert({
-          name: acc.name,
-          type: encodedType,
-          balance: acc.balance,
-          status: acc.status,
-        })
+        .insert(basePayload as any)
         .select()
         .single();
 
@@ -224,14 +238,16 @@ export function useCreateAccount() {
             : acc.type === "Cashea"
             ? "Digital"
             : acc.type;
+        const fallbackPayload: Record<string, any> = {
+          name: acc.name,
+          type: safeDbType,
+          balance: acc.balance,
+          status: acc.status,
+        };
+        if (clinicId) fallbackPayload.id_clinica = clinicId;
         res = await supabase
           .from("financial_accounts")
-          .insert({
-            name: acc.name,
-            type: safeDbType,
-            balance: acc.balance,
-            status: acc.status,
-          })
+          .insert(fallbackPayload as any)
           .select()
           .single();
       }

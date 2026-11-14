@@ -14,7 +14,7 @@ import {
   removeQuickAccessAccount,
   type QuickAccessProfile,
 } from "@/lib/auth/quickAccess";
-import { Activity, Sparkles, CreditCard, ShieldCheck } from "lucide-react";
+import { Activity, Sparkles, CreditCard, ShieldCheck, Lock } from "lucide-react";
 import {
   AuthQuickLoginForm,
   AuthStandardLoginForm,
@@ -182,10 +182,51 @@ function useAuthPageLogic() {
       if (data.session) {
         setAuthSessionManually(data.session);
       }
+      if (typeof window !== "undefined") {
+        try {
+          window.localStorage.removeItem("medizen_cached_clinic_info");
+        } catch {}
+      }
+      qc.clear();
       await qc.invalidateQueries();
 
-      toast.success("¡Bienvenido/a de nuevo!");
-      router.navigate({ to: "/dashboard" });
+      // Detectar si el usuario es Superadmin o si su clínica está suspendida
+      let destination = "/dashboard";
+      try {
+        const { data: dbUser } = await supabase
+          .from("usuarios")
+          .select("es_superadmin, id_clinica, roles(nombre_rol)")
+          .eq("auth_id", data.user.id)
+          .maybeSingle();
+
+        const roleName = (
+          Array.isArray(dbUser?.roles)
+            ? dbUser?.roles[0]?.nombre_rol
+            : (dbUser?.roles as any)?.nombre_rol || ""
+        ).toLowerCase();
+
+        const isSuper = !!dbUser?.es_superadmin || roleName.includes("super");
+        if (isSuper) {
+          destination = "/superadmin";
+        } else if (dbUser?.id_clinica) {
+          const { data: clinicaRow } = await supabase
+            .from("clinicas")
+            .select("estado, nombre")
+            .eq("id_clinica", dbUser.id_clinica)
+            .maybeSingle();
+
+          if (clinicaRow?.estado === "suspendido") {
+            await supabase.auth.signOut();
+            toast.error(
+              `Acceso suspendido: La cuenta de ${clinicaRow.nombre || "esta clínica"} se encuentra temporalmente suspendida por administración.`
+            );
+            return;
+          }
+        }
+      } catch {}
+
+      toast.success(destination === "/superadmin" ? "¡Bienvenido, Super Administrador!" : "¡Bienvenido/a de nuevo!");
+      router.navigate({ to: destination });
     } finally {
       setLoading(false);
     }
@@ -202,9 +243,45 @@ function useAuthPageLogic() {
         if (result.session) {
           setAuthSessionManually(result.session);
         }
+        qc.clear();
         await qc.invalidateQueries();
-        toast.success(`Sesión restaurada como ${selectedAccount.fullName}`);
-        router.navigate({ to: "/dashboard" });
+
+        let destination = "/dashboard";
+        try {
+          const { data: dbUser } = await supabase
+            .from("usuarios")
+            .select("es_superadmin, id_clinica, roles(nombre_rol)")
+            .eq("auth_id", result.session?.user.id)
+            .maybeSingle();
+
+          const roleName = (
+            Array.isArray(dbUser?.roles)
+              ? dbUser?.roles[0]?.nombre_rol
+              : (dbUser?.roles as any)?.nombre_rol || ""
+          ).toLowerCase();
+
+          const isSuper = !!dbUser?.es_superadmin || roleName.includes("super");
+          if (isSuper) {
+            destination = "/superadmin";
+          } else if (dbUser?.id_clinica) {
+            const { data: clinicaRow } = await supabase
+              .from("clinicas")
+              .select("estado, nombre")
+              .eq("id_clinica", dbUser.id_clinica)
+              .maybeSingle();
+
+            if (clinicaRow?.estado === "suspendido") {
+              await supabase.auth.signOut();
+              toast.error(
+                `Acceso suspendido: La cuenta de ${clinicaRow.nombre || "esta clínica"} se encuentra temporalmente suspendida.`
+              );
+              return;
+            }
+          }
+        } catch {}
+
+        toast.success(destination === "/superadmin" ? "Sesión restaurada como Super Administrador" : `Sesión restaurada como ${selectedAccount.fullName}`);
+        router.navigate({ to: destination });
         return;
       }
 
@@ -518,6 +595,14 @@ function AuthPage() {
               </Link>
               <Link to="/descargar" className="text-primary hover:underline transition-colors">
                 Descargar App
+              </Link>
+              <Link
+                to="/superadmin-login"
+                className="text-muted-foreground/70 hover:text-primary transition-colors inline-flex items-center gap-1 font-mono text-[10px]"
+                title="Acceso Maestro SaaS (Super Administrador)"
+              >
+                <Lock className="h-2.5 w-2.5" />
+                SaaS Master
               </Link>
             </nav>
           </div>

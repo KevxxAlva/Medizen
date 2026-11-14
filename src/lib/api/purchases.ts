@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 
 export type FinancialPurchase = {
   id: string;
@@ -10,14 +11,21 @@ export type FinancialPurchase = {
 };
 
 export function usePurchases() {
+  const { user } = useAuthSession();
   return useQuery({
-    queryKey: ["financial_purchases"],
+    queryKey: ["financial_purchases", user?.id],
+    enabled: !!user,
     queryFn: async (): Promise<FinancialPurchase[]> => {
-      const { data, error } = await supabase
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
+      let query = supabase
         .from("financial_purchases")
         .select("*")
         .order("created_at", { ascending: true });
+      if (clinicId) {
+        query = (query as any).eq("id_clinica", clinicId);
+      }
         
+      const { data, error } = await query;
       if (error) throw error;
       return data as FinancialPurchase[];
     },
@@ -26,11 +34,15 @@ export function usePurchases() {
 
 export function useCreatePurchase() {
   const qc = useQueryClient();
+  const { user } = useAuthSession();
   return useMutation({
     mutationFn: async (pur: Omit<FinancialPurchase, "id">) => {
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
+      const payload: Record<string, any> = { ...pur };
+      if (clinicId) payload.id_clinica = clinicId;
       const { data, error } = await supabase
         .from("financial_purchases")
-        .insert(pur)
+        .insert(payload as any)
         .select()
         .single();
       if (error) throw error;

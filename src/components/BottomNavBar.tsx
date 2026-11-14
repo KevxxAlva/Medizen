@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutGrid, Calendar, UserRound, Stethoscope } from "lucide-react";
+import { LayoutGrid, Calendar, UserRound, Stethoscope, Building2, ShieldCheck, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -10,17 +10,27 @@ const NAV_ITEMS = [
   { title: "Servicios", url: "/servicios", icon: Stethoscope },
 ] as const;
 
+const SUPERADMIN_NAV_ITEMS = [
+  { title: "Clínicas", url: "/superadmin", icon: Building2 },
+  { title: "Auditoría", url: "/auditoria", icon: ShieldCheck },
+  { title: "Config", url: "/configuracion", icon: Settings },
+  { title: "Ir Clínica", url: "/dashboard", icon: Stethoscope },
+] as const;
+
 export const BottomNavBar = memo(function BottomNavBar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isSuperAdminMode = pathname.startsWith("/superadmin");
+  const items = isSuperAdminMode ? SUPERADMIN_NAV_ITEMS : NAV_ITEMS;
 
   return (
     <nav
       aria-label="Navegación inferior"
       className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around bg-card border-t border-border md:hidden pb-safe"
     >
-      {NAV_ITEMS.map((item) => {
+      {items.map((item) => {
         const active =
-          pathname === item.url || (item.url !== "/dashboard" && pathname.startsWith(item.url));
+          pathname === item.url ||
+          (item.url !== "/dashboard" && item.url !== "/superadmin" && pathname.startsWith(item.url));
         const Icon = item.icon;
 
         return (

@@ -151,12 +151,10 @@ export function RecipeDesigner() {
   const handleSave = async () => {
     try {
       await updateClinic.mutateAsync({
-        name: clinicName.trim(),
         recipe_clinic_type: clinicType.trim(),
         address_line1: addressLine1.trim(),
         address_line2: addressLine2.trim(),
         phone: clinicPhone.trim(),
-        rif: clinicRif.trim(),
         recipe_logo_url: logoBase64,
         recipe_primary_color: primaryColor,
         recipe_font_family: fontFamily,

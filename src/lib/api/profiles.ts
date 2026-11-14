@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuthSession } from "@/hooks/useAuth";
+import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 
 export interface Profile {
   id: string;
@@ -71,10 +71,16 @@ export function useDoctors(options?: { enabled?: boolean }) {
     queryKey: ["doctors", user?.id],
     enabled: (options?.enabled ?? true) && !!user,
     queryFn: async (): Promise<Profile[]> => {
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
+      let medQuery = supabase
+        .from("medicos")
+        .select("id_medico, id_especialidad, nombre, apellido, email, numero_licencia, universidad, cmc, especialidades(id_especialidad, nombre), usuarios(auth_id, nombre_usuario)");
+      if (clinicId) {
+        medQuery = (medQuery as any).eq("id_clinica", clinicId);
+      }
+
       const [{ data: rawMedicos, error: medError }, { data: rawSpecialties }] = await Promise.all([
-        supabase
-          .from("medicos")
-          .select("id_medico, id_especialidad, nombre, apellido, email, numero_licencia, universidad, cmc, especialidades(id_especialidad, nombre), usuarios(auth_id, nombre_usuario)"),
+        medQuery,
         supabase.from("especialidades").select("id_especialidad, nombre"),
       ]);
         
@@ -85,41 +91,57 @@ export function useDoctors(options?: { enabled?: boolean }) {
         specMap.set(esp.id_especialidad, esp.nombre);
       });
       
-      return (rawMedicos ?? []).map((m: any) => {
-        const joinedSpec = Array.isArray(m.especialidades) ? m.especialidades[0]?.nombre : m.especialidades?.nombre;
-        const mappedSpec = (m.id_especialidad && specMap.get(m.id_especialidad)) || joinedSpec || null;
-        return {
-          id: m.id_medico?.toString(),
-          doctor_id: m.id_medico?.toString(),
-          auth_id: m.usuarios?.auth_id || null,
-          full_name: `${m.nombre} ${m.apellido}`.trim(),
-          email: m.email || "",
-          specialty: mappedSpec,
-          specialty_id: m.id_especialidad || null,
-          avatar_url: null,
-          mpps: m.numero_licencia,
-          university: m.universidad || null,
-          cmc: m.cmc || null,
-        };
-      });
+      return (rawMedicos ?? [])
+        .filter((m: any) => (m.email || "").toLowerCase() !== "kevinja1406@gmail.com")
+        .map((m: any) => {
+          const joinedSpec = Array.isArray(m.especialidades) ? m.especialidades[0]?.nombre : m.especialidades?.nombre;
+          const mappedSpec = (m.id_especialidad && specMap.get(m.id_especialidad)) || joinedSpec || null;
+          return {
+            id: m.id_medico?.toString(),
+            doctor_id: m.id_medico?.toString(),
+            auth_id: m.usuarios?.auth_id || null,
+            full_name: `${m.nombre} ${m.apellido}`.trim(),
+            email: m.email || "",
+            specialty: mappedSpec,
+            specialty_id: m.id_especialidad || null,
+            avatar_url: null,
+            mpps: m.numero_licencia,
+            university: m.universidad || null,
+            cmc: m.cmc || null,
+          };
+        });
     },
   });
 }
 
 export function useAllProfilesWithRoles() {
+  const { user } = useAuthSession();
   return useQuery({
-    queryKey: ["profiles_with_roles"],
+    queryKey: ["profiles_with_roles", user?.id],
+    enabled: !!user,
     queryFn: async (): Promise<ProfileWithRoles[]> => {
-      const { data, error } = await supabase
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
+      let query = supabase
         .from("usuarios")
-        .select("*, roles(nombre_rol), medicos(nombre, apellido, email, numero_licencia, universidad, cmc, especialidades(nombre))");
+        .select("*, roles(nombre_rol), medicos(nombre, apellido, email, numero_licencia, universidad, cmc, especialidades(nombre))")
+        .eq("es_superadmin", false);
+      if (clinicId) {
+        query = (query as any).eq("id_clinica", clinicId);
+      }
         
+      const { data, error } = await query;
       if (error) throw error;
       
-      return (data ?? []).map((u: any) => ({
-        ...mapProfile(u),
-        roles: u.roles ? [u.roles.nombre_rol.toLowerCase() as "admin" | "doctor" | "recepcionista"] : [],
-      }));
+      return (data ?? [])
+        .filter((u: any) => {
+          const med = Array.isArray(u.medicos) ? u.medicos[0] : u.medicos;
+          const email = (med?.email || u.nombre_usuario || "").toLowerCase();
+          return !u.es_superadmin && !email.includes("kevinja1406");
+        })
+        .map((u: any) => ({
+          ...mapProfile(u),
+          roles: u.roles ? [u.roles.nombre_rol.toLowerCase() as "admin" | "doctor" | "recepcionista"] : [],
+        }));
     },
   });
 }

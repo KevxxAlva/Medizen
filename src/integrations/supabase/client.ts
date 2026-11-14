@@ -97,6 +97,10 @@ function createSupabaseClient() {
       storage: typeof window !== 'undefined' ? authStorage : undefined,
       persistSession: true,
       autoRefreshToken: true,
+      // Avoid cross-tab navigator.locks deadlocks when multiple tabs are open on localhost
+      lock: async <R>(_name: string, _acquireTimeout: number, fn: () => Promise<R>): Promise<R> => {
+        return await fn();
+      },
     }
   });
 }

@@ -13,6 +13,7 @@ import {
   MapPin,
   Save,
   Loader2,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -254,15 +255,24 @@ export function ClinicTabContent({
   return (
     <div className="bg-card border border-border/40 rounded-2xl p-5 shadow-xs space-y-4 animate-in fade-in-50 duration-200">
       <div className="space-y-1.5">
-        <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-          <Building2 className="h-3.5 w-3.5 text-primary" /> Nombre del Centro / Clínica
+        <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center justify-between">
+          <span className="flex items-center gap-1.5">
+            <Building2 className="h-3.5 w-3.5 text-primary" /> Nombre del Centro / Clínica
+          </span>
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400">
+            <Lock className="h-3 w-3" /> Solo Super Admin
+          </span>
         </Label>
         <Input
           placeholder="Ej: FemeSalud"
-          className="rounded-xl bg-muted/40 border-border/50 text-sm font-bold text-foreground h-10"
+          disabled
+          readOnly
+          className="rounded-xl bg-muted/60 border-border/50 text-sm font-bold text-muted-foreground h-10 cursor-not-allowed opacity-80"
           value={clinicName}
-          onChange={(e) => setClinicName(e.target.value)}
         />
+        <p className="text-[11px] text-muted-foreground">
+          El nombre oficial de la organización es gestionado por la administración central de Medizen.
+        </p>
       </div>
 
       <div className="space-y-1.5">
@@ -279,14 +289,20 @@ export function ClinicTabContent({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-            <CreditCard className="h-3.5 w-3.5 text-primary" /> RIF / Identificación
+          <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center justify-between">
+            <span className="flex items-center gap-1.5">
+              <CreditCard className="h-3.5 w-3.5 text-primary" /> RIF / Identificación
+            </span>
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400">
+              <Lock className="h-3 w-3" /> Solo Super Admin
+            </span>
           </Label>
           <Input
             placeholder="Ej: J-502316876"
-            className="rounded-xl bg-muted/40 border-border/50 text-sm h-10 uppercase"
+            disabled
+            readOnly
+            className="rounded-xl bg-muted/60 border-border/50 text-sm font-bold text-muted-foreground h-10 uppercase cursor-not-allowed opacity-80"
             value={clinicRif}
-            onChange={(e) => setClinicRif(e.target.value)}
           />
         </div>
 

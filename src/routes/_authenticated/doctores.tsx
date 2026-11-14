@@ -1,6 +1,5 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   UserRound,
@@ -39,8 +38,9 @@ import {
   useUpdateProfile,
   type ProfileWithRoles,
 } from "@/lib/api/profiles";
-import { adminCreateUser, adminDeleteUser } from "@/lib/admin.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession, requireAdminAccess } from "@/hooks/useAuth";
+import { useClinicInfo, getSaasPlanConfig } from "@/lib/api/clinic";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/doctores")({
@@ -207,10 +207,10 @@ function DoctoresAdmin() {
   const { data: profiles = [], isLoading } = useAllProfilesWithRoles();
   const toggle = useToggleRole();
   const updateProfile = useUpdateProfile();
-  const create = useServerFn(adminCreateUser);
-  const del = useServerFn(adminDeleteUser);
   const qc = useQueryClient();
   const { user: me } = useAuthSession();
+  const { data: clinicInfo } = useClinicInfo();
+  const planConfig = getSaasPlanConfig(clinicInfo?.plan_suscripcion);
 
   const [openCreate, setOpenCreate] = useState(false);
   const [toEdit, setToEdit] = useState<ProfileWithRoles | null>(null);
@@ -244,9 +244,31 @@ function DoctoresAdmin() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.full_name.trim() || !form.email.trim() || form.password.length < 8) {
+      toast.error("Completa nombre, correo válido y contraseña (mín. 8 caracteres)");
+      return;
+    }
+    if (form.role === "doctor" && planConfig.maxDoctors !== null) {
+      const currentDoctorsCount = profiles.filter(
+        (p) => p.roles.includes("doctor") || p.roles.includes("medico"),
+      ).length;
+      if (currentDoctorsCount >= planConfig.maxDoctors) {
+        toast.error(
+          `El Plan ${planConfig.name} ($${planConfig.priceMonthlyUsd}/mes) permite hasta ${planConfig.maxDoctors} médicos. Actualiza tu plan para registrar más especialistas.`,
+        );
+        return;
+      }
+    }
     setBusy(true);
     try {
-      await create({ data: form });
+      const { error: rpcError } = await (supabase as any).rpc("admin_create_staff_user", {
+        p_email: form.email.trim().toLowerCase(),
+        p_password: form.password,
+        p_full_name: form.full_name.trim(),
+        p_role: form.role,
+        p_specialty: form.specialty?.trim() || null,
+      });
+      if (rpcError) throw new Error(rpcError.message);
       toast.success("Usuario creado exitosamente");
       setOpenCreate(false);
       setForm({ email: "", password: "", full_name: "", specialty: "", role: "doctor" });
@@ -291,9 +313,17 @@ function DoctoresAdmin() {
 
   const handleDelete = async () => {
     if (!toDelete) return;
+    if (toDelete.id === me?.id) {
+      toast.error("No puedes eliminarte a ti mismo");
+      setToDelete(null);
+      return;
+    }
     setBusy(true);
     try {
-      await del({ data: { user_id: toDelete.id } });
+      const { error: rpcError } = await (supabase as any).rpc("admin_delete_staff_user", {
+        p_user_id: toDelete.id,
+      });
+      if (rpcError) throw new Error(rpcError.message);
       toast.success("Usuario eliminado");
       qc.invalidateQueries({ queryKey: ["profiles_with_roles"] });
       qc.invalidateQueries({ queryKey: ["doctors"] });

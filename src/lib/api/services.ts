@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 export interface SpecialtyItem {
@@ -39,14 +40,21 @@ export function useSpecialties() {
 }
 
 export function useServices() {
+  const { user } = useAuthSession();
   return useQuery({
-    queryKey: ["services"],
+    queryKey: ["services", user?.id],
+    enabled: !!user,
     queryFn: async (): Promise<Service[]> => {
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
       // 1. Fetch all raw services
-      const { data: rawServices, error: servError } = await supabase
+      let servQ = supabase
         .from("servicios")
         .select("*")
         .order("nombre_servicio", { ascending: true });
+      if (clinicId) {
+        servQ = (servQ as any).eq("id_clinica", clinicId);
+      }
+      const { data: rawServices, error: servError } = await servQ;
 
       if (servError) {
         console.error("Error al cargar los servicios:", servError);
@@ -79,12 +87,18 @@ export function useServices() {
 
 export function useCreateService() {
   const queryClient = useQueryClient();
+  const { user } = useAuthSession();
 
   return useMutation({
     mutationFn: async (service: ServiceInsert) => {
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
+      const payload: Record<string, any> = { ...service };
+      if (clinicId) {
+        payload.id_clinica = clinicId;
+      }
       const { data, error } = await supabase
         .from("servicios")
-        .insert(service)
+        .insert(payload as any)
         .select()
         .single();
 

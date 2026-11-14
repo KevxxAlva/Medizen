@@ -9,6 +9,7 @@ import {
   PlusCircle,
   UserCheck,
   Loader2,
+  Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -139,17 +140,31 @@ async function exportAuditLogsPdf(logs: AuditLog[]) {
   }
 }
 
-export function AuditLogsPage() {
+export function AuditLogsPage({ isSuperAdminView = false }: { isSuperAdminView?: boolean } = {}) {
   const { isAdmin, isLoading: roleLoading } = useUserRoleScope();
   const { data: logs = [], isLoading } = useAuditLogs(250);
   const [searchQ, setSearchQ] = useState("");
+  const [clinicFilter, setClinicFilter] = useState("all");
   const [actionFilter, setActionFilter] = useState("all");
   const [entityFilter, setEntityFilter] = useState("all");
+
+  const availableClinics = useMemo(() => {
+    const map = new Map<string, string>();
+    logs.forEach((l) => {
+      if (l.id_clinica && l.clinic_name) {
+        map.set(l.id_clinica, l.clinic_name);
+      }
+    });
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [logs]);
 
   const filteredLogs = useMemo(() => {
     const q = searchQ.trim().toLowerCase();
     return logs
       .filter((log) => {
+        if (clinicFilter !== "all" && log.id_clinica !== clinicFilter) {
+          return false;
+        }
         if (actionFilter !== "all" && (log.action_type || "").toUpperCase() !== actionFilter) {
           return false;
         }
@@ -158,6 +173,7 @@ export function AuditLogsPage() {
         }
         if (!q) return true;
         const haystack = [
+          log.clinic_name || "",
           log.perfiles?.full_name || "",
           log.perfiles?.email || "",
           summarizeDetails(log),
@@ -175,14 +191,15 @@ export function AuditLogsPage() {
         entityLabel: getEntityLabel(log.entity_type),
         summary: summarizeDetails(log),
       }));
-  }, [logs, actionFilter, entityFilter, searchQ]);
+  }, [logs, clinicFilter, actionFilter, entityFilter, searchQ]);
 
   const stats = useMemo(() => {
-    const deletes = logs.filter((l) => (l.action_type || "").toUpperCase() === "DELETE").length;
-    const financial = logs.filter((l) => (l.entity_type || "").toUpperCase() === "INVOICE").length;
-    const uniqueUsers = new Set(logs.map((l) => l.user_id).filter(Boolean)).size;
-    return { total: logs.length, deletes, financial, uniqueUsers };
-  }, [logs]);
+    const source = clinicFilter === "all" ? logs : logs.filter((l) => l.id_clinica === clinicFilter);
+    const deletes = source.filter((l) => (l.action_type || "").toUpperCase() === "DELETE").length;
+    const financial = source.filter((l) => (l.entity_type || "").toUpperCase() === "INVOICE").length;
+    const uniqueUsers = new Set(source.map((l) => l.user_id).filter(Boolean)).size;
+    return { total: source.length, deletes, financial, uniqueUsers };
+  }, [logs, clinicFilter]);
 
   if (isLoading || roleLoading) {
     return (
@@ -284,10 +301,30 @@ export function AuditLogsPage() {
           <Input
             value={searchQ}
             onChange={(e) => setSearchQ(e.target.value)}
-            placeholder="Filtrar por usuario, factura, paciente o detalle…"
+            placeholder={
+              isSuperAdminView
+                ? "Filtrar por clínica, usuario, factura, paciente o detalle…"
+                : "Filtrar por usuario, factura, paciente o detalle…"
+            }
             className="h-9 pl-9 rounded-xl text-xs"
           />
         </div>
+
+        {isSuperAdminView && (
+          <Select value={clinicFilter} onValueChange={setClinicFilter}>
+            <SelectTrigger className="w-[200px] h-9 rounded-xl text-xs font-semibold">
+              <SelectValue placeholder="Todas las clínicas" />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl">
+              <SelectItem value="all">Todas las clínicas ({availableClinics.length})</SelectItem>
+              {availableClinics.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
 
         <Select value={actionFilter} onValueChange={setActionFilter}>
           <SelectTrigger className="w-[180px] h-9 rounded-xl text-xs font-semibold">
@@ -311,6 +348,7 @@ export function AuditLogsPage() {
             <SelectItem value="INVOICE">Facturación / Ventas</SelectItem>
             <SelectItem value="APPOINTMENT">Agenda de Citas</SelectItem>
             <SelectItem value="PATIENT">Pacientes</SelectItem>
+            <SelectItem value="CONSULTATION">Consulta Clínica</SelectItem>
             <SelectItem value="WAITING_ROOM">Sala de Espera</SelectItem>
           </SelectContent>
         </Select>
@@ -327,6 +365,7 @@ export function AuditLogsPage() {
               <thead className="bg-muted/60 text-muted-foreground uppercase text-[10px] tracking-wider font-extrabold border-b border-border">
                 <tr>
                   <th className="py-3 px-4">Fecha y Hora</th>
+                  {isSuperAdminView && <th className="py-3 px-4">Clínica</th>}
                   <th className="py-3 px-4">Usuario</th>
                   <th className="py-3 px-4">Acción</th>
                   <th className="py-3 px-4">Módulo</th>
@@ -341,6 +380,14 @@ export function AuditLogsPage() {
                       <td className="py-3 px-4 whitespace-nowrap text-muted-foreground font-mono text-[11px]">
                         {formattedDate}
                       </td>
+                      {isSuperAdminView && (
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 text-[11px] font-bold">
+                            <Building2 className="h-3 w-3 shrink-0" />
+                            {log.clinic_name || "Clínica FemeSalud"}
+                          </span>
+                        </td>
+                      )}
                       <td className="py-3 px-4">
                         <p className="font-bold text-foreground">
                           {log.perfiles?.full_name || "Usuario del Sistema"}

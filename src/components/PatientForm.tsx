@@ -228,11 +228,16 @@ function PatientFormContent({
 
       if (
         rawMsg.includes("pacientes_documento_identidad_key") ||
+        rawMsg.includes("pacientes_clinica_documento_unique") ||
         rawMsg.includes("documento_identidad")
       ) {
         errorMsg =
           "Ya existe un paciente registrado con este documento de identidad (cédula/pasaporte).";
-      } else if (rawMsg.includes("pacientes_email_key") || rawMsg.includes("email")) {
+      } else if (
+        rawMsg.includes("pacientes_email_key") ||
+        rawMsg.includes("pacientes_clinica_email_unique") ||
+        rawMsg.includes("email")
+      ) {
         errorMsg = "El correo electrónico ya se encuentra registrado para otro paciente.";
       } else if (rawMsg) {
         errorMsg = rawMsg;

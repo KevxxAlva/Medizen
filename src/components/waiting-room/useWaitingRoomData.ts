@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 import { useAppointments, type AppointmentWithPatient } from "@/lib/api/appointments";
 import type { DoctorOption } from "@/lib/api/profiles";
 import type { InvoiceRecord } from "@/components/finance/useSalesInvoices";
@@ -51,6 +52,7 @@ export function useWaitingRoomData(params: {
 }) {
   const { selectedDate, effectiveDoctorFilter, doctors, facturas } = params;
   const qc = useQueryClient();
+  const { user } = useAuthSession();
 
   const { data: appointments = [], isLoading } = useAppointments({
     from: `${selectedDate}T00:00:00`,
@@ -61,17 +63,23 @@ export function useWaitingRoomData(params: {
   });
 
   const { data: sharedStages = {} } = useQuery({
-    queryKey: ["waiting_room_stages", selectedDate],
+    queryKey: ["waiting_room_stages", user?.id, selectedDate],
+    enabled: !!user,
     staleTime: 0,
     refetchInterval: 4000,
     refetchOnWindowFocus: true,
     queryFn: async (): Promise<Record<string, StageRecord>> => {
-      const { data } = await supabase
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
+      let query = supabase
         .from("audit_logs")
         .select("entity_id, details, created_at")
         .eq("entity_type", "WAITING_ROOM")
         .order("created_at", { ascending: true })
         .limit(300);
+      if (clinicId) {
+        query = (query as any).eq("id_clinica", clinicId);
+      }
+      const { data } = await query;
 
       return mergeAuditStageRows(data ?? [], readLocalStages());
     },

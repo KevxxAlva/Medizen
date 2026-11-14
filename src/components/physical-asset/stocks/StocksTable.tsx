@@ -147,6 +147,200 @@ function StocksEmptyRow({
   );
 }
 
+function StockIdentityCell({ name, category }: { name: string; category: string }) {
+  const catMeta = getCategoryMeta(category);
+  const CatIcon = catMeta.icon;
+
+  return (
+    <div className="flex items-center gap-3">
+      <div
+        className={cn(
+          "h-10 w-10 rounded-2xl border flex items-center justify-center shrink-0 transition-transform group-hover:scale-105",
+          catMeta.bg,
+        )}
+      >
+        <CatIcon className={cn("h-5 w-5", catMeta.color)} />
+      </div>
+      <div>
+        <p className="font-bold text-foreground text-sm tracking-tight group-hover:text-primary transition-colors">
+          {name}
+        </p>
+        <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 mt-0.5">
+          <span>{catMeta.label}</span>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function StockSkuCell({
+  id,
+  isCopied,
+  onCopy,
+}: {
+  id: string;
+  isCopied: boolean;
+  onCopy: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <code className="text-xs font-mono font-bold bg-muted/60 border border-border/70 text-foreground/80 px-2.5 py-1 rounded-lg">
+        {formatSku(id)}
+      </code>
+      <button
+        type="button"
+        onClick={onCopy}
+        className="p-1 text-muted-foreground hover:text-foreground rounded-md transition-colors cursor-pointer"
+        title="Copiar ID completo"
+        aria-label="Copiar ID"
+      >
+        {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+      </button>
+    </div>
+  );
+}
+
+function StockCategoryBadge({ category }: { category: string }) {
+  const catMeta = getCategoryMeta(category);
+  const CatIcon = catMeta.icon;
+
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border",
+        catMeta.bg,
+        catMeta.color,
+      )}
+    >
+      <CatIcon className="h-3.5 w-3.5" />
+      <span>{catMeta.label}</span>
+    </span>
+  );
+}
+
+function StockQuantityBar({ quantity, status }: { quantity: number; status: StockItem["status"] }) {
+  const isOut = status === "Out of Stock" || quantity === 0;
+  const isLow = status === "Low Stock" || (quantity > 0 && quantity <= 100);
+  const pct = Math.min(100, Math.round((quantity / 300) * 100));
+  const barClass = isOut ? "bg-destructive" : isLow ? "bg-amber-500" : "bg-emerald-500";
+
+  return (
+    <div className="w-36 space-y-1.5">
+      <div className="flex items-baseline justify-between">
+        <span className="font-display font-bold text-base text-foreground tabular-nums">
+          {quantity.toLocaleString("es-ES")}
+        </span>
+        <span className="text-[10px] text-muted-foreground font-semibold">unidades</span>
+      </div>
+      <div className="h-2 w-full bg-muted/70 rounded-full overflow-hidden p-0.5 border border-border/40">
+        <div
+          style={{ width: `${Math.max(5, pct)}%` }}
+          className={cn("h-full rounded-full transition-[width] duration-300", barClass)}
+        />
+      </div>
+    </div>
+  );
+}
+
+function StockStatusBadge({ status, quantity }: { status: StockItem["status"]; quantity: number }) {
+  const isOut = status === "Out of Stock" || quantity === 0;
+  const isLow = status === "Low Stock" || (quantity > 0 && quantity <= 100);
+
+  const containerClass = isOut
+    ? "bg-destructive/10 text-destructive border-destructive/20"
+    : isLow
+      ? "bg-amber-500/10 text-amber-500 border-amber-500/25"
+      : "bg-emerald-500/10 text-emerald-500 border-emerald-500/25";
+
+  const dotClass = isOut
+    ? "bg-destructive"
+    : isLow
+      ? "bg-amber-500 animate-pulse"
+      : "bg-emerald-500";
+
+  const label = isOut ? "Agotado" : isLow ? "Stock Bajo" : "En Stock";
+
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-full tracking-wide border shadow-2xs",
+        containerClass,
+      )}
+    >
+      <span className={cn("h-1.5 w-1.5 rounded-full inline-block", dotClass)} />
+      {label}
+    </span>
+  );
+}
+
+function StockQuickAdjustControls({
+  quantity,
+  onAdjust,
+}: {
+  quantity: number;
+  onAdjust: (delta: number) => void;
+}) {
+  return (
+    <div className="inline-flex items-center gap-1 bg-muted/60 p-1 rounded-xl border border-border/60">
+      <button
+        type="button"
+        disabled={quantity <= 0}
+        onClick={() => onAdjust(-1)}
+        className="h-7 w-7 rounded-lg bg-card hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shadow-2xs"
+        title="Descontar 1 unidad"
+        aria-label="Descontar 1"
+      >
+        <Minus className="h-3.5 w-3.5" />
+      </button>
+      <span className="w-8 text-center text-xs font-bold text-foreground tabular-nums">
+        {quantity}
+      </span>
+      <button
+        type="button"
+        onClick={() => onAdjust(10)}
+        className="h-7 px-2 rounded-lg bg-card hover:bg-muted text-primary font-bold text-xs flex items-center justify-center transition-colors cursor-pointer shadow-2xs"
+        title="Añadir +10 unidades"
+        aria-label="Añadir 10"
+      >
+        +10
+      </button>
+    </div>
+  );
+}
+
+function StockActionButtons({
+  name,
+  onEdit,
+  onDelete,
+}: {
+  name: string;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-end gap-1.5">
+      <button
+        type="button"
+        onClick={onEdit}
+        className="h-8 w-8 rounded-xl hover:bg-muted/80 text-muted-foreground hover:text-primary flex items-center justify-center transition-colors cursor-pointer"
+        title="Editar artículo"
+        aria-label={`Editar ${name}`}
+      >
+        <Pencil className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        onClick={onDelete}
+        className="h-8 w-8 rounded-xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive flex items-center justify-center transition-colors cursor-pointer"
+        title="Eliminar artículo"
+        aria-label={`Eliminar ${name}`}
+      >
+        <Trash2 className="h-4 w-4" />
+      </button>
+    </div>
+  );
+}
+
 function StocksTableRow({
   item,
   isSelected,
@@ -166,13 +360,6 @@ function StocksTableRow({
   onEdit: () => void;
   onDelete: () => void;
 }) {
-  const catMeta = getCategoryMeta(item.category);
-  const CatIcon = catMeta.icon;
-  const isLow = item.status === "Low Stock" || (item.quantity > 0 && item.quantity <= 100);
-  const isOut = item.status === "Out of Stock" || item.quantity === 0;
-  const skuFormatted = formatSku(item.id);
-  const stockHealthPct = Math.min(100, Math.round((item.quantity / 300) * 100));
-
   return (
     <tr className={cn("group transition-colors hover:bg-muted/40", isSelected && "bg-primary/5")}>
       <td className="py-4 px-4 text-center">
@@ -186,149 +373,31 @@ function StocksTableRow({
       </td>
 
       <td className="py-4 px-4">
-        <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              "h-10 w-10 rounded-2xl border flex items-center justify-center shrink-0 transition-transform group-hover:scale-105",
-              catMeta.bg,
-            )}
-          >
-            <CatIcon className={cn("h-5 w-5", catMeta.color)} />
-          </div>
-          <div>
-            <p className="font-bold text-foreground text-sm tracking-tight group-hover:text-primary transition-colors">
-              {item.name}
-            </p>
-            <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 mt-0.5">
-              <span>{catMeta.label}</span>
-            </p>
-          </div>
-        </div>
+        <StockIdentityCell name={item.name} category={item.category} />
       </td>
 
       <td className="py-4 px-4">
-        <div className="flex items-center gap-1.5">
-          <code className="text-xs font-mono font-bold bg-muted/60 border border-border/70 text-foreground/80 px-2.5 py-1 rounded-lg">
-            {skuFormatted}
-          </code>
-          <button
-            type="button"
-            onClick={onCopySku}
-            className="p-1 text-muted-foreground hover:text-foreground rounded-md transition-colors cursor-pointer"
-            title="Copiar ID completo"
-            aria-label="Copiar ID"
-          >
-            {copiedSku === item.id ? (
-              <Check className="h-3.5 w-3.5 text-emerald-500" />
-            ) : (
-              <Copy className="h-3.5 w-3.5" />
-            )}
-          </button>
-        </div>
+        <StockSkuCell id={item.id} isCopied={copiedSku === item.id} onCopy={onCopySku} />
       </td>
 
       <td className="py-4 px-4">
-        <span
-          className={cn(
-            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border",
-            catMeta.bg,
-            catMeta.color,
-          )}
-        >
-          <CatIcon className="h-3.5 w-3.5" />
-          <span>{catMeta.label}</span>
-        </span>
+        <StockCategoryBadge category={item.category} />
       </td>
 
       <td className="py-4 px-4">
-        <div className="w-36 space-y-1.5">
-          <div className="flex items-baseline justify-between">
-            <span className="font-display font-bold text-base text-foreground tabular-nums">
-              {item.quantity.toLocaleString("es-ES")}
-            </span>
-            <span className="text-[10px] text-muted-foreground font-semibold">unidades</span>
-          </div>
-          <div className="h-2 w-full bg-muted/70 rounded-full overflow-hidden p-0.5 border border-border/40">
-            <div
-              style={{ width: `${Math.max(5, stockHealthPct)}%` }}
-              className={cn(
-                "h-full rounded-full transition-[width] duration-300",
-                isOut ? "bg-destructive" : isLow ? "bg-amber-500" : "bg-emerald-500",
-              )}
-            />
-          </div>
-        </div>
+        <StockQuantityBar quantity={item.quantity} status={item.status} />
       </td>
 
       <td className="py-4 px-4">
-        <span
-          className={cn(
-            "inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-full tracking-wide border shadow-2xs",
-            isOut
-              ? "bg-destructive/10 text-destructive border-destructive/20"
-              : isLow
-                ? "bg-amber-500/10 text-amber-500 border-amber-500/25"
-                : "bg-emerald-500/10 text-emerald-500 border-emerald-500/25",
-          )}
-        >
-          <span
-            className={cn(
-              "h-1.5 w-1.5 rounded-full inline-block",
-              isOut ? "bg-destructive" : isLow ? "bg-amber-500 animate-pulse" : "bg-emerald-500",
-            )}
-          />
-          {isOut ? "Agotado" : isLow ? "Stock Bajo" : "En Stock"}
-        </span>
+        <StockStatusBadge status={item.status} quantity={item.quantity} />
       </td>
 
       <td className="py-4 px-4 text-center">
-        <div className="inline-flex items-center gap-1 bg-muted/60 p-1 rounded-xl border border-border/60">
-          <button
-            type="button"
-            disabled={item.quantity <= 0}
-            onClick={() => onQuickAdjust(-1)}
-            className="h-7 w-7 rounded-lg bg-card hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shadow-2xs"
-            title="Descontar 1 unidad"
-            aria-label="Descontar 1"
-          >
-            <Minus className="h-3.5 w-3.5" />
-          </button>
-          <span className="w-8 text-center text-xs font-bold text-foreground tabular-nums">
-            {item.quantity}
-          </span>
-          <button
-            type="button"
-            onClick={() => onQuickAdjust(10)}
-            className="h-7 px-2 rounded-lg bg-card hover:bg-muted text-primary font-bold text-xs flex items-center justify-center transition-colors cursor-pointer shadow-2xs"
-            title="Añadir +10 unidades"
-            aria-label="Añadir 10"
-          >
-            +10
-          </button>
-        </div>
+        <StockQuickAdjustControls quantity={item.quantity} onAdjust={onQuickAdjust} />
       </td>
 
       <td className="py-4 px-4 text-right pr-6">
-        <div className="flex items-center justify-end gap-1.5">
-          <button
-            type="button"
-            onClick={onEdit}
-            className="h-8 w-8 rounded-xl hover:bg-muted/80 text-muted-foreground hover:text-primary flex items-center justify-center transition-colors cursor-pointer"
-            title="Editar artículo"
-            aria-label={`Editar ${item.name}`}
-          >
-            <Pencil className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={onDelete}
-            className="h-8 w-8 rounded-xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive flex items-center justify-center transition-colors cursor-pointer"
-            title="Eliminar artículo"
-            aria-label={`Eliminar ${item.name}`}
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-        </div>
+        <StockActionButtons name={item.name} onEdit={onEdit} onDelete={onDelete} />
       </td>
     </tr>
   );

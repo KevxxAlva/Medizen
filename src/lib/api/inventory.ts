@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 
 export type StockItem = {
   id: string;
@@ -10,14 +11,21 @@ export type StockItem = {
 };
 
 export function useStocks() {
+  const { user } = useAuthSession();
   return useQuery({
-    queryKey: ["inventory_stocks"],
+    queryKey: ["inventory_stocks", user?.id],
+    enabled: !!user,
     queryFn: async (): Promise<StockItem[]> => {
-      const { data, error } = await supabase
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
+      let query = supabase
         .from("inventory_stocks")
         .select("*")
         .order("created_at", { ascending: true });
+      if (clinicId) {
+        query = (query as any).eq("id_clinica", clinicId);
+      }
         
+      const { data, error } = await query;
       if (error) throw error;
       return data as StockItem[];
     },
@@ -26,11 +34,15 @@ export function useStocks() {
 
 export function useCreateStock() {
   const qc = useQueryClient();
+  const { user } = useAuthSession();
   return useMutation({
     mutationFn: async (item: Omit<StockItem, "id">) => {
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
+      const payload: Record<string, any> = { ...item };
+      if (clinicId) payload.id_clinica = clinicId;
       const { data, error } = await supabase
         .from("inventory_stocks")
-        .insert(item)
+        .insert(payload as any)
         .select()
         .single();
       if (error) throw error;

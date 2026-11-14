@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getStoredAppointmentPrice, resolveServiceFromReason } from "@/lib/api/appointments";
+import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 
 export type VisitType = "CONTROL" | "EMERGENCIA" | "CONSULTA_NUEVA" | "POST_TRATAMIENTO" | "OTRO";
 
@@ -192,14 +193,21 @@ const unpackConsultation = (h: any): Consultation => {
 };
 
 export function useConsultations(filters?: ConsultationFilters) {
-  const queryKey = filters ? ["consultations", filters] : ["consultations"];
+  const { user } = useAuthSession();
+  const queryKey = filters ? ["consultations", user?.id, filters] : ["consultations", user?.id];
   return useQuery({
     queryKey,
+    enabled: !!user,
     queryFn: async (): Promise<Consultation[]> => {
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
       let query = supabase
         .from("consultas")
         .select("*, citas(id_paciente, pacientes(nombre, apellido))")
         .order("fecha_hora", { ascending: false });
+
+      if (clinicId) {
+        query = (query as any).eq("id_clinica", clinicId);
+      }
 
       if (filters?.from) {
         query = query.gte("fecha_hora", filters.from);
@@ -291,34 +299,40 @@ export function useConsultationByAppointment(appointmentId: string | undefined) 
 
 export function useCreateConsultation() {
   const qc = useQueryClient();
+  const { user } = useAuthSession();
   return useMutation({
     mutationFn: async ({ consumables, ...consultationData }: ConsultationInput) => {
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
       // 1. Get or Create historias_clinicas
       const { data: hcList } = await supabase.from("historias_clinicas").select("id_historia").eq("id_paciente", parseInt(consultationData.patient_id));
       let id_historia = hcList?.[0]?.id_historia;
       if (!id_historia) {
-         const { data: newHc, error: hcError } = await supabase.from("historias_clinicas").insert({ id_paciente: parseInt(consultationData.patient_id) }).select().single();
+         const hcInsert: Record<string, any> = { id_paciente: parseInt(consultationData.patient_id) };
+         if (clinicId) hcInsert.id_clinica = clinicId;
+         const { data: newHc, error: hcError } = await supabase.from("historias_clinicas").insert(hcInsert as any).select().single();
          if (hcError) throw hcError;
          id_historia = newHc.id_historia;
       }
 
       // 2. Insert consultation
       const jsonObservaciones = packObservaciones(consultationData);
+      const consultaInsert: Record<string, any> = {
+        id_cita: parseInt(consultationData.appointment_id),
+        id_historia: id_historia,
+        id_medico: consultationData.doctor_id ? parseInt(consultationData.doctor_id) : null,
+        diagnostico: consultationData.diagnosis || null,
+        peso_kg: consultationData.weight_kg || null,
+        presion_arterial: consultationData.blood_pressure || null,
+        temperatura_c: consultationData.temperature || null,
+        sintomas: consultationData.subjective_exam || null,
+        motivo_consulta: consultationData.visit_type || null,
+        notas_medicas: jsonObservaciones,
+      };
+      if (clinicId) consultaInsert.id_clinica = clinicId;
       
       const { data: hc, error: cError } = await supabase
         .from("consultas")
-        .insert({
-          id_cita: parseInt(consultationData.appointment_id),
-          id_historia: id_historia,
-          id_medico: consultationData.doctor_id ? parseInt(consultationData.doctor_id) : null,
-          diagnostico: consultationData.diagnosis || null,
-          peso_kg: consultationData.weight_kg || null,
-          presion_arterial: consultationData.blood_pressure || null,
-          temperatura_c: consultationData.temperature || null,
-          sintomas: consultationData.subjective_exam || null,
-          motivo_consulta: consultationData.visit_type || null,
-          notas_medicas: jsonObservaciones
-        })
+        .insert(consultaInsert as any)
         .select()
         .single();
       if (cError) throw cError;

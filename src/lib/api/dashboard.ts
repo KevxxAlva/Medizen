@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuthSession } from "@/hooks/useAuth";
+import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 import { getInvoicesForDoctor } from "@/lib/utils/invoiceDoctorPartition";
 
 // Helper to get dates for the last 7 days (including today)
@@ -55,6 +55,7 @@ export function useDashboardStats(options?: {
         };
       }
 
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
       const dates = getLast7Days();
       const todayStr = dates[6];
       const yesterdayStr = dates[5];
@@ -66,6 +67,10 @@ export function useDashboardStats(options?: {
         .select("fecha_hora, estado, motivo, id_medico, id_paciente")
         .or("motivo.is.null,motivo.not.ilike.%[TEST-LOAD]%")
         .gte("fecha_hora", `${sevenDaysAgo}T00:00:00.000Z`);
+
+      if (clinicId) {
+        citasQuery = (citasQuery as any).eq("id_clinica", clinicId);
+      }
 
       if (doctorId) {
         citasQuery = citasQuery.eq("id_medico", doctorId);
@@ -81,11 +86,21 @@ export function useDashboardStats(options?: {
       let doctorPatientIds: Set<number> | null = null;
       if (doctorId) {
         doctorPatientIds = new Set<number>();
+        let allCitasQ = supabase.from("citas").select("id_paciente").eq("id_medico", doctorId);
+        let allConsQ = supabase.from("consultas").select("id_paciente").eq("id_medico", doctorId);
+        let allHcQ = supabase.from("historias_clinicas").select("id_paciente, datos_extras");
+        let medQ = supabase.from("medicos").select("id_medico", { count: "exact", head: true });
+        if (clinicId) {
+          allCitasQ = (allCitasQ as any).eq("id_clinica", clinicId);
+          allConsQ = (allConsQ as any).eq("id_clinica", clinicId);
+          allHcQ = (allHcQ as any).eq("id_clinica", clinicId);
+          medQ = (medQ as any).eq("id_clinica", clinicId);
+        }
         const [allCitasRes, allConsultasRes, allHcRes, medicosCountRes] = await Promise.all([
-          supabase.from("citas").select("id_paciente").eq("id_medico", doctorId),
-          supabase.from("consultas").select("id_paciente").eq("id_medico", doctorId),
-          supabase.from("historias_clinicas").select("id_paciente, datos_extras"),
-          supabase.from("medicos").select("id_medico", { count: "exact", head: true }),
+          allCitasQ,
+          allConsQ,
+          allHcQ,
+          medQ,
         ]);
 
         (allCitasRes.data || []).forEach((c) => {
@@ -104,7 +119,9 @@ export function useDashboardStats(options?: {
         // Si la clínica tiene solo 1 médico registrado, todos los pacientes le corresponden
         const totalMedicos = medicosCountRes.count ?? 0;
         if (totalMedicos <= 1) {
-          const { data: allP } = await supabase.from("pacientes").select("id_paciente");
+          let allPQ = supabase.from("pacientes").select("id_paciente");
+          if (clinicId) allPQ = (allPQ as any).eq("id_clinica", clinicId);
+          const { data: allP } = await allPQ;
           (allP || []).forEach((p) => doctorPatientIds!.add(Number(p.id_paciente)));
         }
       }
@@ -112,34 +129,42 @@ export function useDashboardStats(options?: {
       // Invoices
       let invoices: any[] = [];
       if (!isDoctorOnly && !doctorId) {
-        const { data: invoicesData } = await supabase
+        let invQ = supabase
           .from("facturas")
           .select("id_paciente, fecha_emision, estado_pago")
           .gte("fecha_emision", `${sevenDaysAgo}T00:00:00.000Z`);
+        if (clinicId) invQ = (invQ as any).eq("id_clinica", clinicId);
+        const { data: invoicesData } = await invQ;
         invoices = invoicesData || [];
       } else if (doctorPatientIds && doctorPatientIds.size > 0) {
-        const { data: invoicesData } = await supabase
+        let invQ = supabase
           .from("facturas")
           .select("id_paciente, fecha_emision, estado_pago")
           .in("id_paciente", Array.from(doctorPatientIds))
           .gte("fecha_emision", `${sevenDaysAgo}T00:00:00.000Z`);
+        if (clinicId) invQ = (invQ as any).eq("id_clinica", clinicId);
+        const { data: invoicesData } = await invQ;
         invoices = invoicesData || [];
       }
 
       // New Patients registered in last 7 days
       let newPatients: any[] = [];
       if (!isDoctorOnly && !doctorId) {
-        const { data: patientsData } = await supabase
+        let patQ = supabase
           .from("pacientes")
           .select("id_paciente, creado_en")
           .gte("creado_en", `${sevenDaysAgo}T00:00:00.000Z`);
+        if (clinicId) patQ = (patQ as any).eq("id_clinica", clinicId);
+        const { data: patientsData } = await patQ;
         newPatients = patientsData || [];
       } else if (doctorPatientIds && doctorPatientIds.size > 0) {
-        const { data: patientsData } = await supabase
+        let patQ = supabase
           .from("pacientes")
           .select("id_paciente, creado_en")
           .in("id_paciente", Array.from(doctorPatientIds))
           .gte("creado_en", `${sevenDaysAgo}T00:00:00.000Z`);
+        if (clinicId) patQ = (patQ as any).eq("id_clinica", clinicId);
+        const { data: patientsData } = await patQ;
         newPatients = patientsData || [];
       }
 
@@ -300,33 +325,40 @@ export function useMonthlyPayments(options?: {
         return { total: 0, paymentsByDay: [] };
       }
 
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
       const now = new Date();
       const currentMonthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
       // CASO 1: DOCTOR INDIVIDUAL (isDoctorOnly o doctorId presente)
       if (isDoctorOnly && doctorId) {
+        let citasQ = supabase
+          .from("citas")
+          .select("id_cita, id_paciente, id_medico, fecha_hora, motivo, estado")
+          .or("motivo.is.null,motivo.not.ilike.%[TEST-LOAD]%")
+          .order("fecha_hora", { ascending: false });
+        let invQ = supabase
+          .from("facturas")
+          .select(`
+            id_factura,
+            id_paciente,
+            total_general,
+            estado_pago,
+            fecha_emision,
+            detalles_factura (
+              id_servicio,
+              servicios (nombre_servicio)
+            )
+          `)
+          .order("id_factura", { ascending: false });
+        if (clinicId) {
+          citasQ = (citasQ as any).eq("id_clinica", clinicId);
+          invQ = (invQ as any).eq("id_clinica", clinicId);
+        }
         // Consultar citas de la clínica (excluyendo datos de prueba) y facturas emitidas
         const [{ data: allCitas }, { data: allRawInvoices }] = await Promise.all([
-          supabase
-            .from("citas")
-            .select("id_cita, id_paciente, id_medico, fecha_hora, motivo, estado")
-            .or("motivo.is.null,motivo.not.ilike.%[TEST-LOAD]%")
-            .order("fecha_hora", { ascending: false }),
-          supabase
-            .from("facturas")
-            .select(`
-              id_factura,
-              id_paciente,
-              total_general,
-              estado_pago,
-              fecha_emision,
-              detalles_factura (
-                id_servicio,
-                servicios (nombre_servicio)
-              )
-            `)
-            .order("id_factura", { ascending: false }),
+          citasQ,
+          invQ,
         ]);
 
         const paidInvoices = (allRawInvoices || []).filter((i) => {
@@ -371,10 +403,14 @@ export function useMonthlyPayments(options?: {
       }
 
       // CASO 2: ADMIN Y RECEPCIONISTA (Vista global de la clínica)
-      const { data, error } = await supabase
+      let facQuery = supabase
         .from("facturas")
         .select("id_paciente, total_general, estado_pago, fecha_emision")
         .order("id_factura", { ascending: false });
+      if (clinicId) {
+        facQuery = (facQuery as any).eq("id_clinica", clinicId);
+      }
+      const { data, error } = await facQuery;
 
       if (error) throw error;
 
@@ -507,16 +543,21 @@ export function useDashboardTrends(options?: {
         return getEmptyMonthly();
       }
 
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
       const sixMonthsAgo = new Date();
       sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
       sixMonthsAgo.setDate(1);
 
       let allowedPatientIds: Set<number> | null = null;
       if (isDoctorOnly || doctorId) {
-        const { data: doctorCitas } = await supabase
+        let docCitasQ = supabase
           .from("citas")
           .select("id_paciente")
           .eq("id_medico", doctorId!);
+        if (clinicId) {
+          docCitasQ = (docCitasQ as any).eq("id_clinica", clinicId);
+        }
+        const { data: doctorCitas } = await docCitasQ;
 
         const patientIds = (doctorCitas || [])
           .map((c) => c.id_paciente)
@@ -532,6 +573,10 @@ export function useDashboardTrends(options?: {
         .from("facturas")
         .select("id_paciente, fecha_emision, total_general, estado_pago")
         .gte("fecha_emision", sixMonthsAgo.toISOString());
+
+      if (clinicId) {
+        query = (query as any).eq("id_clinica", clinicId);
+      }
 
       if (allowedPatientIds) {
         query = query.in("id_paciente", Array.from(allowedPatientIds));
@@ -582,15 +627,20 @@ export function useTopTreatments(options?: {
     queryFn: async () => {
       if (isDoctorOnly && !doctorId) return [];
 
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
       let allowedPatientIds: Set<number> | null = null;
       if (isDoctorOnly || doctorId) {
-        const { data: doctorCitas } = await supabase
+        let docCitasQ = supabase
           .from("citas")
           .select("id_paciente")
           .eq("id_medico", doctorId!);
+        if (clinicId) {
+          docCitasQ = (docCitasQ as any).eq("id_clinica", clinicId);
+        }
+        const { data: doctorCitas } = await docCitasQ;
 
         const patientIds = (doctorCitas || [])
           .map((c) => c.id_paciente)
@@ -604,6 +654,10 @@ export function useTopTreatments(options?: {
         .from("detalles_factura")
         .select("id_servicio, cantidad, servicios(nombre_servicio), facturas!inner(id_paciente, fecha_emision)")
         .gte("facturas.fecha_emision", thirtyDaysAgo.toISOString());
+
+      if (clinicId) {
+        query = (query as any).eq("facturas.id_clinica", clinicId);
+      }
 
       if (allowedPatientIds) {
         query = query.in("facturas.id_paciente", Array.from(allowedPatientIds));

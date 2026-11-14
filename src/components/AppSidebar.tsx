@@ -19,14 +19,15 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  Building2,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useIsAdmin } from "@/hooks/useAuth";
+import { useIsAdmin, useIsSuperAdmin } from "@/hooks/useAuth";
 import { useUserRoleScope } from "@/hooks/useUserRoleScope";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { useClinicInfo } from "@/lib/api/clinic";
+import { useClinicInfo, getSaasPlanConfig } from "@/lib/api/clinic";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ThemeCustomizer } from "@/components/ThemeCustomizer";
 import { MedizenLogo } from "@/components/MedizenLogo";
@@ -40,6 +41,8 @@ type ModuleDef = {
   badge?: number;
   adminOnly?: boolean;
   receptionOrAdminOnly?: boolean;
+  superAdminOnly?: boolean;
+  minPlan?: "pro" | "enterprise";
 };
 
 const navigation: ModuleDef[] = [
@@ -50,17 +53,27 @@ const navigation: ModuleDef[] = [
   { title: "Pacientes", url: "/pacientes", icon: UserRound },
   { title: "Servicios Médicos", url: "/servicios", icon: Stethoscope },
   { title: "Personal", url: "/doctores", icon: Users, adminOnly: true },
-  { category: "FINANZAS" },
-  { title: "Cuentas", url: "/cuentas", icon: Wallet, adminOnly: true },
-  { title: "Ventas", url: "/facturacion", icon: ReceiptText },
-  { title: "Honorarios Médicos", url: "/honorarios", icon: HandCoins, adminOnly: true },
-  { title: "Métodos de Pago", url: "/metodos-pago", icon: CreditCard, adminOnly: true },
-  { category: "ACTIVOS FÍSICOS", adminOnly: true },
-  { title: "Inventario", url: "/stocks", icon: Box, adminOnly: true },
+  { category: "FINANZAS", minPlan: "pro" },
+  { title: "Cuentas", url: "/cuentas", icon: Wallet, adminOnly: true, minPlan: "pro" },
+  { title: "Ventas", url: "/facturacion", icon: ReceiptText, minPlan: "pro" },
+  { title: "Honorarios Médicos", url: "/honorarios", icon: HandCoins, adminOnly: true, minPlan: "pro" },
+  { title: "Métodos de Pago", url: "/metodos-pago", icon: CreditCard, adminOnly: true, minPlan: "pro" },
+  { category: "ACTIVOS FÍSICOS", adminOnly: true, minPlan: "pro" },
+  { title: "Inventario", url: "/stocks", icon: Box, adminOnly: true, minPlan: "pro" },
   { category: "OTROS" },
-  { title: "Reportes", url: "/reportes", icon: RotateCw },
-  { title: "Auditoría", url: "/auditoria", icon: ShieldCheck, adminOnly: true },
+  { title: "Reportes", url: "/reportes", icon: RotateCw, minPlan: "enterprise" },
+  { title: "Auditoría", url: "/auditoria", icon: ShieldCheck, adminOnly: true, minPlan: "enterprise" },
   { title: "Configuración", url: "/configuracion", icon: Settings },
+  { category: "PLATAFORMA SAAS", superAdminOnly: true },
+  { title: "Super Admin", url: "/superadmin", icon: Building2, superAdminOnly: true },
+];
+
+const superAdminNavigation: ModuleDef[] = [
+  { category: "PLATAFORMA SAAS" },
+  { title: "Gestión de Clínicas", url: "/superadmin", icon: Building2 },
+  { category: "SEGURIDAD Y CONTROL" },
+  { title: "Auditoría del Sistema", url: "/superadmin?view=auditoria", icon: ShieldCheck },
+  { title: "Configuración Global", url: "/superadmin?view=configuracion", icon: Settings },
 ];
 
 const SidebarBody = memo(function SidebarBody({
@@ -71,11 +84,17 @@ const SidebarBody = memo(function SidebarBody({
   isCollapsed?: boolean;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const searchStr = useRouterState({ select: (s) => s.location.searchStr });
   const isAdmin = useIsAdmin();
+  const isSuperAdmin = useIsSuperAdmin();
   const { canViewAllDoctors } = useUserRoleScope();
   const router = useRouter();
   const qc = useQueryClient();
   const { data: clinic } = useClinicInfo();
+
+  const isSuperAdminMode = pathname.startsWith("/superadmin");
+  const planConfig = getSaasPlanConfig(clinic?.plan_suscripcion);
+  const navList = isSuperAdminMode ? superAdminNavigation : navigation;
 
   const handleLogout = async () => {
     if (onNavigate) onNavigate();
@@ -95,22 +114,87 @@ const SidebarBody = memo(function SidebarBody({
             isCollapsed ? "justify-center px-2" : "px-6 gap-3",
           )}
         >
-          <MedizenLogo className="h-8 w-8 flex-shrink-0 transition-transform duration-300" />
+          <div className="relative flex items-center justify-center">
+            <MedizenLogo className="h-8 w-8 flex-shrink-0 transition-transform duration-300" />
+            {isSuperAdminMode && (
+              <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
+              </span>
+            )}
+          </div>
           {!isCollapsed && (
-            <span
-              className="font-display font-bold text-xl tracking-tight text-sidebar-foreground truncate"
-              title={clinic?.name || "Medizen"}
-            >
-              {clinic?.name || "Medizen"}
-            </span>
+            <div className="flex flex-col min-w-0">
+              <span
+                className="font-display font-bold text-lg tracking-tight text-sidebar-foreground truncate"
+                title={isSuperAdminMode ? "Medizen SaaS" : clinic?.name || "Medizen"}
+              >
+                {isSuperAdminMode ? "Medizen SaaS" : clinic?.name || "Medizen"}
+              </span>
+              {isSuperAdminMode ? (
+                <span className="text-[10px] font-bold tracking-wider uppercase text-primary -mt-0.5">
+                  Super Administrador
+                </span>
+              ) : (
+                clinic?.tagline && (
+                  <span className="text-[10px] font-medium text-muted-foreground truncate -mt-0.5">
+                    {clinic.tagline}
+                  </span>
+                )
+              )}
+            </div>
           )}
         </div>
 
+        {/* Workspace / Context Switcher for Superadmin when outside /superadmin */}
+        {isSuperAdmin && !isSuperAdminMode && !isCollapsed && (
+          <div className="mx-3 mt-3 p-2.5 rounded-xl bg-sidebar-accent/50 border border-sidebar-border flex items-center justify-between gap-2 shadow-xs">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-2 h-2 rounded-full shrink-0 bg-emerald-500" />
+              <div className="flex flex-col min-w-0">
+                <span className="text-[11px] font-bold text-sidebar-foreground truncate leading-tight">
+                  {clinic?.name || "Clínica"}
+                </span>
+                <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-semibold">
+                  Modo Operativo
+                </span>
+              </div>
+            </div>
+            <Link
+              to="/superadmin"
+              onClick={onNavigate}
+              className="px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all shrink-0 active:scale-95 bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs"
+            >
+              Ver SaaS
+            </Link>
+          </div>
+        )}
+
+        {isSuperAdmin && !isSuperAdminMode && isCollapsed && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                to="/superadmin"
+                onClick={onNavigate}
+                className="my-2 mx-auto h-9 w-9 rounded-xl flex items-center justify-center transition-all active:scale-95 bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/80"
+              >
+                <Building2 className="h-4 w-4 text-primary" />
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={10} className="font-semibold text-xs">
+              Volver al Panel Super Admin
+            </TooltipContent>
+          </Tooltip>
+        )}
+
         {/* Navigation List */}
         <nav className="flex-1 w-full overflow-y-auto overscroll-contain no-scrollbar px-3 pt-3 pb-4 flex flex-col gap-1">
-          {navigation.map((m) => {
-            if (m.adminOnly && !isAdmin) return null;
-            if (m.receptionOrAdminOnly && !canViewAllDoctors) return null;
+          {navList.map((m) => {
+            if (m.superAdminOnly && !isSuperAdmin) return null;
+            if (m.adminOnly && !isAdmin && !isSuperAdmin) return null;
+            if (m.receptionOrAdminOnly && !canViewAllDoctors && !isSuperAdmin) return null;
+            if (!isSuperAdminMode && m.minPlan === "pro" && !planConfig.includesFinance) return null;
+            if (!isSuperAdminMode && m.minPlan === "enterprise" && !planConfig.includesReportsAndAudit) return null;
 
             if (m.category) {
               if (isCollapsed) {
@@ -132,17 +216,24 @@ const SidebarBody = memo(function SidebarBody({
               );
             }
 
-            const active =
-              pathname === m.url ||
-              (m.url !== "/" && !m.url?.startsWith("#") && pathname.startsWith(m.url || ""));
+            const currentFullUrl = `${pathname}${searchStr || ""}`;
+            const active = isSuperAdminMode
+              ? m.url === "/superadmin"
+                ? pathname === "/superadmin" && (!searchStr || !searchStr.includes("view="))
+                : currentFullUrl === m.url
+              : pathname === m.url ||
+                (m.url !== "/" && !m.url?.startsWith("#") && pathname.startsWith(m.url || ""));
             const Icon = m.icon;
             if (!Icon) return null;
             const isDummy = m.url?.startsWith("#");
+            const [basePath, rawQuery] = (m.url || "/").split("?");
+            const searchObj = rawQuery ? Object.fromEntries(new URLSearchParams(rawQuery)) : undefined;
 
             const linkContent = (
               <Link
                 key={m.title}
-                to={isDummy ? "/" : m.url!}
+                to={isDummy ? "/" : (basePath as any)}
+                search={isDummy ? undefined : (searchObj as any)}
                 aria-current={active ? "page" : undefined}
                 aria-label={isCollapsed ? m.title : undefined}
                 onClick={(e) => {

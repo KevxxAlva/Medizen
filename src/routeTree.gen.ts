@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DescargarRouteImport } from './routes/descargar'
 import { Route as LegalRouteImport } from './routes/legal'
+import { Route as SuperadminLoginRouteImport } from './routes/superadmin-login'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as AuthenticatedAuditoriaRouteImport } from './routes/_authenticated/auditoria'
 import { Route as AuthenticatedConfiguracionRouteImport } from './routes/_authenticated/configuracion'
@@ -27,6 +28,7 @@ import { Route as AuthenticatedReportesRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedSalaEsperaRouteImport } from './routes/_authenticated/sala-espera'
 import { Route as AuthenticatedServiciosRouteImport } from './routes/_authenticated/servicios'
 import { Route as AuthenticatedStocksRouteImport } from './routes/_authenticated/stocks'
+import { Route as AuthenticatedSuperadminRouteImport } from './routes/_authenticated/superadmin'
 import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
 import { Route as AuthenticatedPacientesIndexRouteImport } from './routes/_authenticated/pacientes.index'
 import { Route as AuthenticatedPacientesPatientIdRouteImport } from './routes/_authenticated/pacientes.$patientId'
@@ -53,6 +55,11 @@ const DescargarRoute = DescargarRouteImport.update({
 const LegalRoute = LegalRouteImport.update({
   id: '/legal',
   path: '/legal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SuperadminLoginRoute = SuperadminLoginRouteImport.update({
+  id: '/superadmin-login',
+  path: '/superadmin-login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
@@ -123,6 +130,11 @@ const AuthenticatedStocksRoute = AuthenticatedStocksRouteImport.update({
   path: '/stocks',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSuperadminRoute = AuthenticatedSuperadminRouteImport.update({
+  id: '/superadmin',
+  path: '/superadmin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSupportRoute = AuthenticatedSupportRouteImport.update({
   id: '/support',
   path: '/support',
@@ -146,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/descargar': typeof DescargarRoute
   '/legal': typeof LegalRoute
+  '/superadmin-login': typeof SuperadminLoginRoute
   '/agenda': typeof AuthenticatedAgendaRoute
   '/auditoria': typeof AuthenticatedAuditoriaRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
@@ -159,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/sala-espera': typeof AuthenticatedSalaEsperaRoute
   '/servicios': typeof AuthenticatedServiciosRoute
   '/stocks': typeof AuthenticatedStocksRoute
+  '/superadmin': typeof AuthenticatedSuperadminRoute
   '/support': typeof AuthenticatedSupportRoute
   '/pacientes/$patientId': typeof AuthenticatedPacientesPatientIdRoute
   '/pacientes/': typeof AuthenticatedPacientesIndexRoute
@@ -168,6 +182,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/descargar': typeof DescargarRoute
   '/legal': typeof LegalRoute
+  '/superadmin-login': typeof SuperadminLoginRoute
   '/agenda': typeof AuthenticatedAgendaRoute
   '/auditoria': typeof AuthenticatedAuditoriaRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
@@ -181,6 +196,7 @@ export interface FileRoutesByTo {
   '/sala-espera': typeof AuthenticatedSalaEsperaRoute
   '/servicios': typeof AuthenticatedServiciosRoute
   '/stocks': typeof AuthenticatedStocksRoute
+  '/superadmin': typeof AuthenticatedSuperadminRoute
   '/support': typeof AuthenticatedSupportRoute
   '/pacientes/$patientId': typeof AuthenticatedPacientesPatientIdRoute
   '/pacientes': typeof AuthenticatedPacientesIndexRoute
@@ -192,6 +208,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/descargar': typeof DescargarRoute
   '/legal': typeof LegalRoute
+  '/superadmin-login': typeof SuperadminLoginRoute
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
   '/_authenticated/auditoria': typeof AuthenticatedAuditoriaRoute
   '/_authenticated/configuracion': typeof AuthenticatedConfiguracionRoute
@@ -205,6 +222,7 @@ export interface FileRoutesById {
   '/_authenticated/sala-espera': typeof AuthenticatedSalaEsperaRoute
   '/_authenticated/servicios': typeof AuthenticatedServiciosRoute
   '/_authenticated/stocks': typeof AuthenticatedStocksRoute
+  '/_authenticated/superadmin': typeof AuthenticatedSuperadminRoute
   '/_authenticated/support': typeof AuthenticatedSupportRoute
   '/_authenticated/pacientes/$patientId': typeof AuthenticatedPacientesPatientIdRoute
   '/_authenticated/pacientes/': typeof AuthenticatedPacientesIndexRoute
@@ -216,6 +234,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/descargar'
     | '/legal'
+    | '/superadmin-login'
     | '/agenda'
     | '/auditoria'
     | '/configuracion'
@@ -229,6 +248,7 @@ export interface FileRouteTypes {
     | '/sala-espera'
     | '/servicios'
     | '/stocks'
+    | '/superadmin'
     | '/support'
     | '/pacientes/$patientId'
     | '/pacientes/'
@@ -238,6 +258,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/descargar'
     | '/legal'
+    | '/superadmin-login'
     | '/agenda'
     | '/auditoria'
     | '/configuracion'
@@ -251,6 +272,7 @@ export interface FileRouteTypes {
     | '/sala-espera'
     | '/servicios'
     | '/stocks'
+    | '/superadmin'
     | '/support'
     | '/pacientes/$patientId'
     | '/pacientes'
@@ -261,6 +283,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/descargar'
     | '/legal'
+    | '/superadmin-login'
     | '/_authenticated/agenda'
     | '/_authenticated/auditoria'
     | '/_authenticated/configuracion'
@@ -274,6 +297,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sala-espera'
     | '/_authenticated/servicios'
     | '/_authenticated/stocks'
+    | '/_authenticated/superadmin'
     | '/_authenticated/support'
     | '/_authenticated/pacientes/$patientId'
     | '/_authenticated/pacientes/'
@@ -285,6 +309,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   DescargarRoute: typeof DescargarRoute
   LegalRoute: typeof LegalRoute
+  SuperadminLoginRoute: typeof SuperadminLoginRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -322,6 +347,13 @@ declare module '@tanstack/react-router' {
       path: '/legal'
       fullPath: '/legal'
       preLoaderRoute: typeof LegalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/superadmin-login': {
+      id: '/superadmin-login'
+      path: '/superadmin-login'
+      fullPath: '/superadmin-login'
+      preLoaderRoute: typeof SuperadminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/agenda': {
@@ -415,6 +447,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStocksRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/superadmin': {
+      id: '/_authenticated/superadmin'
+      path: '/superadmin'
+      fullPath: '/superadmin'
+      preLoaderRoute: typeof AuthenticatedSuperadminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/support': {
       id: '/_authenticated/support'
       path: '/support'
@@ -453,6 +492,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSalaEsperaRoute: typeof AuthenticatedSalaEsperaRoute
   AuthenticatedServiciosRoute: typeof AuthenticatedServiciosRoute
   AuthenticatedStocksRoute: typeof AuthenticatedStocksRoute
+  AuthenticatedSuperadminRoute: typeof AuthenticatedSuperadminRoute
   AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
   AuthenticatedPacientesPatientIdRoute: typeof AuthenticatedPacientesPatientIdRoute
   AuthenticatedPacientesIndexRoute: typeof AuthenticatedPacientesIndexRoute
@@ -472,6 +512,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSalaEsperaRoute: AuthenticatedSalaEsperaRoute,
   AuthenticatedServiciosRoute: AuthenticatedServiciosRoute,
   AuthenticatedStocksRoute: AuthenticatedStocksRoute,
+  AuthenticatedSuperadminRoute: AuthenticatedSuperadminRoute,
   AuthenticatedSupportRoute: AuthenticatedSupportRoute,
   AuthenticatedPacientesPatientIdRoute: AuthenticatedPacientesPatientIdRoute,
   AuthenticatedPacientesIndexRoute: AuthenticatedPacientesIndexRoute,
@@ -486,6 +527,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   DescargarRoute: DescargarRoute,
   LegalRoute: LegalRoute,
+  SuperadminLoginRoute: SuperadminLoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
