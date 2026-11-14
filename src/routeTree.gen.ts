@@ -14,7 +14,6 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DescargarRouteImport } from './routes/descargar'
 import { Route as LegalRouteImport } from './routes/legal'
-import { Route as SuperadminLoginRouteImport } from './routes/superadmin-login'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as AuthenticatedAuditoriaRouteImport } from './routes/_authenticated/auditoria'
 import { Route as AuthenticatedConfiguracionRouteImport } from './routes/_authenticated/configuracion'
@@ -55,11 +54,6 @@ const DescargarRoute = DescargarRouteImport.update({
 const LegalRoute = LegalRouteImport.update({
   id: '/legal',
   path: '/legal',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SuperadminLoginRoute = SuperadminLoginRouteImport.update({
-  id: '/superadmin-login',
-  path: '/superadmin-login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
@@ -158,7 +152,6 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/descargar': typeof DescargarRoute
   '/legal': typeof LegalRoute
-  '/superadmin-login': typeof SuperadminLoginRoute
   '/agenda': typeof AuthenticatedAgendaRoute
   '/auditoria': typeof AuthenticatedAuditoriaRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
@@ -182,7 +175,6 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/descargar': typeof DescargarRoute
   '/legal': typeof LegalRoute
-  '/superadmin-login': typeof SuperadminLoginRoute
   '/agenda': typeof AuthenticatedAgendaRoute
   '/auditoria': typeof AuthenticatedAuditoriaRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
@@ -208,7 +200,6 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/descargar': typeof DescargarRoute
   '/legal': typeof LegalRoute
-  '/superadmin-login': typeof SuperadminLoginRoute
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
   '/_authenticated/auditoria': typeof AuthenticatedAuditoriaRoute
   '/_authenticated/configuracion': typeof AuthenticatedConfiguracionRoute
@@ -234,7 +225,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/descargar'
     | '/legal'
-    | '/superadmin-login'
     | '/agenda'
     | '/auditoria'
     | '/configuracion'
@@ -258,7 +248,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/descargar'
     | '/legal'
-    | '/superadmin-login'
     | '/agenda'
     | '/auditoria'
     | '/configuracion'
@@ -283,7 +272,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/descargar'
     | '/legal'
-    | '/superadmin-login'
     | '/_authenticated/agenda'
     | '/_authenticated/auditoria'
     | '/_authenticated/configuracion'
@@ -309,7 +297,6 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   DescargarRoute: typeof DescargarRoute
   LegalRoute: typeof LegalRoute
-  SuperadminLoginRoute: typeof SuperadminLoginRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -347,13 +334,6 @@ declare module '@tanstack/react-router' {
       path: '/legal'
       fullPath: '/legal'
       preLoaderRoute: typeof LegalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/superadmin-login': {
-      id: '/superadmin-login'
-      path: '/superadmin-login'
-      fullPath: '/superadmin-login'
-      preLoaderRoute: typeof SuperadminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/agenda': {
@@ -527,7 +507,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   DescargarRoute: DescargarRoute,
   LegalRoute: LegalRoute,
-  SuperadminLoginRoute: SuperadminLoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

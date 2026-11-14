@@ -125,8 +125,9 @@ Clínica FemeSalud — Valle de la Pascua
 * En **Ventas (`/facturacion`)**, procese facturas pendientes (ordenadas de más reciente a más antigua) con los **6 métodos de pago de Venezuela** (**Efectivo Bs., Pago Móvil, Transferencia Bancaria, Binance Pay USDT, Divisas USD/EUR y Cashea** con calculadora de inicial 40%/50%/60% + 3 cuotas sin interés), tasas en vivo (**Dólar BCV, Euro BCV y USDT**) y acreditación automática en **Cuentas (`/cuentas`)**.
 * Al cierre de la jornada, pulse **Cierre de Caja (Reporte Z)** para descargar el arqueo diario conciliado en PDF, o acuda a **Reportes (`/reportes`)** para exportar informes ejecutivos en PDF y CSV.
 
-### 7. Honorarios Médicos (`/honorarios`), Inventario (`/inventario`) y Auditoría (`/auditoria`)
-* *(Exclusivos para Administración)*:
+### 7. Honorarios Médicos (`/honorarios`), Inventario (`/stocks`), Auditoría (`/auditoria`) y Panel Super Admin (`/superadmin`)
+* *(Exclusivos para Administración y Super Administración SaaS)*:
   * **Honorarios Médicos (`/honorarios`)**: Seleccione el rango de fechas y especialista para calcular sin doble conteo su comisión (`% Médico` vs. retención clínica) y emitir el recibo oficial de liquidación en PDF con firmas.
-  * **Inventario (`/inventario`)**: Controle existencias de insumos médicos, alertas de stock mínimo y kárdex de entradas/salidas.
+  * **Inventario (`/stocks`)**: Controle existencias de insumos médicos, alertas de stock mínimo y kárdex de entradas/salidas.
   * **Auditoría (`/auditoria`)**: Supervise la bitácora inmutable de eventos clínicos, financieros y de seguridad, filtrando por acción o usuario y exportando reportes de trazabilidad en PDF.
+  * **Panel del Super Administrador (`/superadmin`)**: Gestione organizaciones afiliadas, planes comerciales (`Básico $15`, `Pro $25`, `Enterprise $45` y `Prueba 14 días`), registro de pagos mensuales (`+30 días`), recordatorios por WhatsApp, anuncios globales en tiempo real y restablecimiento directo de contraseñas de administradores y médicos.

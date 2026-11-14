@@ -14,7 +14,7 @@ import {
   removeQuickAccessAccount,
   type QuickAccessProfile,
 } from "@/lib/auth/quickAccess";
-import { Activity, Sparkles, CreditCard, ShieldCheck, Lock } from "lucide-react";
+import { Activity, Sparkles, CreditCard, ShieldCheck } from "lucide-react";
 import {
   AuthQuickLoginForm,
   AuthStandardLoginForm,
@@ -120,8 +120,24 @@ function useAuthPageLogic() {
       }
     }
 
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       if (data.session && !hash.includes("type=recovery") && mode !== "reset-password") {
+        try {
+          const { data: dbUser } = await supabase
+            .from("usuarios")
+            .select("es_superadmin, roles(nombre_rol)")
+            .eq("auth_id", data.session.user.id)
+            .maybeSingle();
+          const roleName = (
+            Array.isArray(dbUser?.roles)
+              ? dbUser?.roles[0]?.nombre_rol
+              : (dbUser?.roles as any)?.nombre_rol || ""
+          ).toLowerCase();
+          if (dbUser?.es_superadmin || roleName.includes("super")) {
+            router.navigate({ to: "/superadmin", replace: true });
+            return;
+          }
+        } catch {}
         router.navigate({ to: "/dashboard", replace: true });
       }
     });
@@ -595,14 +611,6 @@ function AuthPage() {
               </Link>
               <Link to="/descargar" className="text-primary hover:underline transition-colors">
                 Descargar App
-              </Link>
-              <Link
-                to="/superadmin-login"
-                className="text-muted-foreground/70 hover:text-primary transition-colors inline-flex items-center gap-1 font-mono text-[10px]"
-                title="Acceso Maestro SaaS (Super Administrador)"
-              >
-                <Lock className="h-2.5 w-2.5" />
-                SaaS Master
               </Link>
             </nav>
           </div>
