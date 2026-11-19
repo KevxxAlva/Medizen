@@ -2,23 +2,20 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
   createRootRouteWithContext,
-  useRouter,
   HeadContent,
   Scripts,
+  useRouter,
+  Link,
+  type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
-
-import "@fontsource/inter/400.css";
-import "@fontsource/inter/500.css";
-import "@fontsource/inter/600.css";
-import "@fontsource/inter/700.css";
-import "@fontsource/plus-jakarta-sans/500.css";
-import "@fontsource/plus-jakarta-sans/600.css";
-import "@fontsource/plus-jakarta-sans/700.css";
-import "@fontsource/plus-jakarta-sans/800.css";
-import appCss from "../styles.css?url";
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { applySavedThemeColor } from "@/components/ThemeCustomizer";
+import { AppSplashScreen } from "@/components/AppSplashScreen";
+import "../styles.css";
 
 function NotFoundComponent() {
   return (
@@ -26,34 +23,45 @@ function NotFoundComponent() {
       <div className="max-w-md text-center">
         <h1 className="font-display text-7xl font-bold text-foreground">404</h1>
         <h2 className="mt-4 text-xl font-semibold">Página no encontrada</h2>
-        <p className="mt-2 text-sm text-muted-foreground">Esta ruta no existe en FemeSalud.</p>
-        <a
-          href="/"
-          className="mt-6 inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-mauve to-mauve-soft px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm"
+        <p className="mt-2 text-sm text-muted-foreground">Esta ruta no existe en Medizen.</p>
+        <Link
+          to="/"
+          preload="intent"
+          className="mt-6 inline-flex items-center justify-center rounded-2xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90 transition-opacity"
         >
           Volver al inicio
-        </a>
+        </Link>
       </div>
     </div>
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
+function ErrorComponent({ error, reset }: ErrorComponentProps) {
+  console.error("Root route error:", error);
   const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
+
+  const errorMessage =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : "Se produjo un error inesperado en la aplicación.";
+  const errorStack = error instanceof Error ? error.stack : undefined;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-2xl text-center bg-card p-8 rounded-3xl border border-destructive/20 shadow-xl">
         <h1 className="text-xl font-bold text-destructive">Algo salió mal</h1>
         <p className="mt-2 text-sm text-muted-foreground">Error detectado en la aplicación:</p>
-        
+
         <div className="mt-4 p-4 bg-muted rounded-2xl text-left font-mono text-xs overflow-auto max-h-[300px] border border-border/60">
-          <p className="font-bold text-foreground mb-1">{error.message}</p>
-          <pre className="text-muted-foreground whitespace-pre-wrap">{error.stack}</pre>
+          <p className="font-bold text-foreground mb-1">{errorMessage}</p>
+          {import.meta.env.DEV && errorStack && (
+            <pre className="text-muted-foreground whitespace-pre-wrap">{errorStack}</pre>
+          )}
         </div>
 
         <div className="mt-6 flex justify-center gap-3">
@@ -62,7 +70,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
               router.invalidate();
               reset();
             }}
-            className="rounded-2xl bg-gradient-to-r from-mauve to-mauve-soft px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-95"
+            className="rounded-2xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-95"
           >
             Reintentar
           </button>
@@ -82,55 +90,115 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "FemeSalud — Premium Clinical Suite" },
-      { name: "description", content: "Plataforma premium de gestión médica para profesionales de la salud." },
+      {
+        name: "viewport",
+        content: "width=device-width, initial-scale=1.0, viewport-fit=cover",
+      },
+      { title: "Medizen — Suite Clínica Inteligente" },
+      {
+        name: "description",
+        content:
+          "Plataforma de alta resolución para la gestión médica integral, administración clínica y flujo de trabajo sin fricción.",
+      },
+      {
+        name: "theme-color",
+        media: "(prefers-color-scheme: light)",
+        content: "#ffffff",
+      },
+      {
+        name: "theme-color",
+        media: "(prefers-color-scheme: dark)",
+        content: "#000000",
+      },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "Medizen" },
+      { name: "application-name", content: "Medizen" },
     ],
     links: [
-      { rel: "icon", href: "/logo.png", type: "image/png" },
-      { rel: "stylesheet", href: appCss },
+      { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      {
+        rel: "preconnect",
+        href: "https://fonts.gstatic.com",
+        crossOrigin: "anonymous",
+      },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap",
+      },
     ],
   }),
-  shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
 
-function RootShell({ children }: { children: ReactNode }) {
+function RootComponent() {
+  const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+        queryClient.invalidateQueries();
+      } else if (event === "SIGNED_OUT") {
+        queryClient.clear();
+      }
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [queryClient]);
+
+  useEffect(() => {
+    applySavedThemeColor();
+
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      const isLocalhost =
+        window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+
+      if ((import.meta.env.DEV || isLocalhost) && "caches" in window) {
+        caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
+      }
+
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then((reg) => {
+          console.log("[PWA] Service Worker registrado con éxito:", reg.scope);
+        })
+        .catch((err) => {
+          console.warn("[PWA] Error al registrar Service Worker:", err);
+        });
+    }
+  }, []);
+
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <head>
         <HeadContent />
         <script
           dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                  document.documentElement.classList.add('dark');
-                } else {
-                  document.documentElement.classList.remove('dark');
-                }
-              } catch (_) {}
-            `,
+            __html: `(function(){try{var root=document.documentElement;var savedTheme=localStorage.getItem('theme')||'system';var resolvedTheme=savedTheme==='system'?(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):savedTheme;root.classList.remove('light','dark');root.classList.add(resolvedTheme==='dark'?'dark':'light');if(sessionStorage.getItem('medizen_splash_seen')==='1'){root.dataset.splash='skip';}window.__medizenInstallPrompt=null;window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__medizenInstallPrompt=e;});window.addEventListener('appinstalled',function(){window.__medizenInstallPrompt=null;});var map={blue:'#4361EE',emerald:'#059669',purple:'#7C3AED',teal:'#0D9488',rose:'#E11D48'};var saved=localStorage.getItem('medizen-accent-color');var hex=map[saved]||'#4361EE';var r=root.style;r.setProperty('--primary',hex);r.setProperty('--sidebar-primary',hex);r.setProperty('--ring',hex);r.setProperty('--sidebar-ring',hex);}catch(e){}})();`,
           }}
         />
       </head>
       <body>
-        {children}
+        <AppSplashScreen />
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-xl focus:shadow-md focus:outline-none"
+        >
+          Saltar al contenido principal
+        </a>
+        <ThemeProvider defaultTheme="system" storageKey="theme">
+          <QueryClientProvider client={queryClient}>
+            <Outlet />
+            <Toaster richColors position="top-right" />
+          </QueryClientProvider>
+        </ThemeProvider>
         <Scripts />
       </body>
     </html>
-  );
-}
-
-function RootComponent() {
-  const { queryClient } = Route.useRouteContext();
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <Outlet />
-      <Toaster richColors position="top-right" />
-    </QueryClientProvider>
   );
 }

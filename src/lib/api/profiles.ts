@@ -1,72 +1,147 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 
 export interface Profile {
   id: string;
+  doctor_id?: string | null;
+  auth_id?: string | null;
   full_name: string;
   email: string;
   specialty: string | null;
+  specialty_id?: number | null;
   avatar_url: string | null;
   university?: string | null;
   mpps?: string | null;
   cmc?: string | null;
+  role?: string | null;
 }
 
 export interface ProfileWithRoles extends Profile {
-  roles: ("admin" | "doctor")[];
+  roles: ("admin" | "doctor" | "recepcionista" | "medico")[];
 }
+
+const mapProfile = (u: any): Profile => {
+  // Try to find if this user is a doctor
+  const isDoctor = !!u.medicos;
+  const docInfo = isDoctor ? (Array.isArray(u.medicos) ? u.medicos[0] : u.medicos) : null;
+  const roleName = Array.isArray(u.roles) ? u.roles[0]?.nombre_rol : u.roles?.nombre_rol;
+
+  return {
+    id: u.auth_id || u.id_usuario?.toString(),
+    doctor_id: docInfo?.id_medico ? String(docInfo.id_medico) : null,
+    full_name: docInfo ? `${docInfo.nombre} ${docInfo.apellido}` : u.nombre_usuario,
+    email: docInfo?.email || `${u.nombre_usuario}@femesalud.com`,
+    specialty: docInfo?.especialidades?.nombre || null,
+    specialty_id: docInfo?.id_especialidad || docInfo?.especialidades?.id_especialidad || null,
+    avatar_url: null,
+    mpps: docInfo?.numero_licencia || null,
+    university: docInfo?.universidad || null,
+    cmc: docInfo?.cmc || null,
+    role: roleName || null,
+  };
+};
 
 export function useMyProfile(userId: string | undefined) {
   return useQuery({
     queryKey: ["profile", userId],
     enabled: !!userId,
     queryFn: async (): Promise<Profile | null> => {
+      // First try to match by auth_id (UUID from Supabase Auth)
       const { data, error } = await supabase
-        .from("profiles")
-        .select("id, full_name, email, specialty, avatar_url, university, mpps, cmc")
-        .eq("id", userId!)
+        .from("usuarios")
+        .select("*, roles(nombre_rol), medicos(id_medico, id_especialidad, nombre, apellido, email, numero_licencia, universidad, cmc, especialidades(id_especialidad, nombre))")
+        .eq("auth_id", userId!)
         .maybeSingle();
+
       if (error) throw error;
-      return data;
+      if (!data) {
+        // Fallback or handle cases where user is not yet synced in public.usuarios
+        return null; 
+      }
+      return mapProfile(data);
     },
   });
 }
 
-// Doctors picker — visible to admins (all profiles) and doctors (only doctors' profiles via RLS)
-export function useDoctors() {
+// Doctors picker
+export function useDoctors(options?: { enabled?: boolean }) {
+  const { user } = useAuthSession();
   return useQuery({
-    queryKey: ["doctors"],
+    queryKey: ["doctors", user?.id],
+    enabled: (options?.enabled ?? true) && !!user,
     queryFn: async (): Promise<Profile[]> => {
-      const { data: roleData, error: roleErr } = await supabase
-        .from("user_roles")
-        .select("user_id, role");
-      if (roleErr) throw roleErr;
-      const doctorIds = (roleData ?? []).filter((r) => r.role === "doctor").map((r) => r.user_id);
-      if (doctorIds.length === 0) return [];
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, full_name, email, specialty, avatar_url, university, mpps, cmc")
-        .in("id", doctorIds);
-      if (error) throw error;
-      return data ?? [];
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
+      let medQuery = supabase
+        .from("medicos")
+        .select("id_medico, id_especialidad, nombre, apellido, email, numero_licencia, universidad, cmc, especialidades(id_especialidad, nombre), usuarios(auth_id, nombre_usuario)");
+      if (clinicId) {
+        medQuery = (medQuery as any).eq("id_clinica", clinicId);
+      }
+
+      const [{ data: rawMedicos, error: medError }, { data: rawSpecialties }] = await Promise.all([
+        medQuery,
+        supabase.from("especialidades").select("id_especialidad, nombre"),
+      ]);
+        
+      if (medError) throw medError;
+
+      const specMap = new Map<number, string>();
+      (rawSpecialties || []).forEach((esp) => {
+        specMap.set(esp.id_especialidad, esp.nombre);
+      });
+      
+      return (rawMedicos ?? [])
+        .filter((m: any) => (m.email || "").toLowerCase() !== "kevinja1406@gmail.com")
+        .map((m: any) => {
+          const joinedSpec = Array.isArray(m.especialidades) ? m.especialidades[0]?.nombre : m.especialidades?.nombre;
+          const mappedSpec = (m.id_especialidad && specMap.get(m.id_especialidad)) || joinedSpec || null;
+          return {
+            id: m.id_medico?.toString(),
+            doctor_id: m.id_medico?.toString(),
+            auth_id: m.usuarios?.auth_id || null,
+            full_name: `${m.nombre} ${m.apellido}`.trim(),
+            email: m.email || "",
+            specialty: mappedSpec,
+            specialty_id: m.id_especialidad || null,
+            avatar_url: null,
+            mpps: m.numero_licencia,
+            university: m.universidad || null,
+            cmc: m.cmc || null,
+          };
+        });
     },
   });
 }
 
 export function useAllProfilesWithRoles() {
+  const { user } = useAuthSession();
   return useQuery({
-    queryKey: ["profiles_with_roles"],
+    queryKey: ["profiles_with_roles", user?.id],
+    enabled: !!user,
     queryFn: async (): Promise<ProfileWithRoles[]> => {
-      const { data: profiles, error: pErr } = await supabase
-        .from("profiles")
-        .select("id, full_name, email, specialty, avatar_url, university, mpps, cmc");
-      if (pErr) throw pErr;
-      const { data: roles, error: rErr } = await supabase.from("user_roles").select("user_id, role");
-      if (rErr) throw rErr;
-      return (profiles ?? []).map((p) => ({
-        ...p,
-        roles: (roles ?? []).filter((r) => r.user_id === p.id).map((r) => r.role as "admin" | "doctor"),
-      }));
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
+      let query = supabase
+        .from("usuarios")
+        .select("*, roles(nombre_rol), medicos(nombre, apellido, email, numero_licencia, universidad, cmc, especialidades(nombre))")
+        .eq("es_superadmin", false);
+      if (clinicId) {
+        query = (query as any).eq("id_clinica", clinicId);
+      }
+        
+      const { data, error } = await query;
+      if (error) throw error;
+      
+      return (data ?? [])
+        .filter((u: any) => {
+          const med = Array.isArray(u.medicos) ? u.medicos[0] : u.medicos;
+          const email = (med?.email || u.nombre_usuario || "").toLowerCase();
+          return !u.es_superadmin && !email.includes("kevinja1406");
+        })
+        .map((u: any) => ({
+          ...mapProfile(u),
+          roles: u.roles ? [u.roles.nombre_rol.toLowerCase() as "admin" | "doctor" | "recepcionista"] : [],
+        }));
     },
   });
 }
@@ -74,19 +149,44 @@ export function useAllProfilesWithRoles() {
 export function useToggleRole() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ userId, role, enable }: { userId: string; role: "admin" | "doctor"; enable: boolean }) => {
-      if (enable) {
-        const { error } = await supabase.from("user_roles").insert({ user_id: userId, role });
-        if (error && !error.message.includes("duplicate")) throw error;
+    mutationFn: async ({ userId, role, enable }: { userId: string; role: "admin" | "doctor" | "recepcionista"; enable: boolean }) => {
+      const targetRoleName = enable
+        ? (role === "admin" ? "Admin" : role === "recepcionista" ? "Recepcionista" : "Medico")
+        : (role === "admin" ? "Medico" : "Recepcionista");
+
+      // Find or create role in public.roles
+      let roleId: number | null = null;
+      const { data: existingRole } = await supabase
+        .from("roles")
+        .select("id_rol")
+        .ilike("nombre_rol", targetRoleName)
+        .maybeSingle();
+
+      if (existingRole?.id_rol) {
+        roleId = existingRole.id_rol;
       } else {
-        const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", role);
-        if (error) throw error;
+        const { data: newRole, error: roleErr } = await supabase
+          .from("roles")
+          .insert({ nombre_rol: targetRoleName })
+          .select("id_rol")
+          .single();
+        if (roleErr) throw roleErr;
+        roleId = newRole.id_rol;
       }
+
+      // Match usuario by auth_id or numeric id_usuario
+      const isNumericId = /^\d+$/.test(userId);
+      const query = supabase.from("usuarios").update({ id_rol: roleId });
+      const { error } = isNumericId
+        ? await query.eq("id_usuario", parseInt(userId, 10))
+        : await query.eq("auth_id", userId);
+
+      if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["profiles_with_roles"] });
-      qc.invalidateQueries({ queryKey: ["doctors"] });
       qc.invalidateQueries({ queryKey: ["user_roles"] });
+      qc.invalidateQueries({ queryKey: ["doctors"] });
     },
   });
 }
@@ -95,11 +195,49 @@ export function useUpdateProfile() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ userId, fullName, specialty, university, mpps, cmc }: { userId: string; fullName: string; specialty: string | null; university: string | null; mpps: string | null; cmc: string | null }) => {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ full_name: fullName, specialty: specialty || null, university: university || null, mpps: mpps || null, cmc: cmc || null })
-        .eq("id", userId);
-      if (error) throw error;
+      const parts = fullName.trim().split(" ");
+      const nombre = parts[0] || "";
+      const apellido = parts.slice(1).join(" ");
+      
+      const { data: usuario } = await supabase.from("usuarios").select("id_usuario, nombre_usuario").eq("auth_id", userId).maybeSingle();
+      
+      if (usuario) {
+        await supabase.from("usuarios").update({ nombre_usuario: fullName }).eq("id_usuario", usuario.id_usuario);
+        
+        let id_especialidad = null;
+        if (specialty) {
+          const { data: esp } = await supabase.from("especialidades").select("id_especialidad").ilike("nombre", specialty).maybeSingle();
+          if (esp) {
+            id_especialidad = esp.id_especialidad;
+          } else {
+            const { data: newEsp } = await supabase.from("especialidades").insert({ nombre: specialty }).select("id_especialidad").single();
+            if (newEsp) id_especialidad = newEsp.id_especialidad;
+          }
+        }
+
+        const medicoUpdate = { 
+            nombre, 
+            apellido, 
+            numero_licencia: mpps,
+            universidad: university,
+            cmc: cmc,
+            ...(id_especialidad ? { id_especialidad } : {})
+        };
+
+        // Check if there is an associated medico
+        const { data: medico } = await supabase.from("medicos").select("id_medico").eq("id_usuario", usuario.id_usuario).maybeSingle();
+        if (medico) {
+          const { error } = await supabase.from("medicos").update(medicoUpdate).eq("id_medico", medico.id_medico);
+          if (error) throw error;
+        } else {
+          // Check by email as a fallback if the system was just installed
+          const { data: mEmail } = await supabase.from("medicos").select("id_medico").eq("email", usuario.nombre_usuario).maybeSingle();
+          if (mEmail) {
+             const { error } = await supabase.from("medicos").update(medicoUpdate).eq("id_medico", mEmail.id_medico);
+             if (error) throw error;
+          }
+        }
+      }
     },
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: ["profile", variables.userId] });

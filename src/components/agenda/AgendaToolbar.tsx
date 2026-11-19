@@ -1,0 +1,180 @@
+import { Link } from "@tanstack/react-router";
+import { Filter, Download, Search, LifeBuoy, Grid, Stethoscope } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+
+interface AgendaToolbarProps {
+  statusFilter: string;
+  onStatusFilterChange: (status: string) => void;
+  onDownloadAgenda: () => void;
+  searchQuery: string;
+  onSearchQueryChange: (query: string) => void;
+  isSearchOpen: boolean;
+  onSearchOpenChange: (open: boolean) => void;
+  compactMode: boolean;
+  onCompactModeChange: (compact: boolean) => void;
+  canViewAllDoctors?: boolean;
+  selectedDoctorId?: string;
+  onDoctorChange?: (doctorId: string) => void;
+  doctors?: Array<{ id: string; full_name?: string | null; email?: string | null }>;
+  doctorName?: string | null;
+}
+
+export function AgendaToolbar({
+  statusFilter,
+  onStatusFilterChange,
+  onDownloadAgenda,
+  searchQuery,
+  onSearchQueryChange,
+  isSearchOpen,
+  onSearchOpenChange,
+  compactMode,
+  onCompactModeChange,
+  canViewAllDoctors = true,
+  selectedDoctorId = "all",
+  onDoctorChange,
+  doctors = [],
+  doctorName,
+}: AgendaToolbarProps) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+      <div className="flex flex-wrap items-center gap-3">
+        {canViewAllDoctors && doctors.length > 0 ? (
+          <div className="flex items-center gap-2">
+            <Stethoscope className="h-4 w-4 text-primary shrink-0" />
+            <select
+              value={selectedDoctorId}
+              aria-label="Filtrar por especialista"
+              onChange={(e) => onDoctorChange?.(e.target.value)}
+              className="h-9 rounded-xl border border-border bg-background px-3 text-xs font-bold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
+            >
+              <option value="all">Todos los Médicos</option>
+              {doctors.map((doc) => (
+                <option key={doc.id} value={doc.id}>
+                  {doc.full_name || doc.email || "Médico"}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          doctorName && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-primary/20 bg-primary/10 text-primary text-xs font-bold">
+              <Stethoscope className="h-3.5 w-3.5 shrink-0" />
+              <span>Mis Citas · Dr(a). {doctorName}</span>
+            </span>
+          )
+        )}
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-2 text-xs font-bold text-foreground border border-border rounded-xl px-4 py-2 hover:bg-muted focus:outline-none cursor-pointer">
+              <Filter className="h-4 w-4 text-muted-foreground" /> Filtro
+              {statusFilter !== "todas" && (
+                <span className="bg-primary w-2 h-2 rounded-full absolute top-1 right-1"></span>
+              )}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-56 rounded-xl border border-border">
+            <DropdownMenuItem
+              onClick={() => onStatusFilterChange("todas")}
+              className="text-xs font-bold cursor-pointer"
+            >
+              Completadas y en Espera (Todas)
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onStatusFilterChange("pendiente")}
+              className="text-xs font-bold cursor-pointer"
+            >
+              Solo en Espera (Pendientes)
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onStatusFilterChange("completada")}
+              className="text-xs font-bold cursor-pointer"
+            >
+              Solo Completadas
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onStatusFilterChange("cancelada")}
+              className="text-xs font-bold cursor-pointer text-destructive hover:text-destructive focus:text-destructive"
+            >
+              Ver Canceladas
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <button
+          type="button"
+          onClick={onDownloadAgenda}
+          className="flex items-center gap-2 text-xs font-bold text-foreground border border-border rounded-xl px-4 py-2 hover:bg-muted cursor-pointer"
+        >
+          <Download className="h-4 w-4 text-muted-foreground" /> Descargar Datos
+        </button>
+      </div>
+      <div className="flex items-center gap-3">
+        <div
+          className={cn(
+            "flex items-center transition-[width] duration-300 overflow-hidden",
+            isSearchOpen ? "w-48 opacity-100" : "w-9 opacity-100",
+          )}
+        >
+          {isSearchOpen ? (
+            <div className="relative w-full">
+              <input
+                autoFocus
+                type="text"
+                value={searchQuery}
+                onChange={(e) => onSearchQueryChange(e.target.value)}
+                onBlur={() => {
+                  if (!searchQuery) onSearchOpenChange(false);
+                }}
+                placeholder="Buscar paciente…"
+                aria-label="Buscar paciente"
+                className="w-full h-9 pl-9 pr-3 text-xs border border-primary rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
+              <Search className="h-4 w-4 text-primary absolute left-3 top-2.5" />
+            </div>
+          ) : (
+            <button
+              type="button"
+              aria-label="Abrir buscador de citas"
+              onClick={() => onSearchOpenChange(true)}
+              className="h-9 w-9 shrink-0 flex items-center justify-center border border-border rounded-full text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+            >
+              <Search className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+        <Link to="/support">
+          <button className="flex items-center gap-2 text-xs font-bold text-foreground border border-border rounded-xl px-4 py-2 hover:bg-muted">
+            <LifeBuoy className="h-4 w-4 text-muted-foreground" /> Soporte
+          </button>
+        </Link>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-2 text-xs font-bold text-foreground border border-border rounded-xl px-4 py-2 hover:bg-muted focus:outline-none focus:ring-0">
+              <Grid className="h-4 w-4 text-muted-foreground" /> Diseño
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48 rounded-xl border border-border">
+            <DropdownMenuItem
+              onClick={() => onCompactModeChange(false)}
+              className="text-xs font-bold cursor-pointer"
+            >
+              Vista Cómoda (Normal)
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onCompactModeChange(true)}
+              className="text-xs font-bold cursor-pointer"
+            >
+              Vista Compacta
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
+  );
+}

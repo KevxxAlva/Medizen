@@ -16,8 +16,6 @@ dist-ssr
 .nitro
 .vercel/
 *.local
-.env
-temp_*.txt
 
 # Wrangler / Cloudflare
 .wrangler/
@@ -34,7 +32,28 @@ temp_*.txt
 *.sln
 *.sw?
 
-# Sensitive data
-*.xlsx
-*.csv
-excel_*.json
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# AI tool directories
+.claude
+.codex
+.cursor
+.impeccable
+.git-rewrite
+
+# Temporary files & utility scripts with secrets
+temp_*.txt
+setAdmin.js
+scripts/setAdmin.js
+
+# Nested projects & scratch folders
+careflow-suite/
+scratch/
+scripts/
+*.bak
+renders/
+videos/
+generate_narration.cjs

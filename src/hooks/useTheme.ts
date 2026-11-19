@@ -1,14 +1,31 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+
+const DARK_QUERY = "(prefers-color-scheme: dark)";
+
+function subscribeSystemDark(callback: () => void) {
+  const mediaQuery = window.matchMedia(DARK_QUERY);
+  mediaQuery.addEventListener("change", callback);
+  return () => mediaQuery.removeEventListener("change", callback);
+}
+
+const getSystemDark = () => window.matchMedia(DARK_QUERY).matches;
+const getServerSystemDark = () => false;
 
 export function useTheme() {
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
+  const systemPrefersDark = useSyncExternalStore(
+    subscribeSystemDark,
+    getSystemDark,
+    getServerSystemDark,
+  );
+  const [storedTheme, setStoredTheme] = useState<"light" | "dark" | null>(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("theme");
       if (stored === "dark" || stored === "light") return stored;
-      if (window.matchMedia("(prefers-color-scheme: dark)").matches) return "dark";
     }
-    return "light";
+    return null;
   });
+
+  const theme: "light" | "dark" = storedTheme ?? (systemPrefersDark ? "dark" : "light");
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -20,7 +37,7 @@ export function useTheme() {
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
+  const toggleTheme = () => setStoredTheme(theme === "dark" ? "light" : "dark");
 
   return { theme, toggleTheme, isDark: theme === "dark" };
 }

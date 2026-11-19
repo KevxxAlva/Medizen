@@ -7,75 +7,56 @@ const CreateUserSchema = z.object({
   password: z.string().min(8).max(72),
   full_name: z.string().min(1).max(120),
   specialty: z.string().max(120).optional().nullable(),
-  role: z.enum(["admin", "doctor"]),
+  role: z.enum(["admin", "doctor", "recepcionista"]),
 });
 
 const DeleteUserSchema = z.object({
   user_id: z.string().uuid(),
 });
 
-async function ensureAdmin(userId: string) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .eq("role", "admin")
+async function ensureAdmin(userId: string, supabaseClient: any) {
+  const { data, error } = await supabaseClient
+    .from("usuarios")
+    .select("roles(nombre_rol)")
+    .eq("auth_id", userId)
     .maybeSingle();
   if (error) throw new Error(error.message);
-  if (!data) throw new Error("Solo los administradores pueden realizar esta acción");
+  
+  const roleName = Array.isArray(data?.roles) ? data?.roles[0]?.nombre_rol : (data?.roles as any)?.nombre_rol;
+  if (roleName?.toLowerCase() !== "admin") {
+     throw new Error("Solo los administradores pueden realizar esta acción");
+  }
 }
 
 export const adminCreateUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => CreateUserSchema.parse(input))
+  .validator((input: unknown) => CreateUserSchema.parse(input))
   .handler(async ({ data, context }) => {
-    await ensureAdmin(context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await ensureAdmin(context.userId, context.supabase);
 
-    const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
-      email: data.email,
-      password: data.password,
-      email_confirm: true,
-      user_metadata: { full_name: data.full_name },
+    const { data: rpcResult, error: rpcError } = await (context.supabase as any).rpc("admin_create_staff_user", {
+      p_email: data.email,
+      p_password: data.password,
+      p_full_name: data.full_name,
+      p_role: data.role,
+      p_specialty: data.specialty || null,
     });
-    if (error) throw new Error(error.message);
-    const newId = created.user?.id;
-    if (!newId) throw new Error("No se pudo crear el usuario");
 
-    // Profile fields (trigger ya creó el perfil)
-    await supabaseAdmin
-      .from("profiles")
-      .update({ full_name: data.full_name, specialty: data.specialty ?? null })
-      .eq("id", newId);
-
-    // Si el rol pedido es admin, agregarlo (el trigger ya puso 'doctor')
-    if (data.role === "admin") {
-      await supabaseAdmin
-        .from("user_roles")
-        .insert({ user_id: newId, role: "admin" });
-    }
-
-    return { id: newId };
+    if (rpcError) throw new Error(rpcError.message);
+    return rpcResult || { ok: true };
   });
 
 export const adminDeleteUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => DeleteUserSchema.parse(input))
+  .validator((input: unknown) => DeleteUserSchema.parse(input))
   .handler(async ({ data, context }) => {
     if (data.user_id === context.userId) throw new Error("No puedes eliminarte a ti mismo");
-    await ensureAdmin(context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.user_id);
-    if (error) {
-      // Si el usuario no existe en Supabase Auth (ej. usuarios semilla insertados por SQL),
-      // eliminamos sus registros públicos directamente para limpiar la base de datos y la interfaz.
-      if (error.message.toLowerCase().includes("not found") || error.status === 404) {
-        await supabaseAdmin.from("user_roles").delete().eq("user_id", data.user_id);
-        await supabaseAdmin.from("profiles").delete().eq("id", data.user_id);
-        return { ok: true };
-      }
-      throw new Error(error.message);
-    }
+    await ensureAdmin(context.userId, context.supabase);
+
+    const { error: rpcError } = await (context.supabase as any).rpc("admin_delete_staff_user", {
+      p_user_id: data.user_id,
+    });
+
+    if (rpcError) throw new Error(rpcError.message);
     return { ok: true };
   });

@@ -1,45 +1,45 @@
-import { QueryClient, QueryCache, MutationCache } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
-import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 import { routeTree } from "./routeTree.gen";
-import { GlobalError } from "./components/ui/global-error";
+import { setupPersistentQueryCache } from "@/lib/cache/persistentQueryCache";
 
-export const getRouter = () => {
-  const queryClient = new QueryClient({
+let browserQueryClient: QueryClient | undefined;
+
+function makeQueryClient() {
+  return new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 1000 * 60 * 2, // 2 minutos de staleTime
-        gcTime: 1000 * 60 * 10,    // 10 minutos de cacheTime
+        staleTime: 1000 * 60 * 5, // 5 minutos de datos frescos en Caché L1 (RAM)
+        gcTime: 1000 * 60 * 30, // 30 minutos de retención en memoria (Garbage Collection)
         refetchOnWindowFocus: false, // Evita re-consultar al cambiar de pestaña/aplicación
+        refetchOnMount: false, // Usa la caché existente; Supabase Realtime invalida cuando hay cambios
         refetchOnReconnect: true,
+        retry: 1,
       },
     },
-    queryCache: new QueryCache({
-      onError: (error) => {
-        toast.error(`Error de consulta: ${error.message}`);
-      },
-    }),
-    mutationCache: new MutationCache({
-      onError: (error) => {
-        toast.error(`Error en operación: ${error.message}`);
-      },
-    }),
   });
+}
+
+function getQueryClient() {
+  if (typeof window === "undefined") {
+    return makeQueryClient();
+  }
+  if (!browserQueryClient) {
+    browserQueryClient = makeQueryClient();
+    setupPersistentQueryCache(browserQueryClient);
+  }
+  return browserQueryClient;
+}
+
+export const getRouter = () => {
+  const queryClient = getQueryClient();
 
   const router = createRouter({
     routeTree,
     context: { queryClient },
-    defaultErrorComponent: ({ error, reset }) => <GlobalError error={error} resetErrorBoundary={reset} />,
-    defaultPendingComponent: () => (
-      <div className="flex h-full min-h-[50vh] w-full flex-col items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-mauve" />
-        <p className="mt-4 text-sm text-muted-foreground animate-pulse">Cargando módulo...</p>
-      </div>
-    ),
     scrollRestoration: true,
     defaultPreload: "intent",
-    defaultPreloadStaleTime: 0,
+    defaultPreloadStaleTime: 1000 * 60 * 5, // Respeta los 5 min de caché al pasar el cursor por el menú
   });
 
   return router;

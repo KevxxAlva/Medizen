@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getStoredAppointmentPrice, resolveServiceFromReason } from "@/lib/api/appointments";
+import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 
 export type VisitType = "CONTROL" | "EMERGENCIA" | "CONSULTA_NUEVA" | "POST_TRATAMIENTO" | "OTRO";
 
@@ -66,6 +68,10 @@ export interface Consultation {
   
   // Marketing
   contact_channel: string | null;
+
+  // Specialty dynamic data
+  specialty_name?: string | null;
+  specialty_data?: Record<string, any> | null;
   
   created_at: string;
   updated_at: string;
@@ -84,29 +90,135 @@ export interface ConsultationFilters {
   to?: string;
 }
 
+// Helpers to Pack/Unpack the JSON payload into `observaciones`
+const packObservaciones = (data: Partial<ConsultationInput>) => {
+  const json = {
+    visit_type: data.visit_type,
+    is_first_visit: data.is_first_visit,
+    subjective_exam: data.subjective_exam,
+    height_cm: data.height_cm, weight_kg: data.weight_kg, bmi: data.bmi,
+    blood_pressure: data.blood_pressure, heart_rate: data.heart_rate,
+    respiratory_rate: data.respiratory_rate, temperature: data.temperature,
+    skin: data.skin, head_neck: data.head_neck, breasts: data.breasts, abdomen: data.abdomen,
+    gynecological: data.gynecological, extremities: data.extremities, neurological: data.neurological,
+    acetic_acid_test: data.acetic_acid_test, acetic_clock_position: data.acetic_clock_position,
+    acetic_relative_position: data.acetic_relative_position, lugol_test: data.lugol_test,
+    lugol_clock_position: data.lugol_clock_position, lugol_relative_position: data.lugol_relative_position,
+    gestational_age: data.gestational_age, fetal_weight: data.fetal_weight,
+    obstetric_bp: data.obstetric_bp, uterine_height: data.uterine_height,
+    presentation: data.presentation, fetal_heart_rate: data.fetal_heart_rate,
+    fetal_movements: data.fetal_movements, edema: data.edema, alarm_signs: data.alarm_signs,
+    complementary_exams: data.complementary_exams, plan: data.plan,
+    next_appointment_date: data.next_appointment_date, contact_channel: data.contact_channel,
+    indications: data.indications, diagnosis: data.diagnosis,
+    specialty_name: data.specialty_name,
+    specialty_data: data.specialty_data
+  };
+  return JSON.stringify(json);
+};
+
+const unpackConsultation = (h: any): Consultation => {
+  let extra: any = {};
+  try {
+     extra = h.notas_medicas ? JSON.parse(h.notas_medicas) : (h.observaciones ? JSON.parse(h.observaciones) : {});
+  } catch(e) {}
+
+  const patient = h.citas?.pacientes || h.pacientes || null;
+
+  return {
+    id: (h.id_consulta || h.id_historia || "").toString(),
+    appointment_id: h.id_cita?.toString() || "",
+    patient_id: h.citas?.id_paciente?.toString() || h.id_paciente?.toString() || "",
+    doctor_id: h.id_medico?.toString() || null,
+    
+    visit_type: extra.visit_type || "CONTROL",
+    is_first_visit: !!extra.is_first_visit,
+    subjective_exam: h.sintomas || h.motivo_consulta || extra.subjective_exam || h.enfermedad_actual || null,
+    
+    height_cm: extra.height_cm || null,
+    weight_kg: h.peso_kg || extra.weight_kg || null,
+    bmi: extra.bmi || null,
+    blood_pressure: h.presion_arterial || extra.blood_pressure || null,
+    heart_rate: extra.heart_rate || null,
+    respiratory_rate: extra.respiratory_rate || null,
+    temperature: h.temperatura_c || extra.temperature || null,
+    
+    skin: extra.skin || null,
+    head_neck: extra.head_neck || null,
+    breasts: extra.breasts || null,
+    abdomen: extra.abdomen || null,
+    gynecological: extra.gynecological || h.examen_fisico || null,
+    extremities: extra.extremities || null,
+    neurological: extra.neurological || null,
+    
+    acetic_acid_test: extra.acetic_acid_test || null,
+    acetic_clock_position: extra.acetic_clock_position || null,
+    acetic_relative_position: extra.acetic_relative_position || null,
+    lugol_test: extra.lugol_test || null,
+    lugol_clock_position: extra.lugol_clock_position || null,
+    lugol_relative_position: extra.lugol_relative_position || null,
+    
+    gestational_age: extra.gestational_age || null,
+    fetal_weight: extra.fetal_weight || null,
+    obstetric_bp: extra.obstetric_bp || null,
+    uterine_height: extra.uterine_height || null,
+    presentation: extra.presentation || null,
+    fetal_heart_rate: extra.fetal_heart_rate || null,
+    fetal_movements: extra.fetal_movements || null,
+    edema: extra.edema || null,
+    alarm_signs: extra.alarm_signs || null,
+    
+    indications: extra.indications || h.tratamiento || null,
+    complementary_exams: extra.complementary_exams || null,
+    diagnosis: h.diagnostico || extra.diagnosis || null,
+    plan: extra.plan || null,
+    next_appointment_date: extra.next_appointment_date || null,
+    contact_channel: extra.contact_channel || null,
+
+    specialty_name: extra.specialty_name || null,
+    specialty_data: extra.specialty_data || null,
+    
+    created_at: h.fecha_hora || h.fecha_consulta || new Date().toISOString(),
+    updated_at: h.fecha_hora || h.fecha_consulta || new Date().toISOString(),
+    
+    patient_name: patient ? `${patient.nombre} ${patient.apellido}` : "—",
+    consumables: (h.insumos_consulta ?? []).map((i: any) => ({
+      id: i.id_insumo,
+      consultation_id: i.id_consulta || i.id_historia,
+      item_name: i.nombre_insumo,
+      quantity: i.cantidad,
+      unit: null
+    }))
+  };
+};
+
 export function useConsultations(filters?: ConsultationFilters) {
-  const queryKey = filters ? ["consultations", filters] : ["consultations"];
+  const { user } = useAuthSession();
+  const queryKey = filters ? ["consultations", user?.id, filters] : ["consultations", user?.id];
   return useQuery({
     queryKey,
+    enabled: !!user,
     queryFn: async (): Promise<Consultation[]> => {
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
       let query = supabase
-        .from("consultations")
-        .select("id, appointment_id, patient_id, doctor_id, visit_type, is_first_visit, diagnosis, contact_channel, created_at, indications, patients(full_name)")
-        .order("created_at", { ascending: false });
+        .from("consultas")
+        .select("*, citas(id_paciente, pacientes(nombre, apellido))")
+        .order("fecha_hora", { ascending: false });
+
+      if (clinicId) {
+        query = (query as any).eq("id_clinica", clinicId);
+      }
 
       if (filters?.from) {
-        query = query.gte("created_at", filters.from);
+        query = query.gte("fecha_hora", filters.from);
       }
       if (filters?.to) {
-        query = query.lte("created_at", filters.to + "T23:59:59.999Z");
+        query = query.lte("fecha_hora", filters.to + "T23:59:59.999Z");
       }
 
       const { data, error } = await query;
       if (error) throw error;
-      return (data ?? []).map((c: any) => ({
-        ...c,
-        patient_name: c.patients?.full_name ?? "—",
-      }));
+      return (data ?? []).map(unpackConsultation);
     },
   });
 }
@@ -118,16 +230,35 @@ export function usePatientConsultations(patientId: string | undefined) {
     queryFn: async (): Promise<Consultation[]> => {
       if (!patientId) return [];
       const { data, error } = await supabase
-        .from("consultations")
-        .select("*, patients(full_name), consultation_consumables(*)")
-        .eq("patient_id", patientId)
-        .order("created_at", { ascending: false });
+        .from("consultas")
+        .select("*, citas!inner(id_paciente, pacientes(nombre, apellido))")
+        .eq("citas.id_paciente", parseInt(patientId))
+        .order("fecha_hora", { ascending: false });
       if (error) throw error;
-      return (data ?? []).map((c: any) => ({
-        ...c,
-        patient_name: c.patients?.full_name ?? "—",
-        consumables: c.consultation_consumables ?? [],
-      }));
+      
+      const mapped = (data ?? []).map(unpackConsultation);
+      
+      // Fetch consumables separately just to be safe
+      const consultaIds = mapped.map(c => parseInt(c.id)).filter(id => !isNaN(id));
+      if (consultaIds.length > 0) {
+        const { data: consumables } = await supabase.from("insumos_consulta").select("*").in("id_consulta", consultaIds);
+        if (consumables && consumables.length > 0) {
+          mapped.forEach(c => {
+             const cons = consumables.filter(co => co.id_consulta === parseInt(c.id));
+             if (cons.length > 0) {
+                c.consumables = cons.map((i: any) => ({
+                  id: i.id_insumo,
+                  consultation_id: i.id_consulta,
+                  item_name: i.nombre_insumo,
+                  quantity: i.cantidad,
+                  unit: null
+                }));
+             }
+          });
+        }
+      }
+
+      return mapped;
     },
   });
 }
@@ -138,12 +269,29 @@ export function useConsultationByAppointment(appointmentId: string | undefined) 
     queryFn: async (): Promise<Consultation | null> => {
       if (!appointmentId) return null;
       const { data, error } = await supabase
-        .from("consultations")
-        .select("*, consultation_consumables(*)")
-        .eq("appointment_id", appointmentId)
+        .from("consultas")
+        .select("*, citas(id_paciente, pacientes(nombre, apellido))")
+        .eq("id_cita", parseInt(appointmentId))
         .maybeSingle();
-      if (error) throw error;
-      return data;
+      if (error && error.code !== 'PGRST116') throw error;
+      if (!data) return null;
+      
+      const mapped = unpackConsultation(data);
+      const idConsulta = parseInt(mapped.id);
+      if (!isNaN(idConsulta)) {
+        const { data: consumables } = await supabase.from("insumos_consulta").select("*").eq("id_consulta", idConsulta);
+        if (consumables && consumables.length > 0) {
+           mapped.consumables = consumables.map((i: any) => ({
+             id: i.id_insumo,
+             consultation_id: i.id_consulta,
+             item_name: i.nombre_insumo,
+             quantity: i.cantidad,
+             unit: null
+           }));
+        }
+      }
+
+      return mapped;
     },
     enabled: !!appointmentId,
   });
@@ -151,65 +299,201 @@ export function useConsultationByAppointment(appointmentId: string | undefined) 
 
 export function useCreateConsultation() {
   const qc = useQueryClient();
+  const { user } = useAuthSession();
   return useMutation({
     mutationFn: async ({ consumables, ...consultationData }: ConsultationInput) => {
-      const { data, error } = await supabase.rpc("create_consultation_rpc", {
-        p_consultation: consultationData as any,
-        p_consumables: (consumables ?? []) as any,
-      });
-      if (error) throw error;
-      return data as Consultation;
-    },
-    onMutate: async (newConsultation) => {
-      await qc.cancelQueries({ queryKey: ["consultations"] });
-      await qc.cancelQueries({ queryKey: ["consultations", "patient", newConsultation.patient_id] });
-      await qc.cancelQueries({ queryKey: ["consultation", newConsultation.appointment_id] });
-
-      const previousConsultations = qc.getQueriesData({ queryKey: ["consultations"] });
-      const previousPatientConsultations = qc.getQueriesData({ queryKey: ["consultations", "patient", newConsultation.patient_id] });
-      const previousConsultation = qc.getQueryData(["consultation", newConsultation.appointment_id]);
-
-      const optimisticConsultation = {
-        id: crypto.randomUUID(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        ...newConsultation,
-      } as Consultation;
-
-      qc.setQueriesData({ queryKey: ["consultations"] }, (old: any) => {
-        if (!old) return old;
-        if (Array.isArray(old)) return [optimisticConsultation, ...old];
-        return old;
-      });
-
-      qc.setQueriesData({ queryKey: ["consultations", "patient", newConsultation.patient_id] }, (old: any) => {
-        if (!old) return old;
-        if (Array.isArray(old)) return [optimisticConsultation, ...old];
-        return old;
-      });
-
-      qc.setQueryData(["consultation", newConsultation.appointment_id], optimisticConsultation);
-
-      return { previousConsultations, previousPatientConsultations, previousConsultation };
-    },
-    onError: (err, newConsultation, context: any) => {
-      if (context?.previousConsultations) {
-        context.previousConsultations.forEach(([queryKey, data]: any) => qc.setQueryData(queryKey, data));
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
+      // 1. Get or Create historias_clinicas
+      const { data: hcList } = await supabase.from("historias_clinicas").select("id_historia").eq("id_paciente", parseInt(consultationData.patient_id));
+      let id_historia = hcList?.[0]?.id_historia;
+      if (!id_historia) {
+         const hcInsert: Record<string, any> = { id_paciente: parseInt(consultationData.patient_id) };
+         if (clinicId) hcInsert.id_clinica = clinicId;
+         const { data: newHc, error: hcError } = await supabase.from("historias_clinicas").insert(hcInsert as any).select().single();
+         if (hcError) throw hcError;
+         id_historia = newHc.id_historia;
       }
-      if (context?.previousPatientConsultations) {
-        context.previousPatientConsultations.forEach(([queryKey, data]: any) => qc.setQueryData(queryKey, data));
+
+      // 2. Insert consultation
+      const jsonObservaciones = packObservaciones(consultationData);
+      const consultaInsert: Record<string, any> = {
+        id_cita: parseInt(consultationData.appointment_id),
+        id_historia: id_historia,
+        id_medico: consultationData.doctor_id ? parseInt(consultationData.doctor_id) : null,
+        diagnostico: consultationData.diagnosis || null,
+        peso_kg: consultationData.weight_kg || null,
+        presion_arterial: consultationData.blood_pressure || null,
+        temperatura_c: consultationData.temperature || null,
+        sintomas: consultationData.subjective_exam || null,
+        motivo_consulta: consultationData.visit_type || null,
+        notas_medicas: jsonObservaciones,
+      };
+      if (clinicId) consultaInsert.id_clinica = clinicId;
+      
+      const { data: hc, error: cError } = await supabase
+        .from("consultas")
+        .insert(consultaInsert as any)
+        .select()
+        .single();
+      if (cError) throw cError;
+
+      // 3. Insert consumables if present
+      if (consumables && consumables.length > 0) {
+        const newConsumables = consumables.map((item) => ({
+          id_consulta: hc.id_consulta,
+          id_historia: id_historia, // In case DB still requires it
+          nombre_insumo: item.item_name,
+          cantidad: item.quantity
+        }));
+        // We catch errors silently here just in case schema is out of sync for consumables
+        const { error: consError } = await (supabase as any)
+          .from("insumos_consulta")
+          .insert(newConsumables);
+        if (consError) {
+           console.warn("Error inserting consumables:", consError);
+        }
+
+        // Deduct from inventory in batch (single SELECT + parallel UPDATEs)
+        const itemNames = [...new Set(consumables.map((i) => i.item_name).filter(Boolean))];
+        if (itemNames.length > 0) {
+          const { data: stockItems } = await supabase
+            .from("inventory_stocks")
+            .select("id, name, quantity")
+            .in("name", itemNames);
+          if (stockItems && stockItems.length > 0) {
+            const stockByName = new Map(stockItems.map((s) => [s.name, s]));
+            await Promise.all(
+              consumables.map((item) => {
+                const stockItem = stockByName.get(item.item_name);
+                if (!stockItem) return Promise.resolve();
+                const nextQty = Math.max(0, (stockItem.quantity || 0) - item.quantity);
+                stockItem.quantity = nextQty;
+                return supabase
+                  .from("inventory_stocks")
+                  .update({ quantity: nextQty })
+                  .eq("id", stockItem.id);
+              })
+            );
+          }
+        }
       }
-      if (context?.previousConsultation !== undefined) {
-        qc.setQueryData(["consultation", newConsultation.appointment_id], context.previousConsultation);
+
+      // 4. Mark appointment as completed
+      const citaId = parseInt(consultationData.appointment_id);
+      const patientId = parseInt(consultationData.patient_id);
+      await supabase
+        .from("citas")
+        .update({ estado: "Completada" })
+        .eq("id_cita", citaId);
+
+      // 5. Emitir automáticamente la factura como Pendiente con el monto exacto del servicio de la cita
+      const { data: origCita } = await supabase
+        .from("citas")
+        .select("fecha_hora, motivo, id_medico")
+        .eq("id_cita", citaId)
+        .maybeSingle();
+
+      const invoiceDate = origCita?.fecha_hora || new Date().toISOString();
+
+      const { data: existingFacs } = await supabase
+        .from("facturas")
+        .select("id_factura")
+        .eq("id_paciente", patientId)
+        .eq("fecha_emision", invoiceDate)
+        .limit(1);
+
+      if (!existingFacs || existingFacs.length === 0) {
+        const { data: allServices } = await supabase
+          .from("servicios")
+          .select("id_servicio, nombre_servicio, costo_base")
+          .order("id_servicio", { ascending: true });
+        const servicesList = allServices || [];
+
+        const matchedServ =
+          resolveServiceFromReason(origCita?.motivo, servicesList) ||
+          resolveServiceFromReason(consultationData.specialty_name, servicesList);
+
+        let matchedServiceId: number | null = matchedServ ? matchedServ.id_servicio : null;
+        const storedPrice = getStoredAppointmentPrice(citaId) || 0;
+        const servicePrice = matchedServ?.costo_base ? Number(matchedServ.costo_base) : 0;
+
+        let finalPrice = storedPrice || servicePrice;
+
+        if (!matchedServiceId && servicesList.length > 0) {
+          const defServ = servicesList[0];
+          matchedServiceId = defServ.id_servicio;
+          if (finalPrice <= 0 && defServ.costo_base) {
+            finalPrice = Number(defServ.costo_base);
+          }
+        }
+
+        if (finalPrice <= 0) {
+          finalPrice = 35;
+        }
+
+        const { data: newF } = await supabase
+          .from("facturas")
+          .insert({
+            id_paciente: patientId,
+            total_general: finalPrice,
+            subtotal: finalPrice,
+            monto_paciente: finalPrice,
+            estado_pago: "Pendiente",
+            fecha_emision: invoiceDate,
+          })
+          .select("id_factura")
+          .single();
+
+        if (newF?.id_factura && matchedServiceId) {
+          await supabase.from("detalles_factura").insert({
+            id_factura: newF.id_factura,
+            id_servicio: matchedServiceId,
+            cantidad: 1,
+            precio_unitario: finalPrice,
+            subtotal: finalPrice,
+          });
+        }
       }
+
+      // 4. Create next appointment if next_appointment_date is provided
+      if (consultationData.next_appointment_date) {
+        const { data: origApp } = await supabase
+          .from("citas")
+          .select("fecha_hora, id_medico")
+          .eq("id_cita", parseInt(consultationData.appointment_id))
+          .maybeSingle();
+
+        let scheduledAt = `${consultationData.next_appointment_date}T09:00:00Z`;
+        if (origApp?.fecha_hora) {
+          try {
+            const timePart = new Date(origApp.fecha_hora).toISOString().split("T")[1];
+            scheduledAt = `${consultationData.next_appointment_date}T${timePart}`;
+          } catch (e) {}
+        }
+
+        await supabase
+          .from("citas")
+          .insert({
+            id_paciente: parseInt(consultationData.patient_id),
+            id_medico: origApp?.id_medico || (consultationData.doctor_id ? parseInt(consultationData.doctor_id) : null),
+            fecha_hora: scheduledAt,
+            estado: "Programada",
+            motivo: "Próxima Cita"
+          });
+      }
+
+      return unpackConsultation(hc);
     },
-    onSettled: (_, __, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: ["consultations"] });
       qc.invalidateQueries({ queryKey: ["consultation", variables.appointment_id] });
-      qc.invalidateQueries({ queryKey: ["consultations", "patient", variables.patient_id] });
-      qc.invalidateQueries({ queryKey: ["appointments"] });
+      qc.invalidateQueries({ queryKey: ["appointments"], refetchType: "all" });
+      qc.invalidateQueries({ queryKey: ["facturas"], refetchType: "all" });
+      qc.invalidateQueries({ queryKey: ["dashboard_stats"], refetchType: "all" });
+      qc.invalidateQueries({ queryKey: ["monthly_payments"], refetchType: "all" });
       qc.invalidateQueries({ queryKey: ["patients"] });
-      qc.invalidateQueries({ queryKey: ["clinical_notes"] });
+      qc.invalidateQueries({ queryKey: ["clinical-notes"] });
+      qc.invalidateQueries({ queryKey: ["inventory_stocks"] });
     },
   });
 }
@@ -218,121 +502,160 @@ export function useUpdateConsultation() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, consumables, ...patch }: Partial<ConsultationInput> & { id: string }) => {
-      const { data, error } = await supabase.rpc("update_consultation_rpc", {
-        p_consultation_id: id,
-        p_patch: patch as any,
-        p_consumables: consumables as any,
-      });
-      if (error) throw error;
-      return data as Consultation;
-    },
-    onMutate: async (updatedConsultation) => {
-      await qc.cancelQueries({ queryKey: ["consultations"] });
+      // 1. Fetch current consultation data before update
+      const { data: oldHc } = await supabase
+        .from("consultas")
+        .select("*, citas(id_paciente)")
+        .eq("id_consulta", parseInt(id))
+        .maybeSingle();
+
+      if (!oldHc) throw new Error("Consulta no encontrada");
+
+      // Merge JSON for notas_medicas
+      let oldJson: any = {};
+      try { oldJson = JSON.parse(oldHc.notas_medicas || "{}"); } catch(e){}
       
-      const previousConsultations = qc.getQueriesData({ queryKey: ["consultations"] });
-      const previousPatientConsultations = qc.getQueriesData({ queryKey: ["consultations", "patient"] });
+      const newJson = { ...oldJson, ...patch };
+      const jsonObservaciones = packObservaciones(newJson);
 
-      qc.setQueriesData({ queryKey: ["consultations"] }, (old: any) => {
-        if (!old || !Array.isArray(old)) return old;
-        return old.map((c: any) => c.id === updatedConsultation.id ? { ...c, ...updatedConsultation } : c);
-      });
+      const updateData: any = {
+         notas_medicas: jsonObservaciones
+      };
+      if (patch.diagnosis !== undefined) updateData.diagnostico = patch.diagnosis;
+      if (patch.weight_kg !== undefined) updateData.peso_kg = patch.weight_kg;
+      if (patch.blood_pressure !== undefined) updateData.presion_arterial = patch.blood_pressure;
+      if (patch.temperature !== undefined) updateData.temperatura_c = patch.temperature;
+      if (patch.subjective_exam !== undefined) updateData.sintomas = patch.subjective_exam;
+      if (patch.visit_type !== undefined) updateData.motivo_consulta = patch.visit_type;
 
-      qc.setQueriesData({ queryKey: ["consultations", "patient"] }, (old: any) => {
-        if (!old || !Array.isArray(old)) return old;
-        return old.map((c: any) => c.id === updatedConsultation.id ? { ...c, ...updatedConsultation } : c);
-      });
+      // 2. Update consultation details
+      const { data: hc, error: cError } = await supabase
+        .from("consultas")
+        .update(updateData)
+        .eq("id_consulta", parseInt(id))
+        .select()
+        .single();
+      if (cError) throw cError;
 
-      let previousConsultation = undefined;
-      if (updatedConsultation.appointment_id) {
-         await qc.cancelQueries({ queryKey: ["consultation", updatedConsultation.appointment_id] });
-         previousConsultation = qc.getQueryData(["consultation", updatedConsultation.appointment_id]);
-         qc.setQueryData(["consultation", updatedConsultation.appointment_id], (old: any) => old ? { ...old, ...updatedConsultation } : old);
+      // 3. Update consumables if provided
+      if (consumables) {
+        // Fetch old consumables to restore inventory
+        const { data: oldConsumables } = await (supabase as any)
+          .from("insumos_consulta")
+          .select("*")
+          .eq("id_consulta", parseInt(id));
+
+        const allNames = [
+          ...new Set([
+            ...((oldConsumables as any[]) || []).map((o: any) => o.nombre_insumo),
+            ...consumables.map((c) => c.item_name),
+          ].filter(Boolean)),
+        ];
+
+        const stockByName = new Map<string, { id: string; name: string; quantity: number }>();
+        if (allNames.length > 0) {
+          const { data: stockItems } = await supabase
+            .from("inventory_stocks")
+            .select("id, name, quantity")
+            .in("name", allNames);
+          for (const s of stockItems || []) {
+            stockByName.set(s.name, { id: s.id, name: s.name, quantity: s.quantity ?? 0 });
+          }
+        }
+
+        if (oldConsumables) {
+          for (const old of (oldConsumables as any[])) {
+            const st = stockByName.get(old.nombre_insumo);
+            if (st) st.quantity = (st.quantity || 0) + (old.cantidad || 0);
+          }
+        }
+
+        // Delete only consumables belonging to this specific consultation
+        await (supabase as any).from("insumos_consulta").delete().eq("id_consulta", parseInt(id));
+
+        if (consumables.length > 0) {
+          const newConsumables = consumables.map((item) => ({
+            id_consulta: parseInt(id),
+            id_historia: oldHc.id_historia,
+            nombre_insumo: item.item_name,
+            cantidad: item.quantity
+          }));
+          const { error: insError } = await (supabase as any).from("insumos_consulta").insert(newConsumables);
+          if (insError) {
+             console.warn("Error inserting consumables on update:", insError);
+          }
+
+          for (const item of consumables) {
+            const st = stockByName.get(item.item_name);
+            if (st) st.quantity = Math.max(0, (st.quantity || 0) - item.quantity);
+          }
+        }
+
+        if (stockByName.size > 0) {
+          await Promise.all(
+            Array.from(stockByName.values()).map((st) =>
+              supabase.from("inventory_stocks").update({ quantity: st.quantity }).eq("id", st.id)
+            )
+          );
+        }
       }
 
-      return { previousConsultations, previousPatientConsultations, previousConsultation, appointment_id: updatedConsultation.appointment_id };
+      // 4. Handle next appointment date change
+      if (patch.next_appointment_date && patch.next_appointment_date !== oldJson?.next_appointment_date) {
+        
+        const { data: origApp } = await supabase
+          .from("citas")
+          .select("fecha_hora, id_medico")
+          .eq("id_cita", Number(oldHc.id_cita))
+          .maybeSingle();
+
+        let scheduledAt = `${patch.next_appointment_date}T09:00:00Z`;
+        if (origApp?.fecha_hora) {
+          try {
+            const timePart = new Date(origApp.fecha_hora).toISOString().split("T")[1];
+            scheduledAt = `${patch.next_appointment_date}T${timePart}`;
+          } catch (e) {}
+        }
+
+        const patientId = oldHc.citas?.id_paciente;
+        if (patientId) {
+          const { data: existingNextApp } = await supabase
+            .from("citas")
+            .select("id_cita")
+            .eq("id_paciente", patientId)
+            .eq("estado", "Programada")
+            .gt("fecha_hora", origApp?.fecha_hora || new Date(0).toISOString())
+            .order("fecha_hora", { ascending: true })
+            .limit(1)
+            .maybeSingle();
+
+          if (existingNextApp) {
+            await supabase.from("citas").update({ fecha_hora: scheduledAt }).eq("id_cita", existingNextApp.id_cita);
+          } else {
+            await supabase.from("citas").insert({
+              id_paciente: patientId,
+              id_medico: origApp?.id_medico || oldHc.id_medico,
+              fecha_hora: scheduledAt,
+              estado: "Programada",
+              motivo: "Próxima Cita"
+            });
+          }
+        }
+      }
+
+      return unpackConsultation(hc);
     },
-    onError: (err, updatedConsultation, context: any) => {
-      if (context?.previousConsultations) {
-        context.previousConsultations.forEach(([queryKey, data]: any) => qc.setQueryData(queryKey, data));
-      }
-      if (context?.previousPatientConsultations) {
-        context.previousPatientConsultations.forEach(([queryKey, data]: any) => qc.setQueryData(queryKey, data));
-      }
-      if (context?.appointment_id && context.previousConsultation !== undefined) {
-        qc.setQueryData(["consultation", context.appointment_id], context.previousConsultation);
-      }
-    },
-    onSettled: (data) => {
+    onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["consultations"] });
       if (data?.appointment_id) {
         qc.invalidateQueries({ queryKey: ["consultation", data.appointment_id] });
       }
-      qc.invalidateQueries({ queryKey: ["consultations", "patient"] });
-      qc.invalidateQueries({ queryKey: ["appointments"] });
+      qc.invalidateQueries({ queryKey: ["appointments"], refetchType: "all" });
+      qc.invalidateQueries({ queryKey: ["facturas"], refetchType: "all" });
+      qc.invalidateQueries({ queryKey: ["dashboard_stats"], refetchType: "all" });
+      qc.invalidateQueries({ queryKey: ["monthly_payments"], refetchType: "all" });
       qc.invalidateQueries({ queryKey: ["patients"] });
-      qc.invalidateQueries({ queryKey: ["clinical_notes"] });
-    },
-  });
-}
-
-export interface PrescriptionTemplate {
-  id: string;
-  title: string;
-  indications: string;
-  created_by: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export function usePrescriptionTemplates() {
-  return useQuery({
-    queryKey: ["prescription_templates"],
-    queryFn: async (): Promise<PrescriptionTemplate[]> => {
-      const { data, error } = await supabase
-        .from("prescription_templates")
-        .select("*")
-        .order("title", { ascending: true });
-      if (error) throw error;
-      return data as PrescriptionTemplate[];
-    },
-  });
-}
-
-export function useCreatePrescriptionTemplate() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (input: { title: string; indications: string }) => {
-      const { data: user } = await supabase.auth.getUser();
-      const { data, error } = await supabase
-        .from("prescription_templates")
-        .insert({
-          title: input.title,
-          indications: input.indications,
-          created_by: user.user?.id || null,
-        })
-        .select()
-        .single();
-      if (error) throw error;
-      return data as PrescriptionTemplate;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["prescription_templates"] });
-    },
-  });
-}
-
-export function useDeletePrescriptionTemplate() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("prescription_templates")
-        .delete()
-        .eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["prescription_templates"] });
+      qc.invalidateQueries({ queryKey: ["clinical-notes"] });
     },
   });
 }

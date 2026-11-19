@@ -1,6 +1,9 @@
 {
-  "name": "tanstack_start_ts",
+  "name": "Medizen clinical system",
+  "version": "2.0.0",
   "private": true,
+  "license": "SEE LICENSE IN LICENSE",
+  "author": "Kevin Alvarez <kevinja1406@gmail.com> (https://github.com/KevxxAlva)",
   "sideEffects": false,
   "type": "module",
   "scripts": {
@@ -12,8 +15,6 @@
     "format": "prettier --write ."
   },
   "dependencies": {
-    "@fontsource/inter": "^5.2.8",
-    "@fontsource/plus-jakarta-sans": "^5.2.8",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -43,20 +44,27 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@supabase/supabase-js": "^2.108.0",
     "@tailwindcss/vite": "^4.2.1",
+    "@tanstack/charts": "^1.4.0",
     "@tanstack/react-query": "^5.83.0",
-    "@tanstack/react-router": "^1.168.25",
-    "@tanstack/react-start": "^1.167.50",
-    "@tanstack/router-plugin": "^1.167.28",
+    "@tanstack/react-router": "^1.170.40",
+    "@tanstack/react-start": "1.168.60",
+    "@tanstack/router-plugin": "^1.168.41",
+    "@types/d3-scale": "^4.0.9",
+    "@types/qrcode": "^1.5.6",
+    "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "d3-scale": "^4.0.3",
     "date-fns": "^4.1.0",
+    "driver.js": "^1.8.0",
     "embla-carousel-react": "^8.6.0",
-    "framer-motion": "^12.42.0",
+    "framer-motion": "^13.1.0",
     "input-otp": "^1.4.2",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "lucide-react": "^0.575.0",
+    "qrcode": "^1.5.4",
     "react": "^19.2.0",
     "react-day-picker": "^9.14.0",
     "react-dom": "^19.2.0",
@@ -75,20 +83,34 @@
   "devDependencies": {
     "@eslint/js": "^9.32.0",
     "@lovable.dev/vite-tanstack-config": "^2.3.2",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^22.16.5",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^5.0.4",
+    "asynckit": "^0.5.0",
+    "combined-stream": "^1.0.8",
     "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.2.6",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^15.15.0",
+    "mime-types": "^3.0.2",
     "nitro": "3.0.260603-beta",
     "prettier": "^3.7.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
     "vite": "^7.3.1"
+  },
+  "reactDoctor": {
+    "ignore": {
+      "files": [
+        "scripts/**",
+        "scratch/**",
+        "setAdmin.js",
+        "generate_narration.cjs"
+      ]
+    }
   }
 }

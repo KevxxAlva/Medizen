@@ -2,11 +2,9 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface RecipePatient {
-  id?: string;
   full_name: string;
   document_id: string | null;
   birth_date: string | null;
-  phone?: string | null;
 }
 
 export interface RecipeConsultation {
@@ -35,25 +33,35 @@ const loadLogoBase64 = (url: string): Promise<string> => {
   });
 };
 
-export const calculateAge = (birthDateStr: string | null | undefined): string => {
+const calculateAge = (birthDateStr: string | null): string => {
   if (!birthDateStr) return "—";
-  
-  const parts = birthDateStr.split("T")[0].split("-");
-  if (parts.length !== 3) return "—";
-  
-  const birthYear = parseInt(parts[0], 10);
-  const birthMonth = parseInt(parts[1], 10) - 1;
-  const birthDay = parseInt(parts[2], 10);
-  
-  const birth = new Date(birthYear, birthMonth, birthDay);
+  const birth = new Date(birthDateStr);
   const today = new Date();
-  
   let age = today.getFullYear() - birth.getFullYear();
   const monthDiff = today.getMonth() - birth.getMonth();
   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
     age--;
   }
   return `${age} años`;
+};
+
+const hexToRgb = (hex: string): [number, number, number] => {
+  const clean = (hex || "#992ACB").replace("#", "").trim();
+  if (clean.length === 3) {
+    return [
+      parseInt(clean[0] + clean[0], 16),
+      parseInt(clean[1] + clean[1], 16),
+      parseInt(clean[2] + clean[2], 16),
+    ];
+  }
+  if (clean.length === 6) {
+    return [
+      parseInt(clean.slice(0, 2), 16),
+      parseInt(clean.slice(2, 4), 16),
+      parseInt(clean.slice(4, 6), 16),
+    ];
+  }
+  return [153, 42, 203];
 };
 
 export const generateRecipePDF = async (
@@ -64,8 +72,8 @@ export const generateRecipePDF = async (
   doctorUniversity?: string,
   doctorMpps?: string,
   doctorCmc?: string,
-  action: "save" | "whatsapp" = "save"
-) => {
+  returnBlob: boolean = false
+): Promise<Blob | void> => {
   try {
     const indicationsText = consultation.indications?.trim();
     if (!indicationsText) {
@@ -73,14 +81,15 @@ export const generateRecipePDF = async (
       return;
     }
 
+    const { jsPDF } = await import("jspdf");
+
     // A4 Format (unit: pt, format: a4)
     // Page dimensions in pt: 595.28 x 841.89
-    const { default: jsPDF } = await import("jspdf");
     const doc = new jsPDF({ unit: "pt", format: "a4", orientation: "p" });
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
 
-    const logoBase64 = await loadLogoBase64("/logo.png");
+
 
     // Query clinic info
     let clinicAddress1 = "Calle las Flores entre González Padrón y Shettino, Número 16.";
@@ -88,15 +97,33 @@ export const generateRecipePDF = async (
     let clinicPhone = "0412/8299890 0424/4609387";
     let clinicName = "Femesalud";
     let clinicRif = "";
+    let clinicType = "Consultorio Ginecológico Obstétrico";
+    let clinicPrimaryColor = "#992ACB";
+    
+    // Custom Config
+    let customHeaderText = "";
+    let customFontFamily = "times"; // default serif
+    let customLogoUrl = "";
+    let customFooterText = "";
 
     try {
       const { data } = await supabase.from("clinic_info").select("*").eq("id", 1).maybeSingle();
       if (data) {
-        clinicAddress1 = data.address_line1;
-        clinicAddress2 = data.address_line2;
-        clinicPhone = data.phone;
-        clinicName = data.name;
-        clinicRif = data.rif;
+        clinicAddress1 = data.address_line1 || clinicAddress1;
+        clinicAddress2 = data.address_line2 || clinicAddress2;
+        clinicPhone = data.phone || clinicPhone;
+        clinicName = data.name || clinicName;
+        clinicRif = data.rif || clinicRif;
+        clinicType = data.recipe_clinic_type || clinicType;
+        clinicPrimaryColor = data.recipe_primary_color || clinicPrimaryColor;
+        
+        customHeaderText = data.recipe_header_text || "";
+        customFooterText = data.recipe_footer_text || "";
+        customLogoUrl = data.recipe_logo_url || "";
+        
+        if (data.recipe_font_family === "font-sans") customFontFamily = "helvetica";
+        else if (data.recipe_font_family === "font-mono") customFontFamily = "courier";
+        else customFontFamily = "times";
       }
     } catch (e) {
       console.error("Error fetching clinic info for PDF:", e);
@@ -113,33 +140,9 @@ export const generateRecipePDF = async (
     let docCmc = doctorCmc || "";
     let finalSpecialty = doctorSpecialty || "";
 
-    // If any of the credentials are not provided, try to fetch them from database profiles
-    if (!docUni || !docMpps || !docCmc || !finalSpecialty) {
-      try {
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("university, mpps, cmc, specialty")
-          .ilike("full_name", `%${doctorName}%`)
-          .maybeSingle();
-
-        if (profileData) {
-          if (!docUni) docUni = profileData.university || "";
-          if (!docMpps) docMpps = profileData.mpps || "";
-          if (!docCmc) docCmc = profileData.cmc || "";
-          if (!finalSpecialty) finalSpecialty = profileData.specialty || "";
-        }
-      } catch (e) {
-        console.error("Error fetching doctor profile for PDF:", e);
-      }
-    }
-
     // Default fallbacks if they are still missing
     if (!docUni) {
-      if (doctorName.toLowerCase().includes("carli") || doctorName.toLowerCase().includes("sole") || doctorName.toLowerCase().includes("solé")) {
-        docUni = "UC-CHET";
-      } else {
-        docUni = finalSpecialty ? "Ginecólogo Obstetra" : "UC-CHET";
-      }
+      docUni = "Universidad Central de Venezuela";
     }
     if (!docMpps) {
       if (doctorName.toLowerCase().includes("carli") || doctorName.toLowerCase().includes("sole") || doctorName.toLowerCase().includes("solé")) {
@@ -161,64 +164,108 @@ export const generateRecipePDF = async (
         : "Médico Especialista";
     }
 
+    // Load logo if exists
+    const logoBase64 = customLogoUrl ? customLogoUrl : await loadLogoBase64("/logo.png");
+    const [r, g, b] = hexToRgb(clinicPrimaryColor);
+
     // Draw header on Page 1
-    const drawHeader = () => {
-      // Add logo to the top left if available
+    const drawHeader = (): number => {
+      // Font Setup
+      doc.setFont(customFontFamily, "normal");
+      
+      // Top Micro Info: Address & Contact
+      doc.setFontSize(8.5);
+      doc.setTextColor(80, 80, 80);
+      doc.text(clinicAddress1, pageWidth / 2, 42, { align: "center" });
+      doc.text(clinicAddress2, pageWidth / 2, 54, { align: "center" });
+      const headerLine3 = clinicRif ? `Teléfono: ${clinicPhone} | RIF: ${clinicRif}` : `Teléfono: ${clinicPhone}`;
+      doc.text(headerLine3, pageWidth / 2, 66, { align: "center" });
+
+      // Header Logo if available
       if (logoBase64) {
-        doc.addImage(logoBase64, "PNG", 65, 25, 65, 65);
+        try {
+          doc.addImage(logoBase64, "PNG", 70, 42, 55, 55);
+        } catch {
+          // ignore if image format issue
+        }
       }
 
-      // Font Setup
-      doc.setFont("times", "normal");
-      doc.setFontSize(8.5);
-      doc.setTextColor(60, 60, 60);
+      // Clinic Specialty / Type
+      doc.setFont(customFontFamily, "normal");
+      doc.setFontSize(10.5);
+      doc.setTextColor(90, 90, 90);
+      doc.text(clinicType, pageWidth / 2, 88, { align: "center" });
 
-      // Top Header Info
-      doc.text(clinicAddress1, pageWidth / 2, 45, { align: "center" });
-      doc.text(clinicAddress2, pageWidth / 2, 57, { align: "center" });
-      const headerLine3 = clinicRif ? `Teléfono: ${clinicPhone} | RIF: ${clinicRif}` : `Teléfono: ${clinicPhone}`;
-      doc.text(headerLine3, pageWidth / 2, 69, { align: "center" });
+      // Clinic Name in Brand Color
+      doc.setFont(customFontFamily, "bold");
+      doc.setFontSize(18);
+      doc.setTextColor(r, g, b);
+      doc.text(clinicName, pageWidth / 2, 108, { align: "center" });
 
-      // Consultorio Header
-      doc.setFont("times", "normal");
-      doc.setFontSize(12.5);
-      doc.setTextColor(0);
-      doc.text("Consultorio Ginecológico Obstétrico", pageWidth / 2, 105, { align: "center" });
-      doc.setFont("times", "italic");
-      doc.setFontSize(17.5);
-      doc.text(clinicName, pageWidth / 2, 122, { align: "center" });
+      // Custom Subtitle / Slogan (e.g. #Gente Que Suma)
+      let nextY = 121;
+      if (customHeaderText) {
+        doc.setFont(customFontFamily, "italic");
+        doc.setFontSize(10.5);
+        doc.setTextColor(80, 80, 80);
+        const lines = customHeaderText.replace(/\\n/g, "\n").split("\n");
+        lines.forEach((line) => {
+          doc.text(line, pageWidth / 2, nextY, { align: "center" });
+          nextY += 13;
+        });
+      }
+
+      // Divider accent line
+      const dividerY = Math.max(nextY + 3, 130);
+      doc.setDrawColor(r, g, b);
+      doc.setLineWidth(1.6);
+      doc.line(70, dividerY, pageWidth - 70, dividerY);
+
+      // Watermark
+      if (customLogoUrl) {
+        try {
+          doc.setGState(new (doc as any).GState({ opacity: 0.08 }));
+          doc.addImage(customLogoUrl, "PNG", (pageWidth - 250) / 2, (pageHeight - 250) / 2, 250, 250);
+          doc.setGState(new (doc as any).GState({ opacity: 1.0 }));
+        } catch (e) {
+          console.error("Could not draw watermark", e);
+        }
+      }
 
       // Date Format: Valle de la Pascua, DD / MM / AAAA
-      doc.setFont("times", "normal");
+      doc.setFont(customFontFamily, "normal");
       doc.setFontSize(10.5);
-      doc.text(`Valle de la Pascua,   ${topDay}   /   ${topMonth}   /   ${topYear}`, pageWidth - 70, 155, { align: "right" });
+      doc.setTextColor(70, 70, 70);
+      doc.text(`Valle de la Pascua,   ${topDay}   /   ${topMonth}   /   ${topYear}`, pageWidth - 70, dividerY + 22, { align: "right" });
 
       // Title (centered & underlined)
-      doc.setFont("times", "bold");
+      doc.setFont(customFontFamily, "bold");
       doc.setFontSize(13);
-      doc.text("RÉCIPE / INDICACIONES", pageWidth / 2, 195, { align: "center" });
+      doc.setTextColor(r, g, b);
+      doc.text("RÉCIPE / INDICACIONES", pageWidth / 2, dividerY + 46, { align: "center" });
       const titleWidth = doc.getTextWidth("RÉCIPE / INDICACIONES");
-      doc.setDrawColor(0);
-      doc.setLineWidth(0.5);
-      doc.line(pageWidth / 2 - titleWidth / 2, 198, pageWidth / 2 + titleWidth / 2, 198);
+      doc.setDrawColor(r, g, b);
+      doc.setLineWidth(0.8);
+      doc.line(pageWidth / 2 - titleWidth / 2, dividerY + 49, pageWidth / 2 + titleWidth / 2, dividerY + 49);
 
-      // Patient Name and Age lines (same as constancias)
-      doc.setFont("times", "normal");
+      // Patient Name and Age lines
+      const metaY = dividerY + 76;
+      doc.setFont(customFontFamily, "normal");
       doc.setFontSize(11);
       doc.setTextColor(0);
-      doc.text("Paciente:", 70, 240);
-      doc.line(120, 240, 390, 240);
-      doc.setFont("times", "bold");
+      doc.text("Paciente:", 70, metaY);
+      doc.line(125, metaY, 390, metaY);
+      doc.setFont(customFontFamily, "bold");
       doc.setFontSize(11.5);
-      doc.text(patient.full_name, (120 + 390) / 2, 236, { align: "center" });
+      doc.text(patient.full_name, (125 + 390) / 2, metaY - 4, { align: "center" });
 
-      doc.setFont("times", "normal");
+      doc.setFont(customFontFamily, "normal");
       doc.setFontSize(11);
-      doc.text("Edad:", 405, 240);
-      doc.line(435, 240, 525, 240);
-      doc.setFont("times", "bold");
+      doc.text("Edad:", 405, metaY);
+      doc.line(435, metaY, 525, metaY);
+      doc.setFont(customFontFamily, "bold");
       doc.setFontSize(11.5);
-      doc.text(calculateAge(patient.birth_date), (435 + 525) / 2, 236, { align: "center" });
+      doc.text(calculateAge(patient.birth_date), (435 + 525) / 2, metaY - 4, { align: "center" });
 
       // C.I. line
       let ciLabel = "C.I. V-";
@@ -236,32 +283,37 @@ export const generateRecipePDF = async (
         ciLabel = "C.I. ";
       }
 
-      doc.setFont("times", "normal");
+      const ciY = metaY + 28;
+      doc.setFont(customFontFamily, "normal");
       doc.setFontSize(11);
-      doc.text(ciLabel, 70, 275);
+      doc.text(ciLabel, 70, ciY);
       const labelWidth = doc.getTextWidth(ciLabel);
       const lineStartX = 70 + labelWidth + 5;
       const lineEndX = 280;
-      doc.line(lineStartX, 275, lineEndX, 275);
-      doc.setFont("times", "bold");
+      doc.line(lineStartX, ciY, lineEndX, ciY);
+      doc.setFont(customFontFamily, "bold");
       doc.setFontSize(11.5);
-      doc.text(displayCI, (lineStartX + lineEndX) / 2, 271, { align: "center" });
+      doc.text(displayCI, (lineStartX + lineEndX) / 2, ciY - 4, { align: "center" });
 
       // Rx body title
-      doc.setFont("times", "bold");
+      const rxY = ciY + 30;
+      doc.setFont(customFontFamily, "bold");
       doc.setFontSize(11.5);
-      doc.text("Indicaciones:", 70, 310);
+      doc.setTextColor(r, g, b);
+      doc.text("Indicaciones:", 70, rxY);
+
+      return rxY + 18;
     };
 
-    drawHeader();
+    const startY = drawHeader();
 
     // Body Text wrap at 455 pt (70 pt margin left/right)
-    doc.setFont("times", "normal");
+    doc.setFont(customFontFamily, "normal");
     doc.setFontSize(11);
     doc.setTextColor(30, 30, 30);
     const lines = doc.splitTextToSize(indicationsText, 455);
 
-    let currentY = 330;
+    let currentY = startY;
     const lineHeight = 15;
 
     lines.forEach((line: string) => {
@@ -270,7 +322,7 @@ export const generateRecipePDF = async (
         doc.addPage();
         
         // Draw running header on next pages
-        doc.setFont("times", "bold");
+        doc.setFont(customFontFamily, "bold");
         doc.setFontSize(8.5);
         doc.setTextColor(140, 140, 140);
         doc.text(`Paciente: ${patient.full_name} | Fecha: ${topDay}/${topMonth}/${topYear}`, 70, 35);
@@ -280,7 +332,7 @@ export const generateRecipePDF = async (
         doc.line(70, 40, pageWidth - 70, 40);
 
         currentY = 60;
-        doc.setFont("times", "normal");
+        doc.setFont(customFontFamily, "normal");
         doc.setFontSize(11);
         doc.setTextColor(30, 30, 30);
       }
@@ -293,17 +345,19 @@ export const generateRecipePDF = async (
     doc.setPage(totalPages);
 
     const sigY = 700;
+
+    doc.setTextColor(0);
     doc.setDrawColor(120);
     doc.setLineWidth(0.5);
     doc.setLineDashPattern([2, 2], 0);
     doc.line(pageWidth / 2 - 100, sigY, pageWidth / 2 + 100, sigY);
     doc.setLineDashPattern([], 0); // Restore solid line
 
-    doc.setFont("times", "bold");
+    doc.setFont(customFontFamily, "bold");
     doc.setFontSize(11.5);
     doc.text(doctorName, pageWidth / 2, sigY + 16, { align: "center" });
 
-    doc.setFont("times", "normal");
+    doc.setFont(customFontFamily, "normal");
     doc.setFontSize(10.5);
     doc.text(finalSpecialty, pageWidth / 2, sigY + 29, { align: "center" });
 
@@ -322,7 +376,7 @@ export const generateRecipePDF = async (
       try {
         if (logoBase64) {
           doc.saveGraphicsState();
-          const gState = new (doc as any).GState({ opacity: 0.04 });
+          const gState = new (doc as any).GState({ opacity: 0.1 });
           doc.setGState(gState);
           // Logo centered: width 550, height 550
           const imgWidth = 550;
@@ -336,56 +390,36 @@ export const generateRecipePDF = async (
         console.error("Error drawing watermark:", e);
       }
 
-      // Page numbers if multi-page
+      // Footer Text and Page numbers if multi-page
+      if (customFooterText) {
+        doc.setFont(customFontFamily, "normal");
+        doc.setFontSize(8.5);
+        doc.setTextColor(100, 100, 100);
+        const footerLines = customFooterText.split("\\n");
+        let fY = pageHeight - 30;
+        footerLines.forEach(line => {
+          doc.text(line, pageWidth / 2, fY, { align: "center" });
+          fY += 10;
+        });
+      }
+
       if (totalPages > 1) {
-        doc.setFont("times", "normal");
+        doc.setFont(customFontFamily, "normal");
         doc.setFontSize(8);
         doc.setTextColor(150, 150, 150);
         doc.text(`Página ${i} de ${totalPages}`, pageWidth - 70, pageHeight - 20, { align: "right" });
       }
     }
 
-    const cleanName = patient.full_name
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "") // Remove accents
-      .replace(/[^a-zA-Z0-9]/g, "_")   // Replace any non-alphanumeric character with underscore
-      .replace(/_+/g, "_");            // Collapse multiple underscores
-
-    const fileName = `Recipe_${cleanName}_${topYear}${topMonth}${topDay}.pdf`;
-
-    if (action === "save") {
-      doc.save(fileName);
+    const cleanName = patient.full_name.replace(/\s+/g, "_");
+    if (returnBlob) {
+      return doc.output("blob");
+    } else {
+      doc.save(`Recipe_${cleanName}_${topYear}${topMonth}${topDay}.pdf`);
       toast.success("Récipe médico exportado correctamente");
-    } else if (action === "whatsapp") {
-      toast.loading("Generando y subiendo el récipe...", { id: "recipe-whatsapp" });
-      const pdfBlob = doc.output("blob");
-      const path = `recipes/${patient.id || "tmp"}/${Date.now()}_${fileName}`;
-      
-      const { error: uploadError } = await supabase.storage.from("clinical-attachments").upload(path, pdfBlob, {
-        contentType: "application/pdf"
-      });
-      
-      if (uploadError) throw uploadError;
-      
-      const { data } = await supabase.storage.from("clinical-attachments").createSignedUrl(path, 60 * 60 * 24 * 7); // 7 días
-      if (!data?.signedUrl) throw new Error("No se pudo generar el enlace");
-      
-      const phone = patient.phone?.replace(/\D/g, "");
-      
-      toast.dismiss("recipe-whatsapp");
-      
-      if (!phone) {
-        await navigator.clipboard.writeText(data.signedUrl);
-        toast.success("Enlace copiado. El paciente no tiene teléfono registrado.");
-      } else {
-        const text = `Hola *${patient.full_name}*, aquí tienes tu récipe médico: \n\n${data.signedUrl}`;
-        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, "_blank");
-        toast.success("Redirigiendo a WhatsApp...");
-      }
     }
   } catch (err) {
     console.error(err);
-    toast.dismiss("recipe-whatsapp");
-    toast.error(err instanceof Error ? err.message : "Error al procesar el récipe");
+    toast.error(err instanceof Error ? err.message : "Error al exportar el récipe");
   }
 };

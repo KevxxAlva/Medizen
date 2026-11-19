@@ -9,67 +9,61 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AuthRouteImport } from './routes/auth'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
-import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
-import { Route as AuthenticatedServiciosRouteImport } from './routes/_authenticated/servicios'
-import { Route as AuthenticatedReportesRouteImport } from './routes/_authenticated/reportes'
-import { Route as AuthenticatedPacientesRouteImport } from './routes/_authenticated/pacientes'
-import { Route as AuthenticatedHistoriasRouteImport } from './routes/_authenticated/historias'
-import { Route as AuthenticatedFacturacionRouteImport } from './routes/_authenticated/facturacion'
-import { Route as AuthenticatedDoctoresRouteImport } from './routes/_authenticated/doctores'
-import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/crm'
-import { Route as AuthenticatedConfiguracionRouteImport } from './routes/_authenticated/configuracion'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as DescargarRouteImport } from './routes/descargar'
+import { Route as LegalRouteImport } from './routes/legal'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
+import { Route as AuthenticatedAuditoriaRouteImport } from './routes/_authenticated/auditoria'
+import { Route as AuthenticatedConfiguracionRouteImport } from './routes/_authenticated/configuracion'
+import { Route as AuthenticatedCuentasRouteImport } from './routes/_authenticated/cuentas'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedDoctoresRouteImport } from './routes/_authenticated/doctores'
+import { Route as AuthenticatedFacturacionRouteImport } from './routes/_authenticated/facturacion'
+import { Route as AuthenticatedHonorariosRouteImport } from './routes/_authenticated/honorarios'
+import { Route as AuthenticatedMetodosPagoRouteImport } from './routes/_authenticated/metodos-pago'
+import { Route as AuthenticatedReportesRouteImport } from './routes/_authenticated/reportes'
+import { Route as AuthenticatedSalaEsperaRouteImport } from './routes/_authenticated/sala-espera'
+import { Route as AuthenticatedServiciosRouteImport } from './routes/_authenticated/servicios'
+import { Route as AuthenticatedStocksRouteImport } from './routes/_authenticated/stocks'
+import { Route as AuthenticatedSuperadminRouteImport } from './routes/_authenticated/superadmin'
+import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
+import { Route as AuthenticatedPacientesIndexRouteImport } from './routes/_authenticated/pacientes.index'
+import { Route as AuthenticatedPacientesPatientIdRouteImport } from './routes/_authenticated/pacientes.$patientId'
 
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DescargarRoute = DescargarRouteImport.update({
+  id: '/descargar',
+  path: '/descargar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalRoute = LegalRouteImport.update({
+  id: '/legal',
+  path: '/legal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
+  id: '/agenda',
+  path: '/agenda',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedServiciosRoute = AuthenticatedServiciosRouteImport.update({
-  id: '/servicios',
-  path: '/servicios',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedReportesRoute = AuthenticatedReportesRouteImport.update({
-  id: '/reportes',
-  path: '/reportes',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedPacientesRoute = AuthenticatedPacientesRouteImport.update({
-  id: '/pacientes',
-  path: '/pacientes',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedHistoriasRoute = AuthenticatedHistoriasRouteImport.update({
-  id: '/historias',
-  path: '/historias',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedFacturacionRoute =
-  AuthenticatedFacturacionRouteImport.update({
-    id: '/facturacion',
-    path: '/facturacion',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedDoctoresRoute = AuthenticatedDoctoresRouteImport.update({
-  id: '/doctores',
-  path: '/doctores',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedCrmRoute = AuthenticatedCrmRouteImport.update({
-  id: '/crm',
-  path: '/crm',
+const AuthenticatedAuditoriaRoute = AuthenticatedAuditoriaRouteImport.update({
+  id: '/auditoria',
+  path: '/auditoria',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedConfiguracionRoute =
@@ -78,108 +72,240 @@ const AuthenticatedConfiguracionRoute =
     path: '/configuracion',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
-  id: '/agenda',
-  path: '/agenda',
+const AuthenticatedCuentasRoute = AuthenticatedCuentasRouteImport.update({
+  id: '/cuentas',
+  path: '/cuentas',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDoctoresRoute = AuthenticatedDoctoresRouteImport.update({
+  id: '/doctores',
+  path: '/doctores',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedFacturacionRoute =
+  AuthenticatedFacturacionRouteImport.update({
+    id: '/facturacion',
+    path: '/facturacion',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedHonorariosRoute = AuthenticatedHonorariosRouteImport.update({
+  id: '/honorarios',
+  path: '/honorarios',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMetodosPagoRoute =
+  AuthenticatedMetodosPagoRouteImport.update({
+    id: '/metodos-pago',
+    path: '/metodos-pago',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedReportesRoute = AuthenticatedReportesRouteImport.update({
+  id: '/reportes',
+  path: '/reportes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSalaEsperaRoute = AuthenticatedSalaEsperaRouteImport.update({
+  id: '/sala-espera',
+  path: '/sala-espera',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedServiciosRoute = AuthenticatedServiciosRouteImport.update({
+  id: '/servicios',
+  path: '/servicios',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedStocksRoute = AuthenticatedStocksRouteImport.update({
+  id: '/stocks',
+  path: '/stocks',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSuperadminRoute = AuthenticatedSuperadminRouteImport.update({
+  id: '/superadmin',
+  path: '/superadmin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSupportRoute = AuthenticatedSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPacientesIndexRoute =
+  AuthenticatedPacientesIndexRouteImport.update({
+    id: '/pacientes/',
+    path: '/pacientes/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPacientesPatientIdRoute =
+  AuthenticatedPacientesPatientIdRouteImport.update({
+    id: '/pacientes/$patientId',
+    path: '/pacientes/$patientId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AuthenticatedIndexRoute
+  '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/descargar': typeof DescargarRoute
+  '/legal': typeof LegalRoute
   '/agenda': typeof AuthenticatedAgendaRoute
+  '/auditoria': typeof AuthenticatedAuditoriaRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
-  '/crm': typeof AuthenticatedCrmRoute
+  '/cuentas': typeof AuthenticatedCuentasRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/doctores': typeof AuthenticatedDoctoresRoute
   '/facturacion': typeof AuthenticatedFacturacionRoute
-  '/historias': typeof AuthenticatedHistoriasRoute
-  '/pacientes': typeof AuthenticatedPacientesRoute
+  '/honorarios': typeof AuthenticatedHonorariosRoute
+  '/metodos-pago': typeof AuthenticatedMetodosPagoRoute
   '/reportes': typeof AuthenticatedReportesRoute
+  '/sala-espera': typeof AuthenticatedSalaEsperaRoute
   '/servicios': typeof AuthenticatedServiciosRoute
+  '/stocks': typeof AuthenticatedStocksRoute
+  '/superadmin': typeof AuthenticatedSuperadminRoute
+  '/support': typeof AuthenticatedSupportRoute
+  '/pacientes/$patientId': typeof AuthenticatedPacientesPatientIdRoute
+  '/pacientes/': typeof AuthenticatedPacientesIndexRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/descargar': typeof DescargarRoute
+  '/legal': typeof LegalRoute
   '/agenda': typeof AuthenticatedAgendaRoute
+  '/auditoria': typeof AuthenticatedAuditoriaRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
-  '/crm': typeof AuthenticatedCrmRoute
+  '/cuentas': typeof AuthenticatedCuentasRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/doctores': typeof AuthenticatedDoctoresRoute
   '/facturacion': typeof AuthenticatedFacturacionRoute
-  '/historias': typeof AuthenticatedHistoriasRoute
-  '/pacientes': typeof AuthenticatedPacientesRoute
+  '/honorarios': typeof AuthenticatedHonorariosRoute
+  '/metodos-pago': typeof AuthenticatedMetodosPagoRoute
   '/reportes': typeof AuthenticatedReportesRoute
+  '/sala-espera': typeof AuthenticatedSalaEsperaRoute
   '/servicios': typeof AuthenticatedServiciosRoute
-  '/': typeof AuthenticatedIndexRoute
+  '/stocks': typeof AuthenticatedStocksRoute
+  '/superadmin': typeof AuthenticatedSuperadminRoute
+  '/support': typeof AuthenticatedSupportRoute
+  '/pacientes/$patientId': typeof AuthenticatedPacientesPatientIdRoute
+  '/pacientes': typeof AuthenticatedPacientesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/descargar': typeof DescargarRoute
+  '/legal': typeof LegalRoute
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
+  '/_authenticated/auditoria': typeof AuthenticatedAuditoriaRoute
   '/_authenticated/configuracion': typeof AuthenticatedConfiguracionRoute
-  '/_authenticated/crm': typeof AuthenticatedCrmRoute
+  '/_authenticated/cuentas': typeof AuthenticatedCuentasRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/doctores': typeof AuthenticatedDoctoresRoute
   '/_authenticated/facturacion': typeof AuthenticatedFacturacionRoute
-  '/_authenticated/historias': typeof AuthenticatedHistoriasRoute
-  '/_authenticated/pacientes': typeof AuthenticatedPacientesRoute
+  '/_authenticated/honorarios': typeof AuthenticatedHonorariosRoute
+  '/_authenticated/metodos-pago': typeof AuthenticatedMetodosPagoRoute
   '/_authenticated/reportes': typeof AuthenticatedReportesRoute
+  '/_authenticated/sala-espera': typeof AuthenticatedSalaEsperaRoute
   '/_authenticated/servicios': typeof AuthenticatedServiciosRoute
-  '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/stocks': typeof AuthenticatedStocksRoute
+  '/_authenticated/superadmin': typeof AuthenticatedSuperadminRoute
+  '/_authenticated/support': typeof AuthenticatedSupportRoute
+  '/_authenticated/pacientes/$patientId': typeof AuthenticatedPacientesPatientIdRoute
+  '/_authenticated/pacientes/': typeof AuthenticatedPacientesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/auth'
+    | '/descargar'
+    | '/legal'
     | '/agenda'
+    | '/auditoria'
     | '/configuracion'
-    | '/crm'
+    | '/cuentas'
+    | '/dashboard'
     | '/doctores'
     | '/facturacion'
-    | '/historias'
-    | '/pacientes'
+    | '/honorarios'
+    | '/metodos-pago'
     | '/reportes'
+    | '/sala-espera'
     | '/servicios'
+    | '/stocks'
+    | '/superadmin'
+    | '/support'
+    | '/pacientes/$patientId'
+    | '/pacientes/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/auth'
+    | '/descargar'
+    | '/legal'
     | '/agenda'
+    | '/auditoria'
     | '/configuracion'
-    | '/crm'
+    | '/cuentas'
+    | '/dashboard'
     | '/doctores'
     | '/facturacion'
-    | '/historias'
-    | '/pacientes'
+    | '/honorarios'
+    | '/metodos-pago'
     | '/reportes'
+    | '/sala-espera'
     | '/servicios'
-    | '/'
+    | '/stocks'
+    | '/superadmin'
+    | '/support'
+    | '/pacientes/$patientId'
+    | '/pacientes'
   id:
     | '__root__'
+    | '/'
     | '/_authenticated'
     | '/auth'
+    | '/descargar'
+    | '/legal'
     | '/_authenticated/agenda'
+    | '/_authenticated/auditoria'
     | '/_authenticated/configuracion'
-    | '/_authenticated/crm'
+    | '/_authenticated/cuentas'
+    | '/_authenticated/dashboard'
     | '/_authenticated/doctores'
     | '/_authenticated/facturacion'
-    | '/_authenticated/historias'
-    | '/_authenticated/pacientes'
+    | '/_authenticated/honorarios'
+    | '/_authenticated/metodos-pago'
     | '/_authenticated/reportes'
+    | '/_authenticated/sala-espera'
     | '/_authenticated/servicios'
-    | '/_authenticated/'
+    | '/_authenticated/stocks'
+    | '/_authenticated/superadmin'
+    | '/_authenticated/support'
+    | '/_authenticated/pacientes/$patientId'
+    | '/_authenticated/pacientes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  DescargarRoute: typeof DescargarRoute
+  LegalRoute: typeof LegalRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -189,60 +315,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/': {
-      id: '/_authenticated/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/descargar': {
+      id: '/descargar'
+      path: '/descargar'
+      fullPath: '/descargar'
+      preLoaderRoute: typeof DescargarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal': {
+      id: '/legal'
+      path: '/legal'
+      fullPath: '/legal'
+      preLoaderRoute: typeof LegalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/agenda': {
+      id: '/_authenticated/agenda'
+      path: '/agenda'
+      fullPath: '/agenda'
+      preLoaderRoute: typeof AuthenticatedAgendaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/servicios': {
-      id: '/_authenticated/servicios'
-      path: '/servicios'
-      fullPath: '/servicios'
-      preLoaderRoute: typeof AuthenticatedServiciosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/reportes': {
-      id: '/_authenticated/reportes'
-      path: '/reportes'
-      fullPath: '/reportes'
-      preLoaderRoute: typeof AuthenticatedReportesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/pacientes': {
-      id: '/_authenticated/pacientes'
-      path: '/pacientes'
-      fullPath: '/pacientes'
-      preLoaderRoute: typeof AuthenticatedPacientesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/historias': {
-      id: '/_authenticated/historias'
-      path: '/historias'
-      fullPath: '/historias'
-      preLoaderRoute: typeof AuthenticatedHistoriasRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/facturacion': {
-      id: '/_authenticated/facturacion'
-      path: '/facturacion'
-      fullPath: '/facturacion'
-      preLoaderRoute: typeof AuthenticatedFacturacionRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/doctores': {
-      id: '/_authenticated/doctores'
-      path: '/doctores'
-      fullPath: '/doctores'
-      preLoaderRoute: typeof AuthenticatedDoctoresRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/crm': {
-      id: '/_authenticated/crm'
-      path: '/crm'
-      fullPath: '/crm'
-      preLoaderRoute: typeof AuthenticatedCrmRouteImport
+    '/_authenticated/auditoria': {
+      id: '/_authenticated/auditoria'
+      path: '/auditoria'
+      fullPath: '/auditoria'
+      preLoaderRoute: typeof AuthenticatedAuditoriaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/configuracion': {
@@ -252,11 +357,102 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConfiguracionRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/agenda': {
-      id: '/_authenticated/agenda'
-      path: '/agenda'
-      fullPath: '/agenda'
-      preLoaderRoute: typeof AuthenticatedAgendaRouteImport
+    '/_authenticated/cuentas': {
+      id: '/_authenticated/cuentas'
+      path: '/cuentas'
+      fullPath: '/cuentas'
+      preLoaderRoute: typeof AuthenticatedCuentasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/doctores': {
+      id: '/_authenticated/doctores'
+      path: '/doctores'
+      fullPath: '/doctores'
+      preLoaderRoute: typeof AuthenticatedDoctoresRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/facturacion': {
+      id: '/_authenticated/facturacion'
+      path: '/facturacion'
+      fullPath: '/facturacion'
+      preLoaderRoute: typeof AuthenticatedFacturacionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/honorarios': {
+      id: '/_authenticated/honorarios'
+      path: '/honorarios'
+      fullPath: '/honorarios'
+      preLoaderRoute: typeof AuthenticatedHonorariosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/metodos-pago': {
+      id: '/_authenticated/metodos-pago'
+      path: '/metodos-pago'
+      fullPath: '/metodos-pago'
+      preLoaderRoute: typeof AuthenticatedMetodosPagoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/reportes': {
+      id: '/_authenticated/reportes'
+      path: '/reportes'
+      fullPath: '/reportes'
+      preLoaderRoute: typeof AuthenticatedReportesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sala-espera': {
+      id: '/_authenticated/sala-espera'
+      path: '/sala-espera'
+      fullPath: '/sala-espera'
+      preLoaderRoute: typeof AuthenticatedSalaEsperaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/servicios': {
+      id: '/_authenticated/servicios'
+      path: '/servicios'
+      fullPath: '/servicios'
+      preLoaderRoute: typeof AuthenticatedServiciosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/stocks': {
+      id: '/_authenticated/stocks'
+      path: '/stocks'
+      fullPath: '/stocks'
+      preLoaderRoute: typeof AuthenticatedStocksRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/superadmin': {
+      id: '/_authenticated/superadmin'
+      path: '/superadmin'
+      fullPath: '/superadmin'
+      preLoaderRoute: typeof AuthenticatedSuperadminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/support': {
+      id: '/_authenticated/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof AuthenticatedSupportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pacientes/': {
+      id: '/_authenticated/pacientes/'
+      path: '/pacientes'
+      fullPath: '/pacientes/'
+      preLoaderRoute: typeof AuthenticatedPacientesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pacientes/$patientId': {
+      id: '/_authenticated/pacientes/$patientId'
+      path: '/pacientes/$patientId'
+      fullPath: '/pacientes/$patientId'
+      preLoaderRoute: typeof AuthenticatedPacientesPatientIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
   }
@@ -264,36 +460,53 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAgendaRoute: typeof AuthenticatedAgendaRoute
+  AuthenticatedAuditoriaRoute: typeof AuthenticatedAuditoriaRoute
   AuthenticatedConfiguracionRoute: typeof AuthenticatedConfiguracionRoute
-  AuthenticatedCrmRoute: typeof AuthenticatedCrmRoute
+  AuthenticatedCuentasRoute: typeof AuthenticatedCuentasRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDoctoresRoute: typeof AuthenticatedDoctoresRoute
   AuthenticatedFacturacionRoute: typeof AuthenticatedFacturacionRoute
-  AuthenticatedHistoriasRoute: typeof AuthenticatedHistoriasRoute
-  AuthenticatedPacientesRoute: typeof AuthenticatedPacientesRoute
+  AuthenticatedHonorariosRoute: typeof AuthenticatedHonorariosRoute
+  AuthenticatedMetodosPagoRoute: typeof AuthenticatedMetodosPagoRoute
   AuthenticatedReportesRoute: typeof AuthenticatedReportesRoute
+  AuthenticatedSalaEsperaRoute: typeof AuthenticatedSalaEsperaRoute
   AuthenticatedServiciosRoute: typeof AuthenticatedServiciosRoute
-  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedStocksRoute: typeof AuthenticatedStocksRoute
+  AuthenticatedSuperadminRoute: typeof AuthenticatedSuperadminRoute
+  AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
+  AuthenticatedPacientesPatientIdRoute: typeof AuthenticatedPacientesPatientIdRoute
+  AuthenticatedPacientesIndexRoute: typeof AuthenticatedPacientesIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAgendaRoute: AuthenticatedAgendaRoute,
+  AuthenticatedAuditoriaRoute: AuthenticatedAuditoriaRoute,
   AuthenticatedConfiguracionRoute: AuthenticatedConfiguracionRoute,
-  AuthenticatedCrmRoute: AuthenticatedCrmRoute,
+  AuthenticatedCuentasRoute: AuthenticatedCuentasRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDoctoresRoute: AuthenticatedDoctoresRoute,
   AuthenticatedFacturacionRoute: AuthenticatedFacturacionRoute,
-  AuthenticatedHistoriasRoute: AuthenticatedHistoriasRoute,
-  AuthenticatedPacientesRoute: AuthenticatedPacientesRoute,
+  AuthenticatedHonorariosRoute: AuthenticatedHonorariosRoute,
+  AuthenticatedMetodosPagoRoute: AuthenticatedMetodosPagoRoute,
   AuthenticatedReportesRoute: AuthenticatedReportesRoute,
+  AuthenticatedSalaEsperaRoute: AuthenticatedSalaEsperaRoute,
   AuthenticatedServiciosRoute: AuthenticatedServiciosRoute,
-  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedStocksRoute: AuthenticatedStocksRoute,
+  AuthenticatedSuperadminRoute: AuthenticatedSuperadminRoute,
+  AuthenticatedSupportRoute: AuthenticatedSupportRoute,
+  AuthenticatedPacientesPatientIdRoute: AuthenticatedPacientesPatientIdRoute,
+  AuthenticatedPacientesIndexRoute: AuthenticatedPacientesIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  DescargarRoute: DescargarRoute,
+  LegalRoute: LegalRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

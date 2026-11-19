@@ -1,24 +1,57 @@
-import { useState, useEffect, useMemo } from "react";
-import { useForm, FormProvider } from "react-hook-form";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useConsultationByAppointment, useCreateConsultation, useUpdateConsultation } from "@/lib/api/consultations";
-import { usePatient } from "@/lib/api/patients";
-import { useDoctors } from "@/lib/api/profiles";
-import { supabase } from "@/integrations/supabase/client";
-import { generateRecipePDF } from "@/lib/utils/recipePdf";
-import { toast } from "sonner";
-import { useRouter } from "@tanstack/react-router";
-import { Loader2, Printer } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  useConsultationByAppointment,
+  type Consultation,
+} from "@/lib/api/consultations";
+import {
+  Loader2,
+  ShieldAlert,
+  Printer,
+  Wand2,
+  MessageSquare,
+  Sparkles,
+  Stethoscope,
+} from "lucide-react";
+import { useUserRoleScope } from "@/hooks/useUserRoleScope";
+import {
+  getSpecialtyBadgeStyle,
+} from "@/lib/constants/specialtyForms";
+import { DynamicSpecialtyFields } from "@/components/consultation/DynamicSpecialtyFields";
+import { TabsContent } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
+import { useConsultationFormState } from "@/components/consultation/useConsultationFormState";
+import { ConsultationAnamnesisTab } from "@/components/consultation/ConsultationAnamnesisTab";
+import { ConsultationVitalsTab } from "@/components/consultation/ConsultationVitalsTab";
+import { ConsultationPlanTab } from "@/components/consultation/ConsultationPlanTab";
+import { ConsultationConsumablesTab } from "@/components/consultation/ConsultationConsumablesTab";
 
-import { ConsultationFormValues, COMMON_CONSUMABLES } from "./consultations/form/types";
-import { ConsultationAnamnesis } from "./consultations/form/ConsultationAnamnesis";
-import { ConsultationVitals } from "./consultations/form/ConsultationVitals";
-import { ConsultationSpecial } from "./consultations/form/ConsultationSpecial";
-import { ConsultationPlan } from "./consultations/form/ConsultationPlan";
-import { ConsultationConsumables } from "./consultations/form/ConsultationConsumables";
+const CONTACT_CHANNELS = [
+  "WhatsApp",
+  "Instagram",
+  "Facebook",
+  "Radio",
+  "Recomendado",
+  "Prensa",
+  "Volante",
+  "Otro",
+];
 
 export function ConsultationForm({
   open,
@@ -27,467 +60,425 @@ export function ConsultationForm({
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  appointment?: { id: string; patient_id: string; patient_name?: string; doctor_id?: string } | null;
+  appointment?: {
+    id: string;
+    patient_id: string;
+    doctor_id?: string;
+    patient_name?: string;
+    price?: number | null;
+    reason?: string | null;
+  } | null;
 }) {
-  const { data: existingConsultation, isLoading: loadingExisting } = useConsultationByAppointment(appointment?.id);
-
-  const create = useCreateConsultation();
-  const update = useUpdateConsultation();
-  const busy = create.isPending || update.isPending;
-
+  const { data: existingConsultation, isLoading: loadingExisting } = useConsultationByAppointment(
+    appointment?.id,
+  );
   const isEdit = !!existingConsultation;
-
-  const { data: patient } = usePatient(appointment?.patient_id);
-  const { data: doctors = [] } = useDoctors();
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const router = useRouter();
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data?.user) {
-        setCurrentUserId(data.user.id);
-      }
-    });
-  }, []);
-
-  const methods = useForm<ConsultationFormValues>({
-    defaultValues: {
-      visitType: "CONTROL",
-      isFirstVisit: false,
-      subjectiveExam: "",
-      contactChannel: "",
-      heightCm: "",
-      weightKg: "",
-      bloodPressure: "",
-      heartRate: "",
-      respiratoryRate: "",
-      temperature: "",
-      skin: "",
-      headNeck: "",
-      breasts: "",
-      abdomen: "",
-      gynecological: "",
-      extremities: "",
-      neurological: "",
-      aceticAcidTest: "",
-      aceticClockPosition: "",
-      aceticRelativePosition: "",
-      lugolTest: "",
-      lugolClockPosition: "",
-      lugolRelativePosition: "",
-      gestationalAge: "",
-      fetalWeight: "",
-      obstetricBp: "",
-      uterineHeight: "",
-      presentation: "",
-      fetalHeartRate: "",
-      fetalMovements: "",
-      edema: "",
-      alarmSigns: "",
-      diagnosis: "",
-      indications: "",
-      complementaryExams: "",
-      plan: "",
-      nextAppointmentDate: "",
-    }
-  });
-
-  const { handleSubmit, reset, watch, getValues } = methods;
-
-  // Consumables States
-  const [commonQuantities, setCommonQuantities] = useState<Record<string, string>>({});
-  const [customConsumables, setCustomConsumables] = useState<{ item_name: string; quantity: string; unit: string }[]>([]);
-
-  // IMC Calculation context for payload
-  const weightKg = watch("weightKg") || "";
-  const heightCm = watch("heightCm") || "";
-  const bmi = useMemo(() => {
-    const w = parseFloat(weightKg);
-    const h = parseFloat(heightCm) / 100;
-    if (w > 0 && h > 0) {
-      return (w / (h * h)).toFixed(1);
-    }
-    return "";
-  }, [weightKg, heightCm]);
-
-  // Load existing consultation data
-  useEffect(() => {
-    if (open) {
-      if (existingConsultation) {
-        reset({
-          visitType: existingConsultation.visit_type || "CONTROL",
-          isFirstVisit: existingConsultation.is_first_visit || false,
-          subjectiveExam: existingConsultation.subjective_exam ?? "",
-          contactChannel: existingConsultation.contact_channel ?? "",
-          heightCm: existingConsultation.height_cm ? String(existingConsultation.height_cm) : "",
-          weightKg: existingConsultation.weight_kg ? String(existingConsultation.weight_kg) : "",
-          bloodPressure: existingConsultation.blood_pressure ?? "",
-          heartRate: existingConsultation.heart_rate ? String(existingConsultation.heart_rate) : "",
-          respiratoryRate: existingConsultation.respiratory_rate ? String(existingConsultation.respiratory_rate) : "",
-          temperature: existingConsultation.temperature ? String(existingConsultation.temperature) : "",
-          skin: existingConsultation.skin ?? "",
-          headNeck: existingConsultation.head_neck ?? "",
-          breasts: existingConsultation.breasts ?? "",
-          abdomen: existingConsultation.abdomen ?? "",
-          gynecological: existingConsultation.gynecological ?? "",
-          extremities: existingConsultation.extremities ?? "",
-          neurological: existingConsultation.neurological ?? "",
-          aceticAcidTest: existingConsultation.acetic_acid_test ?? "",
-          aceticClockPosition: existingConsultation.acetic_clock_position ?? "",
-          aceticRelativePosition: existingConsultation.acetic_relative_position ?? "",
-          lugolTest: existingConsultation.lugol_test ?? "",
-          lugolClockPosition: existingConsultation.lugol_clock_position ?? "",
-          lugolRelativePosition: existingConsultation.lugol_relative_position ?? "",
-          gestationalAge: existingConsultation.gestational_age ?? "",
-          fetalWeight: existingConsultation.fetal_weight ? String(existingConsultation.fetal_weight) : "",
-          obstetricBp: existingConsultation.obstetric_bp ?? "",
-          uterineHeight: existingConsultation.uterine_height ? String(existingConsultation.uterine_height) : "",
-          presentation: existingConsultation.presentation ?? "",
-          fetalHeartRate: existingConsultation.fetal_heart_rate ? String(existingConsultation.fetal_heart_rate) : "",
-          fetalMovements: existingConsultation.fetal_movements ?? "",
-          edema: existingConsultation.edema ?? "",
-          alarmSigns: existingConsultation.alarm_signs ?? "",
-          diagnosis: existingConsultation.diagnosis ?? "",
-          indications: existingConsultation.indications ?? "",
-          complementaryExams: existingConsultation.complementary_exams ?? "",
-          plan: existingConsultation.plan ?? "",
-          nextAppointmentDate: existingConsultation.next_appointment_date ?? "",
-        });
-
-        // Map consumables
-        if (existingConsultation.consumables && Array.isArray(existingConsultation.consumables)) {
-          const common: Record<string, string> = {};
-          const custom: { item_name: string; quantity: string; unit: string }[] = [];
-
-          existingConsultation.consumables.forEach((c: any) => {
-            const isCommon = COMMON_CONSUMABLES.some((com) => com.name === c.item_name);
-            if (isCommon) {
-              common[c.item_name] = String(c.quantity);
-            } else {
-              custom.push({
-                item_name: c.item_name,
-                quantity: String(c.quantity),
-                unit: c.unit || "U",
-              });
-            }
-          });
-
-          setCommonQuantities(common);
-          setCustomConsumables(custom);
-        } else {
-          setCommonQuantities({});
-          setCustomConsumables([]);
-        }
-      } else {
-        reset({
-          visitType: "CONTROL",
-          isFirstVisit: false,
-          subjectiveExam: "",
-          contactChannel: "",
-          heightCm: "",
-          weightKg: "",
-          bloodPressure: "",
-          heartRate: "",
-          respiratoryRate: "",
-          temperature: "",
-          skin: "",
-          headNeck: "",
-          breasts: "",
-          abdomen: "",
-          gynecological: "",
-          extremities: "",
-          neurological: "",
-          aceticAcidTest: "",
-          aceticClockPosition: "",
-          aceticRelativePosition: "",
-          lugolTest: "",
-          lugolClockPosition: "",
-          lugolRelativePosition: "",
-          gestationalAge: "",
-          fetalWeight: "",
-          obstetricBp: "",
-          uterineHeight: "",
-          presentation: "",
-          fetalHeartRate: "",
-          fetalMovements: "",
-          edema: "",
-          alarmSigns: "",
-          diagnosis: "",
-          indications: "",
-          complementaryExams: "",
-          plan: "",
-          nextAppointmentDate: "",
-        });
-        setCommonQuantities({});
-        setCustomConsumables([]);
-      }
-    }
-  }, [open, existingConsultation, reset]);
-
-  const addCustomConsumable = () => {
-    setCustomConsumables([...customConsumables, { item_name: "", quantity: "1", unit: "U" }]);
-  };
-
-  const removeCustomConsumable = (idx: number) => {
-    setCustomConsumables(customConsumables.filter((_, i) => i !== idx));
-  };
-
-  const updateCustomConsumable = (idx: number, key: "item_name" | "quantity" | "unit", val: string) => {
-    const next = [...customConsumables];
-    next[idx] = { ...next[idx], [key]: val };
-    setCustomConsumables(next);
-  };
-
-  const updateCommonQty = (name: string, val: string) => {
-    setCommonQuantities({ ...commonQuantities, [name]: val });
-  };
-
-  const onFormSubmit = () => {
-    handleSave(false);
-  };
-
-  const handleSave = async (shouldPrint: boolean) => {
-    if (!appointment) return;
-
-    try {
-      // Collect consumables
-      const consumables: { item_name: string; quantity: number; unit: string | null }[] = [];
-
-      Object.entries(commonQuantities).forEach(([name, qtyStr]) => {
-        const qty = parseFloat(qtyStr);
-        if (!isNaN(qty) && qty > 0) {
-          const item = COMMON_CONSUMABLES.find((c) => c.name === name);
-          consumables.push({
-            item_name: name,
-            quantity: qty,
-            unit: item?.defaultUnit ?? "U",
-          });
-        }
-      });
-
-      customConsumables.forEach((c) => {
-        const qty = parseFloat(c.quantity);
-        if (c.item_name.trim() && !isNaN(qty) && qty > 0) {
-          consumables.push({
-            item_name: c.item_name.trim(),
-            quantity: qty,
-            unit: c.unit || "U",
-          });
-        }
-      });
-
-      const values = getValues();
-
-      const payload = {
-        appointment_id: appointment.id,
-        patient_id: appointment.patient_id,
-        doctor_id: appointment.doctor_id || currentUserId,
-        visit_type: values.visitType,
-        is_first_visit: values.isFirstVisit,
-        subjective_exam: values.subjectiveExam || null,
-        contact_channel: values.contactChannel || null,
-
-        height_cm: values.heightCm ? parseFloat(values.heightCm) : null,
-        weight_kg: values.weightKg ? parseFloat(values.weightKg) : null,
-        bmi: bmi ? parseFloat(bmi) : null,
-        blood_pressure: values.bloodPressure || null,
-        heart_rate: values.heartRate ? parseInt(values.heartRate) : null,
-        respiratory_rate: values.respiratoryRate ? parseInt(values.respiratoryRate) : null,
-        temperature: values.temperature ? parseFloat(values.temperature) : null,
-
-        skin: values.skin || null,
-        head_neck: values.headNeck || null,
-        breasts: values.breasts || null,
-        abdomen: values.abdomen || null,
-        gynecological: values.gynecological || null,
-        extremities: values.extremities || null,
-        neurological: values.neurological || null,
-
-        acetic_acid_test: values.aceticAcidTest || null,
-        acetic_clock_position: values.aceticClockPosition || null,
-        acetic_relative_position: values.aceticRelativePosition || null,
-        lugol_test: values.lugolTest || null,
-        lugol_clock_position: values.lugolClockPosition || null,
-        lugol_relative_position: values.lugolRelativePosition || null,
-
-        gestational_age: values.gestationalAge || null,
-        fetal_weight: values.fetalWeight ? parseFloat(values.fetalWeight) : null,
-        obstetric_bp: values.obstetricBp || null,
-        uterine_height: values.uterineHeight ? parseFloat(values.uterineHeight) : null,
-        presentation: values.presentation || null,
-        fetal_heart_rate: values.fetalHeartRate ? parseInt(values.fetalHeartRate) : null,
-        fetal_movements: values.fetalMovements || null,
-        edema: values.edema || null,
-        alarm_signs: values.alarmSigns || null,
-
-        diagnosis: values.diagnosis || null,
-        indications: values.indications || null,
-        complementary_exams: values.complementaryExams || null,
-        plan: values.plan || null,
-        next_appointment_date: values.nextAppointmentDate || null,
-
-        consumables,
-      };
-
-      if (isEdit && existingConsultation) {
-        await update.mutateAsync({ id: existingConsultation.id, ...payload });
-        toast.success("Consulta clínica actualizada");
-        onOpenChange(false);
-      } else {
-        await create.mutateAsync(payload);
-        toast.success("Consulta clínica registrada con éxito");
-        localStorage.setItem("pending_payment_appointment_id", appointment.id);
-        onOpenChange(false);
-        router.navigate({ to: "/facturacion" });
-      }
-
-      if (shouldPrint && payload.indications) {
-        const patientData = patient;
-        const doctorObj = doctors.find((d) => d.id === (existingConsultation?.doctor_id || appointment.doctor_id || currentUserId));
-        const doctorName = doctorObj?.full_name || "Médico Tratante";
-        const doctorSpecialty = doctorObj?.specialty || undefined;
-        
-        if (patientData) {
-          await generateRecipePDF(
-            {
-              full_name: patientData.full_name,
-              document_id: patientData.document_id,
-              birth_date: patientData.birth_date,
-            },
-            {
-              created_at: new Date().toISOString(),
-              indications: payload.indications,
-            },
-            doctorName,
-            doctorSpecialty,
-            doctorObj?.university || undefined,
-            doctorObj?.mpps || undefined,
-            doctorObj?.cmc || undefined
-          );
-        } else {
-          await generateRecipePDF(
-            {
-              full_name: appointment.patient_name || "Paciente",
-              document_id: null,
-              birth_date: null,
-            },
-            {
-              created_at: new Date().toISOString(),
-              indications: payload.indications,
-            },
-            doctorName,
-            doctorSpecialty,
-            doctorObj?.university || undefined,
-            doctorObj?.mpps || undefined,
-            doctorObj?.cmc || undefined
-          );
-        }
-      }
-
-      onOpenChange(false);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Error guardando la consulta");
-    }
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl h-[90vh] flex flex-col rounded-3xl p-6">
+      <DialogContent className="w-[calc(100vw-1.25rem)] sm:max-w-4xl h-[calc(100dvh-1.5rem)] sm:h-[90vh] flex flex-col rounded-2xl sm:rounded-[2rem] p-3.5 sm:p-6 text-foreground">
         <DialogHeader className="pb-2">
-          <DialogTitle>
+          <DialogTitle className="text-xl font-bold text-foreground">
             {isEdit ? "Editar Consulta Clínica" : "Registrar Nueva Consulta Clínica"}
           </DialogTitle>
-          <DialogDescription className="text-xs">
+          <DialogDescription className="text-xs text-muted-foreground font-medium">
             Registrar examen físico, diagnóstico y consumibles utilizados para{" "}
-            <span className="font-semibold text-mauve">{appointment?.patient_name}</span>.
+            <span className="font-semibold text-primary">{appointment?.patient_name}</span>.
           </DialogDescription>
         </DialogHeader>
 
         {loadingExisting ? (
           <div className="flex-1 flex items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-mauve" />
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : (
-          <FormProvider {...methods}>
-            <form onSubmit={handleSubmit(onFormSubmit)} className="flex-1 flex flex-col min-h-0">
-              <Tabs defaultValue="anamnesis" className="flex-1 flex flex-col min-h-0">
-                <TabsList className="grid w-full grid-cols-5 bg-muted/60 p-1 rounded-2xl mb-4">
-                  <TabsTrigger value="anamnesis" className="rounded-xl font-medium text-xs">Anamnesis</TabsTrigger>
-                  <TabsTrigger value="vitals" className="rounded-xl font-medium text-xs">Físico y Vitales</TabsTrigger>
-                  <TabsTrigger value="special" className="rounded-xl font-medium text-xs">Colpo & Obstetricia</TabsTrigger>
-                  <TabsTrigger value="plan" className="rounded-xl font-medium text-xs">Diagnóstico & Plan</TabsTrigger>
-                  <TabsTrigger value="consumables" className="rounded-xl font-medium text-xs">Consumibles</TabsTrigger>
-                </TabsList>
-
-                <ScrollArea className="flex-1 pr-2">
-                  <div className="py-1">
-                    <TabsContent value="anamnesis">
-                      <ConsultationAnamnesis />
-                    </TabsContent>
-                    
-                    <TabsContent value="vitals">
-                      <ConsultationVitals />
-                    </TabsContent>
-                    
-                    <TabsContent value="special">
-                      <ConsultationSpecial />
-                    </TabsContent>
-                    
-                    <TabsContent value="plan">
-                      <ConsultationPlan />
-                    </TabsContent>
-                    
-                    <TabsContent value="consumables">
-                      <ConsultationConsumables
-                        commonQuantities={commonQuantities}
-                        updateCommonQty={updateCommonQty}
-                        customConsumables={customConsumables}
-                        addCustomConsumable={addCustomConsumable}
-                        updateCustomConsumable={updateCustomConsumable}
-                        removeCustomConsumable={removeCustomConsumable}
-                      />
-                    </TabsContent>
-                  </div>
-                </ScrollArea>
-
-                <DialogFooter className="pt-4 mt-2 border-t border-border/50">
-                  <div className="flex w-full items-center justify-between">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="rounded-xl"
-                      onClick={() => onOpenChange(false)}
-                      disabled={busy}
-                    >
-                      Cancelar
-                    </Button>
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="rounded-xl flex gap-2 border-mauve text-mauve hover:bg-mauve/10"
-                        onClick={handleSubmit(() => handleSave(true))}
-                        disabled={busy}
-                      >
-                        {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4" />}
-                        Guardar e Imprimir
-                      </Button>
-                      <Button
-                        type="submit"
-                        className="rounded-xl flex gap-2 bg-mauve hover:bg-mauve/90 text-white"
-                        disabled={busy}
-                      >
-                        {busy && <Loader2 className="w-4 h-4 animate-spin" />}
-                        {isEdit ? "Guardar Cambios" : "Completar Consulta"}
-                      </Button>
-                    </div>
-                  </div>
-                </DialogFooter>
-              </Tabs>
-            </form>
-          </FormProvider>
+          <ConsultationFormContent
+            key={existingConsultation?.id ?? appointment?.id ?? "new"}
+            appointment={appointment}
+            existingConsultation={existingConsultation}
+            onOpenChange={onOpenChange}
+          />
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+function ConsultationDoctorSpecialtyBar({
+  selectedDoctorId,
+  currentDoctor,
+  doctors,
+  handleDoctorChange,
+  selectedSpecialty,
+  isDoctorOnly,
+}: {
+  selectedDoctorId: string;
+  currentDoctor: any;
+  doctors: any[];
+  handleDoctorChange: (id: string) => void;
+  selectedSpecialty: string;
+  isDoctorOnly?: boolean;
+}) {
+  const doctorSpecialty = currentDoctor?.specialty || selectedSpecialty || "Medicina General";
+  const badge = getSpecialtyBadgeStyle(doctorSpecialty);
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 p-3 mb-3 rounded-2xl bg-muted/40 border border-border/50">
+      <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+        <span className="text-xs font-bold text-muted-foreground flex items-center gap-1.5">
+          <Stethoscope className="w-3.5 h-3.5 text-primary" /> Médico:
+        </span>
+        {isDoctorOnly ? (
+          <div className="flex items-center gap-2 h-8 px-3 rounded-xl bg-background border border-border/50 text-xs font-bold text-foreground">
+            <span>Dr(a). {currentDoctor?.full_name || "Médico Tratante"}</span>
+            <span className="text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full bg-primary/15 text-primary">
+              Tú
+            </span>
+          </div>
+        ) : (
+          <Select
+            value={selectedDoctorId || currentDoctor?.id || ""}
+            onValueChange={handleDoctorChange}
+          >
+            <SelectTrigger className="h-8 text-xs rounded-xl bg-background border-border/50 font-bold w-full sm:w-auto sm:min-w-[200px]">
+              <SelectValue placeholder="Seleccione médico…" />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl max-h-[300px]">
+              {doctors.map((d) => (
+                <SelectItem key={d.id} value={d.id} className="text-xs font-semibold">
+                  {d.full_name} {d.specialty ? `— ${d.specialty}` : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+        <span className="text-xs font-bold text-muted-foreground">Especialidad:</span>
+        <span
+          className={cn(
+            "text-xs font-extrabold px-3 py-1 rounded-xl border uppercase tracking-wider inline-flex items-center gap-1.5 shadow-xs",
+            badge.className,
+          )}
+        >
+          <Sparkles className="w-3 h-3 opacity-80" />
+          {doctorSpecialty}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function ConsultationAllergyBanner({ patient }: { patient: any }) {
+  const allergies = patient?.personal_history?.allergies;
+  if (!allergies) return null;
+  const upper = allergies.toUpperCase();
+  if (upper.includes("NIEGA") || upper.includes("NO REFIERE")) return null;
+
+  return (
+    <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-rose-500/15 border border-rose-500/35 text-rose-700 dark:text-rose-300 text-xs font-bold animate-in fade-in">
+      <span className="relative flex h-2.5 w-2.5 shrink-0">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500" />
+      </span>
+      <ShieldAlert className="h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400" />
+      <span>
+        ALERTA CLÍNICA: Paciente con alergias registradas a:{" "}
+        <strong className="underline">{allergies}</strong>. Verifique interacciones antes de
+        prescribir.
+      </span>
+    </div>
+  );
+}
+
+function ConsultationFormActionFooter({
+  busy,
+  isEdit,
+  indications,
+  onCancel,
+  onSaveAction,
+}: {
+  busy: boolean;
+  isEdit: boolean;
+  indications: string;
+  onCancel: () => void;
+  onSaveAction: (action: "save" | "print" | "whatsapp") => void;
+}) {
+  return (
+    <DialogFooter className="mt-3 sm:mt-4 border-t border-border/60 pt-3 sm:pt-4 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2">
+      <Button
+        type="button"
+        variant="ghost"
+        onClick={onCancel}
+        disabled={busy}
+        className="rounded-2xl w-full sm:w-auto"
+      >
+        Cancelar
+      </Button>
+      <div className="flex flex-wrap items-center justify-end gap-2 w-full sm:w-auto">
+        {indications.trim() && (
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onSaveAction("print")}
+              disabled={busy}
+              className="rounded-2xl border-mauve text-primary hover:bg-primary/10 flex items-center gap-1.5 cursor-pointer h-9 text-xs"
+            >
+              {busy ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Printer className="h-3.5 w-3.5" />
+              )}
+              Imprimir PDF
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onSaveAction("whatsapp")}
+              disabled={busy}
+              className="rounded-2xl border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 flex items-center gap-1.5 cursor-pointer h-9 text-xs font-bold"
+            >
+              {busy ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <MessageSquare className="h-3.5 w-3.5 text-emerald-500" />
+              )}
+              Enviar por WhatsApp
+            </Button>
+          </>
+        )}
+        <Button
+          type="submit"
+          disabled={busy}
+          className="rounded-2xl bg-primary text-primary-foreground hover:bg-[#3451d6] shadow-sm shadow-primary/20 hover:opacity-95 px-6 h-9 text-xs font-semibold"
+        >
+          {busy ? (
+            <span className="flex items-center gap-1.5">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Guardando…
+            </span>
+          ) : isEdit ? (
+            "Guardar Cambios"
+          ) : (
+            "Registrar Consulta"
+          )}
+        </Button>
+      </div>
+    </DialogFooter>
+  );
+}
+
+function ConsultationFormContent({
+  appointment,
+  existingConsultation,
+  onOpenChange,
+}: {
+  appointment?: {
+    id: string;
+    patient_id: string;
+    doctor_id?: string;
+    patient_name?: string;
+    price?: number | null;
+    reason?: string | null;
+  } | null;
+  existingConsultation?: Consultation | null;
+  onOpenChange: (v: boolean) => void;
+}) {
+  const { isDoctorOnly } = useUserRoleScope();
+  const state = useConsultationFormState(appointment, existingConsultation, onOpenChange);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    state.handleSave("save");
+  };
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="flex-1 overflow-hidden p-3 sm:p-6 flex flex-col min-h-0 bg-background/50 relative"
+    >
+      <ConsultationDoctorSpecialtyBar
+        selectedDoctorId={state.selectedDoctorId}
+        currentDoctor={state.currentDoctor}
+        doctors={state.doctors}
+        handleDoctorChange={state.handleDoctorChange}
+        selectedSpecialty={state.selectedSpecialty}
+        isDoctorOnly={isDoctorOnly}
+      />
+
+      <ConsultationAllergyBanner patient={state.patient} />
+
+      <Tabs defaultValue="anamnesis" className="flex-1 flex flex-col min-h-0">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4">
+          <TabsList className="flex items-center justify-start lg:justify-center h-10 w-full lg:w-auto bg-muted/60 p-1 rounded-2xl gap-1 overflow-x-auto">
+            <TabsTrigger
+              value="anamnesis"
+              className="rounded-xl font-semibold text-xs px-3.5 py-1.5 shrink-0 data-[state=active]:shadow-sm"
+            >
+              Anamnesis
+            </TabsTrigger>
+            <TabsTrigger
+              value="vitals"
+              className="rounded-xl font-semibold text-xs px-3.5 py-1.5 shrink-0 data-[state=active]:shadow-sm"
+            >
+              Físico y Vitales
+            </TabsTrigger>
+            <TabsTrigger
+              value="special"
+              className="rounded-xl font-semibold text-xs px-3.5 py-1.5 shrink-0 data-[state=active]:shadow-sm flex items-center gap-1.5"
+              title={state.specialtyConfig.tabTitle}
+            >
+              <Sparkles className="w-3 h-3 text-primary shrink-0" />
+              <span>{state.specialtyConfig.tabTitle}</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="plan"
+              className="rounded-xl font-semibold text-xs px-3.5 py-1.5 shrink-0 data-[state=active]:shadow-sm"
+            >
+              Diagnóstico & Plan
+            </TabsTrigger>
+            <TabsTrigger
+              value="consumables"
+              className="rounded-xl font-semibold text-xs px-3.5 py-1.5 shrink-0 data-[state=active]:shadow-sm"
+            >
+              Consumibles
+            </TabsTrigger>
+          </TabsList>
+          <div className="flex items-center gap-2 shrink-0 self-end lg:self-auto">
+            <Wand2 className="h-4 w-4 text-primary" />
+            <Select onValueChange={state.applyClinicalTemplate}>
+              <SelectTrigger className="w-[210px] h-9 text-xs rounded-xl bg-background border-border/60 font-medium shadow-none">
+                <SelectValue placeholder="Plantillas rápidas…" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl max-h-[300px]">
+                {state.currentSpecialtyTemplates.map((t) => (
+                  <SelectItem key={t.id} value={t.id} className="text-xs">
+                    {t.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <ScrollArea className="flex-1 -mx-3 px-3 sm:-mx-6 sm:px-6">
+          <div className="py-1">
+            <ConsultationAnamnesisTab
+              visitType={state.visitType}
+              setVisitType={state.setVisitType}
+              contactChannel={state.contactChannel}
+              setContactChannel={state.setContactChannel}
+              isFirstVisit={state.isFirstVisit}
+              setIsFirstVisit={state.setIsFirstVisit}
+              subjectiveExam={state.subjectiveExam}
+              setSubjectiveExam={state.setSubjectiveExam}
+              contactChannels={CONTACT_CHANNELS}
+              patient={state.patient}
+              appointment={appointment}
+              selectedSpecialty={state.selectedSpecialty}
+              vitals={{
+                heightCm: state.heightCm,
+                weightKg: state.weightKg,
+                bmi: state.bmi,
+                bloodPressure: state.bloodPressure,
+                heartRate: state.heartRate,
+                respiratoryRate: state.respiratoryRate,
+                temperature: state.temperature,
+              }}
+              physicalExam={{
+                skin: state.skin,
+                headNeck: state.headNeck,
+                breasts: state.breasts,
+                abdomen: state.abdomen,
+                gynecological: state.gynecological,
+                extremities: state.extremities,
+                neurological: state.neurological,
+              }}
+              diagnosis={state.diagnosis}
+              plan={state.plan}
+              indications={state.indications}
+              setIndications={state.setIndications}
+            />
+
+            <ConsultationVitalsTab
+              heightCm={state.heightCm}
+              setHeightCm={state.setHeightCm}
+              weightKg={state.weightKg}
+              setWeightKg={state.setWeightKg}
+              bmiEval={state.bmiEval}
+              bloodPressure={state.bloodPressure}
+              setBloodPressure={state.setBloodPressure}
+              heartRate={state.heartRate}
+              setHeartRate={state.setHeartRate}
+              respiratoryRate={state.respiratoryRate}
+              setRespiratoryRate={state.setRespiratoryRate}
+              temperature={state.temperature}
+              setTemperature={state.setTemperature}
+              specialtyConfig={state.specialtyConfig}
+              selectedSpecialty={state.selectedSpecialty}
+              patient={state.patient}
+              gestationalAgeRef={state.gestationalAgeRef}
+              handleSpecialtyAnswerChange={state.handleSpecialtyAnswerChange}
+              skin={state.skin}
+              setSkin={state.setSkin}
+              headNeck={state.headNeck}
+              setHeadNeck={state.setHeadNeck}
+              breasts={state.breasts}
+              setBreasts={state.setBreasts}
+              abdomen={state.abdomen}
+              setAbdomen={state.setAbdomen}
+              gynecological={state.gynecological}
+              setGynecological={state.setGynecological}
+              extremities={state.extremities}
+              setExtremities={state.setExtremities}
+              neurological={state.neurological}
+              setNeurological={state.setNeurological}
+            />
+
+            <TabsContent value="special" className="space-y-6 mt-0">
+              <DynamicSpecialtyFields
+                config={state.specialtyConfig}
+                values={state.specialtyAnswers}
+                onChange={state.handleSpecialtyAnswerChange}
+              />
+            </TabsContent>
+
+            <ConsultationPlanTab
+              diagnosis={state.diagnosis}
+              setDiagnosis={state.setDiagnosis}
+              indications={state.indications}
+              setIndications={state.setIndications}
+              complementaryExams={state.complementaryExams}
+              setComplementaryExams={state.setComplementaryExams}
+              plan={state.plan}
+              setPlan={state.setPlan}
+              nextAppointmentDate={state.nextAppointmentDate}
+              setNextAppointmentDate={state.setNextAppointmentDate}
+              applyPrescriptionTemplate={state.applyPrescriptionTemplate}
+              currentSpecialtyPrescriptions={state.currentSpecialtyPrescriptions}
+            />
+
+            <ConsultationConsumablesTab
+              dynamicConsumables={state.dynamicConsumables}
+              commonQuantities={state.commonQuantities}
+              updateCommonQty={state.updateCommonQty}
+              customConsumables={state.customConsumables}
+              addCustomConsumable={state.addCustomConsumable}
+              removeCustomConsumable={state.removeCustomConsumable}
+              updateCustomConsumable={state.updateCustomConsumable}
+            />
+          </div>
+        </ScrollArea>
+
+        <ConsultationFormActionFooter
+          busy={state.busy}
+          isEdit={state.isEdit}
+          indications={state.indications}
+          onCancel={() => onOpenChange(false)}
+          onSaveAction={(action) => state.handleSave(action)}
+        />
+      </Tabs>
+    </form>
   );
 }

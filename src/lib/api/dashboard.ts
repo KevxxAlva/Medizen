@@ -1,0 +1,684 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
+import { getInvoicesForDoctor } from "@/lib/utils/invoiceDoctorPartition";
+
+// Helper to get dates for the last 7 days (including today)
+const getLast7Days = () => {
+  const dates = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    dates.push(d.toISOString().split("T")[0]);
+  }
+  return dates;
+};
+
+export function useDashboardStats(options?: {
+  enabled?: boolean;
+  doctorId?: string | number | null;
+  isDoctorOnly?: boolean;
+}) {
+  const { user } = useAuthSession();
+  const doctorId = options?.doctorId ? Number(options.doctorId) : undefined;
+  const isDoctorOnly = options?.isDoctorOnly;
+
+  return useQuery({
+    queryKey: ["dashboard_stats", user?.id, doctorId, isDoctorOnly],
+    enabled: (options?.enabled ?? true) && !!user,
+    queryFn: async () => {
+      // Si el rol es exclusivo de doctor y no tiene ID médico asignado o resuelto, retornar 0
+      if (isDoctorOnly && !doctorId) {
+        return {
+          offlineWork: { total: 0, change: 0, sparkline: [0, 0, 0, 0, 0, 0, 0] },
+          onlineWork: { total: 0, change: 0, sparkline: [0, 0, 0, 0, 0, 0, 0] },
+          labWork: { total: 0, change: 0, sparkline: [0, 0, 0, 0, 0, 0, 0] },
+          scheduledEvents: {
+            consultations: 0,
+            patients: 0,
+            labs: 0,
+            invoices: 0,
+            donutPercentage: 0,
+            week: { consultations: 0, patients: 0, labs: 0, invoices: 0, donutPercentage: 0 },
+          },
+          plansDone: {
+            consultations: 0,
+            patients: 0,
+            labs: 0,
+            invoices: 0,
+            done: 0,
+            total: 0,
+            percentage: 0,
+            change: 0,
+            week: { consultations: 0, patients: 0, labs: 0, invoices: 0 },
+          },
+        };
+      }
+
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
+      const dates = getLast7Days();
+      const todayStr = dates[6];
+      const yesterdayStr = dates[5];
+      const sevenDaysAgo = dates[0];
+
+      // Consultas acotadas a los últimos 7 días y al doctor si aplica
+      let citasQuery = supabase
+        .from("citas")
+        .select("fecha_hora, estado, motivo, id_medico, id_paciente")
+        .or("motivo.is.null,motivo.not.ilike.%[TEST-LOAD]%")
+        .gte("fecha_hora", `${sevenDaysAgo}T00:00:00.000Z`);
+
+      if (clinicId) {
+        citasQuery = (citasQuery as any).eq("id_clinica", clinicId);
+      }
+
+      if (doctorId) {
+        citasQuery = citasQuery.eq("id_medico", doctorId);
+      }
+
+      const { data: citasData } = await citasQuery;
+
+      const citas = (citasData || []).filter(
+        (c) => !["cancelada", "cancelado", "cancelled"].includes((c.estado || "").toLowerCase())
+      );
+
+      // Obtener todos los IDs de pacientes vinculados a este doctor (citas históricas/futuras, consultas o médico asignado)
+      let doctorPatientIds: Set<number> | null = null;
+      if (doctorId) {
+        doctorPatientIds = new Set<number>();
+        let allCitasQ = supabase.from("citas").select("id_paciente").eq("id_medico", doctorId);
+        let allConsQ = supabase.from("consultas").select("id_paciente").eq("id_medico", doctorId);
+        let allHcQ = supabase.from("historias_clinicas").select("id_paciente, datos_extras");
+        let medQ = supabase.from("medicos").select("id_medico", { count: "exact", head: true });
+        if (clinicId) {
+          allCitasQ = (allCitasQ as any).eq("id_clinica", clinicId);
+          allConsQ = (allConsQ as any).eq("id_clinica", clinicId);
+          allHcQ = (allHcQ as any).eq("id_clinica", clinicId);
+          medQ = (medQ as any).eq("id_clinica", clinicId);
+        }
+        const [allCitasRes, allConsultasRes, allHcRes, medicosCountRes] = await Promise.all([
+          allCitasQ,
+          allConsQ,
+          allHcQ,
+          medQ,
+        ]);
+
+        (allCitasRes.data || []).forEach((c) => {
+          if (c.id_paciente) doctorPatientIds!.add(Number(c.id_paciente));
+        });
+        (allConsultasRes.data || []).forEach((c) => {
+          if (c.id_paciente) doctorPatientIds!.add(Number(c.id_paciente));
+        });
+        (allHcRes.data || []).forEach((hc: any) => {
+          const assigned = hc.datos_extras?.assigned_doctor_id;
+          if (assigned && String(assigned) === String(doctorId) && hc.id_paciente) {
+            doctorPatientIds!.add(Number(hc.id_paciente));
+          }
+        });
+
+        // Si la clínica tiene solo 1 médico registrado, todos los pacientes le corresponden
+        const totalMedicos = medicosCountRes.count ?? 0;
+        if (totalMedicos <= 1) {
+          let allPQ = supabase.from("pacientes").select("id_paciente");
+          if (clinicId) allPQ = (allPQ as any).eq("id_clinica", clinicId);
+          const { data: allP } = await allPQ;
+          (allP || []).forEach((p) => doctorPatientIds!.add(Number(p.id_paciente)));
+        }
+      }
+
+      // Invoices
+      let invoices: any[] = [];
+      if (!isDoctorOnly && !doctorId) {
+        let invQ = supabase
+          .from("facturas")
+          .select("id_paciente, fecha_emision, estado_pago")
+          .gte("fecha_emision", `${sevenDaysAgo}T00:00:00.000Z`);
+        if (clinicId) invQ = (invQ as any).eq("id_clinica", clinicId);
+        const { data: invoicesData } = await invQ;
+        invoices = invoicesData || [];
+      } else if (doctorPatientIds && doctorPatientIds.size > 0) {
+        let invQ = supabase
+          .from("facturas")
+          .select("id_paciente, fecha_emision, estado_pago")
+          .in("id_paciente", Array.from(doctorPatientIds))
+          .gte("fecha_emision", `${sevenDaysAgo}T00:00:00.000Z`);
+        if (clinicId) invQ = (invQ as any).eq("id_clinica", clinicId);
+        const { data: invoicesData } = await invQ;
+        invoices = invoicesData || [];
+      }
+
+      // New Patients registered in last 7 days
+      let newPatients: any[] = [];
+      if (!isDoctorOnly && !doctorId) {
+        let patQ = supabase
+          .from("pacientes")
+          .select("id_paciente, creado_en")
+          .gte("creado_en", `${sevenDaysAgo}T00:00:00.000Z`);
+        if (clinicId) patQ = (patQ as any).eq("id_clinica", clinicId);
+        const { data: patientsData } = await patQ;
+        newPatients = patientsData || [];
+      } else if (doctorPatientIds && doctorPatientIds.size > 0) {
+        let patQ = supabase
+          .from("pacientes")
+          .select("id_paciente, creado_en")
+          .in("id_paciente", Array.from(doctorPatientIds))
+          .gte("creado_en", `${sevenDaysAgo}T00:00:00.000Z`);
+        if (clinicId) patQ = (patQ as any).eq("id_clinica", clinicId);
+        const { data: patientsData } = await patQ;
+        newPatients = patientsData || [];
+      }
+
+      // Helper to count by day
+      const countByDay = (items: any[], dateField: string) => {
+        return dates.map(date => {
+          return items.filter(item => item[dateField] && item[dateField].startsWith(date)).length;
+        });
+      };
+
+      const citasByDay = countByDay(citas, "fecha_hora");
+      const completedCitas = citas.filter((c) => (c.estado || "").toLowerCase() === "completada");
+      const completedByDay = countByDay(completedCitas, "fecha_hora");
+      const patientsByDay = countByDay(newPatients, "creado_en");
+      const invoicesByDay = countByDay(invoices, "fecha_emision");
+
+      const getChange = (today: number, yesterday: number) => {
+        if (yesterday === 0) return today > 0 ? 100 : 0;
+        return Math.round(((today - yesterday) / yesterday) * 100);
+      };
+
+      // OFFLINE WORK (Active Appointments)
+      const offlineToday = citasByDay[6];
+      const offlineYesterday = citasByDay[5];
+      const offlineChange = getChange(offlineToday, offlineYesterday);
+
+      // COMPLETED CONSULTATIONS (Real completed appointments in last 7 days)
+      const completedWeekTotal = completedByDay.reduce((acc, v) => acc + v, 0);
+      const completedToday = completedByDay[6];
+      const completedYesterday = completedByDay[5];
+      const completedChange = getChange(completedToday, completedYesterday);
+
+      // PATIENTS WORK (New registered patients)
+      const patientsToday = patientsByDay[6];
+      const patientsYesterday = patientsByDay[5];
+      const patientsChange = getChange(patientsToday, patientsYesterday);
+
+      const DAILY_SLOT_CAPACITY = 10;
+      const todayOccupationPct = Math.min(100, Math.round((offlineToday / DAILY_SLOT_CAPACITY) * 100));
+
+      const weekConsultations = citasByDay.reduce((a, b) => a + b, 0);
+      const weekPatients = patientsByDay.reduce((a, b) => a + b, 0);
+      const weekInvoices = invoicesByDay.reduce((a, b) => a + b, 0);
+      const weekOccupationPct = Math.min(
+        100,
+        Math.round((weekConsultations / (DAILY_SLOT_CAPACITY * 7)) * 100)
+      );
+
+      // SCHEDULED EVENTS (Today & 7-Day counts)
+      const scheduledEvents = {
+        consultations: offlineToday,
+        patients: patientsToday,
+        labs: patientsToday,
+        invoices: invoicesByDay[6],
+        donutPercentage: todayOccupationPct,
+        week: {
+          consultations: weekConsultations,
+          patients: weekPatients,
+          labs: weekPatients,
+          invoices: weekInvoices,
+          donutPercentage: weekOccupationPct,
+        }
+      };
+
+      // Invoices calculations for today and week
+      const invoicesToday = invoices.filter(
+        (i) => i.fecha_emision && i.fecha_emision.startsWith(todayStr)
+      );
+      const paidInvoicesToday = invoicesToday.filter((i) =>
+        ["pagado", "pagada", "paid"].includes((i.estado_pago || "").toLowerCase())
+      );
+      const todayInvoicesPct = invoicesToday.length > 0
+        ? Math.min(100, Math.round((paidInvoicesToday.length / invoicesToday.length) * 100))
+        : (paidInvoicesToday.length > 0 ? 100 : 0);
+
+      const paidInvoicesWeek = invoices.filter((i) =>
+        ["pagado", "pagada", "paid"].includes((i.estado_pago || "").toLowerCase())
+      );
+      const weekInvoicesPct = invoices.length > 0
+        ? Math.min(100, Math.round((paidInvoicesWeek.length / invoices.length) * 100))
+        : 0;
+
+      // Consultations calculations
+      const todayConsultationsPct = offlineToday > 0
+        ? Math.min(100, Math.round((completedToday / offlineToday) * 100))
+        : (completedToday > 0 ? 100 : 0);
+
+      const weekConsultationsPct = weekConsultations > 0
+        ? Math.min(100, Math.round((completedWeekTotal / weekConsultations) * 100))
+        : (completedWeekTotal > 0 ? 100 : 0);
+
+      // Patients calculations (Meta: 2 pacientes/día o 10/semana)
+      const DAILY_PATIENT_TARGET = 2;
+      const todayPatientsPct = Math.min(100, Math.round((patientsToday / DAILY_PATIENT_TARGET) * 100));
+      const weekPatientsPct = Math.min(100, Math.round((weekPatients / (DAILY_PATIENT_TARGET * 7)) * 100));
+
+      // REAL CLINICAL PLANS DONE
+      const plansDone = {
+        consultations: todayConsultationsPct,
+        patients: todayPatientsPct,
+        labs: todayPatientsPct,
+        invoices: todayInvoicesPct,
+        done: completedWeekTotal,
+        total: Math.max(completedWeekTotal, weekConsultations),
+        percentage: weekConsultations > 0 ? Math.round((completedWeekTotal / weekConsultations) * 100) : 0,
+        change: completedChange,
+        week: {
+          consultations: weekConsultationsPct,
+          patients: weekPatientsPct,
+          labs: weekPatientsPct,
+          invoices: weekInvoicesPct,
+        },
+      };
+
+      return {
+        offlineWork: {
+          total: offlineToday,
+          change: offlineChange,
+          sparkline: citasByDay,
+        },
+        onlineWork: {
+          total: completedWeekTotal,
+          change: completedChange,
+          sparkline: completedByDay,
+        },
+        labWork: {
+          total: patientsToday,
+          change: patientsChange,
+          sparkline: patientsByDay,
+        },
+        scheduledEvents,
+        plansDone
+      };
+    }
+  });
+}
+
+export function useMonthlyPayments(options?: {
+  enabled?: boolean;
+  doctorId?: string | number | null;
+  isDoctorOnly?: boolean;
+}) {
+  const { user } = useAuthSession();
+  const doctorId = options?.doctorId ? Number(options.doctorId) : undefined;
+  const isDoctorOnly = options?.isDoctorOnly;
+
+  return useQuery({
+    queryKey: ["monthly_payments", user?.id, doctorId, isDoctorOnly],
+    enabled: (options?.enabled ?? true) && !!user,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchInterval: 3000,
+    queryFn: async () => {
+      // 1. Si el usuario es doctor y no tiene ID médico resuelto (cuenta nueva sin citas),
+      // sus ingresos son única y exclusivamente los suyos (inicia en 0).
+      if (isDoctorOnly && !doctorId) {
+        return { total: 0, paymentsByDay: [] };
+      }
+
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
+      const now = new Date();
+      const currentMonthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      // CASO 1: DOCTOR INDIVIDUAL (isDoctorOnly o doctorId presente)
+      if (isDoctorOnly && doctorId) {
+        let citasQ = supabase
+          .from("citas")
+          .select("id_cita, id_paciente, id_medico, fecha_hora, motivo, estado")
+          .or("motivo.is.null,motivo.not.ilike.%[TEST-LOAD]%")
+          .order("fecha_hora", { ascending: false });
+        let invQ = supabase
+          .from("facturas")
+          .select(`
+            id_factura,
+            id_paciente,
+            total_general,
+            estado_pago,
+            fecha_emision,
+            detalles_factura (
+              id_servicio,
+              servicios (nombre_servicio)
+            )
+          `)
+          .order("id_factura", { ascending: false });
+        if (clinicId) {
+          citasQ = (citasQ as any).eq("id_clinica", clinicId);
+          invQ = (invQ as any).eq("id_clinica", clinicId);
+        }
+        // Consultar citas de la clínica (excluyendo datos de prueba) y facturas emitidas
+        const [{ data: allCitas }, { data: allRawInvoices }] = await Promise.all([
+          citasQ,
+          invQ,
+        ]);
+
+        const paidInvoices = (allRawInvoices || []).filter((i) => {
+          const isPaid = ["pagado", "pagada", "paid"].includes((i.estado_pago || "").toLowerCase());
+          if (!isPaid) return false;
+          if (!i.fecha_emision) return false;
+          return i.fecha_emision.startsWith(currentMonthPrefix) || new Date(i.fecha_emision) >= startOfMonth;
+        });
+
+        // Partición biyectiva determinista: cada factura pagada va a su médico legítimo sin pérdidas ni solapamientos
+        const myPaidInvoices = getInvoicesForDoctor(paidInvoices, allCitas || [], doctorId);
+
+        const total = myPaidInvoices.reduce((sum, f) => sum + (Number(f.total_general) || 0), 0);
+
+        const dailyMap: Record<string, number> = {};
+        const today = new Date();
+        const numDays = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+
+        for (let i = 1; i <= numDays; i++) {
+          const year = today.getFullYear();
+          const month = String(today.getMonth() + 1).padStart(2, "0");
+          const day = String(i).padStart(2, "0");
+          dailyMap[`${year}-${month}-${day}`] = 0;
+        }
+
+        myPaidInvoices.forEach((inv) => {
+          if (!inv.fecha_emision) return;
+          const dateStr = inv.fecha_emision.slice(0, 10);
+          if (dailyMap[dateStr] !== undefined) {
+            dailyMap[dateStr] += Number(inv.total_general) || 0;
+          }
+        });
+
+        const paymentsByDay = Object.keys(dailyMap)
+          .sort()
+          .map((date) => ({
+            date,
+            amount: dailyMap[date],
+          }));
+
+        return { total, paymentsByDay };
+      }
+
+      // CASO 2: ADMIN Y RECEPCIONISTA (Vista global de la clínica)
+      let facQuery = supabase
+        .from("facturas")
+        .select("id_paciente, total_general, estado_pago, fecha_emision")
+        .order("id_factura", { ascending: false });
+      if (clinicId) {
+        facQuery = (facQuery as any).eq("id_clinica", clinicId);
+      }
+      const { data, error } = await facQuery;
+
+      if (error) throw error;
+
+      const paidInvoices = (data || []).filter((i) => {
+        const isPaid = ["pagado", "pagada", "paid"].includes((i.estado_pago || "").toLowerCase());
+        if (!isPaid) return false;
+        if (!i.fecha_emision) return false;
+        return i.fecha_emision.startsWith(currentMonthPrefix) || new Date(i.fecha_emision) >= startOfMonth;
+      });
+
+      const total = paidInvoices.reduce((sum, f) => sum + (Number(f.total_general) || 0), 0);
+
+      const dailyMap: Record<string, number> = {};
+      const today = new Date();
+      const numDays = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+
+      for (let i = 1; i <= numDays; i++) {
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, "0");
+        const day = String(i).padStart(2, "0");
+        dailyMap[`${year}-${month}-${day}`] = 0;
+      }
+
+      paidInvoices.forEach((inv) => {
+        if (!inv.fecha_emision) return;
+        const dateStr = inv.fecha_emision.slice(0, 10);
+        if (dailyMap[dateStr] !== undefined) {
+          dailyMap[dateStr] += Number(inv.total_general) || 0;
+        }
+      });
+
+      const paymentsByDay = Object.keys(dailyMap)
+        .sort()
+        .map((date) => ({
+          date,
+          amount: dailyMap[date],
+        }));
+
+      return { total, paymentsByDay };
+    },
+  });
+}
+
+export interface DailyGoal {
+  id: string;
+  created_at: string;
+  date: string;
+  title: string;
+  target_value: number;
+  current_value: number;
+}
+
+export function useDailyGoals(dateStr: string, options?: { enabled?: boolean }) {
+  const { user } = useAuthSession();
+  return useQuery({
+    queryKey: ["daily_goals", dateStr, user?.id],
+    enabled: (options?.enabled ?? true) && !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("daily_goals")
+        .select("*")
+        .eq("date", dateStr)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data as DailyGoal[];
+    }
+  });
+}
+
+export function useAddDailyGoal() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (goal: { title: string; target_value: number; date: string }) => {
+      const { data, error } = await supabase.from("daily_goals").insert([goal]).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["daily_goals", variables.date] });
+    }
+  });
+}
+
+export function useIncrementDailyGoal() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, currentValue }: { id: string; currentValue: number; date: string }) => {
+      const { data, error } = await supabase
+        .from("daily_goals")
+        .update({ current_value: currentValue + 1 })
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["daily_goals", variables.date] });
+    }
+  });
+}
+
+export function useDashboardTrends(options?: {
+  enabled?: boolean;
+  doctorId?: string | number | null;
+  isDoctorOnly?: boolean;
+}) {
+  const { user } = useAuthSession();
+  const doctorId = options?.doctorId ? Number(options.doctorId) : undefined;
+  const isDoctorOnly = options?.isDoctorOnly;
+
+  return useQuery({
+    queryKey: ["dashboard_trends", user?.id, doctorId, isDoctorOnly],
+    enabled: (options?.enabled ?? true) && !!user,
+    queryFn: async () => {
+      const getEmptyMonthly = () => {
+        const emptyMonthly: { month: string; amount: number }[] = [];
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date();
+          d.setMonth(d.getMonth() - i);
+          emptyMonthly.push({
+            month: d.toLocaleString('es-ES', { month: 'short', year: '2-digit' }),
+            amount: 0,
+          });
+        }
+        return emptyMonthly;
+      };
+
+      if (isDoctorOnly && !doctorId) {
+        return getEmptyMonthly();
+      }
+
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      sixMonthsAgo.setDate(1);
+
+      let allowedPatientIds: Set<number> | null = null;
+      if (isDoctorOnly || doctorId) {
+        let docCitasQ = supabase
+          .from("citas")
+          .select("id_paciente")
+          .eq("id_medico", doctorId!);
+        if (clinicId) {
+          docCitasQ = (docCitasQ as any).eq("id_clinica", clinicId);
+        }
+        const { data: doctorCitas } = await docCitasQ;
+
+        const patientIds = (doctorCitas || [])
+          .map((c) => c.id_paciente)
+          .filter((id): id is number => id !== null && id !== undefined);
+
+        allowedPatientIds = new Set(patientIds);
+        if (allowedPatientIds.size === 0) {
+          return getEmptyMonthly();
+        }
+      }
+
+      let query = supabase
+        .from("facturas")
+        .select("id_paciente, fecha_emision, total_general, estado_pago")
+        .gte("fecha_emision", sixMonthsAgo.toISOString());
+
+      if (clinicId) {
+        query = (query as any).eq("id_clinica", clinicId);
+      }
+
+      if (allowedPatientIds) {
+        query = query.in("id_paciente", Array.from(allowedPatientIds));
+      }
+
+      const { data: invoices, error } = await query;
+      if (error) throw error;
+
+      const monthlyData: Record<string, number> = {};
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date();
+        d.setMonth(d.getMonth() - i);
+        const monthYear = d.toLocaleString('es-ES', { month: 'short', year: '2-digit' });
+        monthlyData[monthYear] = 0;
+      }
+
+      const paidInvoices = invoices?.filter(i => ["pagado", "pagada", "paid"].includes((i.estado_pago || "").toLowerCase())) || [];
+
+      paidInvoices.forEach(inv => {
+        if (!inv.fecha_emision) return;
+        const d = new Date(inv.fecha_emision);
+        const monthYear = d.toLocaleString('es-ES', { month: 'short', year: '2-digit' });
+        if (monthlyData[monthYear] !== undefined) {
+          monthlyData[monthYear] += (Number(inv.total_general) || 0);
+        }
+      });
+
+      return Object.entries(monthlyData).map(([month, amount]) => ({
+        month,
+        amount
+      }));
+    }
+  });
+}
+
+export function useTopTreatments(options?: {
+  enabled?: boolean;
+  doctorId?: string | number | null;
+  isDoctorOnly?: boolean;
+}) {
+  const { user } = useAuthSession();
+  const doctorId = options?.doctorId ? Number(options.doctorId) : undefined;
+  const isDoctorOnly = options?.isDoctorOnly;
+
+  return useQuery({
+    queryKey: ["dashboard_top_treatments", user?.id, doctorId, isDoctorOnly],
+    enabled: (options?.enabled ?? true) && !!user,
+    queryFn: async () => {
+      if (isDoctorOnly && !doctorId) return [];
+
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      let allowedPatientIds: Set<number> | null = null;
+      if (isDoctorOnly || doctorId) {
+        let docCitasQ = supabase
+          .from("citas")
+          .select("id_paciente")
+          .eq("id_medico", doctorId!);
+        if (clinicId) {
+          docCitasQ = (docCitasQ as any).eq("id_clinica", clinicId);
+        }
+        const { data: doctorCitas } = await docCitasQ;
+
+        const patientIds = (doctorCitas || [])
+          .map((c) => c.id_paciente)
+          .filter((id): id is number => id !== null && id !== undefined);
+
+        allowedPatientIds = new Set(patientIds);
+        if (allowedPatientIds.size === 0) return [];
+      }
+
+      let query = supabase
+        .from("detalles_factura")
+        .select("id_servicio, cantidad, servicios(nombre_servicio), facturas!inner(id_paciente, fecha_emision)")
+        .gte("facturas.fecha_emision", thirtyDaysAgo.toISOString());
+
+      if (clinicId) {
+        query = (query as any).eq("facturas.id_clinica", clinicId);
+      }
+
+      if (allowedPatientIds) {
+        query = query.in("facturas.id_paciente", Array.from(allowedPatientIds));
+      }
+
+      const { data: detalles } = await query;
+      if (!detalles || detalles.length === 0) return [];
+
+      const counts: Record<string, { name: string, count: number }> = {};
+      detalles.forEach(d => {
+        const sId = d.id_servicio;
+        if (!sId) return;
+        if (!counts[sId]) {
+          counts[sId] = { name: (d.servicios as any)?.nombre_servicio || "Tratamiento", count: 0 };
+        }
+        counts[sId].count += (d.cantidad || 1);
+      });
+
+      return Object.values(counts)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+    }
+  });
+}

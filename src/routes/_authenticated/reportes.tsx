@@ -1,9 +1,5 @@
-import { createFileRoute, lazyRouteComponent } from "@tanstack/react-router";
-
-const ReportsPage = lazyRouteComponent(
-  () => import("@/components/ReportsPage"),
-  "ReportsPage"
-);
+import { createFileRoute } from "@tanstack/react-router";
+import { ReportsPage } from "@/components/ReportsPage";
 
 export const Route = createFileRoute("/_authenticated/reportes")({
   head: () => ({ meta: [{ title: "Reportes — FemeSalud" }] }),

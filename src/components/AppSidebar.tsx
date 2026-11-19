@@ -1,70 +1,103 @@
-import { useState } from "react";
+import { memo } from "react";
 import { Link, useRouterState, useRouter } from "@tanstack/react-router";
-import { motion } from "framer-motion";
 import {
-  Home, Calendar, Users, FileText, Receipt, FileBarChart,
-  Stethoscope, UserRound, Settings, Heart, Menu, X, LogOut, Shield,
-  Sun, Moon, Megaphone,
+  LayoutGrid,
+  Calendar,
+  UserRound,
+  Stethoscope,
+  Users,
+  Wallet,
+  ReceiptText,
+  CreditCard,
+  Box,
+  RotateCw,
+  Settings,
+  Clock,
+  HandCoins,
+  ShieldCheck,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  Building2,
+  type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAuthSession, useIsAdmin } from "@/hooks/useAuth";
-import { useMyProfile } from "@/lib/api/profiles";
+import { useIsAdmin, useIsSuperAdmin } from "@/hooks/useAuth";
+import { useUserRoleScope } from "@/hooks/useUserRoleScope";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { useTheme } from "@/hooks/useTheme";
+import { useClinicInfo, getSaasPlanConfig } from "@/lib/api/clinic";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { ThemeCustomizer } from "@/components/ThemeCustomizer";
+import { MedizenLogo } from "@/components/MedizenLogo";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-const baseModules = [
-  { title: "Inicio", url: "/", icon: Home },
+type ModuleDef = {
+  category?: string;
+  title?: string;
+  url?: string;
+  icon?: LucideIcon;
+  badge?: number;
+  adminOnly?: boolean;
+  receptionOrAdminOnly?: boolean;
+  superAdminOnly?: boolean;
+  minPlan?: "pro" | "enterprise";
+};
+
+const navigation: ModuleDef[] = [
+  { title: "Dashboard", url: "/dashboard", icon: LayoutGrid },
+  { category: "CLÍNICA" },
+  { title: "Sala de Espera", url: "/sala-espera", icon: Clock, receptionOrAdminOnly: true },
   { title: "Agenda", url: "/agenda", icon: Calendar },
-  { title: "Pacientes", url: "/pacientes", icon: Users },
-  { title: "Historias Clínicas", url: "/historias", icon: FileText },
-  { title: "Reportes", url: "/reportes", icon: FileBarChart },
-  { title: "Facturación", url: "/facturacion", icon: Receipt },
+  { title: "Pacientes", url: "/pacientes", icon: UserRound },
   { title: "Servicios Médicos", url: "/servicios", icon: Stethoscope },
-  { title: "Marketing / CRM", url: "/crm", icon: Megaphone },
-] as const;
-
-const adminModules = [
-  { title: "Doctores", url: "/doctores", icon: UserRound },
+  { title: "Personal", url: "/doctores", icon: Users, adminOnly: true },
+  { category: "FINANZAS", minPlan: "pro" },
+  { title: "Cuentas", url: "/cuentas", icon: Wallet, adminOnly: true, minPlan: "pro" },
+  { title: "Ventas", url: "/facturacion", icon: ReceiptText, minPlan: "pro" },
+  { title: "Honorarios Médicos", url: "/honorarios", icon: HandCoins, adminOnly: true, minPlan: "pro" },
+  { title: "Métodos de Pago", url: "/metodos-pago", icon: CreditCard, adminOnly: true, minPlan: "pro" },
+  { category: "ACTIVOS FÍSICOS", adminOnly: true, minPlan: "pro" },
+  { title: "Inventario", url: "/stocks", icon: Box, adminOnly: true, minPlan: "pro" },
+  { category: "OTROS" },
+  { title: "Reportes", url: "/reportes", icon: RotateCw, minPlan: "enterprise" },
+  { title: "Auditoría", url: "/auditoria", icon: ShieldCheck, adminOnly: true, minPlan: "enterprise" },
   { title: "Configuración", url: "/configuracion", icon: Settings },
-] as const;
+  { category: "PLATAFORMA SAAS", superAdminOnly: true },
+  { title: "Super Admin", url: "/superadmin", icon: Building2, superAdminOnly: true },
+];
 
-const initials = (n: string) =>
-  (n || "U").split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
+const superAdminNavigation: ModuleDef[] = [
+  { category: "PLATAFORMA SAAS" },
+  { title: "Gestión de Clínicas", url: "/superadmin", icon: Building2 },
+  { category: "SEGURIDAD Y CONTROL" },
+  { title: "Auditoría del Sistema", url: "/superadmin?view=auditoria", icon: ShieldCheck },
+  { title: "Configuración Global", url: "/superadmin?view=configuracion", icon: Settings },
+];
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.05,
-      delayChildren: 0.1,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, x: -20, filter: "blur(4px)" },
-  show: { 
-    opacity: 1, 
-    x: 0, 
-    filter: "blur(0px)",
-    transition: { type: "spring", stiffness: 300, damping: 24 } 
-  },
-};
-
-function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
+const SidebarBody = memo(function SidebarBody({
+  onNavigate,
+  isCollapsed,
+}: {
+  onNavigate?: () => void;
+  isCollapsed?: boolean;
+}) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { user } = useAuthSession();
-  const { data: profile } = useMyProfile(user?.id);
+  const searchStr = useRouterState({ select: (s) => s.location.searchStr });
   const isAdmin = useIsAdmin();
+  const isSuperAdmin = useIsSuperAdmin();
+  const { canViewAllDoctors } = useUserRoleScope();
   const router = useRouter();
   const qc = useQueryClient();
-  const { isDark, toggleTheme } = useTheme();
+  const { data: clinic } = useClinicInfo();
 
-  const modules = [...baseModules, ...(isAdmin ? adminModules : [])];
+  const isSuperAdminMode = pathname.startsWith("/superadmin");
+  const planConfig = getSaasPlanConfig(clinic?.plan_suscripcion);
+  const navList = isSuperAdminMode ? superAdminNavigation : navigation;
 
   const handleLogout = async () => {
+    if (onNavigate) onNavigate();
     await qc.cancelQueries();
     qc.clear();
     await supabase.auth.signOut();
@@ -72,123 +105,293 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
   };
 
   return (
-    <>
-      <div className="flex items-center gap-2.5 px-6 pt-6 pb-6">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-mauve to-mauve-soft shadow-sm">
-          <Heart className="h-5 w-5 text-primary-foreground" fill="currentColor" />
+    <TooltipProvider delayDuration={150}>
+      <div className="flex flex-col h-full bg-sidebar text-sidebar-foreground overflow-hidden">
+        {/* Logo Area */}
+        <div
+          className={cn(
+            "h-16 flex items-center border-b border-sidebar-border shrink-0",
+            isCollapsed ? "justify-center px-2" : "px-6 gap-3",
+          )}
+        >
+          <div className="relative flex items-center justify-center">
+            <MedizenLogo className="h-8 w-8 flex-shrink-0 transition-transform duration-300" />
+            {isSuperAdminMode && (
+              <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
+              </span>
+            )}
+          </div>
+          {!isCollapsed && (
+            <div className="flex flex-col min-w-0">
+              <span
+                className="font-display font-bold text-lg tracking-tight text-sidebar-foreground truncate"
+                title={isSuperAdminMode ? "Medizen SaaS" : clinic?.name || "Medizen"}
+              >
+                {isSuperAdminMode ? "Medizen SaaS" : clinic?.name || "Medizen"}
+              </span>
+              {isSuperAdminMode ? (
+                <span className="text-[10px] font-bold tracking-wider uppercase text-primary -mt-0.5">
+                  Super Administrador
+                </span>
+              ) : (
+                clinic?.tagline && (
+                  <span className="text-[10px] font-medium text-muted-foreground truncate -mt-0.5">
+                    {clinic.tagline}
+                  </span>
+                )
+              )}
+            </div>
+          )}
         </div>
-        <div>
-          <h1 className="text-base font-semibold tracking-tight">FemeSalud</h1>
-          <p className="text-[11px] text-muted-foreground">Premium Clinical Suite</p>
-        </div>
-      </div>
-      <motion.nav 
-        variants={containerVariants}
-        initial="hidden"
-        animate="show"
-        className="flex-1 space-y-1 overflow-y-auto px-3"
-      >
-        {modules.map((m) => {
-          const active = pathname === m.url;
-          const Icon = m.icon;
-          return (
-            <motion.div key={m.url} variants={itemVariants}>
+
+        {/* Workspace / Context Switcher for Superadmin when outside /superadmin */}
+        {isSuperAdmin && !isSuperAdminMode && !isCollapsed && (
+          <div className="mx-3 mt-3 p-2.5 rounded-xl bg-sidebar-accent/50 border border-sidebar-border flex items-center justify-between gap-2 shadow-xs">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-2 h-2 rounded-full shrink-0 bg-emerald-500" />
+              <div className="flex flex-col min-w-0">
+                <span className="text-[11px] font-bold text-sidebar-foreground truncate leading-tight">
+                  {clinic?.name || "Clínica"}
+                </span>
+                <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-semibold">
+                  Modo Operativo
+                </span>
+              </div>
+            </div>
+            <Link
+              to="/superadmin"
+              onClick={onNavigate}
+              className="px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all shrink-0 active:scale-95 bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs"
+            >
+              Ver SaaS
+            </Link>
+          </div>
+        )}
+
+        {isSuperAdmin && !isSuperAdminMode && isCollapsed && (
+          <Tooltip>
+            <TooltipTrigger asChild>
               <Link
-                to={m.url}
+                to="/superadmin"
                 onClick={onNavigate}
+                className="my-2 mx-auto h-9 w-9 rounded-xl flex items-center justify-center transition-all active:scale-95 bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/80"
+              >
+                <Building2 className="h-4 w-4 text-primary" />
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={10} className="font-semibold text-xs">
+              Volver al Panel Super Admin
+            </TooltipContent>
+          </Tooltip>
+        )}
+
+        {/* Navigation List */}
+        <nav className="flex-1 w-full overflow-y-auto overscroll-contain no-scrollbar px-3 pt-3 pb-4 flex flex-col gap-1">
+          {navList.map((m) => {
+            if (m.superAdminOnly && !isSuperAdmin) return null;
+            if (m.adminOnly && !isAdmin && !isSuperAdmin) return null;
+            if (m.receptionOrAdminOnly && !canViewAllDoctors && !isSuperAdmin) return null;
+            if (!isSuperAdminMode && m.minPlan === "pro" && !planConfig.includesFinance) return null;
+            if (!isSuperAdminMode && m.minPlan === "enterprise" && !planConfig.includesReportsAndAudit) return null;
+
+            if (m.category) {
+              if (isCollapsed) {
+                return (
+                  <div
+                    key={`cat-${m.category}`}
+                    className="my-2.5 mx-2 border-t border-sidebar-border"
+                    title={m.category}
+                  />
+                );
+              }
+              return (
+                <div key={`cat-${m.category}`} className="mt-5 mb-1.5 px-3 flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider truncate">
+                    {m.category}
+                  </span>
+                  <div className="flex-1 border-t border-sidebar-border" />
+                </div>
+              );
+            }
+
+            const currentFullUrl = `${pathname}${searchStr || ""}`;
+            const active = isSuperAdminMode
+              ? m.url === "/superadmin"
+                ? pathname === "/superadmin" && (!searchStr || !searchStr.includes("view="))
+                : currentFullUrl === m.url
+              : pathname === m.url ||
+                (m.url !== "/" && !m.url?.startsWith("#") && pathname.startsWith(m.url || ""));
+            const Icon = m.icon;
+            if (!Icon) return null;
+            const isDummy = m.url?.startsWith("#");
+            const [basePath, rawQuery] = (m.url || "/").split("?");
+            const searchObj = rawQuery ? Object.fromEntries(new URLSearchParams(rawQuery)) : undefined;
+
+            const linkContent = (
+              <Link
+                key={m.title}
+                to={isDummy ? "/" : (basePath as any)}
+                search={isDummy ? undefined : (searchObj as any)}
+                aria-current={active ? "page" : undefined}
+                aria-label={isCollapsed ? m.title : undefined}
+                onClick={(e) => {
+                  if (isDummy) e.preventDefault();
+                  else if (onNavigate) onNavigate();
+                }}
                 className={cn(
-                  "group flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm font-medium transition-all duration-300",
+                  "flex items-center rounded-xl transition-[background-color,color,transform] duration-150 group text-sm font-semibold active:scale-[0.98] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  isCollapsed
+                    ? "justify-center h-11 w-11 sm:h-10 sm:w-10 mx-auto"
+                    : "gap-3 px-3 py-2.5 min-h-11 sm:min-h-10",
                   active
-                    ? "bg-gradient-to-r from-mauve to-mauve-soft text-primary-foreground shadow-sm shadow-mauve/30"
-                    : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:scale-[1.02]",
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent",
                 )}
               >
                 <Icon
+                  aria-hidden="true"
                   className={cn(
-                    "h-[18px] w-[18px] transition-transform duration-300",
-                    active ? "scale-110" : "group-hover:scale-105",
+                    "h-4 w-4 flex-shrink-0",
+                    active
+                      ? "text-primary-foreground"
+                      : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground",
                   )}
-                  strokeWidth={active ? 2.4 : 2}
+                  strokeWidth={2.2}
                 />
-                <span>{m.title}</span>
+                {!isCollapsed && <span className="truncate">{m.title}</span>}
               </Link>
-            </motion.div>
-          );
-        })}
-      </motion.nav>
-      <div className="m-3 rounded-2xl bg-gradient-to-br from-blush/60 to-accent/50 p-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-mauve to-blush text-xs font-semibold text-primary-foreground">
-            {initials(profile?.full_name || user?.email || "U")}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold">
-              {profile?.full_name?.trim() || user?.email?.split("@")[0] || "Usuario"}
-            </p>
-            <p className="truncate text-[11px] text-muted-foreground flex items-center gap-1">
-              {isAdmin && <Shield className="h-3 w-3 text-mauve" />}
-              {isAdmin ? "Administrador" : profile?.specialty || "Doctor"}
-            </p>
-          </div>
-          <button
-            onClick={toggleTheme}
-            aria-label="Cambiar tema"
-            className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground transition hover:bg-mauve/10 hover:text-mauve"
+            );
+
+            if (isCollapsed) {
+              return (
+                <Tooltip key={m.title}>
+                  <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
+                  <TooltipContent side="right" sideOffset={10} className="font-semibold">
+                    {m.title}
+                  </TooltipContent>
+                </Tooltip>
+              );
+            }
+            return linkContent;
+          })}
+        </nav>
+
+        {/* Footer Area with crisp top divider line */}
+        <div
+          className={cn(
+            "mt-auto pt-3 pb-[max(env(safe-area-inset-bottom),1rem)] border-t border-sidebar-border flex flex-col gap-2 shrink-0 bg-sidebar",
+            isCollapsed ? "items-center px-1 pb-3" : "px-4",
+          )}
+        >
+          <div
+            className={cn(
+              "flex items-center w-full",
+              isCollapsed ? "flex-col gap-2" : "justify-between gap-1",
+            )}
           >
-            {isDark ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
-          </button>
-          <button
-            onClick={handleLogout}
-            aria-label="Cerrar sesión"
-            className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
-          >
-            <LogOut className="h-4 w-4" />
-          </button>
+            {/* Logout */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  aria-label="Cerrar sesión"
+                  className={cn(
+                    "flex items-center rounded-xl transition-[background-color,color,transform] duration-150 group text-xs font-semibold text-destructive hover:bg-destructive/10 active:scale-95 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer",
+                    isCollapsed
+                      ? "justify-center h-11 w-11 sm:h-8 sm:w-8"
+                      : "gap-2 px-3 sm:px-2.5 py-2 sm:py-1.5 min-h-11 sm:min-h-8 bg-destructive/10 text-destructive",
+                  )}
+                >
+                  <LogOut
+                    className="h-4 w-4 text-destructive flex-shrink-0"
+                    strokeWidth={2.2}
+                    aria-hidden="true"
+                  />
+                  {!isCollapsed && <span>Cerrar sesión</span>}
+                </button>
+              </TooltipTrigger>
+              {isCollapsed && (
+                <TooltipContent side="right" sideOffset={10} className="font-semibold">
+                  Cerrar Sesión
+                </TooltipContent>
+              )}
+            </Tooltip>
+
+            {/* Theme & Palette Controls */}
+            <div className={cn("flex items-center gap-1.5 shrink-0", isCollapsed && "flex-col")}>
+              <ThemeCustomizer />
+              <ThemeToggle />
+            </div>
+          </div>
         </div>
       </div>
-    </>
+    </TooltipProvider>
   );
-}
+});
 
-export function AppSidebar() {
-  const [mobileOpen, setMobileOpen] = useState(false);
-
+export const AppSidebar = memo(function AppSidebar({
+  isCollapsed,
+  onToggle,
+  mobileOpen,
+  onMobileClose,
+}: {
+  isCollapsed?: boolean;
+  onToggle?: () => void;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
+}) {
   return (
     <>
-      <aside className="fixed left-4 top-4 bottom-4 z-30 hidden w-64 flex-col rounded-3xl glass-card shadow-sm md:flex">
-        <SidebarBody />
-      </aside>
+      {/* Mobile Drawer */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-[70] md:hidden flex animate-in fade-in duration-200">
+          {/* Backdrop */}
+          <button
+            type="button"
+            aria-label="Cerrar menú móvil"
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity border-none cursor-default z-[71]"
+            onClick={onMobileClose}
+          />
+          {/* Sliding Drawer */}
+          <div className="relative w-[280px] max-w-[85vw] h-[100dvh] max-h-[100dvh] bg-sidebar border-r border-sidebar-border shadow-2xl z-[72] flex flex-col overscroll-contain animate-in slide-in-from-left duration-300">
+            <button
+              type="button"
+              onClick={onMobileClose}
+              className="absolute right-3 top-4 h-11 w-11 flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-[background-color,color,transform] duration-150 active:scale-95 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring z-[73] cursor-pointer"
+              aria-label="Cerrar menú"
+            >
+              <X className="h-5 w-5" aria-hidden="true" />
+            </button>
+            <SidebarBody onNavigate={onMobileClose} isCollapsed={false} />
+          </div>
+        </div>
+      )}
 
-      <button
-        onClick={() => setMobileOpen(true)}
-        aria-label="Abrir menú"
-        className="fixed left-4 top-4 z-40 flex h-11 w-11 items-center justify-center rounded-2xl glass-card shadow-sm md:hidden"
-      >
-        <Menu className="h-5 w-5" />
-      </button>
-
-      <div
-        onClick={() => setMobileOpen(false)}
-        className={cn(
-          "fixed inset-0 z-40 bg-foreground/30 backdrop-blur-sm transition-opacity duration-300 md:hidden",
-          mobileOpen ? "opacity-100" : "pointer-events-none opacity-0",
-        )}
-      />
+      {/* Desktop Sidebar with crisp right border line matching react.doctor */}
       <aside
         className={cn(
-          "fixed left-3 top-3 bottom-3 z-50 flex w-64 flex-col rounded-3xl glass-card shadow-lg transition-all duration-300 ease-out md:hidden",
-          mobileOpen ? "translate-x-0 opacity-100" : "-translate-x-[110%] opacity-0",
+          "fixed left-0 top-0 bottom-0 z-30 hidden flex-col bg-sidebar border-r border-sidebar-border md:flex transition-[width] duration-300",
+          isCollapsed ? "w-[80px]" : "w-[260px]",
         )}
       >
+        {/* Collapse Button */}
         <button
-          onClick={() => setMobileOpen(false)}
-          aria-label="Cerrar menú"
-          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted"
+          type="button"
+          aria-label={isCollapsed ? "Expandir barra lateral" : "Colapsar barra lateral"}
+          onClick={onToggle}
+          className="absolute -right-3 top-5 h-6 w-6 bg-sidebar border border-sidebar-border rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground shadow-xs z-40 transition duration-150 hover:scale-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
         >
-          <X className="h-4 w-4" />
+          {isCollapsed ? (
+            <ChevronRight className="h-3 w-3" strokeWidth={2.5} aria-hidden="true" />
+          ) : (
+            <ChevronLeft className="h-3 w-3" strokeWidth={2.5} aria-hidden="true" />
+          )}
         </button>
-        <SidebarBody onNavigate={() => setMobileOpen(false)} />
+        <SidebarBody isCollapsed={isCollapsed} />
       </aside>
     </>
   );
-}
+});
