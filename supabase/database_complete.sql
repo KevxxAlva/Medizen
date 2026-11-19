@@ -1100,3 +1100,27 @@ INSERT INTO public.especialidades (id_especialidad, nombre) VALUES
   (4, 'Dermatología'),
   (5, 'Medicina Interna')
 ON CONFLICT (id_especialidad) DO NOTHING;
+
+-- Sincronizar todas las secuencias SERIAL después de insertar datos semilla con IDs explícitos
+DO $$
+DECLARE
+  r record;
+  v_max bigint;
+BEGIN
+  FOR r IN
+    SELECT
+      c.table_name,
+      c.column_name,
+      pg_get_serial_sequence(format('public.%I', c.table_name), c.column_name) AS seq_name
+    FROM information_schema.columns c
+    WHERE c.table_schema = 'public'
+      AND pg_get_serial_sequence(format('public.%I', c.table_name), c.column_name) IS NOT NULL
+  LOOP
+    EXECUTE format('SELECT COALESCE(MAX(%I), 0) FROM public.%I', r.column_name, r.table_name) INTO v_max;
+    IF v_max > 0 THEN
+      PERFORM setval(r.seq_name, v_max, true);
+    ELSE
+      PERFORM setval(r.seq_name, 1, false);
+    END IF;
+  END LOOP;
+END $$;
