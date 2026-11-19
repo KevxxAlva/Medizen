@@ -1,5 +1,5 @@
 // Medizen PWA Service Worker
-const CACHE_NAME = "medizen-cache-v4";
+const CACHE_NAME = "medizen-cache-v5";
 const STATIC_ASSETS = [
   "/",
   "/manifest.json",
@@ -84,7 +84,10 @@ self.addEventListener("fetch", (event) => {
       caches.match(event.request).then((cached) => {
         if (cached) return cached;
         return fetch(event.request).then((response) => {
-          if (response && response.status === 200) {
+          const contentType = response.headers.get("content-type") || "";
+          const isHtmlFallback =
+            url.pathname.startsWith("/assets/") && contentType.includes("text/html");
+          if (response && response.status === 200 && !isHtmlFallback) {
             const responseClone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
           }

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useTransition, lazy, Suspense, memo } from "react";
+import React, { useState, useMemo, memo } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   Wallet,
@@ -10,21 +10,13 @@ import {
   Banknote,
   ShoppingBag,
   FileSpreadsheet,
-  Loader2,
 } from "lucide-react";
 import { useExchangeRate, formatBs, formatEurFromUsd } from "@/hooks/useExchangeRate";
 import { inferCategoryFromMethod } from "@/lib/api/paymentMethods";
 import { TreasuryChannelCard } from "./TreasuryChannelCard";
 import { APP_LOCALE, APP_TIME_ZONE } from "@/lib/constants/locale";
 import type { Invoice } from "@/components/finance/ViewInvoiceDialog";
-
-const CashCloseDialog = lazy(() =>
-  import("@/components/finance/CashCloseDialog").then((m) => ({ default: m.CashCloseDialog }))
-);
-
-const preloadCashCloseDialog = () => {
-  void import("@/components/finance/CashCloseDialog");
-};
+import { CashCloseDialog } from "@/components/finance/CashCloseDialog";
 
 export interface DashboardDailyTreasuryCardProps {
   invoices: Invoice[];
@@ -37,14 +29,11 @@ export const DashboardDailyTreasuryCard = memo(function DashboardDailyTreasuryCa
 }: DashboardDailyTreasuryCardProps) {
   const [hasMountedCashClose, setHasMountedCashClose] = useState(false);
   const [cashCloseOpen, setCashCloseOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
   const { rate, rates } = useExchangeRate();
 
   const handleOpenCashClose = () => {
-    startTransition(() => {
-      setHasMountedCashClose(true);
-      setCashCloseOpen(true);
-    });
+    setHasMountedCashClose(true);
+    setCashCloseOpen(true);
   };
 
   const todayIso = useMemo(() => {
@@ -155,16 +144,9 @@ export const DashboardDailyTreasuryCard = memo(function DashboardDailyTreasuryCa
           <button
             type="button"
             onClick={handleOpenCashClose}
-            onPointerEnter={preloadCashCloseDialog}
-            onFocus={preloadCashCloseDialog}
-            aria-busy={isPending}
             className="flex items-center gap-1.5 min-h-11 sm:min-h-9 px-3 bg-primary text-primary-foreground rounded-xl text-xs font-bold hover:bg-primary/90 transition-[transform,colors] duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring shadow-sm cursor-pointer shrink-0"
           >
-            {isPending ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-            ) : (
-              <FileSpreadsheet className="h-3.5 w-3.5" aria-hidden="true" />
-            )}
+            <FileSpreadsheet className="h-3.5 w-3.5" aria-hidden="true" />
             <span>Cierre Z</span>
           </button>
         </div>
@@ -253,15 +235,13 @@ export const DashboardDailyTreasuryCard = memo(function DashboardDailyTreasuryCa
 
       {/* Cash Close Report Modal */}
       {hasMountedCashClose && (
-        <Suspense fallback={null}>
-          <CashCloseDialog
-            open={cashCloseOpen}
-            onOpenChange={setCashCloseOpen}
-            invoices={invoices}
-            rate={rate}
-            rates={rates}
-          />
-        </Suspense>
+        <CashCloseDialog
+          open={cashCloseOpen}
+          onOpenChange={setCashCloseOpen}
+          invoices={invoices}
+          rate={rate}
+          rates={rates}
+        />
       )}
     </>
   );

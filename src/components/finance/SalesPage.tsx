@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { Search, X, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { generateSalesReport } from "@/lib/utils/generateSalesReport";
 import { toast } from "sonner";
 import { TablePagination } from "@/components/ui/table-pagination";
@@ -138,8 +139,16 @@ export function SalesPage() {
     );
   }
 
+  const isConfirmActive = Boolean(confirmOpen && selectedInvoice);
+
   return (
-    <div className="bg-card border border-border rounded-3xl p-3.5 sm:p-6 shadow-xs min-h-[calc(100vh-8rem)] font-sans flex flex-col w-full min-w-0 overflow-hidden">
+    <>
+      <div
+        className={cn(
+          "bg-card border border-border rounded-3xl p-3.5 sm:p-6 shadow-xs min-h-[calc(100vh-8rem)] font-sans flex-col w-full min-w-0 overflow-hidden",
+          isConfirmActive ? "hidden md:flex" : "flex",
+        )}
+      >
       <FinancePageHeader
         title="Ventas y Facturación"
         subtitle="Control multimoneda en USD ($), Bolívares (BCV), Euros (€) y USDT"
@@ -259,9 +268,21 @@ export function SalesPage() {
         }}
       />
 
+      <CashCloseDialog
+        open={cashCloseOpen}
+        onOpenChange={setCashCloseOpen}
+        invoices={facturas}
+        rate={rate}
+        rates={rates}
+      />
+      </div>
+
       <ConfirmPaymentDialog
         open={confirmOpen}
-        onOpenChange={setConfirmOpen}
+        onOpenChange={(val) => {
+          setConfirmOpen(val);
+          if (!val) setSelectedInvoice(null);
+        }}
         invoice={selectedInvoice}
         rates={rates}
         defaultRateType={activeType}
@@ -271,9 +292,9 @@ export function SalesPage() {
         paymentReference={paymentReference}
         setPaymentReference={setPaymentReference}
         isPending={updatePaymentStatus.isPending}
-        onConfirm={(composedRef, activeRateVal, rateType, finalMethod, creditedUsd) => {
+        onConfirm={async (composedRef, activeRateVal, rateType, finalMethod, creditedUsd) => {
           if (!selectedInvoice) return;
-          updatePaymentStatus.mutate({
+          await updatePaymentStatus.mutateAsync({
             id: selectedInvoice.id_factura,
             status: "Pagado",
             method: finalMethod || paymentMethod || "Pago Móvil",
@@ -281,23 +302,10 @@ export function SalesPage() {
             usedRate: activeRateVal,
             usedRateType: rateType,
             usdAmount: creditedUsd || selectedInvoice.total_general,
-          }, {
-            onSuccess: () => {
-              setConfirmOpen(false);
-              setSelectedInvoice(null);
-            }
           });
         }}
       />
-
-      <CashCloseDialog
-        open={cashCloseOpen}
-        onOpenChange={setCashCloseOpen}
-        invoices={facturas}
-        rate={rate}
-        rates={rates}
-      />
-    </div>
+    </>
   );
 }
 

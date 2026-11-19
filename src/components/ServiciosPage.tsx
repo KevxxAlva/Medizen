@@ -97,6 +97,18 @@ export function ServiciosPage() {
     }
   };
 
+  if (formOpen) {
+    return (
+      <ServiceForm
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        service={editing}
+        defaultSpecialtyId={doctorSpecialtyId}
+        isDoctorOnly={isDoctorOnly}
+      />
+    );
+  }
+
   return (
     <div className="bg-card border border-border rounded-3xl p-3.5 sm:p-6 shadow-xs min-h-[calc(100vh-8rem)] font-sans flex flex-col w-full min-w-0 overflow-hidden">
       <ServiciosHeader
@@ -144,14 +156,6 @@ export function ServiciosPage() {
         itemsPerPage={ITEMS_PER_PAGE}
         entityLabel="servicios"
         onPageChange={setCurrentPage}
-      />
-
-      <ServiceForm
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        service={editing}
-        defaultSpecialtyId={doctorSpecialtyId}
-        isDoctorOnly={isDoctorOnly}
       />
     </div>
   );

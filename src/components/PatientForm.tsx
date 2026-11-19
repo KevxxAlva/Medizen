@@ -1,18 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { useRouter } from "@tanstack/react-router";
 import { useCreatePatient, useUpdatePatient, usePatient, type Patient } from "@/lib/api/patients";
 import { useDoctors } from "@/lib/api/profiles";
 import { useAuthSession } from "@/hooks/useAuth";
 import { useUserRoleScope } from "@/hooks/useUserRoleScope";
 import { toast } from "sonner";
-import confetti from "canvas-confetti";
 import { usePatientFormState } from "./patient-form/usePatientFormState";
 import { PatientFormBody } from "./patient-form/PatientFormBody";
 
@@ -31,10 +24,12 @@ export function PatientForm({
   open,
   onOpenChange,
   patient: initialPatient,
+  backLabel = "Volver a Pacientes",
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   patient?: Patient | null;
+  backLabel?: string;
 }) {
   const isEdit = !!initialPatient;
   const { data: fullPatient, isLoading: isPatientDetailLoading } = usePatient(initialPatient?.id);
@@ -42,6 +37,7 @@ export function PatientForm({
   const { user } = useAuthSession();
   const { isDoctorOnly, doctorId: currentDoctorId, doctorName } = useUserRoleScope();
   const { data: doctors = [] } = useDoctors();
+  const [resetCounter, setResetCounter] = useState(0);
 
   const defaultDoctor = useMemo(() => {
     if (isDoctorOnly) {
@@ -53,37 +49,30 @@ export function PatientForm({
     return doctors[0]?.id ? String(doctors[0].id) : "";
   }, [patient?.assigned_doctor_id, isDoctorOnly, currentDoctorId, doctors]);
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-1.25rem)] sm:max-w-4xl h-[calc(100dvh-1.5rem)] sm:h-[90vh] flex flex-col rounded-2xl sm:rounded-3xl p-4 sm:p-6">
-        <DialogHeader className="pb-2">
-          <DialogTitle>{isEdit ? "Editar historia clínica" : "Nueva historia clínica"}</DialogTitle>
-          <DialogDescription>
-            {isEdit
-              ? "Actualiza el registro médico de la paciente."
-              : "Registra los datos clínicos de la paciente."}
-          </DialogDescription>
-        </DialogHeader>
+  if (!open) return null;
 
-        {isEdit && isPatientDetailLoading ? (
-          <div className="flex-1 flex items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : (
-          <PatientFormContent
-            key={open ? `${patient?.id ?? "new"}-${defaultDoctor}` : "closed"}
-            patient={patient}
-            defaultDoctor={defaultDoctor}
-            isEdit={isEdit}
-            doctors={doctors}
-            user={user}
-            isDoctorOnly={isDoctorOnly}
-            doctorName={doctorName}
-            onOpenChange={onOpenChange}
-          />
-        )}
-      </DialogContent>
-    </Dialog>
+  return (
+    <div className="bg-card border border-border rounded-3xl p-4 sm:p-6 shadow-xs min-h-[calc(100vh-8rem)] flex flex-col text-foreground w-full min-w-0 animate-in fade-in duration-200">
+      {isEdit && isPatientDetailLoading ? (
+        <div className="flex-1 flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : (
+        <PatientFormContent
+          key={open ? `${patient?.id ?? "new"}-${defaultDoctor}-${resetCounter}` : "closed"}
+          patient={patient}
+          defaultDoctor={defaultDoctor}
+          isEdit={isEdit}
+          doctors={doctors}
+          user={user}
+          isDoctorOnly={isDoctorOnly}
+          doctorName={doctorName}
+          onOpenChange={onOpenChange}
+          onResetForNew={() => setResetCounter((c) => c + 1)}
+          backLabel={backLabel}
+        />
+      )}
+    </div>
   );
 }
 
@@ -96,6 +85,8 @@ function PatientFormContent({
   isDoctorOnly,
   doctorName,
   onOpenChange,
+  onResetForNew,
+  backLabel = "Volver a Pacientes",
 }: {
   patient?: Patient | null;
   defaultDoctor: string;
@@ -105,8 +96,12 @@ function PatientFormContent({
   isDoctorOnly?: boolean;
   doctorName?: string | null;
   onOpenChange: (v: boolean) => void;
+  onResetForNew?: () => void;
+  backLabel?: string;
 }) {
+  const router = useRouter();
   const formState = usePatientFormState(patient, defaultDoctor);
+  const [savedPatient, setSavedPatient] = useState<Patient | null>(null);
 
   const create = useCreatePatient();
   const update = useUpdatePatient();
@@ -205,18 +200,14 @@ function PatientFormContent({
       };
 
       if (isEdit && patient) {
-        await update.mutateAsync({ id: patient.id, ...payload });
-        toast.success("Paciente actualizado con éxito");
+        const updated = await update.mutateAsync({ id: patient.id, ...payload });
+        toast.success("Historia clínica actualizada con éxito");
+        setSavedPatient(updated);
       } else {
-        await create.mutateAsync(payload);
-        toast.success("Paciente creado con éxito");
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-        });
+        const created = await create.mutateAsync(payload);
+        toast.success("Expediente clínico creado con éxito");
+        setSavedPatient(created);
       }
-      onOpenChange(false);
     } catch (err: any) {
       console.error("Error guardando paciente:", err);
       let errorMsg = "Error al guardar el paciente";
@@ -247,7 +238,7 @@ function PatientFormContent({
   };
 
   return (
-    <form onSubmit={submit} className="flex-1 flex flex-col min-h-0">
+    <form onSubmit={submit} className="flex-1 flex flex-col min-w-0">
       <PatientFormBody
         formState={formState}
         doctors={doctors}
@@ -257,6 +248,16 @@ function PatientFormContent({
         isEdit={isEdit}
         isDoctorOnly={isDoctorOnly}
         doctorName={doctorName}
+        backLabel={backLabel}
+        savedPatient={savedPatient}
+        onResetForNew={onResetForNew}
+        onOpenDossier={(targetId) => {
+          onOpenChange(false);
+          router.navigate({
+            to: "/pacientes/$patientId",
+            params: { patientId: String(targetId) },
+          });
+        }}
         onCancel={() => onOpenChange(false)}
       />
     </form>

@@ -122,6 +122,17 @@ export function PatientsPage() {
     setToDelete(null);
   };
 
+  if (formOpen) {
+    return (
+      <PatientForm
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        patient={editing}
+        backLabel="Volver a Pacientes"
+      />
+    );
+  }
+
   return (
     <div className="bg-card border border-border rounded-3xl p-3.5 sm:p-6 shadow-xs min-h-[calc(100vh-8rem)] font-sans flex flex-col w-full min-w-0 overflow-hidden">
       <header className="flex flex-wrap items-center justify-between gap-4 mb-6">
@@ -250,8 +261,6 @@ export function PatientsPage() {
         entityLabel="pacientes"
         onPageChange={setCurrentPage}
       />
-
-      <PatientForm open={formOpen} onOpenChange={setFormOpen} patient={editing} />
 
       <PatientDeleteDialog
         patient={toDelete}

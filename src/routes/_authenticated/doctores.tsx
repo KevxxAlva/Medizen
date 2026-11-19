@@ -14,6 +14,14 @@ import {
   Users,
   Pencil,
   Check,
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  UserPlus,
+  Sparkles,
+  Mail,
+  KeyRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TablePagination } from "@/components/ui/table-pagination";
@@ -170,13 +178,13 @@ function SpecialtyMultiSelector({
         </div>
       )}
 
-      {/* Lista de ramas sugeridas para selección rápida múltiple */}
+      {/* Lista de ramas sugeridas para selección rápida múltiple (amplia y sin caja pequeña de scroll) */}
       {!disabled && (
         <div>
-          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">
-            Ramas sugeridas (haz clic para activar/desactivar hasta 3 o más):
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-2">
+            Ramas sugeridas (haz clic para activar o desactivar 1, 2, 3 o más):
           </span>
-          <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto p-1.5 rounded-lg border border-border/50 bg-muted/20">
+          <div className="flex flex-wrap gap-1.5 p-3 rounded-2xl border border-border/60 bg-muted/20">
             {COMMON_SPECIALTIES.map((spec) => {
               const active = selectedList.includes(spec);
               return (
@@ -185,13 +193,13 @@ function SpecialtyMultiSelector({
                   type="button"
                   onClick={() => toggleSpecialty(spec)}
                   className={cn(
-                    "text-[10px] px-2 py-0.5 rounded-md font-medium transition cursor-pointer border flex items-center gap-1",
+                    "text-xs px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer border flex items-center gap-1.5",
                     active
                       ? "bg-primary text-primary-foreground border-primary shadow-xs"
-                      : "bg-background text-muted-foreground border-border hover:bg-muted"
+                      : "bg-background text-muted-foreground border-border hover:bg-muted hover:text-foreground"
                   )}
                 >
-                  {active && <Check className="h-2.5 w-2.5" />}
+                  {active && <Check className="h-3.5 w-3.5 stroke-[2.5]" />}
                   {spec}
                 </button>
               );
@@ -216,6 +224,13 @@ function DoctoresAdmin() {
   const [toEdit, setToEdit] = useState<ProfileWithRoles | null>(null);
   const [toDelete, setToDelete] = useState<ProfileWithRoles | null>(null);
   const [busy, setBusy] = useState(false);
+  const [createdSummary, setCreatedSummary] = useState<{
+    full_name: string;
+    email: string;
+    password?: string;
+    role: "admin" | "doctor" | "recepcionista";
+    specialty: string;
+  } | null>(null);
 
   const [form, setForm] = useState({
     email: "",
@@ -270,8 +285,13 @@ function DoctoresAdmin() {
       });
       if (rpcError) throw new Error(rpcError.message);
       toast.success("Usuario creado exitosamente");
-      setOpenCreate(false);
-      setForm({ email: "", password: "", full_name: "", specialty: "", role: "doctor" });
+      setCreatedSummary({
+        full_name: form.full_name.trim(),
+        email: form.email.trim().toLowerCase(),
+        password: form.password,
+        role: form.role,
+        specialty: form.role === "doctor" ? form.specialty?.trim() || "Medicina General" : "",
+      });
       qc.invalidateQueries({ queryKey: ["profiles_with_roles"] });
       qc.invalidateQueries({ queryKey: ["doctors"] });
     } catch (err) {
@@ -334,6 +354,38 @@ function DoctoresAdmin() {
       setToDelete(null);
     }
   };
+
+  if (openCreate) {
+    return (
+      <CreateUserPageView
+        form={form}
+        setForm={setForm}
+        onSubmit={handleCreate}
+        busy={busy}
+        createdSummary={createdSummary}
+        onResetForNew={() => {
+          setCreatedSummary(null);
+          setForm({ email: "", password: "", full_name: "", specialty: "", role: "doctor" });
+        }}
+        onClose={() => {
+          setCreatedSummary(null);
+          setForm({ email: "", password: "", full_name: "", specialty: "", role: "doctor" });
+          setOpenCreate(false);
+        }}
+      />
+    );
+  }
+
+  if (toEdit) {
+    return (
+      <EditUserPageView
+        key={toEdit.id}
+        profile={toEdit}
+        onClose={() => setToEdit(null)}
+        updateProfile={updateProfile}
+      />
+    );
+  }
 
   return (
     <div className="flex-1 w-full min-w-0 p-4 md:p-8 space-y-6">
@@ -460,22 +512,6 @@ function DoctoresAdmin() {
         itemsPerPage={itemsPerPage}
         entityLabel="miembros"
         onPageChange={setCurrentPage}
-      />
-
-      <CreateUserModal
-        open={openCreate}
-        onOpenChange={setOpenCreate}
-        form={form}
-        setForm={setForm}
-        onSubmit={handleCreate}
-        busy={busy}
-      />
-
-      <EditUserModal
-        key={toEdit?.id ?? "closed"}
-        profile={toEdit}
-        onOpenChange={(open) => !open && setToEdit(null)}
-        updateProfile={updateProfile}
       />
 
       <DeleteUserAlert
@@ -650,16 +686,272 @@ function DoctorTableRow({
   );
 }
 
-function CreateUserModal({
-  open,
-  onOpenChange,
+const STAFF_STEPS = [
+  {
+    id: "credentials",
+    title: "Datos y Credenciales",
+    subtitle: "Nombre, correo y contraseña",
+  },
+  {
+    id: "role_specialties",
+    title: "Rol y Especialidades",
+    subtitle: "Permisos y ramas médicas",
+  },
+];
+
+function getRoleDisplayLabel(role: string): string {
+  if (role === "admin") return "Administrador del Sistema";
+  if (role === "recepcionista") return "Recepción / Facturación";
+  return "Doctor / Especialista Médico";
+}
+
+function StaffSuccessAnimationCard({
+  isEdit,
+  fullName,
+  email,
+  password,
+  role,
+  specialty,
+  onResetForNew,
+  onClose,
+}: {
+  isEdit?: boolean;
+  fullName: string;
+  email: string;
+  password?: string;
+  role: string;
+  specialty?: string;
+  onResetForNew?: () => void;
+  onClose: () => void;
+}) {
+  const [copiedCreds, setCopiedCreds] = useState(false);
+  const specList = (specialty || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const handleCopyCredentials = () => {
+    const text = [
+      `Acceso a Medizen Suite — ${fullName}`,
+      `Correo: ${email}`,
+      password ? `Contraseña: ${password}` : null,
+      `Rol: ${getRoleDisplayLabel(role)}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+    navigator.clipboard.writeText(text);
+    setCopiedCreds(true);
+    toast.success("Credenciales copiadas al portapapeles");
+    setTimeout(() => setCopiedCreds(false), 1800);
+  };
+
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center py-8 px-4 text-center animate-in fade-in zoom-in-95 duration-300">
+      <style>{`
+        @keyframes medizen-badge-draw {
+          0% { stroke-dashoffset: 300; opacity: 0; transform: translateY(6px); }
+          50% { opacity: 1; }
+          100% { stroke-dashoffset: 0; opacity: 1; transform: translateY(0); }
+        }
+        @keyframes medizen-staff-seal-pop {
+          0% { transform: scale(0.35); opacity: 0; }
+          70% { transform: scale(1.08); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes medizen-staff-check {
+          0% { stroke-dashoffset: 60; }
+          100% { stroke-dashoffset: 0; }
+        }
+        .medizen-staff-stroke {
+          stroke-dasharray: 300;
+          stroke-dashoffset: 300;
+          animation: medizen-badge-draw 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        .medizen-staff-seal {
+          transform-origin: 72px 70px;
+          opacity: 0;
+          animation: medizen-staff-seal-pop 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.35s forwards;
+        }
+        .medizen-staff-check-path {
+          stroke-dasharray: 60;
+          stroke-dashoffset: 60;
+          animation: medizen-staff-check 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.52s forwards;
+        }
+      `}</style>
+
+      {/* Ilustración SVG: Credencial Médica + Sello Checkmark Esmeralda */}
+      <div className="relative flex items-center justify-center mb-5">
+        <div className="absolute h-28 w-28 rounded-full bg-emerald-500/15 animate-ping [animation-duration:1.8s]" />
+        <div className="absolute h-24 w-24 rounded-full bg-primary/5" />
+        <svg
+          className="h-28 w-28 relative z-10"
+          viewBox="0 0 100 100"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          {/* Gafete / Credencial Institucional */}
+          <rect
+            x="18"
+            y="18"
+            width="54"
+            height="62"
+            rx="11"
+            className="fill-primary/10 stroke-primary medizen-staff-stroke"
+            strokeWidth="3.5"
+          />
+          {/* Avatar en la credencial */}
+          <circle
+            cx="45"
+            cy="39"
+            r="8"
+            className="stroke-primary medizen-staff-stroke"
+            strokeWidth="3.2"
+          />
+          <path
+            d="M32 58C34.5 52.5 39.2 50 45 50C50.8 50 55.5 52.5 58 58"
+            className="stroke-primary medizen-staff-stroke"
+            strokeWidth="3.2"
+            strokeLinecap="round"
+          />
+          {/* Línea inferior del gafete */}
+          <path
+            d="M31 68H55"
+            className="stroke-primary/65 medizen-staff-stroke"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+          {/* Sello Circular Esmeralda con Checkmark */}
+          <g className="medizen-staff-seal">
+            <circle
+              cx="72"
+              cy="70"
+              r="18"
+              className="fill-emerald-500 stroke-card"
+              strokeWidth="4"
+            />
+            <path
+              d="M63.5 70.5L69 76L80.5 64"
+              stroke="white"
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="medizen-staff-check-path"
+            />
+          </g>
+        </svg>
+      </div>
+
+      <span className="text-[11px] font-extrabold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-3.5 py-1 rounded-full">
+        {isEdit ? "Credencial Clínica Actualizada" : "Credencial Institucional Activada"}
+      </span>
+
+      <h3 className="text-xl sm:text-2xl font-black text-foreground mt-3">
+        {isEdit ? "¡Perfil Profesional Actualizado!" : "¡Personal Registrado con Éxito!"}
+      </h3>
+      <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-md">
+        La cuenta de <strong className="text-foreground">{fullName}</strong> ya tiene acceso activo
+        en la clínica con sus permisos y especialidades configurados.
+      </p>
+
+      {/* Carnet Digital del Profesional */}
+      <div className="mt-6 w-full max-w-md rounded-2xl border border-border/80 bg-muted/30 p-4 text-left shadow-xs space-y-3">
+        <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-border/60">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="h-10 w-10 rounded-xl bg-primary/15 text-primary font-black text-sm flex items-center justify-center shrink-0">
+              {initials(fullName || email)}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-extrabold text-foreground truncate">{fullName}</p>
+              <p className="text-[11px] text-muted-foreground truncate flex items-center gap-1">
+                <Mail className="h-3 w-3 text-primary shrink-0" />
+                {email}
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] font-extrabold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-lg shrink-0">
+            {role === "admin" ? "Admin" : role === "recepcionista" ? "Recepción" : "Doctor"}
+          </span>
+        </div>
+
+        {specList.length > 0 && (
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1.5">
+              Especialidades Habilitadas
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {specList.map((sp) => (
+                <span
+                  key={sp}
+                  className="text-[10px] font-bold px-2.5 py-0.5 rounded-lg bg-primary/10 text-primary border border-primary/20 inline-flex items-center gap-1"
+                >
+                  <Sparkles className="h-2.5 w-2.5" />
+                  {sp}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {password && (
+          <div className="pt-2 border-t border-border/60 flex items-center justify-between gap-2">
+            <div className="text-xs">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                Clave Inicial de Acceso
+              </span>
+              <span className="font-mono font-bold text-foreground">{password}</span>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleCopyCredentials}
+              className="h-8 px-2.5 rounded-xl text-[11px] font-bold gap-1.5 cursor-pointer"
+            >
+              {copiedCreds ? (
+                <Check className="h-3.5 w-3.5 text-emerald-500" />
+              ) : (
+                <Copy className="h-3.5 w-3.5 text-primary" />
+              )}
+              Copiar Acceso
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-6 flex flex-col sm:flex-row flex-wrap items-center justify-center gap-2.5 w-full max-w-md">
+        {!isEdit && onResetForNew && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onResetForNew}
+            className="w-full sm:w-auto h-10 rounded-2xl font-bold text-xs gap-1.5 cursor-pointer"
+          >
+            <UserPlus className="h-4 w-4 text-primary" />
+            Registrar Otro Miembro
+          </Button>
+        )}
+
+        <Button
+          type="button"
+          onClick={onClose}
+          className="w-full sm:w-auto flex-1 h-10 rounded-2xl bg-primary text-primary-foreground hover:bg-[#3451d6] font-bold text-xs shadow-sm shadow-primary/20 cursor-pointer"
+        >
+          Listo, Volver a Personal
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function CreateUserPageView({
   form,
   setForm,
   onSubmit,
   busy,
+  createdSummary,
+  onResetForNew,
+  onClose,
 }: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   form: {
     email: string;
     password: string;
@@ -670,116 +962,456 @@ function CreateUserModal({
   setForm: React.Dispatch<React.SetStateAction<typeof form>>;
   onSubmit: (e: React.FormEvent) => void;
   busy: boolean;
+  createdSummary: {
+    full_name: string;
+    email: string;
+    password?: string;
+    role: "admin" | "doctor" | "recepcionista";
+    specialty: string;
+  } | null;
+  onResetForNew: () => void;
+  onClose: () => void;
 }) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const currentStep = STAFF_STEPS[activeIndex] ?? STAFF_STEPS[0];
+  const isFirstStep = activeIndex === 0;
+  const isLastStep = activeIndex === STAFF_STEPS.length - 1;
+  const isAllSealed = Boolean(createdSummary);
+
+  const handleNextStep = () => {
+    if (activeIndex === 0) {
+      if (!form.full_name.trim() || !form.email.trim() || form.password.length < 8) {
+        toast.error("Completa nombre, correo válido y contraseña (mín. 8 caracteres) para continuar");
+        return;
+      }
+    }
+    setActiveIndex((i) => Math.min(STAFF_STEPS.length - 1, i + 1));
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="rounded-3xl max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Registrar Nuevo Personal</DialogTitle>
-          <DialogDescription>
-            Crea la cuenta del profesional, define su rol y asigna sus especialidades (1, 2 o más).
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={onSubmit} className="space-y-4">
-          <div className="grid gap-2">
-            <Label htmlFor="fn">Nombre Completo</Label>
-            <Input
-              id="fn"
-              placeholder="Ej. Dra. María Pérez"
-              value={form.full_name}
-              onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-              required
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="em">Correo Electrónico</Label>
-            <Input
-              id="em"
-              type="email"
-              placeholder="profesional@clinica.com"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              required
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="pw">Contraseña (mín. 8 caracteres)</Label>
-            <Input
-              id="pw"
-              type="password"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              required
-              minLength={8}
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label>Rol del Personal</Label>
-            <Select
-              value={form.role}
-              onValueChange={(v) =>
-                setForm({ ...form, role: v as "admin" | "doctor" | "recepcionista" })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="doctor">Doctor / Especialista Médico</SelectItem>
-                <SelectItem value="recepcionista">Recepción / Facturación</SelectItem>
-                <SelectItem value="admin">Administrador del Sistema</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* SELECTOR MÚLTIPLE DE ESPECIALIDADES */}
-          <div className="grid gap-2">
-            <Label className={cn(form.role !== "doctor" && "text-muted-foreground")}>
-              Especialidad(es) o Ramas Médicas {form.role !== "doctor" && "(No aplica)"}
-            </Label>
-            <SpecialtyMultiSelector
-              value={form.specialty}
-              onChange={(val) => setForm({ ...form, specialty: val })}
-              disabled={form.role !== "doctor"}
-            />
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-              Cancelar
-            </Button>
+    <div className="bg-card border border-border rounded-3xl p-4 sm:p-6 shadow-xs min-h-[calc(100vh-8rem)] flex flex-col text-foreground w-full min-w-0 animate-in fade-in duration-200">
+      {/* Cabecera Superior Unificada */}
+      <header className="mb-6 space-y-3.5 pb-5 border-b border-border/60">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-start sm:items-center gap-3 min-w-0">
             <Button
-              type="submit"
-              disabled={busy}
-              className="bg-primary text-primary-foreground hover:bg-[#3451d6]"
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onClose}
+              className="h-9 px-3 rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground gap-1.5 shrink-0 cursor-pointer shadow-2xs"
             >
-              {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Crear Personal
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>Volver a Personal</span>
             </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground truncate">
+                  Registrar Nuevo Personal
+                </h1>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                  Control de Accesos
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Barra de Resumen en Vivo del Miembro */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-3 p-3 rounded-2xl bg-muted/35 border border-border/60 items-center">
+          <div className="md:col-span-4 flex items-center gap-2.5 min-w-0">
+            <div className="h-9 w-9 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
+              <UserRound className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block leading-none">
+                Profesional
+              </span>
+              <p className="text-xs sm:text-sm font-extrabold text-foreground truncate mt-1">
+                {form.full_name.trim() || "Nuevo Miembro"}
+              </p>
+            </div>
+          </div>
+
+          <div className="md:col-span-4 flex items-center gap-2.5 min-w-0 md:border-l md:border-border/60 md:pl-3.5">
+            <div className="h-9 w-9 rounded-xl bg-background border border-border/70 text-primary flex items-center justify-center shrink-0">
+              <Shield className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block leading-none">
+                Rol Asignado
+              </span>
+              <p className="text-xs font-extrabold text-foreground truncate mt-1">
+                {getRoleDisplayLabel(form.role)}
+              </p>
+            </div>
+          </div>
+
+          <div className="md:col-span-4 flex items-center gap-2.5 min-w-0 md:border-l md:border-border/60 md:pl-3.5">
+            <div className="h-9 w-9 rounded-xl bg-background border border-border/70 text-primary flex items-center justify-center shrink-0">
+              <Stethoscope className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block leading-none">
+                Especialidades
+              </span>
+              <p className="text-xs font-bold text-foreground truncate mt-1">
+                {form.role !== "doctor"
+                  ? "No aplica para este rol"
+                  : form.specialty.trim() || "Pendiente por seleccionar"}
+              </p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <form onSubmit={onSubmit} className="flex-1 flex flex-col lg:flex-row min-w-0">
+        {/* Stepper Horizontal Móvil (< lg) */}
+        <div className="lg:hidden mb-5 rounded-2xl border border-border/60 bg-muted/30 p-3.5">
+          <div className="flex items-center justify-between relative">
+            {STAFF_STEPS.map((step, idx) => {
+              const isCompleted = isAllSealed || idx < activeIndex;
+              const isActive = !isAllSealed && idx === activeIndex;
+              const isLast = idx === STAFF_STEPS.length - 1;
+
+              return (
+                <div key={step.id} className="flex items-center flex-1 last:flex-none">
+                  <button
+                    type="button"
+                    disabled={isAllSealed}
+                    onClick={() => setActiveIndex(idx)}
+                    className={cn(
+                      "relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-extrabold transition-all cursor-pointer disabled:cursor-default",
+                      isCompleted
+                        ? "border-2 border-emerald-500 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                        : isActive
+                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/30 ring-4 ring-primary/15"
+                          : "border-2 border-border bg-background text-muted-foreground",
+                    )}
+                  >
+                    {isCompleted ? <Check className="h-4 w-4 stroke-[2.5]" /> : idx + 1}
+                  </button>
+                  {!isLast && (
+                    <div className="flex-1 mx-2 h-0.5 rounded-full bg-border overflow-hidden">
+                      <div
+                        className={cn(
+                          "h-full transition-all duration-300",
+                          isCompleted ? "w-full bg-emerald-500" : "w-0 bg-primary",
+                        )}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-3 flex items-center justify-between gap-2 pt-2.5 border-t border-border/50">
+            <div className="min-w-0">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-primary block">
+                {isAllSealed ? "Registro Completado" : `Paso ${activeIndex + 1} de ${STAFF_STEPS.length}`}
+              </span>
+              <p className="text-sm font-bold text-foreground truncate">
+                {isAllSealed ? "Credencial Activada" : currentStep.title}
+              </p>
+            </div>
+            <span className="text-xs font-mono font-bold text-muted-foreground bg-background px-2.5 py-1 rounded-xl border border-border/60 shrink-0">
+              {isAllSealed ? "2 / 2 ✓" : `${activeIndex + 1} / ${STAFF_STEPS.length}`}
+            </span>
+          </div>
+        </div>
+
+        {/* Stepper Vertical Lateral Escritorio (lg+) */}
+        <aside className="hidden lg:flex flex-col w-64 shrink-0 pr-7 border-r border-border/60 select-none">
+          <div className="relative py-2">
+            {STAFF_STEPS.map((step, idx) => {
+              const isCompleted = isAllSealed || idx < activeIndex;
+              const isActive = !isAllSealed && idx === activeIndex;
+              const isLast = idx === STAFF_STEPS.length - 1;
+
+              return (
+                <div key={step.id} className="relative flex items-start justify-end gap-4 pb-8 last:pb-0">
+                  {!isLast && (
+                    <div
+                      className={cn(
+                        "absolute right-[17px] top-9 bottom-0 w-[2px] transition-colors",
+                        isCompleted ? "bg-emerald-500/60" : "bg-border",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full",
+                          isCompleted ? "bg-emerald-500" : "bg-muted-foreground/35",
+                        )}
+                      />
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    disabled={isAllSealed}
+                    onClick={() => setActiveIndex(idx)}
+                    className="text-right group cursor-pointer disabled:cursor-default focus:outline-none min-w-0 flex-1 pt-0.5"
+                  >
+                    <p
+                      className={cn(
+                        "text-xs font-bold transition-colors leading-snug",
+                        isActive
+                          ? "text-primary font-extrabold"
+                          : isCompleted
+                            ? "text-emerald-600 dark:text-emerald-400 font-bold"
+                            : "text-muted-foreground group-hover:text-foreground",
+                      )}
+                    >
+                      {step.title}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight">
+                      {step.subtitle}
+                    </p>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isAllSealed}
+                    onClick={() => setActiveIndex(idx)}
+                    className={cn(
+                      "relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-extrabold transition-all cursor-pointer disabled:cursor-default",
+                      isCompleted
+                        ? "border-2 border-emerald-500 bg-emerald-500/10 text-emerald-500 shadow-2xs"
+                        : isActive
+                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/30 ring-4 ring-primary/15"
+                          : "border-2 border-primary/30 bg-background text-muted-foreground hover:border-primary/60",
+                    )}
+                  >
+                    {isCompleted ? <Check className="h-4 w-4 stroke-[2.5]" /> : idx + 1}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </aside>
+
+        {/* Contenido Derecho: Paso Activo o Animación de Éxito */}
+        <div className="flex-1 min-w-0 lg:pl-8 flex flex-col justify-between">
+          {createdSummary ? (
+            <StaffSuccessAnimationCard
+              fullName={createdSummary.full_name}
+              email={createdSummary.email}
+              password={createdSummary.password}
+              role={createdSummary.role}
+              specialty={createdSummary.specialty}
+              onResetForNew={() => {
+                setActiveIndex(0);
+                onResetForNew();
+              }}
+              onClose={onClose}
+            />
+          ) : (
+            <>
+              <div className="min-w-0">
+                <div className="hidden lg:flex items-center justify-between pb-3.5 mb-5 border-b border-border/50">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary text-xs font-extrabold">
+                      {activeIndex + 1}
+                    </span>
+                    <div>
+                      <h2 className="text-base font-bold text-foreground leading-tight">
+                        {currentStep.title}
+                      </h2>
+                      <p className="text-xs text-muted-foreground">{currentStep.subtitle}</p>
+                    </div>
+                  </div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground bg-muted/50 px-3 py-1 rounded-xl border border-border/60">
+                    Paso {activeIndex + 1} de {STAFF_STEPS.length}
+                  </span>
+                </div>
+
+                {activeIndex === 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-1 max-w-2xl">
+                    <div className="md:col-span-2 space-y-1.5">
+                      <Label htmlFor="fn" className="text-xs font-bold">
+                        Nombre Completo del Profesional *
+                      </Label>
+                      <Input
+                        id="fn"
+                        placeholder="Ej. Dra. María Pérez"
+                        value={form.full_name}
+                        onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+                        className="h-10 rounded-xl"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="em" className="text-xs font-bold flex items-center gap-1.5">
+                        <Mail className="h-3.5 w-3.5 text-primary" /> Correo Electrónico (Login) *
+                      </Label>
+                      <Input
+                        id="em"
+                        type="email"
+                        placeholder="profesional@clinica.com"
+                        value={form.email}
+                        onChange={(e) => setForm({ ...form, email: e.target.value })}
+                        className="h-10 rounded-xl"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="pw" className="text-xs font-bold flex items-center gap-1.5">
+                        <KeyRound className="h-3.5 w-3.5 text-primary" /> Contraseña Inicial (mín. 8 caracteres) *
+                      </Label>
+                      <Input
+                        id="pw"
+                        type="password"
+                        placeholder="••••••••"
+                        value={form.password}
+                        onChange={(e) => setForm({ ...form, password: e.target.value })}
+                        className="h-10 rounded-xl"
+                        required
+                        minLength={8}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-5 py-1">
+                    <div className="space-y-2 max-w-2xl">
+                      <Label className="text-xs font-bold">Rol del Personal en la Clínica</Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        {[
+                          {
+                            id: "doctor" as const,
+                            title: "Doctor / Especialista",
+                            desc: "Consultas, historias y récipes",
+                            icon: Stethoscope,
+                          },
+                          {
+                            id: "recepcionista" as const,
+                            title: "Recepción / Caja",
+                            desc: "Agenda, sala de espera y cobros",
+                            icon: UserRound,
+                          },
+                          {
+                            id: "admin" as const,
+                            title: "Administrador",
+                            desc: "Control total de la clínica",
+                            icon: Shield,
+                          },
+                        ].map((r) => {
+                          const Icon = r.icon;
+                          const active = form.role === r.id;
+                          return (
+                            <button
+                              key={r.id}
+                              type="button"
+                              onClick={() => setForm({ ...form, role: r.id })}
+                              className={cn(
+                                "flex flex-col items-start gap-1.5 p-3.5 rounded-2xl border text-left transition-all cursor-pointer",
+                                active
+                                  ? "border-primary bg-primary/10 text-foreground shadow-xs ring-2 ring-primary/25"
+                                  : "border-border/70 bg-muted/20 text-muted-foreground hover:text-foreground hover:bg-muted/40",
+                              )}
+                            >
+                              <div className="flex items-center gap-2">
+                                <Icon className={cn("h-4 w-4", active ? "text-primary" : "text-muted-foreground")} />
+                                <span className="text-xs font-extrabold text-foreground">{r.title}</span>
+                              </div>
+                              <span className="text-[11px] text-muted-foreground leading-tight">
+                                {r.desc}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className={cn("text-xs font-bold", form.role !== "doctor" && "text-muted-foreground")}>
+                        Especialidad(es) o Ramas Médicas {form.role !== "doctor" && "(No aplica para este rol)"}
+                      </Label>
+                      <SpecialtyMultiSelector
+                        value={form.specialty}
+                        onChange={(val) => setForm({ ...form, specialty: val })}
+                        disabled={form.role !== "doctor"}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Pie de Navegación del Stepper */}
+              <div className="mt-6 border-t border-border/60 pt-4 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={onClose}
+                  disabled={busy}
+                  className="rounded-2xl w-full sm:w-auto h-10 text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  Cancelar
+                </Button>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setActiveIndex((i) => Math.max(0, i - 1))}
+                    disabled={isFirstStep || busy}
+                    className="rounded-2xl flex-1 sm:flex-initial h-10 px-4 text-xs font-bold gap-1 cursor-pointer"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Anterior
+                  </Button>
+
+                  {!isLastStep ? (
+                    <Button
+                      type="button"
+                      onClick={handleNextStep}
+                      disabled={busy}
+                      className="rounded-2xl flex-1 sm:flex-initial bg-primary text-primary-foreground hover:bg-[#3451d6] shadow-sm shadow-primary/20 h-10 px-5 text-xs font-bold gap-1 cursor-pointer"
+                    >
+                      Siguiente
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      type="submit"
+                      disabled={busy}
+                      className="rounded-2xl flex-1 sm:flex-initial bg-primary text-primary-foreground hover:bg-[#3451d6] shadow-sm shadow-primary/20 hover:opacity-95 px-6 h-10 text-xs font-bold cursor-pointer"
+                    >
+                      {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Crear Personal
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </form>
+    </div>
   );
 }
 
-function EditUserModal({
+function EditUserPageView({
   profile,
-  onOpenChange,
+  onClose,
   updateProfile,
 }: {
-  profile: ProfileWithRoles | null;
-  onOpenChange: (open: boolean) => void;
+  profile: ProfileWithRoles;
+  onClose: () => void;
   updateProfile: ReturnType<typeof useUpdateProfile>;
 }) {
   const [fullName, setFullName] = useState(profile?.full_name || "");
   const [specialty, setSpecialty] = useState(profile?.specialty || "");
   const [mpps, setMpps] = useState(profile?.mpps || "");
   const [cmc, setCmc] = useState(profile?.cmc || "");
+  const [savedSuccess, setSavedSuccess] = useState(false);
+
+  const isDoctor = profile?.roles.includes("doctor") || profile?.roles.includes("medico") || profile?.roles.includes("admin");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!profile) return;
     try {
       await updateProfile.mutateAsync({
         userId: profile.id,
@@ -790,82 +1422,108 @@ function EditUserModal({
         cmc: cmc || null,
       });
       toast.success("Perfil y especialidades actualizadas correctamente");
-      onOpenChange(false);
+      setSavedSuccess(true);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al actualizar");
     }
   };
 
-  const isDoctor = profile?.roles.includes("doctor") || profile?.roles.includes("medico");
-
   return (
-    <Dialog open={!!profile} onOpenChange={onOpenChange}>
-      <DialogContent className="rounded-3xl max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Editar Especialidades y Datos</DialogTitle>
-          <DialogDescription>
-            Modifica las ramas médicas y credenciales de {profile?.full_name || profile?.email}.
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid gap-2">
-            <Label htmlFor="efn">Nombre Completo</Label>
-            <Input
-              id="efn"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              required
-            />
-          </div>
+    <div className="bg-card border border-border rounded-3xl p-4 sm:p-6 shadow-xs min-h-[calc(100vh-8rem)] flex flex-col text-foreground w-full min-w-0 animate-in fade-in duration-200">
+      <header className="mb-6 space-y-3.5 pb-5 border-b border-border/60">
+        <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onClose}
+            className="h-9 px-3 rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground gap-1.5 shrink-0 cursor-pointer shadow-2xs"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>Volver a Personal</span>
+          </Button>
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground truncate">
+            Editar Especialidades y Credenciales
+          </h1>
+        </div>
+      </header>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="grid gap-2">
-              <Label htmlFor="empps">MPPS / Nro. Licencia</Label>
-              <Input
-                id="empps"
-                placeholder="Ej. 102.927"
-                value={mpps}
-                onChange={(e) => setMpps(e.target.value)}
+      {savedSuccess ? (
+        <StaffSuccessAnimationCard
+          isEdit
+          fullName={fullName}
+          email={profile.email}
+          role={profile.roles[0] || "doctor"}
+          specialty={specialty}
+          onClose={onClose}
+        />
+      ) : (
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col justify-between space-y-6">
+          <div className="space-y-5 max-w-3xl">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="efn" className="text-xs font-bold">Nombre Completo</Label>
+                <Input
+                  id="efn"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="h-10 rounded-xl"
+                  required
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="empps" className="text-xs font-bold">MPPS / Nro. Licencia</Label>
+                <Input
+                  id="empps"
+                  placeholder="Ej. 102.927"
+                  value={mpps}
+                  onChange={(e) => setMpps(e.target.value)}
+                  className="h-10 rounded-xl"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="ecmc" className="text-xs font-bold">Colegiado / CMC</Label>
+                <Input
+                  id="ecmc"
+                  placeholder="Ej. CMC-4589"
+                  value={cmc}
+                  onChange={(e) => setCmc(e.target.value)}
+                  className="h-10 rounded-xl"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-bold">Ramas Médicas o Especialidades</Label>
+              <SpecialtyMultiSelector
+                value={specialty}
+                onChange={setSpecialty}
+                disabled={!isDoctor}
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="ecmc">Colegiado / CMC</Label>
-              <Input
-                id="ecmc"
-                placeholder="Ej. CMC-4589"
-                value={cmc}
-                onChange={(e) => setCmc(e.target.value)}
-              />
-            </div>
           </div>
 
-          {/* SELECTOR MÚLTIPLE DE ESPECIALIDADES */}
-          <div className="grid gap-2">
-            <Label className={cn(!isDoctor && "text-muted-foreground")}>
-              Ramas Médicas o Especialidades {!isDoctor && "(No aplica)"}
-            </Label>
-            <SpecialtyMultiSelector
-              value={specialty}
-              onChange={setSpecialty}
-              disabled={!isDoctor}
-            />
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+          <div className="pt-4 border-t border-border/60 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onClose}
+              className="rounded-2xl h-10 text-xs font-semibold"
+            >
               Cancelar
             </Button>
             <Button
               type="submit"
               disabled={updateProfile.isPending}
-              className="bg-primary text-primary-foreground hover:bg-[#3451d6]"
+              className="rounded-2xl bg-primary text-primary-foreground hover:bg-[#3451d6] h-10 px-6 text-xs font-bold cursor-pointer"
             >
-              {updateProfile.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Guardar Cambios
+              {updateProfile.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Guardar Cambios
             </Button>
-          </DialogFooter>
+          </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      )}
+    </div>
   );
 }
 

@@ -558,6 +558,17 @@ function PatientDetailView({
   const [editOpen, setEditOpen] = useState(false);
   const reports = usePatientReportsState(doctors, myProfile);
 
+  if (editOpen) {
+    return (
+      <PatientForm
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        patient={viewing}
+        backLabel="Volver al Expediente"
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="p-4 sm:p-6 md:p-8 max-w-6xl mx-auto w-full bg-card/60 backdrop-blur-md rounded-[2.5rem] border border-border/40 shadow-sm">
@@ -622,8 +633,6 @@ function PatientDetailView({
           doctorCmc={reports.doctorCmc}
           setDoctorCmc={reports.setDoctorCmc}
         />
-
-        <PatientForm open={editOpen} onOpenChange={setEditOpen} patient={viewing} />
       </div>
     </div>
   );

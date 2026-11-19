@@ -1,18 +1,11 @@
-import React, { useState, useEffect, useMemo, useTransition, lazy, Suspense, memo } from "react";
+import React, { useState, useEffect, useMemo, memo } from "react";
 import { Link } from "@tanstack/react-router";
-import { Search, Bell, Settings, Calculator, Loader2 } from "lucide-react";
+import { Search, Bell, Settings, Calculator } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { LiveClockBadge } from "./DashboardCharts";
 import { useExchangeRate, type ExchangeRates } from "@/hooks/useExchangeRate";
-
-const BcvCalculatorDialog = lazy(() =>
-  import("./BcvCalculatorDialog").then((m) => ({ default: m.BcvCalculatorDialog })),
-);
-
-const preloadBcvDialog = () => {
-  void import("./BcvCalculatorDialog");
-};
+import { BcvCalculatorDialog } from "./BcvCalculatorDialog";
 
 export interface DashboardNotification {
   id: string;
@@ -37,13 +30,10 @@ const BcvQuickConverter = memo(function BcvQuickConverter({
 }) {
   const [hasMountedDialog, setHasMountedDialog] = useState(false);
   const [calcOpen, setCalcOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
 
   const handleOpenCalculator = () => {
-    startTransition(() => {
-      setHasMountedDialog(true);
-      setCalcOpen(true);
-    });
+    setHasMountedDialog(true);
+    setCalcOpen(true);
   };
 
   return (
@@ -51,21 +41,14 @@ const BcvQuickConverter = memo(function BcvQuickConverter({
       <button
         type="button"
         onClick={handleOpenCalculator}
-        onPointerEnter={preloadBcvDialog}
-        onFocus={preloadBcvDialog}
-        aria-busy={isPending}
         aria-label={`Abrir conversor BCV, tasa actual ${rate.toFixed(2)} bolívares`}
         className="flex items-center gap-2 min-h-11 sm:min-h-10 px-3.5 bg-card hover:bg-muted/50 border border-border hover:border-primary/40 rounded-full shadow-sm text-xs font-bold text-foreground transition-[transform,colors] duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:pointer-events-none cursor-pointer group"
         title="Abrir Calculadora y Conversor BCV (Actualizado en tiempo real)"
       >
-        {isPending ? (
-          <Loader2 className="h-4 w-4 text-primary animate-spin shrink-0" aria-hidden="true" />
-        ) : (
-          <Calculator
-            className="h-4 w-4 text-primary group-hover:scale-110 transition-transform duration-150 shrink-0"
-            aria-hidden="true"
-          />
-        )}
+        <Calculator
+          className="h-4 w-4 text-primary group-hover:scale-110 transition-transform duration-150 shrink-0"
+          aria-hidden="true"
+        />
         <span className="hidden sm:inline">Conversor</span>
         <span>BCV</span>
         <span className="text-[11px] font-semibold text-muted-foreground tabular-nums">
@@ -78,9 +61,7 @@ const BcvQuickConverter = memo(function BcvQuickConverter({
       </button>
 
       {hasMountedDialog && (
-        <Suspense fallback={null}>
-          <BcvCalculatorDialog open={calcOpen} onOpenChange={setCalcOpen} rates={rates} />
-        </Suspense>
+        <BcvCalculatorDialog open={calcOpen} onOpenChange={setCalcOpen} rates={rates} />
       )}
     </>
   );

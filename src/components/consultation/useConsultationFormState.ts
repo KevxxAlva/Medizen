@@ -652,11 +652,11 @@ async function executeConsultationSave(params: {
       }
       if (queryClient) {
         await Promise.all([
-          queryClient.invalidateQueries({ queryKey: ["facturas"], refetchType: "all" }),
-          queryClient.invalidateQueries({ queryKey: ["appointments"], refetchType: "all" }),
-          queryClient.invalidateQueries({ queryKey: ["dashboard_stats"], refetchType: "all" }),
-          queryClient.invalidateQueries({ queryKey: ["monthly_payments"], refetchType: "all" }),
-          queryClient.invalidateQueries({ queryKey: ["financial_accounts"], refetchType: "all" }),
+          queryClient.invalidateQueries({ queryKey: ["facturas"] }),
+          queryClient.invalidateQueries({ queryKey: ["appointments"] }),
+          queryClient.invalidateQueries({ queryKey: ["dashboard_stats"] }),
+          queryClient.invalidateQueries({ queryKey: ["monthly_payments"] }),
+          queryClient.invalidateQueries({ queryKey: ["financial_accounts"] }),
         ]);
       }
       toast.success("Consulta actualizada con éxito");
@@ -670,11 +670,11 @@ async function executeConsultationSave(params: {
       });
       if (queryClient) {
         await Promise.all([
-          queryClient.invalidateQueries({ queryKey: ["facturas"], refetchType: "all" }),
-          queryClient.invalidateQueries({ queryKey: ["appointments"], refetchType: "all" }),
-          queryClient.invalidateQueries({ queryKey: ["dashboard_stats"], refetchType: "all" }),
-          queryClient.invalidateQueries({ queryKey: ["monthly_payments"], refetchType: "all" }),
-          queryClient.invalidateQueries({ queryKey: ["financial_accounts"], refetchType: "all" }),
+          queryClient.invalidateQueries({ queryKey: ["facturas"] }),
+          queryClient.invalidateQueries({ queryKey: ["appointments"] }),
+          queryClient.invalidateQueries({ queryKey: ["dashboard_stats"] }),
+          queryClient.invalidateQueries({ queryKey: ["monthly_payments"] }),
+          queryClient.invalidateQueries({ queryKey: ["financial_accounts"] }),
         ]);
       }
       toast.success("Consulta registrada y factura generada con éxito");
@@ -700,10 +700,11 @@ async function executeConsultationSave(params: {
       clinic,
     );
 
-    onOpenChange?.(false);
+    return true;
   } catch (err: any) {
     console.error("Consultation save error:", err);
     toast.error(err?.message || JSON.stringify(err) || "Error guardando la consulta");
+    return false;
   }
 }
 
@@ -843,8 +844,10 @@ export function useConsultationFormState(
     applyPrescriptionTemplateValues(templateId, treatmentState.setIndications);
   };
 
-  const handleSave = (actionType: "save" | "print" | "whatsapp" = "save") => {
-    return executeConsultationSave({
+  const [isCompletedSuccess, setIsCompletedSuccess] = useState(false);
+
+  const handleSave = async (actionType: "save" | "print" | "whatsapp" = "save") => {
+    const ok = await executeConsultationSave({
       actionType,
       appointment,
       isEdit,
@@ -866,6 +869,31 @@ export function useConsultationFormState(
       onOpenChange,
       queryClient,
     });
+    if (ok) {
+      setIsCompletedSuccess(true);
+    }
+    return ok;
+  };
+
+  const exportRecipeOnly = async (actionType: "print" | "whatsapp") => {
+    const activeDoctor =
+      doctorSpecialtyState.currentDoctor ||
+      doctors.find(
+        (d) =>
+          d.id ===
+          (doctorSpecialtyState.selectedDoctorId ||
+            existingConsultation?.doctor_id ||
+            currentUserId),
+      );
+    await handleConsultationActionExport(
+      actionType,
+      treatmentState.indications,
+      patient,
+      appointment,
+      activeDoctor,
+      doctorSpecialtyState.selectedSpecialty,
+      clinic,
+    );
   };
 
   return {
@@ -940,5 +968,7 @@ export function useConsultationFormState(
     updateCustomConsumable: consumablesState.updateCustomConsumable,
     updateCommonQty: consumablesState.updateCommonQty,
     handleSave,
+    isCompletedSuccess,
+    exportRecipeOnly,
   };
 }

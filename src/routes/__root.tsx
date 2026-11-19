@@ -36,12 +36,40 @@ function NotFoundComponent() {
   );
 }
 
+const CHUNK_RELOAD_KEY = "medizen_chunk_reload_ts";
+const CHUNK_RELOAD_COOLDOWN_MS = 15_000;
+
+function isDynamicImportError(message: string): boolean {
+  const lower = message.toLowerCase();
+  return (
+    lower.includes("failed to fetch dynamically imported module") ||
+    lower.includes("importing a module script failed") ||
+    lower.includes("error loading dynamically imported module") ||
+    lower.includes("chunkloaderror") ||
+    lower.includes("unable to preload css")
+  );
+}
+
+async function clearServiceWorkerCachesAndReload(): Promise<void> {
+  if (typeof window === "undefined") return;
+  try {
+    if ("caches" in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+    }
+    if ("serviceWorker" in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map((r) => r.update()));
+    }
+  } catch {
+    // ignore cache clear errors
+  }
+  window.location.reload();
+}
+
 function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error("Root route error:", error);
   const router = useRouter();
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
 
   const errorMessage =
     error instanceof Error
@@ -50,12 +78,35 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
         ? error
         : "Se produjo un error inesperado en la aplicación.";
   const errorStack = error instanceof Error ? error.stack : undefined;
+  const isChunkError = isDynamicImportError(errorMessage);
+
+  useEffect(() => {
+    reportLovableError(error, { boundary: "tanstack_root_error_component" });
+
+    if (isChunkError && typeof window !== "undefined") {
+      try {
+        const lastReload = Number(sessionStorage.getItem(CHUNK_RELOAD_KEY) || "0");
+        if (Date.now() - lastReload > CHUNK_RELOAD_COOLDOWN_MS) {
+          sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now()));
+          void clearServiceWorkerCachesAndReload();
+        }
+      } catch {
+        // ignore storage errors
+      }
+    }
+  }, [error, isChunkError]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-2xl text-center bg-card p-8 rounded-3xl border border-destructive/20 shadow-xl">
-        <h1 className="text-xl font-bold text-destructive">Algo salió mal</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Error detectado en la aplicación:</p>
+        <h1 className="text-xl font-bold text-destructive">
+          {isChunkError ? "Actualizando versión de la aplicación…" : "Algo salió mal"}
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {isChunkError
+            ? "Se detectó una nueva actualización desplegada. Recarga para cargar los módulos más recientes:"
+            : "Error detectado en la aplicación:"}
+        </p>
 
         <div className="mt-4 p-4 bg-muted rounded-2xl text-left font-mono text-xs overflow-auto max-h-[300px] border border-border/60">
           <p className="font-bold text-foreground mb-1">{errorMessage}</p>
@@ -67,16 +118,22 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
         <div className="mt-6 flex justify-center gap-3">
           <button
             onClick={() => {
+              if (isChunkError) {
+                void clearServiceWorkerCachesAndReload();
+                return;
+              }
               router.invalidate();
               reset();
             }}
-            className="rounded-2xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-95"
+            className="rounded-2xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-95 cursor-pointer"
           >
             Reintentar
           </button>
           <button
-            onClick={() => window.location.reload()}
-            className="rounded-2xl border border-border px-4 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-muted"
+            onClick={() => {
+              void clearServiceWorkerCachesAndReload();
+            }}
+            className="rounded-2xl border border-border px-4 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-muted cursor-pointer"
           >
             Forzar Recarga (F5)
           </button>
@@ -154,22 +211,43 @@ function RootComponent() {
   useEffect(() => {
     applySavedThemeColor();
 
-    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-      const isLocalhost =
-        window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    if (typeof window !== "undefined") {
+      const handleVitePreloadError = (event: Event) => {
+        event.preventDefault();
+        try {
+          const lastReload = Number(sessionStorage.getItem(CHUNK_RELOAD_KEY) || "0");
+          if (Date.now() - lastReload > CHUNK_RELOAD_COOLDOWN_MS) {
+            sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now()));
+            void clearServiceWorkerCachesAndReload();
+          }
+        } catch {
+          window.location.reload();
+        }
+      };
 
-      if ((import.meta.env.DEV || isLocalhost) && "caches" in window) {
-        caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
+      window.addEventListener("vite:preloadError", handleVitePreloadError);
+
+      if ("serviceWorker" in navigator) {
+        const isLocalhost =
+          window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+
+        if ((import.meta.env.DEV || isLocalhost) && "caches" in window) {
+          caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
+        }
+
+        navigator.serviceWorker
+          .register("/sw.js")
+          .then((reg) => {
+            console.log("[PWA] Service Worker registrado con éxito:", reg.scope);
+          })
+          .catch((err) => {
+            console.warn("[PWA] Error al registrar Service Worker:", err);
+          });
       }
 
-      navigator.serviceWorker
-        .register("/sw.js")
-        .then((reg) => {
-          console.log("[PWA] Service Worker registrado con éxito:", reg.scope);
-        })
-        .catch((err) => {
-          console.warn("[PWA] Error al registrar Service Worker:", err);
-        });
+      return () => {
+        window.removeEventListener("vite:preloadError", handleVitePreloadError);
+      };
     }
   }, []);
 

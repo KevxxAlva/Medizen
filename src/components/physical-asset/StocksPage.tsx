@@ -103,9 +103,9 @@ export function StocksPage() {
         await createItem.mutateAsync(itemData);
         toast.success("Nuevo artículo registrado en el inventario");
       }
-      setFormOpen(false);
-    } catch {
+    } catch (err) {
       toast.error("Error al guardar el artículo");
+      throw err;
     }
   };
 
@@ -134,6 +134,18 @@ export function StocksPage() {
           Cargando inventario de existencias...
         </p>
       </div>
+    );
+  }
+
+  if (formOpen) {
+    return (
+      <StockFormDialog
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        editing={editing}
+        onSave={handleSave}
+        isPending={createItem.isPending || updateItem.isPending}
+      />
     );
   }
 
@@ -210,14 +222,6 @@ export function StocksPage() {
           setFilterCategory("all");
           setFilterStatus("all");
         }}
-      />
-
-      <StockFormDialog
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        editing={editing}
-        onSave={handleSave}
-        isPending={createItem.isPending || updateItem.isPending}
       />
     </div>
   );
