@@ -294,12 +294,12 @@ export function useSalesInvoices() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["facturas"], refetchType: "all" });
-      queryClient.invalidateQueries({ queryKey: ["financial_accounts"], refetchType: "all" });
-      queryClient.invalidateQueries({ queryKey: ["dashboard_stats"], refetchType: "all" });
-      queryClient.invalidateQueries({ queryKey: ["monthly_payments"], refetchType: "all" });
-      queryClient.invalidateQueries({ queryKey: ["dashboard_trends"], refetchType: "all" });
-      queryClient.invalidateQueries({ queryKey: ["appointments"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["facturas"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard_stats"] });
+      queryClient.invalidateQueries({ queryKey: ["monthly_payments"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard_trends"] });
+      queryClient.invalidateQueries({ queryKey: ["appointments"] });
       toast.success("Factura cobrada y conciliada exitosamente");
     },
     onError: () => {

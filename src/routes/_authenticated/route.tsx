@@ -16,7 +16,7 @@ import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import { Menu, Lock, AlertTriangle, LogOut, Sparkles, Megaphone } from "lucide-react";
 import { useClinicInfo, getSaasPlanConfig, type ClinicInfo } from "@/lib/api/clinic";
 import { useGlobalAnnouncement, getClinicDueStatus } from "@/lib/api/superadmin";
-import { useAuthSession, useRoles } from "@/hooks/useAuth";
+import { useAuthSession, useRoles, setAuthSessionManually } from "@/hooks/useAuth";
 import { useMyProfile } from "@/lib/api/profiles";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ThemeCustomizer } from "@/components/ThemeCustomizer";
@@ -123,13 +123,24 @@ function AuthenticatedLayout() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.navigate({ to: "/auth", replace: true });
+      let cancelled = false;
+      supabase.auth.getSession().then(({ data }) => {
+        if (cancelled) return;
+        if (data.session) {
+          setAuthSessionManually(data.session);
+        } else {
+          router.navigate({ to: "/auth", replace: true });
+        }
+      });
+      return () => {
+        cancelled = true;
+      };
     }
   }, [authLoading, user, router]);
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_OUT") {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT" && !session) {
         router.navigate({ to: "/auth", replace: true });
       }
     });

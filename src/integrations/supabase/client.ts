@@ -50,9 +50,10 @@ const authStorage = {
   getItem(key: string): string | null {
     if (typeof window === "undefined") return null;
     try {
-      return isSessionPersistenceEnabled()
-        ? window.localStorage.getItem(key)
-        : window.sessionStorage.getItem(key);
+      if (isSessionPersistenceEnabled()) {
+        return window.localStorage.getItem(key) ?? window.sessionStorage.getItem(key);
+      }
+      return window.sessionStorage.getItem(key) ?? window.localStorage.getItem(key);
     } catch {
       return null;
     }
@@ -82,6 +83,35 @@ const authStorage = {
   },
 };
 
+// In-process FIFO mutex queue per lock name: prevents concurrent refresh_token rotation
+// race conditions on mobile (which cause GoTrue to revoke the session and sign out)
+// while avoiding browser navigator.locks cross-tab deadlocks.
+const authLockQueues = new Map<string, Promise<unknown>>();
+
+async function acquireInProcessLock<R>(
+  name: string,
+  _acquireTimeout: number,
+  fn: () => Promise<R>
+): Promise<R> {
+  const previous = authLockQueues.get(name) ?? Promise.resolve();
+  let release!: () => void;
+  const current = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const chained = previous.then(() => current, () => current);
+  authLockQueues.set(name, chained);
+
+  await previous.catch(() => {});
+  try {
+    return await fn();
+  } finally {
+    release();
+    if (authLockQueues.get(name) === chained) {
+      authLockQueues.delete(name);
+    }
+  }
+}
+
 function createSupabaseClient() {
   const SUPABASE_URL = getEnvVar('SUPABASE_URL', [
     'VITE_SUPABASE_URL',
@@ -97,10 +127,7 @@ function createSupabaseClient() {
       storage: typeof window !== 'undefined' ? authStorage : undefined,
       persistSession: true,
       autoRefreshToken: true,
-      // Avoid cross-tab navigator.locks deadlocks when multiple tabs are open on localhost
-      lock: async <R>(_name: string, _acquireTimeout: number, fn: () => Promise<R>): Promise<R> => {
-        return await fn();
-      },
+      lock: acquireInProcessLock,
     }
   });
 }

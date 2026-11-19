@@ -848,6 +848,7 @@ export function ConfirmPaymentDialog(props: ConfirmPaymentDialogProps) {
 
         <DialogFooter>
           <Button
+            type="button"
             variant="outline"
             onClick={() => props.onOpenChange(false)}
             className="rounded-xl hover:bg-muted"
@@ -856,6 +857,7 @@ export function ConfirmPaymentDialog(props: ConfirmPaymentDialogProps) {
             Cancelar
           </Button>
           <Button
+            type="button"
             onClick={s.handleSubmitConfirm}
             className="rounded-xl bg-primary text-primary-foreground cursor-pointer"
             disabled={isPending}
