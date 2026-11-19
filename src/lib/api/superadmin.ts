@@ -755,3 +755,111 @@ export function useUpdateClinica() {
     },
   });
 }
+
+export function useDeleteClinica() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id_clinica }: { id_clinica: string }) => {
+      // 1. Intentar eliminación atómica vía RPC SECURITY DEFINER si está disponible
+      const { error: rpcError } = await supabase.rpc(
+        "superadmin_delete_clinic" as any,
+        { p_id_clinica: id_clinica }
+      );
+
+      if (rpcError) {
+        // Fallback: eliminar en orden jerárquico estricto (hijos -> padres) para evitar violaciones de FK
+        const { data: clinicUsers } = await supabase
+          .from("usuarios")
+          .select("id_usuario, auth_id, es_superadmin")
+          .eq("id_clinica", id_clinica);
+
+        if (clinicUsers && clinicUsers.length > 0) {
+          const nonSuperAdminsWithAuth = clinicUsers.filter(
+            (u: any) => !u.es_superadmin && u.auth_id
+          );
+          await Promise.allSettled(
+            nonSuperAdminsWithAuth.map((u: any) =>
+              supabase.rpc("admin_delete_staff_user", {
+                p_user_id: u.auth_id,
+              })
+            )
+          );
+        }
+
+        // Nivel 1: Tablas hoja (detalles, pagos, insumos, exámenes, archivos, finanzas, inventario)
+        const leafTables = [
+          "detalles_receta",
+          "recetas",
+          "insumos_consulta",
+          "examenes_laboratorio",
+          "archivos_pacientes",
+          "document_verifications",
+          "pagos",
+          "detalles_factura",
+          "facturas",
+          "payment_methods",
+          "financial_accounts",
+          "financial_purchases",
+          "inventory_stocks",
+          "daily_goals",
+          "support_tickets",
+          "audit_logs",
+          "clinic_info",
+          "horarios_medicos",
+        ];
+        for (const table of leafTables) {
+          await supabase.from(table as any).delete().eq("id_clinica", id_clinica);
+        }
+
+        // Nivel 2: Consultas -> Citas -> Historias Clínicas -> Pacientes -> Servicios
+        await supabase.from("consultas").delete().eq("id_clinica", id_clinica);
+        await supabase.from("citas").delete().eq("id_clinica", id_clinica);
+        await supabase.from("historias_clinicas").delete().eq("id_clinica", id_clinica);
+        await supabase.from("pacientes").delete().eq("id_clinica", id_clinica);
+        await supabase.from("servicios").delete().eq("id_clinica", id_clinica);
+
+        // Nivel 3: Personal y usuarios de la clínica
+        await supabase
+          .from("usuarios")
+          .update({ id_clinica: null } as any)
+          .eq("id_clinica", id_clinica)
+          .eq("es_superadmin", true);
+        await supabase.from("medicos").delete().eq("id_clinica", id_clinica);
+        await supabase
+          .from("usuarios")
+          .delete()
+          .eq("id_clinica", id_clinica)
+          .eq("es_superadmin", false);
+
+        // Nivel 4: Eliminar la clínica
+        const { error } = await supabase
+          .from("clinicas")
+          .delete()
+          .eq("id_clinica", id_clinica);
+
+        if (error) throw error;
+      }
+
+      if (typeof window !== "undefined") {
+        try {
+          Object.keys(localStorage).forEach((k) => {
+            if (k.startsWith("medizen_cached_clinic_info_")) {
+              localStorage.removeItem(k);
+            }
+          });
+        } catch {
+          // ignore
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["superadmin_clinicas"] });
+      queryClient.invalidateQueries({ queryKey: ["superadmin_clinic_staff"] });
+      queryClient.invalidateQueries({ queryKey: ["clinic_info"] });
+      queryClient.invalidateQueries({ queryKey: ["global_saas_announcement"] });
+      void broadcastSaasSync("clinicas");
+    },
+  });
+}
+
