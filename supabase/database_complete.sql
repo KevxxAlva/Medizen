@@ -810,6 +810,66 @@ BEGIN
 END;
 $$;
 
+-- Procedimiento: Eliminar Clínica y todos sus registros dependientes en orden jerárquico (Superadmin RPC)
+CREATE OR REPLACE FUNCTION public.superadmin_delete_clinic(p_id_clinica uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public', 'auth' AS $$
+DECLARE
+  v_user record;
+BEGIN
+  IF NOT public.is_superadmin() THEN
+    RAISE EXCEPTION 'Acceso denegado: solo el Super Administrador puede eliminar clínicas.';
+  END IF;
+
+  UPDATE public.usuarios
+  SET id_clinica = NULL
+  WHERE id_clinica = p_id_clinica AND es_superadmin = true;
+
+  DELETE FROM public.detalles_receta WHERE id_clinica = p_id_clinica OR id_receta IN (SELECT id_receta FROM public.recetas WHERE id_clinica = p_id_clinica);
+  DELETE FROM public.recetas WHERE id_clinica = p_id_clinica OR id_consulta IN (SELECT id_consulta FROM public.consultas WHERE id_clinica = p_id_clinica);
+  DELETE FROM public.insumos_consulta WHERE id_clinica = p_id_clinica;
+  DELETE FROM public.examenes_laboratorio WHERE id_clinica = p_id_clinica OR id_paciente IN (SELECT id_paciente FROM public.pacientes WHERE id_clinica = p_id_clinica);
+  DELETE FROM public.archivos_pacientes WHERE id_clinica = p_id_clinica OR id_paciente IN (SELECT id_paciente FROM public.pacientes WHERE id_clinica = p_id_clinica);
+  DELETE FROM public.polizas_pacientes WHERE id_paciente IN (SELECT id_paciente FROM public.pacientes WHERE id_clinica = p_id_clinica);
+  DELETE FROM public.document_verifications WHERE id_clinica = p_id_clinica;
+  DELETE FROM public.pagos WHERE id_clinica = p_id_clinica OR id_factura IN (SELECT id_factura FROM public.facturas WHERE id_clinica = p_id_clinica);
+  DELETE FROM public.detalles_factura WHERE id_clinica = p_id_clinica OR id_factura IN (SELECT id_factura FROM public.facturas WHERE id_clinica = p_id_clinica);
+  DELETE FROM public.facturas WHERE id_clinica = p_id_clinica OR id_paciente IN (SELECT id_paciente FROM public.pacientes WHERE id_clinica = p_id_clinica);
+  DELETE FROM public.consultas WHERE id_clinica = p_id_clinica OR id_cita IN (SELECT id_cita FROM public.citas WHERE id_clinica = p_id_clinica) OR id_historia IN (SELECT id_historia FROM public.historias_clinicas WHERE id_clinica = p_id_clinica);
+  DELETE FROM public.citas WHERE id_clinica = p_id_clinica OR id_paciente IN (SELECT id_paciente FROM public.pacientes WHERE id_clinica = p_id_clinica);
+  DELETE FROM public.historias_clinicas WHERE id_clinica = p_id_clinica OR id_paciente IN (SELECT id_paciente FROM public.pacientes WHERE id_clinica = p_id_clinica);
+  DELETE FROM public.pacientes WHERE id_clinica = p_id_clinica;
+  DELETE FROM public.horarios_medicos WHERE id_clinica = p_id_clinica;
+  DELETE FROM public.servicios WHERE id_clinica = p_id_clinica;
+  DELETE FROM public.payment_methods WHERE id_clinica = p_id_clinica;
+  DELETE FROM public.financial_accounts WHERE id_clinica = p_id_clinica;
+  DELETE FROM public.financial_purchases WHERE id_clinica = p_id_clinica;
+  DELETE FROM public.inventory_stocks WHERE id_clinica = p_id_clinica;
+  DELETE FROM public.daily_goals WHERE id_clinica = p_id_clinica;
+  DELETE FROM public.support_tickets WHERE id_clinica = p_id_clinica;
+  DELETE FROM public.audit_logs WHERE id_clinica = p_id_clinica;
+  DELETE FROM public.clinic_info WHERE id_clinica = p_id_clinica;
+
+  DELETE FROM public.medicos WHERE id_clinica = p_id_clinica;
+  FOR v_user IN
+    SELECT id_usuario, auth_id
+    FROM public.usuarios
+    WHERE id_clinica = p_id_clinica AND COALESCE(es_superadmin, false) = false
+  LOOP
+    DELETE FROM public.medicos WHERE id_usuario = v_user.id_usuario;
+    DELETE FROM public.usuarios WHERE id_usuario = v_user.id_usuario;
+    IF v_user.auth_id IS NOT NULL AND v_user.auth_id <> auth.uid() THEN
+      DELETE FROM auth.identities WHERE user_id = v_user.auth_id;
+      DELETE FROM auth.users WHERE id = v_user.auth_id;
+    END IF;
+  END LOOP;
+
+  DELETE FROM public.clinicas WHERE id_clinica = p_id_clinica;
+END;
+$$;
+
 -- Procedimiento: Restablecer Contraseña Directa de Cualquier Usuario / Admin (Superadmin RPC)
 CREATE OR REPLACE FUNCTION public.superadmin_reset_user_password(
   p_auth_id uuid DEFAULT NULL,

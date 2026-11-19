@@ -36,6 +36,7 @@ import {
   useCreateClinica,
   useToggleClinicaStatus,
   useUpdateClinica,
+  useDeleteClinica,
   useClinicStaff,
   useRemoveClinicStaffMember,
   useResetClinicUserPassword,
@@ -89,8 +90,12 @@ export function SuperAdminPage() {
   const createMutation = useCreateClinica();
   const toggleStatusMutation = useToggleClinicaStatus();
   const updateMutation = useUpdateClinica();
+  const deleteClinicaMutation = useDeleteClinica();
   const resetPasswordMutation = useResetClinicUserPassword();
   const removeStaffMutation = useRemoveClinicStaffMember();
+
+  // Confirmación de eliminación de clínica
+  const [clinicToDelete, setClinicToDelete] = useState<Clinica | null>(null);
 
   // Anuncio global
   const { data: globalAnnouncement } = useGlobalAnnouncement();
@@ -498,6 +503,23 @@ export function SuperAdminPage() {
   const handleToggleStatus = async (clinica: Clinica) => {
     const nuevoEstado = clinica.estado === "suspendido" ? "activo" : "suspendido";
     await handleSetStatus(clinica, nuevoEstado);
+  };
+
+  const handleConfirmDeleteClinica = async () => {
+    if (!clinicToDelete) return;
+    const targetName = clinicToDelete.nombre;
+    const targetId = clinicToDelete.id_clinica;
+    try {
+      await deleteClinicaMutation.mutateAsync({ id_clinica: targetId });
+      if (selectedClinica?.id_clinica === targetId) {
+        setIsDetailsOpen(false);
+        setSelectedClinica(null);
+      }
+      setClinicToDelete(null);
+      toast.success(`Clínica "${targetName}" eliminada permanentemente.`);
+    } catch (err: any) {
+      toast.error(err.message || "Error al eliminar la clínica.");
+    }
   };
 
   const copyClinicSlug = (slug: string) => {
@@ -1094,6 +1116,17 @@ export function SuperAdminPage() {
                               )}
                             >
                               <Power className="h-3.5 w-3.5" />
+                            </Button>
+
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setClinicToDelete(clinica)}
+                              disabled={deleteClinicaMutation.isPending}
+                              title="Eliminar clínica"
+                              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           </div>
                         </td>
@@ -1878,33 +1911,104 @@ export function SuperAdminPage() {
             </div>
           )}
 
-          <DialogFooter className="flex flex-col sm:flex-row sm:justify-end items-center gap-2 pt-2 border-t border-border/30">
-            {selectedClinica && hasUnsavedChanges && (
+          <DialogFooter className="flex flex-col sm:flex-row sm:justify-between items-center gap-2 pt-2 border-t border-border/30">
+            {selectedClinica ? (
               <Button
-                variant="default"
-                onClick={handleSaveLegalDetails}
-                disabled={updateMutation.isPending}
-                className="w-full sm:w-auto text-xs gap-1.5"
+                type="button"
+                variant="outline"
+                onClick={() => setClinicToDelete(selectedClinica)}
+                disabled={deleteClinicaMutation.isPending}
+                className="w-full sm:w-auto text-xs gap-1.5 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
               >
-                {updateMutation.isPending ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Save className="h-3.5 w-3.5" />
-                )}
-                Guardar Cambios
+                <Trash2 className="h-3.5 w-3.5" />
+                Eliminar Clínica
               </Button>
+            ) : (
+              <div />
             )}
+
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+              {selectedClinica && hasUnsavedChanges && (
+                <Button
+                  variant="default"
+                  onClick={handleSaveLegalDetails}
+                  disabled={updateMutation.isPending}
+                  className="w-full sm:w-auto text-xs gap-1.5"
+                >
+                  {updateMutation.isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Save className="h-3.5 w-3.5" />
+                  )}
+                  Guardar Cambios
+                </Button>
+              )}
+              <Button
+                variant={selectedClinica && hasUnsavedChanges ? "outline" : "default"}
+                onClick={async () => {
+                  if (selectedClinica && editClinicName.trim() && hasUnsavedChanges) {
+                    await handleSaveLegalDetails();
+                  }
+                  setIsDetailsOpen(false);
+                }}
+                className="w-full sm:w-auto text-xs"
+              >
+                Cerrar Expediente
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Confirmación para Eliminar Clínica */}
+      <Dialog
+        open={Boolean(clinicToDelete)}
+        onOpenChange={(open) => {
+          if (!open && !deleteClinicaMutation.isPending) {
+            setClinicToDelete(null);
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              Eliminar Clínica
+            </DialogTitle>
+            <DialogDescription className="pt-1 text-xs leading-relaxed">
+              ¿Estás seguro de que deseas eliminar permanentemente la clínica{" "}
+              <span className="font-bold text-foreground">{clinicToDelete?.nombre}</span> (
+              <span className="font-mono">{clinicToDelete?.slug}</span>)? Esta acción eliminará su organización, personal asociado y registros vinculados.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 pt-2">
             <Button
-              variant={selectedClinica && hasUnsavedChanges ? "outline" : "default"}
-              onClick={async () => {
-                if (selectedClinica && editClinicName.trim() && hasUnsavedChanges) {
-                  await handleSaveLegalDetails();
-                }
-                setIsDetailsOpen(false);
-              }}
-              className="w-full sm:w-auto text-xs"
+              type="button"
+              variant="outline"
+              disabled={deleteClinicaMutation.isPending}
+              onClick={() => setClinicToDelete(null)}
+              className="text-xs"
             >
-              Cerrar Expediente
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={deleteClinicaMutation.isPending}
+              onClick={handleConfirmDeleteClinica}
+              className="text-xs gap-1.5 font-semibold"
+            >
+              {deleteClinicaMutation.isPending ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Eliminando...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Sí, Eliminar Clínica
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
