@@ -43,9 +43,9 @@ export function ConsultationPlanTab({
   currentSpecialtyPrescriptions,
 }: ConsultationPlanTabProps) {
   return (
-    <TabsContent value="plan" className="grid gap-4 mt-0">
-      <div className="grid gap-2">
-        <div className="flex items-center justify-between">
+    <TabsContent value="plan" className="grid gap-4 mt-0 min-w-0">
+      <div className="grid gap-2 min-w-0">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <Label htmlFor="c-diagnosis">Diagnóstico</Label>
           <VoiceDictationButton
             size="sm"
@@ -64,9 +64,9 @@ export function ConsultationPlanTab({
         />
       </div>
 
-      <div className="grid gap-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+      <div className="grid gap-2 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="flex items-center justify-between sm:justify-start gap-2">
             <Label htmlFor="c-indications">Indicaciones / Receta</Label>
             <VoiceDictationButton
               size="sm"
@@ -76,7 +76,7 @@ export function ConsultationPlanTab({
             />
           </div>
           <Select onValueChange={applyPrescriptionTemplate}>
-            <SelectTrigger className="w-[200px] h-7 text-xs rounded-xl bg-muted/50 border-0 font-medium">
+            <SelectTrigger className="w-full sm:w-[200px] h-8 sm:h-7 text-xs rounded-xl bg-muted/50 border-0 font-medium">
               <SelectValue placeholder="Recetas rápidas…" />
             </SelectTrigger>
             <SelectContent className="rounded-xl max-h-[300px]">
@@ -97,9 +97,9 @@ export function ConsultationPlanTab({
         />
       </div>
 
-      <div className="grid gap-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="c-exams">Exámenes Complementarios Solicitados</Label>
+      <div className="grid gap-2 min-w-0">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <Label htmlFor="c-exams" className="min-w-0">Exámenes Complementarios Solicitados</Label>
           <VoiceDictationButton
             size="sm"
             onTranscript={(spoken) =>
@@ -116,9 +116,9 @@ export function ConsultationPlanTab({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="grid gap-2">
-          <div className="flex items-center justify-between">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-w-0">
+        <div className="grid gap-2 min-w-0">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <Label htmlFor="c-plan">Plan y Seguimiento</Label>
             <VoiceDictationButton
               size="sm"
@@ -135,7 +135,7 @@ export function ConsultationPlanTab({
             className="rounded-2xl min-h-[90px]"
           />
         </div>
-        <div className="grid gap-2 justify-between">
+        <div className="flex flex-col justify-between gap-3 min-w-0">
           <div className="grid gap-2 w-full">
             <Label htmlFor="c-next-date">Fecha sugerida próxima cita</Label>
             <Input
@@ -146,8 +146,8 @@ export function ConsultationPlanTab({
               className="rounded-2xl"
             />
           </div>
-          <div className="flex items-center gap-1.5 p-3 rounded-2xl bg-amber-50 text-amber-800 border border-amber-200/50 text-[11px]">
-            <ShieldAlert className="h-4 w-4 shrink-0" />
+          <div className="flex items-start gap-2 p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border border-amber-200/60 dark:border-amber-800/40 text-[11px] leading-relaxed">
+            <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5" />
             <span>Al guardar, la cita se marcará automáticamente como completada.</span>
           </div>
         </div>
