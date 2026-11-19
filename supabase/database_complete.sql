@@ -353,8 +353,8 @@ CREATE TABLE IF NOT EXISTS public.pagos (
   id_clinica uuid REFERENCES public.clinicas(id_clinica) ON DELETE CASCADE DEFAULT public.current_user_clinic_id(),
   id_factura integer REFERENCES public.facturas(id_factura) ON DELETE CASCADE,
   monto_pagado numeric(10,2) NOT NULL,
-  metodo_pago varchar(50),
-  referencia varchar(100),
+  metodo_pago text,
+  referencia text,
   fecha_pago timestamptz DEFAULT now()
 );
 

@@ -315,23 +315,29 @@ function composePaymentConfirmation({
   const rateNote = `Tasa ${RATE_LABELS[dialogRateType].short}: ${activeRate.toFixed(2)} Bs`;
 
   if (selectedCategory === "Cashea") {
-    finalMethodLabel = `Cashea (Inicial ${casheaInitialPct}% · ${casheaInitialMethod})`;
+    const shortInitMethod =
+      casheaInitialMethod === "Transferencia Bancaria"
+        ? "Transf."
+        : casheaInitialMethod === "Efectivo Divisas ($)"
+          ? "Divisas"
+          : casheaInitialMethod === "Efectivo (Bolívares)"
+            ? "Efect. Bs"
+            : casheaInitialMethod;
+    finalMethodLabel = `Cashea (${casheaInitialPct}% · ${shortInitMethod})`.slice(0, 50);
     composedRef = [
-      casheaOrderNumber.trim() ? `Orden #${casheaOrderNumber.trim()}` : null,
-      `Inicial ${casheaInitialPct}%: $${casheaInitialUsd.toFixed(2)} (${formatBs(
-        casheaInitialUsd,
-        activeRate
-      )} vía ${casheaInitialMethod})`,
-      `Financiado: $${casheaFinancedUsd.toFixed(2)} (3 cuotas de $${casheaInstallmentUsd.toFixed(2)})`,
-      composedRef ? `Ref Inicial: ${composedRef}` : null,
+      casheaOrderNumber.trim() ? `Ord #${casheaOrderNumber.trim()}` : null,
+      `Ini ${casheaInitialPct}% $${casheaInitialUsd.toFixed(2)} (${shortInitMethod})`,
+      `3x$${casheaInstallmentUsd.toFixed(2)}`,
+      composedRef ? `Ref ${composedRef}` : null,
     ]
       .filter(Boolean)
-      .join(" | ");
+      .join(" | ")
+      .slice(0, 100);
   } else if (isSplitPayment && usdPart > 0) {
     const splitSummary = `Mixto: $${usdPart.toFixed(2)} + ${formatBs(remainingUsd, activeRate)} (${rateNote})`;
-    composedRef = composedRef ? `${composedRef} | ${splitSummary}` : splitSummary;
+    composedRef = (composedRef ? `${composedRef} | ${splitSummary}` : splitSummary).slice(0, 100);
   } else if (dialogRateType !== "bcv") {
-    composedRef = composedRef ? `${composedRef} | ${rateNote}` : rateNote;
+    composedRef = (composedRef ? `${composedRef} | ${rateNote}` : rateNote).slice(0, 100);
   }
 
   return { composedRef, finalMethodLabel };

@@ -134,10 +134,10 @@ export function AppointmentServiceSelect({
       </div>
 
       <Select value={value} onValueChange={handleChange}>
-        <SelectTrigger>
+        <SelectTrigger className="h-11 rounded-xl bg-background border-border/50 text-xs font-medium">
           <SelectValue placeholder="Selecciona servicio médico…" />
         </SelectTrigger>
-        <SelectContent className="max-h-[320px]">
+        <SelectContent className="max-h-[320px] z-[70]">
           <SelectItem value="none">Ninguno (Consulta General)</SelectItem>
 
           {matchingServices.length > 0 && (

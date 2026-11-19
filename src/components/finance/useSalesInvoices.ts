@@ -255,29 +255,34 @@ export function useSalesInvoices() {
       if (facturaError) throw facturaError;
 
       if (status === "Pagado" && method) {
+        const safeMethod = method.trim().slice(0, 50);
+        const safeReference = reference ? reference.trim().slice(0, 100) : null;
+
         const { data: existingPagos } = await supabase
           .from("pagos")
           .select("id_pago")
           .eq("id_factura", id);
 
         if (existingPagos && existingPagos.length > 0) {
-          await supabase
+          const { error: updatePagoErr } = await supabase
             .from("pagos")
             .update({
-              metodo_pago: method,
-              referencia: reference || null,
+              metodo_pago: safeMethod,
+              referencia: safeReference,
               monto_pagado: usdAmount || 0,
               fecha_pago: new Date().toISOString(),
             })
             .eq("id_factura", id);
+          if (updatePagoErr) throw updatePagoErr;
         } else {
-          await supabase.from("pagos").insert({
+          const { error: insertPagoErr } = await supabase.from("pagos").insert({
             id_factura: id,
             monto_pagado: usdAmount || 0,
             fecha_pago: new Date().toISOString(),
-            metodo_pago: method,
-            referencia: reference || null,
+            metodo_pago: safeMethod,
+            referencia: safeReference,
           });
+          if (insertPagoErr) throw insertPagoErr;
         }
 
         if (usdAmount && usdAmount > 0) {
