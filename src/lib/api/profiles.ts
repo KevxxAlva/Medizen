@@ -138,10 +138,27 @@ export function useAllProfilesWithRoles() {
           const email = (med?.email || u.nombre_usuario || "").toLowerCase();
           return !u.es_superadmin && !email.includes("kevinja1406");
         })
-        .map((u: any) => ({
-          ...mapProfile(u),
-          roles: u.roles ? [u.roles.nombre_rol.toLowerCase() as "admin" | "doctor" | "recepcionista"] : [],
-        }));
+        .map((u: any) => {
+          const rawRoleObj = Array.isArray(u.roles) ? u.roles[0] : u.roles;
+          const rawRoleName = (rawRoleObj?.nombre_rol || "").toLowerCase();
+          let normalizedRole: "admin" | "doctor" | "recepcionista" = "doctor";
+          if (u.id_rol === 1 || rawRoleName.includes("admin")) {
+            normalizedRole = "admin";
+          } else if (u.id_rol === 3 || rawRoleName.includes("recep")) {
+            normalizedRole = "recepcionista";
+          } else if (
+            u.id_rol === 2 ||
+            rawRoleName.includes("medic") ||
+            rawRoleName.includes("médic") ||
+            rawRoleName.includes("doctor")
+          ) {
+            normalizedRole = "doctor";
+          }
+          return {
+            ...mapProfile(u),
+            roles: [normalizedRole],
+          };
+        });
     },
   });
 }
@@ -150,33 +167,19 @@ export function useToggleRole() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ userId, role, enable }: { userId: string; role: "admin" | "doctor" | "recepcionista"; enable: boolean }) => {
-      const targetRoleName = enable
-        ? (role === "admin" ? "Admin" : role === "recepcionista" ? "Recepcionista" : "Medico")
-        : (role === "admin" ? "Medico" : "Recepcionista");
-
-      // Find or create role in public.roles
-      let roleId: number | null = null;
-      const { data: existingRole } = await supabase
-        .from("roles")
-        .select("id_rol")
-        .ilike("nombre_rol", targetRoleName)
-        .maybeSingle();
-
-      if (existingRole?.id_rol) {
-        roleId = existingRole.id_rol;
-      } else {
-        const { data: newRole, error: roleErr } = await supabase
-          .from("roles")
-          .insert({ nombre_rol: targetRoleName })
-          .select("id_rol")
-          .single();
-        if (roleErr) throw roleErr;
-        roleId = newRole.id_rol;
-      }
+      const targetRoleId = enable
+        ? role === "admin"
+          ? 1
+          : role === "recepcionista"
+            ? 3
+            : 2
+        : role === "admin"
+          ? 2
+          : 3;
 
       // Match usuario by auth_id or numeric id_usuario
       const isNumericId = /^\d+$/.test(userId);
-      const query = supabase.from("usuarios").update({ id_rol: roleId });
+      const query = supabase.from("usuarios").update({ id_rol: targetRoleId });
       const { error } = isNumericId
         ? await query.eq("id_usuario", parseInt(userId, 10))
         : await query.eq("auth_id", userId);

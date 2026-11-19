@@ -62,13 +62,25 @@ export async function requireAdminAccess() {
 
   const { data } = await supabase
     .from("usuarios")
-    .select("roles(nombre_rol)")
+    .select("id_rol, es_superadmin, roles(nombre_rol)")
     .eq("auth_id", user.id)
     .maybeSingle();
 
   const roleObj = data?.roles;
-  const roleName = Array.isArray(roleObj) ? roleObj[0]?.nombre_rol : (roleObj as any)?.nombre_rol;
-  if ((roleName || "").toLowerCase() !== "admin") {
+  const rawRoleName = Array.isArray(roleObj) ? roleObj[0]?.nombre_rol : (roleObj as any)?.nombre_rol;
+  const roleName = (rawRoleName || "").toLowerCase();
+  const metaRole = (user.user_metadata?.role || "").toLowerCase();
+
+  const isAdmin =
+    Boolean(data?.es_superadmin) ||
+    data?.id_rol === 1 ||
+    data?.id_rol === 4 ||
+    roleName.includes("admin") ||
+    roleName.includes("super") ||
+    metaRole.includes("admin") ||
+    metaRole.includes("super");
+
+  if (!isAdmin) {
     throw redirect({ to: "/dashboard" });
   }
 
@@ -172,7 +184,7 @@ export function useRoles() {
 
       const { data, error } = await supabase
         .from("usuarios")
-        .select("es_superadmin, roles(nombre_rol)")
+        .select("id_rol, es_superadmin, roles(nombre_rol)")
         .eq("auth_id", user!.id)
         .maybeSingle();
 
@@ -189,13 +201,13 @@ export function useRoles() {
       const roleName = (rawRole || "").toLowerCase();
       const roles: AppRole[] = [];
 
-      if (data.es_superadmin || roleName.includes("super")) {
+      if (data.es_superadmin || data.id_rol === 4 || roleName.includes("super")) {
         roles.push("superadmin", "admin");
-      } else if (roleName.includes("admin")) {
+      } else if (data.id_rol === 1 || roleName.includes("admin")) {
         roles.push("admin");
-      } else if (roleName.includes("recep")) {
+      } else if (data.id_rol === 3 || roleName.includes("recep")) {
         roles.push("recepcionista");
-      } else if (roleName.includes("medic") || roleName.includes("doctor")) {
+      } else if (data.id_rol === 2 || roleName.includes("medic") || roleName.includes("médic") || roleName.includes("doctor")) {
         roles.push("doctor");
       } else if (defaultRoles.length > 0) {
         roles.push(...defaultRoles);
