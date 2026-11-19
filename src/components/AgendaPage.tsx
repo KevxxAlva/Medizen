@@ -126,6 +126,17 @@ export function AgendaPage() {
     setConsultationOpen(true);
   };
 
+  if (consultationOpen && consultationApp) {
+    return (
+      <ConsultationForm
+        open={consultationOpen}
+        onOpenChange={setConsultationOpen}
+        appointment={consultationApp}
+        backLabel="Volver a la Agenda"
+      />
+    );
+  }
+
   return (
     <>
       <div className="bg-card border border-border rounded-3xl p-4 sm:p-6 shadow-xs min-h-[calc(100vh-8rem)] font-sans text-foreground flex flex-col">
@@ -223,15 +234,6 @@ export function AgendaPage() {
           onOpenChange={setFormOpen}
           defaultDate={defaultFormDate}
           appointment={editingApp}
-        />
-      )}
-
-      {/* Consultation Process Form */}
-      {consultationOpen && consultationApp && (
-        <ConsultationForm
-          open={consultationOpen}
-          onOpenChange={setConsultationOpen}
-          appointment={consultationApp}
         />
       )}
     </>

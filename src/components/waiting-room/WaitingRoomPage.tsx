@@ -139,6 +139,17 @@ export function WaitingRoomPage() {
     );
   }
 
+  if (consultationOpen && consultationApp) {
+    return (
+      <ConsultationForm
+        open={consultationOpen}
+        onOpenChange={setConsultationOpen}
+        appointment={consultationApp}
+        backLabel="Volver a Sala de Espera"
+      />
+    );
+  }
+
   return (
     <div className="bg-card border border-border rounded-3xl p-4 sm:p-6 shadow-xs min-h-[calc(100vh-8rem)] flex flex-col gap-6">
       <WaitingRoomHeaderAndKpis
@@ -170,14 +181,6 @@ export function WaitingRoomPage() {
         onOpenConsultation={handleOpenConsultation}
         onGoToSales={handleGoToSales}
       />
-
-      {consultationOpen && consultationApp && (
-        <ConsultationForm
-          open={consultationOpen}
-          onOpenChange={setConsultationOpen}
-          appointment={consultationApp}
-        />
-      )}
 
       {newAppointmentOpen && (
         <AppointmentForm
