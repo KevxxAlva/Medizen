@@ -364,7 +364,7 @@ export function useClinicStaff(id_clinica?: string) {
 
       const { data, error } = await supabase
         .from("usuarios")
-        .select("id_usuario, nombre_usuario, auth_id, estado, id_rol, es_superadmin, roles(nombre_rol), medicos(email, especialidades(nombre))")
+        .select("id_usuario, nombre_usuario, email, auth_id, estado, id_rol, es_superadmin, roles(nombre_rol), medicos(email, especialidades(nombre))")
         .eq("id_clinica", id_clinica)
         .eq("es_superadmin", false)
         .order("id_usuario", { ascending: true });
@@ -377,7 +377,7 @@ export function useClinicStaff(id_clinica?: string) {
       return (data ?? [])
         .filter((u: any) => {
           const med = Array.isArray(u.medicos) ? u.medicos[0] : u.medicos;
-          const email = (med?.email || u.nombre_usuario || "").toLowerCase();
+          const email = (u.email || med?.email || u.nombre_usuario || "").toLowerCase();
           return !u.es_superadmin && !email.includes("kevinja1406");
         })
         .map((u: any) => {
@@ -393,7 +393,7 @@ export function useClinicStaff(id_clinica?: string) {
             id_usuario: u.id_usuario,
             auth_id: u.auth_id || null,
             nombre: u.nombre_usuario || "Usuario",
-            email: med?.email || "",
+            email: u.email || med?.email || "",
             rol: rawRole || (u.id_rol === 1 ? "Admin" : u.id_rol === 3 ? "Recepcionista" : "Médico"),
             especialidad: esp,
             estado: Boolean(u.estado),

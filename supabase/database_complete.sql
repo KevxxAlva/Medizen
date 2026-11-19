@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS public.usuarios (
   id_clinica uuid REFERENCES public.clinicas(id_clinica) ON DELETE SET NULL,
   es_superadmin boolean DEFAULT false,
   nombre_usuario varchar(100) NOT NULL,
+  email varchar(150),
   contrasena_hash text NOT NULL DEFAULT 'supabase_auth',
   id_rol integer REFERENCES public.roles(id_rol) ON DELETE SET NULL,
   pin_seguridad varchar(10),
@@ -1012,6 +1013,27 @@ CREATE POLICY "clinicas_superadmin_or_own" ON public.clinicas
 CREATE POLICY "clinicas_anon_active_select" ON public.clinicas
   FOR SELECT TO anon
   USING (estado = 'activo');
+
+-- Políticas RLS para tablas de catálogo global y tablas sin id_clinica
+DO $$
+DECLARE
+  t text;
+BEGIN
+  FOREACH t IN ARRAY ARRAY['roles', 'especialidades', 'catalogo_medicamentos', 'seguros_medicos', 'polizas_pacientes']
+  LOOP
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = t) THEN
+      EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY;', t);
+      EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I;', 'authenticated_all_' || t, t);
+      EXECUTE format('CREATE POLICY %I ON public.%I FOR ALL TO authenticated USING (true) WITH CHECK (true);', 'authenticated_all_' || t, t);
+    END IF;
+  END LOOP;
+
+  DROP POLICY IF EXISTS anon_read_roles ON public.roles;
+  CREATE POLICY anon_read_roles ON public.roles FOR SELECT TO anon USING (true);
+
+  DROP POLICY IF EXISTS anon_read_especialidades ON public.especialidades;
+  CREATE POLICY anon_read_especialidades ON public.especialidades FOR SELECT TO anon USING (true);
+END $$;
 
 -- ------------------------------------------------------------------------------
 -- 12. HABILITAR SUPABASE REALTIME (postgres_changes) EN TODAS LAS TABLAS

@@ -21,7 +21,7 @@ export interface ProfileWithRoles extends Profile {
   roles: ("admin" | "doctor" | "recepcionista" | "medico")[];
 }
 
-const mapProfile = (u: any): Profile => {
+const mapProfile = (u: any, fallbackEmail?: string): Profile => {
   // Try to find if this user is a doctor
   const isDoctor = !!u.medicos;
   const docInfo = isDoctor ? (Array.isArray(u.medicos) ? u.medicos[0] : u.medicos) : null;
@@ -30,8 +30,8 @@ const mapProfile = (u: any): Profile => {
   return {
     id: u.auth_id || u.id_usuario?.toString(),
     doctor_id: docInfo?.id_medico ? String(docInfo.id_medico) : null,
-    full_name: docInfo ? `${docInfo.nombre} ${docInfo.apellido}` : u.nombre_usuario,
-    email: docInfo?.email || `${u.nombre_usuario}@femesalud.com`,
+    full_name: docInfo ? `${docInfo.nombre} ${docInfo.apellido}`.trim() : u.nombre_usuario,
+    email: u.email || docInfo?.email || fallbackEmail || "",
     specialty: docInfo?.especialidades?.nombre || null,
     specialty_id: docInfo?.id_especialidad || docInfo?.especialidades?.id_especialidad || null,
     avatar_url: null,
@@ -155,7 +155,7 @@ export function useAllProfilesWithRoles() {
             normalizedRole = "doctor";
           }
           return {
-            ...mapProfile(u),
+            ...mapProfile(u, u.auth_id === user?.id ? user?.email : undefined),
             roles: [normalizedRole],
           };
         });
@@ -185,6 +185,38 @@ export function useToggleRole() {
         : await query.eq("auth_id", userId);
 
       if (error) throw error;
+
+      // Si pasa a rol doctor (targetRoleId === 2), asegurar registro en public.medicos
+      if (targetRoleId === 2) {
+        const userLookup = supabase
+          .from("usuarios")
+          .select("id_usuario, id_clinica, nombre_usuario, email");
+        const { data: uRow } = isNumericId
+          ? await userLookup.eq("id_usuario", parseInt(userId, 10)).maybeSingle()
+          : await userLookup.eq("auth_id", userId).maybeSingle();
+
+        if (uRow) {
+          const { data: existingMed } = await supabase
+            .from("medicos")
+            .select("id_medico")
+            .eq("id_usuario", uRow.id_usuario)
+            .maybeSingle();
+
+          if (!existingMed) {
+            const parts = (uRow.nombre_usuario || "").trim().split(" ");
+            const nombre = parts[0] || "Doctor";
+            const apellido = parts.slice(1).join(" ");
+            await supabase.from("medicos").insert({
+              id_usuario: uRow.id_usuario,
+              id_clinica: uRow.id_clinica,
+              nombre,
+              apellido,
+              email: (uRow as any).email || null,
+              estado: true,
+            } as any);
+          }
+        }
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["profiles_with_roles"] });
@@ -202,11 +234,15 @@ export function useUpdateProfile() {
       const nombre = parts[0] || "";
       const apellido = parts.slice(1).join(" ");
       
-      const { data: usuario } = await supabase.from("usuarios").select("id_usuario, nombre_usuario").eq("auth_id", userId).maybeSingle();
-      
+      const { data: usuario } = await supabase
+        .from("usuarios")
+        .select("id_usuario, id_clinica, nombre_usuario, email")
+        .eq("auth_id", userId)
+        .maybeSingle();
+
       if (usuario) {
         await supabase.from("usuarios").update({ nombre_usuario: fullName }).eq("id_usuario", usuario.id_usuario);
-        
+
         let id_especialidad = null;
         if (specialty) {
           const { data: esp } = await supabase.from("especialidades").select("id_especialidad").ilike("nombre", specialty).maybeSingle();
@@ -218,13 +254,13 @@ export function useUpdateProfile() {
           }
         }
 
-        const medicoUpdate = { 
-            nombre, 
-            apellido, 
-            numero_licencia: mpps,
-            universidad: university,
-            cmc: cmc,
-            ...(id_especialidad ? { id_especialidad } : {})
+        const medicoUpdate = {
+          nombre,
+          apellido,
+          numero_licencia: mpps,
+          universidad: university,
+          cmc: cmc,
+          ...(id_especialidad ? { id_especialidad } : {}),
         };
 
         // Check if there is an associated medico
@@ -232,13 +268,15 @@ export function useUpdateProfile() {
         if (medico) {
           const { error } = await supabase.from("medicos").update(medicoUpdate).eq("id_medico", medico.id_medico);
           if (error) throw error;
-        } else {
-          // Check by email as a fallback if the system was just installed
-          const { data: mEmail } = await supabase.from("medicos").select("id_medico").eq("email", usuario.nombre_usuario).maybeSingle();
-          if (mEmail) {
-             const { error } = await supabase.from("medicos").update(medicoUpdate).eq("id_medico", mEmail.id_medico);
-             if (error) throw error;
-          }
+        } else if (specialty || mpps || university || cmc) {
+          const { error } = await supabase.from("medicos").insert({
+            id_usuario: usuario.id_usuario,
+            id_clinica: (usuario as any).id_clinica,
+            email: (usuario as any).email || null,
+            estado: true,
+            ...medicoUpdate,
+          } as any);
+          if (error) throw error;
         }
       }
     },
