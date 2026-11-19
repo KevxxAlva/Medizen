@@ -695,9 +695,11 @@ SECURITY DEFINER
 SET search_path TO 'public', 'auth', 'extensions' AS $$
 DECLARE
   v_id_clinica uuid := gen_random_uuid();
-  v_auth_id uuid := gen_random_uuid();
+  v_auth_id uuid;
+  v_existing_clinic uuid;
   v_user_id int;
   v_id_type text;
+  v_clean_email text := LOWER(TRIM(p_admin_email));
 BEGIN
   IF NOT public.is_superadmin() THEN
     RAISE EXCEPTION 'Acceso denegado: solo el Super Administrador puede crear clínicas.';
@@ -707,8 +709,19 @@ BEGIN
     RAISE EXCEPTION 'El subdominio o identificador "%" ya está registrado.', p_slug;
   END IF;
 
-  IF EXISTS (SELECT 1 FROM auth.users WHERE email = LOWER(TRIM(p_admin_email))) THEN
-    RAISE EXCEPTION 'El correo "%" ya se encuentra registrado.', p_admin_email;
+  SELECT id INTO v_auth_id FROM auth.users WHERE LOWER(email) = v_clean_email LIMIT 1;
+
+  IF v_auth_id IS NOT NULL THEN
+    SELECT pu.id_clinica INTO v_existing_clinic
+    FROM public.usuarios pu
+    JOIN public.clinicas c ON c.id_clinica = pu.id_clinica
+    WHERE pu.auth_id = v_auth_id
+      AND COALESCE(pu.es_superadmin, false) = false
+    LIMIT 1;
+
+    IF v_existing_clinic IS NOT NULL THEN
+      RAISE EXCEPTION 'El correo "%" ya pertenece a otra clínica activa.', p_admin_email;
+    END IF;
   END IF;
 
   -- 1. Insertar Clínica
@@ -718,54 +731,72 @@ BEGIN
   ) VALUES (
     v_id_clinica, LOWER(TRIM(p_slug)), p_nombre, p_rif, p_telefono, p_direccion, 
     COALESCE(p_plan, 'pro'), 'activo', COALESCE(p_color_primario, '#0ea5e9'), 
-    COALESCE(p_tipo_clinica, 'Consultorio Ginecológico Obstétrico'), LOWER(TRIM(p_admin_email)), now()
+    COALESCE(p_tipo_clinica, 'Consultorio Ginecológico Obstétrico'), v_clean_email, now()
   );
 
-  -- 2. Crear Usuario en auth.users con todos los campos sanitizados (evita error GoTrue)
-  INSERT INTO auth.users (
-    id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
-    raw_app_meta_data, raw_user_meta_data, confirmation_token, recovery_token,
-    email_change_token_new, email_change_token_current, email_change, phone,
-    phone_change, phone_change_token, reauthentication_token, email_change_confirm_status,
-    is_sso_user, is_anonymous, created_at, updated_at
-  ) VALUES (
-    v_auth_id,
-    '00000000-0000-0000-0000-000000000000',
-    'authenticated',
-    'authenticated',
-    LOWER(TRIM(p_admin_email)),
-    crypt(p_admin_password, gen_salt('bf')),
-    now(),
-    jsonb_build_object('provider', 'email', 'providers', jsonb_build_array('email'), 'id_clinica', v_id_clinica),
-    jsonb_build_object('full_name', p_admin_name, 'email_verified', true),
-    '', '', '', '', '', NULL, '', '', '', 0, false, false,
-    now(),
-    now()
-  );
-
-  -- 3. Crear Registro en auth.identities (obligatorio para GoTrue signInWithPassword)
-  SELECT data_type INTO v_id_type 
-  FROM information_schema.columns 
-  WHERE table_schema = 'auth' AND table_name = 'identities' AND column_name = 'id';
-
-  IF v_id_type = 'uuid' THEN
-    EXECUTE 'INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at) ' ||
-            'VALUES ($1, $1, jsonb_build_object(''sub'', $1::text, ''email'', $2), ''email'', $1::text, now(), now(), now()) ' ||
-            'ON CONFLICT DO NOTHING'
-    USING v_auth_id, LOWER(TRIM(p_admin_email));
+  -- 2. Crear o reutilizar Usuario en auth.users con todos los campos sanitizados (evita error GoTrue)
+  IF v_auth_id IS NULL THEN
+    v_auth_id := gen_random_uuid();
+    INSERT INTO auth.users (
+      id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
+      raw_app_meta_data, raw_user_meta_data, confirmation_token, recovery_token,
+      email_change_token_new, email_change_token_current, email_change, phone,
+      phone_change, phone_change_token, reauthentication_token, email_change_confirm_status,
+      is_sso_user, is_anonymous, created_at, updated_at
+    ) VALUES (
+      v_auth_id,
+      '00000000-0000-0000-0000-000000000000',
+      'authenticated',
+      'authenticated',
+      v_clean_email,
+      crypt(p_admin_password, gen_salt('bf')),
+      now(),
+      jsonb_build_object('provider', 'email', 'providers', jsonb_build_array('email'), 'id_clinica', v_id_clinica),
+      jsonb_build_object('full_name', p_admin_name, 'email_verified', true),
+      '', '', '', '', '', NULL, '', '', '', 0, false, false,
+      now(),
+      now()
+    );
   ELSE
-    EXECUTE 'INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at) ' ||
-            'VALUES ($1::text, $1, jsonb_build_object(''sub'', $1::text, ''email'', $2), ''email'', $1::text, now(), now(), now()) ' ||
-            'ON CONFLICT DO NOTHING'
-    USING v_auth_id, LOWER(TRIM(p_admin_email));
+    UPDATE auth.users
+    SET encrypted_password = crypt(p_admin_password, gen_salt('bf')),
+        email_confirmed_at = COALESCE(email_confirmed_at, now()),
+        raw_app_meta_data = COALESCE(raw_app_meta_data, '{}'::jsonb) || jsonb_build_object('provider', 'email', 'providers', jsonb_build_array('email'), 'id_clinica', v_id_clinica),
+        raw_user_meta_data = COALESCE(raw_user_meta_data, '{}'::jsonb) || jsonb_build_object('full_name', p_admin_name, 'email_verified', true),
+        updated_at = now()
+    WHERE id = v_auth_id;
   END IF;
 
-  -- 4. Crear Usuario en public.usuarios (Admin de esa clínica, id_rol = 1)
+  -- 3. Crear Registro en auth.identities (obligatorio para GoTrue signInWithPassword)
+  IF NOT EXISTS (SELECT 1 FROM auth.identities WHERE user_id = v_auth_id AND provider = 'email') THEN
+    SELECT data_type INTO v_id_type 
+    FROM information_schema.columns 
+    WHERE table_schema = 'auth' AND table_name = 'identities' AND column_name = 'id';
+
+    IF v_id_type = 'uuid' THEN
+      EXECUTE 'INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at) ' ||
+              'VALUES ($1, $1, jsonb_build_object(''sub'', $1::text, ''email'', $2), ''email'', $1::text, now(), now(), now()) ' ||
+              'ON CONFLICT DO NOTHING'
+      USING v_auth_id, v_clean_email;
+    ELSE
+      EXECUTE 'INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at) ' ||
+              'VALUES ($1::text, $1, jsonb_build_object(''sub'', $1::text, ''email'', $2), ''email'', $1::text, now(), now(), now()) ' ||
+              'ON CONFLICT DO NOTHING'
+      USING v_auth_id, v_clean_email;
+    END IF;
+  END IF;
+
+  -- 4. Crear o actualizar Usuario en public.usuarios (Admin de esa clínica, id_rol = 1)
   INSERT INTO public.usuarios (
     nombre_usuario, contrasena_hash, id_rol, id_clinica, estado, creado_en, auth_id, es_superadmin
   ) VALUES (
     p_admin_name, 'supabase_auth', 1, v_id_clinica, true, now(), v_auth_id, false
   )
+  ON CONFLICT (auth_id) DO UPDATE SET
+    nombre_usuario = EXCLUDED.nombre_usuario,
+    id_rol = CASE WHEN public.usuarios.es_superadmin THEN public.usuarios.id_rol ELSE 1 END,
+    id_clinica = EXCLUDED.id_clinica,
+    estado = true
   RETURNING id_usuario INTO v_user_id;
 
   -- 5. Sembrar servicios base para la nueva clínica
