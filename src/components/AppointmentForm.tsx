@@ -15,6 +15,7 @@ import { useServices } from "@/lib/api/services";
 import { useClinicInfo } from "@/lib/api/clinic";
 import { cn } from "@/lib/utils";
 import {
+  AlertTriangle,
   ArrowLeft,
   CalendarDays,
   Check,
@@ -139,6 +140,8 @@ export function AppointmentForm({
     setSelectedServiceId,
     savedSummary,
     resetForAnother,
+    conflictingAppointment,
+    isSlotOccupied,
     busy,
     handleSubmit,
   } = useAppointmentFormState({
@@ -565,23 +568,57 @@ export function AppointmentForm({
                   <div className="grid grid-cols-5 gap-1.5">
                     {QUICK_TIME_SLOTS.map((slot) => {
                       const active = time === slot.value;
+                      const occupied = isSlotOccupied(slot.value);
                       return (
                         <button
                           key={slot.value}
                           type="button"
+                          disabled={occupied}
+                          title={occupied ? "Horario ocupado para este médico" : `Seleccionar ${slot.label}`}
                           onClick={() => setTime(slot.value)}
                           className={cn(
-                            "py-1.5 px-1 rounded-xl text-[11px] font-bold border transition-all cursor-pointer text-center",
-                            active
-                              ? "bg-primary text-primary-foreground border-primary shadow-xs"
-                              : "bg-background text-foreground/80 border-border/50 hover:border-primary/40 hover:bg-primary/5"
+                            "py-1.5 px-1 rounded-xl text-[11px] font-bold border transition-all text-center flex flex-col items-center justify-center leading-tight",
+                            occupied
+                              ? "bg-destructive/10 text-destructive/60 border-destructive/25 cursor-not-allowed line-through"
+                              : active
+                                ? "bg-primary text-primary-foreground border-primary shadow-xs cursor-pointer"
+                                : "bg-background text-foreground/80 border-border/50 hover:border-primary/40 hover:bg-primary/5 cursor-pointer"
                           )}
                         >
-                          {slot.label}
+                          <span>{slot.label}</span>
+                          {occupied && (
+                            <span className="text-[8px] font-extrabold uppercase no-underline tracking-tight">
+                              Ocupado
+                            </span>
+                          )}
                         </button>
                       );
                     })}
                   </div>
+
+                  {conflictingAppointment && (
+                    <div className="rounded-xl border border-destructive/35 bg-destructive/10 px-3 py-2.5 flex items-start gap-2 text-destructive text-xs animate-fade-in">
+                      <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                      <div className="leading-snug">
+                        <p className="font-extrabold">Horario ocupado para este especialista</p>
+                        <p className="text-[11px] opacity-90 mt-0.5">
+                          Ya existe una cita con{" "}
+                          <span className="font-bold">
+                            {conflictingAppointment.patient_name || "otro paciente"}
+                          </span>{" "}
+                          a las{" "}
+                          <span className="font-bold">
+                            {formatTime12h(
+                              conflictingAppointment.scheduled_at
+                                .replace(" ", "T")
+                                .slice(11, 16)
+                            )}
+                          </span>
+                          . Elige otra hora o cambia de especialista.
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="flex items-center gap-2 pt-0.5">
                     <span className="text-[11px] text-muted-foreground font-medium shrink-0">
@@ -686,8 +723,8 @@ export function AppointmentForm({
               <Button
                 type="submit"
                 form="appointment-drawer-form"
-                disabled={busy}
-                className="rounded-2xl h-11 px-6 text-xs sm:text-sm font-extrabold gap-2 bg-gradient-to-r from-mauve to-mauve-soft text-primary-foreground hover:opacity-95 shadow-sm"
+                disabled={busy || Boolean(conflictingAppointment)}
+                className="rounded-2xl h-11 px-6 text-xs sm:text-sm font-extrabold gap-2 bg-gradient-to-r from-mauve to-mauve-soft text-primary-foreground hover:opacity-95 shadow-sm disabled:opacity-50"
               >
                 {busy ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

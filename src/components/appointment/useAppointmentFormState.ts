@@ -1,5 +1,11 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { useCreateAppointment, useUpdateAppointment, type Appointment } from "@/lib/api/appointments";
+import {
+  useAppointments,
+  useCreateAppointment,
+  useUpdateAppointment,
+  type Appointment,
+  type AppointmentWithPatient,
+} from "@/lib/api/appointments";
 import { useAuthSession } from "@/hooks/useAuth";
 import { useUserRoleScope } from "@/hooks/useUserRoleScope";
 import type { Profile } from "@/lib/api/profiles";
@@ -101,6 +107,52 @@ export function useAppointmentFormState({
 
   const selectedDoctor = useMemo(() => doctors.find((d) => d.id === doctor_id), [doctors, doctor_id]);
 
+  // Real-time doctor availability for the selected date
+  const { data: doctorDayAppointments = [] } = useAppointments({
+    from: date || undefined,
+    to: date || undefined,
+    doctorId: doctor_id || undefined,
+  });
+
+  const activeDayAppointments = useMemo(() => {
+    return doctorDayAppointments.filter((a) => {
+      if (appointment && String(a.id) === String(appointment.id)) return false;
+      const st = String(a.status || "").toLowerCase();
+      return st !== "cancelada" && st !== "cancelled";
+    });
+  }, [doctorDayAppointments, appointment]);
+
+  const findConflictForRange = useCallback(
+    (candidateTime: string, candidateDurationMin: number): AppointmentWithPatient | null => {
+      if (!date || !candidateTime || !doctor_id) return null;
+      if (status.toLowerCase() === "cancelada") return null;
+      const startMs = new Date(`${date}T${candidateTime}:00`).getTime();
+      if (Number.isNaN(startMs)) return null;
+      const endMs = startMs + Math.max(15, candidateDurationMin || 30) * 60 * 1000;
+
+      for (const existing of activeDayAppointments) {
+        const exStart = new Date(existing.scheduled_at.replace(" ", "T")).getTime();
+        if (Number.isNaN(exStart)) continue;
+        const exEnd = exStart + Math.max(15, existing.duration_minutes || 30) * 60 * 1000;
+        if (startMs < exEnd && exStart < endMs) {
+          return existing;
+        }
+      }
+      return null;
+    },
+    [date, doctor_id, status, activeDayAppointments]
+  );
+
+  const conflictingAppointment = useMemo(
+    () => findConflictForRange(time, Number(duration) || 30),
+    [findConflictForRange, time, duration]
+  );
+
+  const isSlotOccupied = useCallback(
+    (slotTime: string) => Boolean(findConflictForRange(slotTime, Number(duration) || 30)),
+    [findConflictForRange, duration]
+  );
+
   const create = useCreateAppointment();
   const update = useUpdateAppointment();
   const busy = create.isPending || update.isPending;
@@ -124,6 +176,12 @@ export function useAppointmentFormState({
     }
     if (!doctor_id) {
       toast.error("Selecciona un especialista");
+      return;
+    }
+    if (conflictingAppointment && status.toLowerCase() !== "cancelada") {
+      toast.error(
+        `Conflicto de horario: este médico ya tiene una cita con ${conflictingAppointment.patient_name || "otro paciente"} en ese horario.`
+      );
       return;
     }
     const scheduled_at = `${date}T${time}:00`;
@@ -201,6 +259,8 @@ export function useAppointmentFormState({
     setSelectedServiceId,
     savedSummary,
     resetForAnother,
+    conflictingAppointment,
+    isSlotOccupied,
     busy,
     handleSubmit,
   };

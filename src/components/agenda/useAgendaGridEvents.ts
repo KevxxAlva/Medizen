@@ -2,17 +2,33 @@ import { useMemo } from "react";
 import type { AppointmentWithPatient } from "@/lib/api/appointments";
 import { dateOnly, formatToYMD } from "./agenda-helpers";
 
+export interface AgendaGridEvent extends AppointmentWithPatient {
+  dateStr: string;
+  dayIndex: number;
+  topHours: number;
+  durationHours: number;
+  theme: {
+    bg: string;
+    border: string;
+    text: string;
+  };
+  overlapIndex: number;
+  overlapCount: number;
+  clusterEvents: AgendaGridEvent[];
+  isClusterPrimary: boolean;
+}
+
 export function useAgendaGridEvents(
   appointments: AppointmentWithPatient[],
   weekDays: Date[],
   searchQuery: string,
   statusFilter: string,
-) {
+): AgendaGridEvent[] {
   return useMemo(() => {
     const weekStart = formatToYMD(weekDays[0]);
     const weekEnd = formatToYMD(weekDays[6]);
 
-    const processed = appointments
+    const processed: AgendaGridEvent[] = appointments
       .filter((a) => {
         const safeIso = a.scheduled_at.replace(" ", "T");
         const d = dateOnly(safeIso);
@@ -45,19 +61,19 @@ export function useAgendaGridEvents(
 
         const startFloat = hour + mins / 60;
         const startFrom8 = startFloat - 8;
-        const durationHours = (app.duration_minutes || 60) / 60;
+        const durationHours = Math.max(0.5, (app.duration_minutes || 60) / 60);
 
         const isCompletada = app.status?.toLowerCase() === "completada";
         const theme = isCompletada
           ? {
-              bg: "bg-emerald-500/10 dark:bg-emerald-500/15 border-emerald-500/30",
+              bg: "bg-emerald-50 dark:bg-[#0c261d] border-emerald-500/40",
               border: "border-l-emerald-500",
-              text: "text-emerald-700 dark:text-emerald-400",
+              text: "text-emerald-800 dark:text-emerald-300",
             }
           : {
-              bg: "bg-primary/10 dark:bg-primary/15 border-primary/30",
+              bg: "bg-indigo-50 dark:bg-[#141c38] border-primary/40",
               border: "border-l-primary",
-              text: "text-primary dark:text-blue-400",
+              text: "text-primary dark:text-blue-300",
             };
 
         return {
@@ -67,22 +83,72 @@ export function useAgendaGridEvents(
           topHours: Math.max(0, startFrom8),
           durationHours,
           theme,
+          overlapIndex: 0,
+          overlapCount: 1,
+          clusterEvents: [],
+          isClusterPrimary: true,
         };
       })
       .sort((a, b) => {
-        if (a.dayIndex !== b.dayIndex) return a.dayIndex - b.dayIndex;
-        return a.topHours - b.topHours;
+        if (a.dateStr !== b.dateStr) return a.dateStr.localeCompare(b.dateStr);
+        if (a.topHours !== b.topHours) return a.topHours - b.topHours;
+        return b.durationHours - a.durationHours;
       });
 
-    const result = [];
-    let currentGroup: any[] = [];
+    // Group overlapping events into connected clusters per day (Google Calendar column algorithm)
+    const byDay = new Map<string, AgendaGridEvent[]>();
     for (const ev of processed) {
-      currentGroup = currentGroup.filter(
-        (g) => g.dayIndex === ev.dayIndex && g.topHours + g.durationHours > ev.topHours,
-      );
-      ev.overlapIndex = currentGroup.length;
-      currentGroup.push(ev);
-      result.push(ev);
+      const list = byDay.get(ev.dateStr) || [];
+      list.push(ev);
+      byDay.set(ev.dateStr, list);
+    }
+
+    const result: AgendaGridEvent[] = [];
+
+    for (const dayList of byDay.values()) {
+      let cluster: AgendaGridEvent[] = [];
+      let clusterEnd = -1;
+
+      const flushCluster = () => {
+        if (cluster.length === 0) return;
+        const columns: AgendaGridEvent[][] = [];
+        for (const ev of cluster) {
+          let placed = false;
+          for (let c = 0; c < columns.length; c++) {
+            const lastInCol = columns[c][columns[c].length - 1];
+            if (lastInCol.topHours + lastInCol.durationHours <= ev.topHours + 0.001) {
+              columns[c].push(ev);
+              ev.overlapIndex = c;
+              placed = true;
+              break;
+            }
+          }
+          if (!placed) {
+            ev.overlapIndex = columns.length;
+            columns.push([ev]);
+          }
+        }
+
+        const totalCols = Math.max(1, columns.length);
+        const snapshot = [...cluster];
+        cluster.forEach((ev, idx) => {
+          ev.overlapCount = totalCols;
+          ev.clusterEvents = snapshot;
+          ev.isClusterPrimary = idx === 0;
+          result.push(ev);
+        });
+      };
+
+      for (const ev of dayList) {
+        if (cluster.length > 0 && ev.topHours >= clusterEnd - 0.001) {
+          flushCluster();
+          cluster = [];
+          clusterEnd = -1;
+        }
+        cluster.push(ev);
+        clusterEnd = Math.max(clusterEnd, ev.topHours + ev.durationHours);
+      }
+      flushCluster();
     }
 
     return result;

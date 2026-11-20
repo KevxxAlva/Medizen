@@ -279,12 +279,81 @@ export function useAppointments(filters?: AppointmentFilters, options?: { enable
   });
 }
 
+async function assertNoDoctorTimeConflict({
+  doctorId,
+  scheduledAt,
+  durationMinutes = 30,
+  excludeCitaId,
+  clinicId,
+}: {
+  doctorId: number;
+  scheduledAt: string;
+  durationMinutes?: number;
+  excludeCitaId?: number;
+  clinicId?: string | null;
+}) {
+  if (!doctorId || !scheduledAt) return;
+  const safeIso = scheduledAt.replace(" ", "T");
+  const datePart = safeIso.slice(0, 10);
+  const newStart = new Date(safeIso).getTime();
+  if (Number.isNaN(newStart)) return;
+  const newEnd = newStart + Math.max(15, durationMinutes || 30) * 60 * 1000;
+
+  let query = supabase
+    .from("citas")
+    .select("id_cita, fecha_hora, estado, pacientes(nombre, apellido)")
+    .eq("id_medico", doctorId)
+    .gte("fecha_hora", `${datePart}T00:00:00`)
+    .lte("fecha_hora", `${datePart}T23:59:59`);
+
+  if (clinicId) {
+    query = (query as any).eq("id_clinica", clinicId);
+  }
+
+  const { data: sameDayCitas, error } = await query;
+  if (error || !sameDayCitas) return;
+
+  for (const row of sameDayCitas as any[]) {
+    if (excludeCitaId && Number(row.id_cita) === Number(excludeCitaId)) continue;
+    const st = String(row.estado || "").toLowerCase();
+    if (st === "cancelada" || st === "cancelled") continue;
+
+    const exStart = new Date(String(row.fecha_hora || "").replace(" ", "T")).getTime();
+    if (Number.isNaN(exStart)) continue;
+    const exEnd = exStart + 30 * 60 * 1000;
+
+    if (newStart < exEnd && exStart < newEnd) {
+      const pac = Array.isArray(row.pacientes) ? row.pacientes[0] : row.pacientes;
+      const pacName = pac ? `${pac.nombre || ""} ${pac.apellido || ""}`.trim() : "otro paciente";
+      const exDate = new Date(exStart);
+      const timeStr = exDate.toLocaleTimeString("es-VE", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+      throw new Error(
+        `Conflicto de horario: este especialista ya tiene una cita con ${pacName} a las ${timeStr}. Elige otra hora.`
+      );
+    }
+  }
+}
+
 export function useCreateAppointment() {
   const qc = useQueryClient();
   const { user } = useAuthSession();
   return useMutation({
     mutationFn: async (input: AppointmentInput) => {
       const clinicId = await resolveCurrentUserClinicId(user?.id);
+      const statusCheck = (input.status || "Programada").toLowerCase();
+      if (statusCheck !== "cancelada") {
+        await assertNoDoctorTimeConflict({
+          doctorId: parseInt(input.doctor_id, 10),
+          scheduledAt: input.scheduled_at,
+          durationMinutes: input.duration_minutes || 30,
+          clinicId,
+        });
+      }
+
       const citaInsertPayload: Record<string, any> = {
         id_paciente: parseInt(input.patient_id),
         id_medico: parseInt(input.doctor_id),
@@ -408,9 +477,24 @@ export function useUpdateAppointment() {
       // Fetch existing cita to get patient_id, motivo, and fecha_hora for Facturas
       const { data: existingCita } = await supabase
         .from("citas")
-        .select("id_paciente, motivo, fecha_hora, estado")
+        .select("id_paciente, id_medico, motivo, fecha_hora, estado")
         .eq("id_cita", idCita)
         .single();
+
+      // Validate doctor schedule conflict when changing date/time or doctor (unless cancelling)
+      const nextStatus = (patch.status || existingCita?.estado || "").toLowerCase();
+      if ((patch.scheduled_at || patch.doctor_id) && nextStatus !== "cancelada") {
+        const nextDoctorId = patch.doctor_id
+          ? parseInt(patch.doctor_id, 10)
+          : Number(existingCita?.id_medico || 0);
+        const nextScheduledAt = patch.scheduled_at || existingCita?.fecha_hora || "";
+        await assertNoDoctorTimeConflict({
+          doctorId: nextDoctorId,
+          scheduledAt: nextScheduledAt,
+          durationMinutes: patch.duration_minutes || 30,
+          excludeCitaId: idCita,
+        });
+      }
 
       // 1. Update Citas table
       const updateData: any = {};
