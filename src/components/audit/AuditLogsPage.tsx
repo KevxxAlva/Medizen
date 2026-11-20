@@ -141,6 +141,147 @@ async function exportAuditLogsPdf(logs: AuditLog[]) {
   }
 }
 
+function AuditStatsGrid({
+  stats,
+}: {
+  stats: { total: number; financial: number; deletes: number; uniqueUsers: number };
+}) {
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <div className="rounded-2xl border border-border bg-muted/25 p-4 flex items-center justify-between">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+            Eventos Registrados
+          </p>
+          <p className="text-2xl font-extrabold text-foreground mt-0.5">{stats.total}</p>
+        </div>
+        <div className="h-10 w-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center">
+          <Activity className="h-5 w-5" />
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.06] p-4 flex items-center justify-between">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+            Operaciones Financieras
+          </p>
+          <p className="text-2xl font-extrabold text-foreground mt-0.5">{stats.financial}</p>
+        </div>
+        <div className="h-10 w-10 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+          <ShieldCheck className="h-5 w-5" />
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-rose-500/30 bg-rose-500/[0.06] p-4 flex items-center justify-between">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">
+            Eliminaciones Auditadas
+          </p>
+          <p className="text-2xl font-extrabold text-foreground mt-0.5">{stats.deletes}</p>
+        </div>
+        <div className="h-10 w-10 rounded-xl bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center">
+          <Trash2 className="h-5 w-5" />
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-muted/25 p-4 flex items-center justify-between">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+            Usuarios Activos
+          </p>
+          <p className="text-2xl font-extrabold text-foreground mt-0.5">{stats.uniqueUsers}</p>
+        </div>
+        <div className="h-10 w-10 rounded-xl bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+          <UserCheck className="h-5 w-5" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AuditLogsTable({
+  rows,
+  isSuperAdminView,
+}: {
+  rows: Array<{
+    log: AuditLog;
+    formattedDate: string;
+    meta: ReturnType<typeof getActionMeta>;
+    entityLabel: string;
+    summary: string;
+  }>;
+  isSuperAdminView: boolean;
+}) {
+  if (rows.length === 0) {
+    return (
+      <div className="rounded-2xl border border-border overflow-hidden">
+        <div className="p-12 text-center text-muted-foreground text-sm">
+          No se encontraron registros de auditoría para los filtros seleccionados.
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-2xl border border-border overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-xs">
+          <thead className="bg-muted/60 text-muted-foreground uppercase text-[10px] tracking-wider font-extrabold border-b border-border">
+            <tr>
+              <th className="py-3 px-4">Fecha y Hora</th>
+              {isSuperAdminView && <th className="py-3 px-4">Clínica</th>}
+              <th className="py-3 px-4">Usuario</th>
+              <th className="py-3 px-4">Acción</th>
+              <th className="py-3 px-4">Módulo</th>
+              <th className="py-3 px-4">Detalle de la Operación</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border/60">
+            {rows.map(({ log, formattedDate, meta, entityLabel, summary }) => {
+              const Icon = meta.icon;
+              return (
+                <tr key={log.id} className="hover:bg-muted/30 transition-colors">
+                  <td className="py-3 px-4 whitespace-nowrap text-muted-foreground font-mono text-[11px]">
+                    {formattedDate}
+                  </td>
+                  {isSuperAdminView && (
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 text-[11px] font-bold">
+                        <Building2 className="h-3 w-3 shrink-0" />
+                        {log.clinic_name || "Clínica FemeSalud"}
+                      </span>
+                    </td>
+                  )}
+                  <td className="py-3 px-4">
+                    <p className="font-bold text-foreground">
+                      {log.perfiles?.full_name || "Usuario del Sistema"}
+                    </p>
+                    {log.perfiles?.email && (
+                      <p className="text-[10px] text-muted-foreground">{log.perfiles.email}</p>
+                    )}
+                  </td>
+                  <td className="py-3 px-4">
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[10px] font-extrabold uppercase",
+                        meta.badgeClass,
+                      )}
+                    >
+                      <Icon className="h-3 w-3" />
+                      {meta.label}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 font-semibold text-foreground/90">{entityLabel}</td>
+                  <td className="py-3 px-4 text-muted-foreground max-w-md">{summary}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 export function AuditLogsPage({ isSuperAdminView = false }: { isSuperAdminView?: boolean } = {}) {
   const { isAdmin, isLoading: roleLoading } = useUserRoleScope();
   const { data: logs = [], isLoading } = useAuditLogs(250);
@@ -255,55 +396,7 @@ export function AuditLogsPage({ isSuperAdminView = false }: { isSuperAdminView?:
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <div className="rounded-2xl border border-border bg-muted/25 p-4 flex items-center justify-between">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-              Eventos Registrados
-            </p>
-            <p className="text-2xl font-extrabold text-foreground mt-0.5">{stats.total}</p>
-          </div>
-          <div className="h-10 w-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center">
-            <Activity className="h-5 w-5" />
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.06] p-4 flex items-center justify-between">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-              Operaciones Financieras
-            </p>
-            <p className="text-2xl font-extrabold text-foreground mt-0.5">{stats.financial}</p>
-          </div>
-          <div className="h-10 w-10 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-            <ShieldCheck className="h-5 w-5" />
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-rose-500/30 bg-rose-500/[0.06] p-4 flex items-center justify-between">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">
-              Eliminaciones Auditadas
-            </p>
-            <p className="text-2xl font-extrabold text-foreground mt-0.5">{stats.deletes}</p>
-          </div>
-          <div className="h-10 w-10 rounded-xl bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center">
-            <Trash2 className="h-5 w-5" />
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-border bg-muted/25 p-4 flex items-center justify-between">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-              Usuarios Activos
-            </p>
-            <p className="text-2xl font-extrabold text-foreground mt-0.5">{stats.uniqueUsers}</p>
-          </div>
-          <div className="h-10 w-10 rounded-xl bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-            <UserCheck className="h-5 w-5" />
-          </div>
-        </div>
-      </div>
+      <AuditStatsGrid stats={stats} />
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[220px]">
@@ -385,69 +478,7 @@ export function AuditLogsPage({ isSuperAdminView = false }: { isSuperAdminView?:
         </Select>
       </div>
 
-      <div className="rounded-2xl border border-border overflow-hidden">
-        {filteredLogs.length === 0 ? (
-          <div className="p-12 text-center text-muted-foreground text-sm">
-            No se encontraron registros de auditoría para los filtros seleccionados.
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-muted/60 text-muted-foreground uppercase text-[10px] tracking-wider font-extrabold border-b border-border">
-                <tr>
-                  <th className="py-3 px-4">Fecha y Hora</th>
-                  {isSuperAdminView && <th className="py-3 px-4">Clínica</th>}
-                  <th className="py-3 px-4">Usuario</th>
-                  <th className="py-3 px-4">Acción</th>
-                  <th className="py-3 px-4">Módulo</th>
-                  <th className="py-3 px-4">Detalle de la Operación</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
-                {paginatedLogs.map(({ log, formattedDate, meta, entityLabel, summary }) => {
-                  const Icon = meta.icon;
-                  return (
-                    <tr key={log.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="py-3 px-4 whitespace-nowrap text-muted-foreground font-mono text-[11px]">
-                        {formattedDate}
-                      </td>
-                      {isSuperAdminView && (
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 text-[11px] font-bold">
-                            <Building2 className="h-3 w-3 shrink-0" />
-                            {log.clinic_name || "Clínica FemeSalud"}
-                          </span>
-                        </td>
-                      )}
-                      <td className="py-3 px-4">
-                        <p className="font-bold text-foreground">
-                          {log.perfiles?.full_name || "Usuario del Sistema"}
-                        </p>
-                        {log.perfiles?.email && (
-                          <p className="text-[10px] text-muted-foreground">{log.perfiles.email}</p>
-                        )}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span
-                          className={cn(
-                            "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[10px] font-extrabold uppercase",
-                            meta.badgeClass,
-                          )}
-                        >
-                          <Icon className="h-3 w-3" />
-                          {meta.label}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 font-semibold text-foreground/90">{entityLabel}</td>
-                      <td className="py-3 px-4 text-muted-foreground max-w-md">{summary}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      <AuditLogsTable rows={paginatedLogs} isSuperAdminView={isSuperAdminView} />
 
       <TablePagination
         currentPage={safePage}

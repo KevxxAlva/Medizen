@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Check, ChevronsUpDown, UserPlus, Loader2, X, Phone, CreditCard, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,105 @@ interface AppointmentPatientSelectProps {
   doctorId?: string;
   onChange: (patientId: string) => void;
   onPatientResolved?: (patient: Patient | null) => void;
+}
+
+function QuickPatientCreateCard({
+  quickName,
+  setQuickName,
+  quickDocId,
+  setQuickDocId,
+  quickPhone,
+  setQuickPhone,
+  isPending,
+  onCancel,
+  onSubmit,
+}: {
+  quickName: string;
+  setQuickName: (v: string) => void;
+  quickDocId: string;
+  setQuickDocId: (v: string) => void;
+  quickPhone: string;
+  setQuickPhone: (v: string) => void;
+  isPending: boolean;
+  onCancel: () => void;
+  onSubmit: () => void;
+}) {
+  return (
+    <div className="rounded-2xl border border-primary/30 bg-primary/[0.04] p-3.5 space-y-3 animate-fade-in">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="h-6 w-6 rounded-lg bg-primary/15 text-primary flex items-center justify-center">
+            <UserPlus className="h-3.5 w-3.5" />
+          </div>
+          <span className="text-xs font-extrabold text-foreground">
+            Registro Rápido de Paciente
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="h-6 w-6 rounded-lg hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          title="Cancelar registro rápido"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      <div className="grid gap-2.5">
+        <div className="grid gap-1">
+          <Label className="text-[11px] font-semibold text-muted-foreground">Nombre y Apellido *</Label>
+          <Input
+            value={quickName}
+            onChange={(e) => setQuickName(e.target.value)}
+            placeholder="Ej. María Fernanda López"
+            className="h-9 rounded-xl text-xs bg-background"
+            autoFocus
+          />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="grid gap-1">
+            <Label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
+              <CreditCard className="h-3 w-3" /> Cédula (opcional)
+            </Label>
+            <Input
+              value={quickDocId}
+              onChange={(e) => setQuickDocId(e.target.value)}
+              placeholder="Ej. V-24123456"
+              className="h-9 rounded-xl text-xs bg-background"
+            />
+          </div>
+          <div className="grid gap-1">
+            <Label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
+              <Phone className="h-3 w-3" /> Teléfono / WhatsApp
+            </Label>
+            <Input
+              value={quickPhone}
+              onChange={(e) => setQuickPhone(e.target.value)}
+              placeholder="Ej. 0414-1234567"
+              className="h-9 rounded-xl text-xs bg-background"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-end gap-2 pt-1">
+        <Button type="button" variant="ghost" size="sm" onClick={onCancel} className="h-8 rounded-xl text-xs">
+          Cancelar
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          disabled={isPending || !quickName.trim()}
+          onClick={onSubmit}
+          className="h-8 rounded-xl text-xs font-bold gap-1.5 bg-primary text-primary-foreground hover:opacity-95"
+        >
+          {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+          Guardar y Seleccionar
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 export function AppointmentPatientSelect({
@@ -39,12 +138,6 @@ export function AppointmentPatientSelect({
     return paginatedData?.data?.find((p) => p.id === value) || null;
   }, [fetchedSelectedPatient, justCreatedPatient, paginatedData, value]);
 
-  useEffect(() => {
-    onPatientResolved?.(selectedPatient);
-  }, [selectedPatient, onPatientResolved]);
-
-  const selectedPatientName = selectedPatient?.full_name || "Buscar o seleccionar paciente...";
-
   const filteredPatients = useMemo(() => {
     const list = paginatedData?.data || [];
     if (!searchTerm && selectedPatient && !list.some((p) => p.id === value)) {
@@ -55,24 +148,16 @@ export function AppointmentPatientSelect({
 
   const openQuickCreate = () => {
     const trimmed = searchTerm.trim();
-    if (trimmed) {
-      if (/^[vVeEjJ]?-?\d+$/.test(trimmed)) {
-        setQuickDocId(trimmed);
-        setQuickName("");
-      } else {
-        setQuickName(trimmed);
-        setQuickDocId("");
-      }
-    } else {
-      setQuickName("");
-      setQuickDocId("");
-    }
+    const isDocPattern = /^[vVeEjJ]?-?\d+$/.test(trimmed);
+    setQuickDocId(trimmed && isDocPattern ? trimmed : "");
+    setQuickName(trimmed && !isDocPattern ? trimmed : "");
     setQuickPhone("");
     setPopoverOpen(false);
     setQuickCreateOpen(true);
   };
 
   const handleQuickCreate = async () => {
+    if (createPatient.isPending) return;
     const cleanName = quickName.trim();
     if (!cleanName) {
       toast.error("Ingresa el nombre completo del paciente");
@@ -97,6 +182,13 @@ export function AppointmentPatientSelect({
     }
   };
 
+  const patientSubLabel = [
+    selectedPatient?.document_id ? `C.I. ${selectedPatient.document_id}` : "",
+    selectedPatient?.phone || "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
     <div className="grid gap-2">
       <div className="flex items-center justify-between gap-2">
@@ -113,7 +205,19 @@ export function AppointmentPatientSelect({
         )}
       </div>
 
-      {!quickCreateOpen ? (
+      {quickCreateOpen ? (
+        <QuickPatientCreateCard
+          quickName={quickName}
+          setQuickName={setQuickName}
+          quickDocId={quickDocId}
+          setQuickDocId={setQuickDocId}
+          quickPhone={quickPhone}
+          setQuickPhone={setQuickPhone}
+          isPending={createPatient.isPending}
+          onCancel={() => setQuickCreateOpen(false)}
+          onSubmit={handleQuickCreate}
+        />
+      ) : (
         <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
           <PopoverTrigger asChild>
             <Button
@@ -129,14 +233,10 @@ export function AppointmentPatientSelect({
                 </div>
                 <div className="flex flex-col min-w-0">
                   <span className={selectedPatient ? "truncate font-semibold text-foreground" : "truncate text-muted-foreground"}>
-                    {selectedPatientName}
+                    {selectedPatient?.full_name || "Buscar o seleccionar paciente..."}
                   </span>
-                  {selectedPatient && (selectedPatient.document_id || selectedPatient.phone) && (
-                    <span className="text-[10px] text-muted-foreground truncate">
-                      {selectedPatient.document_id ? `C.I. ${selectedPatient.document_id}` : ""}
-                      {selectedPatient.document_id && selectedPatient.phone ? " · " : ""}
-                      {selectedPatient.phone || ""}
-                    </span>
+                  {patientSubLabel && (
+                    <span className="text-[10px] text-muted-foreground truncate">{patientSubLabel}</span>
                   )}
                 </div>
               </div>
@@ -166,7 +266,7 @@ export function AppointmentPatientSelect({
                     className="rounded-xl h-8 text-xs font-bold gap-1.5 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20"
                   >
                     <UserPlus className="h-3.5 w-3.5" />
-                    Crear "{searchTerm.trim() || "paciente nuevo"}" rápido
+                    Crear &quot;{searchTerm.trim() || "paciente nuevo"}&quot; rápido
                   </Button>
                 </CommandEmpty>
                 <CommandGroup>
@@ -190,9 +290,7 @@ export function AppointmentPatientSelect({
                           {p.historia_number ? ` · #${p.historia_number}` : ""}
                         </span>
                       </div>
-                      {value === p.id && (
-                        <Check className="h-4 w-4 text-primary shrink-0 ml-2" />
-                      )}
+                      {value === p.id && <Check className="h-4 w-4 text-primary shrink-0 ml-2" />}
                     </CommandItem>
                   ))}
                 </CommandGroup>
@@ -210,91 +308,6 @@ export function AppointmentPatientSelect({
             </Command>
           </PopoverContent>
         </Popover>
-      ) : (
-        <div className="rounded-2xl border border-primary/30 bg-primary/[0.04] p-3.5 space-y-3 animate-fade-in">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-lg bg-primary/15 text-primary flex items-center justify-center">
-                <UserPlus className="h-3.5 w-3.5" />
-              </div>
-              <span className="text-xs font-extrabold text-foreground">
-                Registro Rápido de Paciente
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setQuickCreateOpen(false)}
-              className="h-6 w-6 rounded-lg hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-              title="Cancelar registro rápido"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-
-          <div className="grid gap-2.5">
-            <div className="grid gap-1">
-              <Label className="text-[11px] font-semibold text-muted-foreground">Nombre y Apellido *</Label>
-              <Input
-                value={quickName}
-                onChange={(e) => setQuickName(e.target.value)}
-                placeholder="Ej. María Fernanda López"
-                className="h-9 rounded-xl text-xs bg-background"
-                autoFocus
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <div className="grid gap-1">
-                <Label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
-                  <CreditCard className="h-3 w-3" /> Cédula (opcional)
-                </Label>
-                <Input
-                  value={quickDocId}
-                  onChange={(e) => setQuickDocId(e.target.value)}
-                  placeholder="Ej. V-24123456"
-                  className="h-9 rounded-xl text-xs bg-background"
-                />
-              </div>
-              <div className="grid gap-1">
-                <Label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
-                  <Phone className="h-3 w-3" /> Teléfono / WhatsApp
-                </Label>
-                <Input
-                  value={quickPhone}
-                  onChange={(e) => setQuickPhone(e.target.value)}
-                  placeholder="Ej. 0414-1234567"
-                  className="h-9 rounded-xl text-xs bg-background"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-end gap-2 pt-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setQuickCreateOpen(false)}
-              className="h-8 rounded-xl text-xs"
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              disabled={createPatient.isPending || !quickName.trim()}
-              onClick={handleQuickCreate}
-              className="h-8 rounded-xl text-xs font-bold gap-1.5 bg-primary text-primary-foreground hover:opacity-95"
-            >
-              {createPatient.isPending ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Check className="h-3.5 w-3.5" />
-              )}
-              Guardar y Seleccionar
-            </Button>
-          </div>
-        </div>
       )}
     </div>
   );

@@ -76,6 +76,215 @@ const superAdminNavigation: ModuleDef[] = [
   { title: "Configuración Global", url: "/superadmin?view=configuracion", icon: Settings },
 ];
 
+function SidebarSuperAdminSwitch({
+  isCollapsed,
+  clinicName,
+  onNavigate,
+}: {
+  isCollapsed?: boolean;
+  clinicName?: string;
+  onNavigate?: () => void;
+}) {
+  if (isCollapsed) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Link
+            to="/superadmin"
+            onClick={onNavigate}
+            className="my-2 mx-auto h-9 w-9 rounded-xl flex items-center justify-center transition-[background-color,transform] active:scale-95 bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/80"
+          >
+            <Building2 className="h-4 w-4 text-primary" />
+          </Link>
+        </TooltipTrigger>
+        <TooltipContent side="right" sideOffset={10} className="font-semibold text-xs">
+          Volver al Panel Super Admin
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+  return (
+    <div className="mx-3 mt-3 p-2.5 rounded-xl bg-sidebar-accent/50 border border-sidebar-border flex items-center justify-between gap-2 shadow-xs">
+      <div className="flex items-center gap-2 min-w-0">
+        <div className="w-2 h-2 rounded-full shrink-0 bg-emerald-500" />
+        <div className="flex flex-col min-w-0">
+          <span className="text-[11px] font-bold text-sidebar-foreground truncate leading-tight">
+            {clinicName || "Clínica"}
+          </span>
+          <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-semibold">
+            Modo Operativo
+          </span>
+        </div>
+      </div>
+      <Link
+        to="/superadmin"
+        onClick={onNavigate}
+        className="px-2.5 py-1 rounded-lg text-[11px] font-bold transition-[background-color,transform] shrink-0 active:scale-95 bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs"
+      >
+        Ver SaaS
+      </Link>
+    </div>
+  );
+}
+
+function isSidebarItemVisible(
+  m: NavItem,
+  opts: {
+    isSuperAdmin: boolean;
+    isAdmin: boolean;
+    canViewAllDoctors: boolean;
+    isSuperAdminMode: boolean;
+    includesFinance: boolean;
+    includesReportsAndAudit: boolean;
+  },
+): boolean {
+  if (m.superAdminOnly && !opts.isSuperAdmin) return false;
+  if (m.adminOnly && !opts.isAdmin && !opts.isSuperAdmin) return false;
+  if (m.receptionOrAdminOnly && !opts.canViewAllDoctors && !opts.isSuperAdmin) return false;
+  if (!opts.isSuperAdminMode && m.minPlan === "pro" && !opts.includesFinance) return false;
+  if (!opts.isSuperAdminMode && m.minPlan === "enterprise" && !opts.includesReportsAndAudit) return false;
+  return true;
+}
+
+function isNavItemActive(
+  m: NavItem,
+  pathname: string,
+  searchStr: string,
+  isSuperAdminMode: boolean,
+): boolean {
+  if (isSuperAdminMode) {
+    if (m.url === "/superadmin") {
+      return pathname === "/superadmin" && (!searchStr || !searchStr.includes("view="));
+    }
+    return `${pathname}${searchStr || ""}` === m.url;
+  }
+  return pathname === m.url || (m.url !== "/" && !m.url?.startsWith("#") && pathname.startsWith(m.url || ""));
+}
+
+function SidebarNavItem({
+  m,
+  pathname,
+  searchStr,
+  isSuperAdminMode,
+  isCollapsed,
+  onNavigate,
+}: {
+  m: NavItem;
+  pathname: string;
+  searchStr: string;
+  isSuperAdminMode: boolean;
+  isCollapsed?: boolean;
+  onNavigate?: () => void;
+}) {
+  if (m.category) {
+    return isCollapsed ? (
+      <div className="my-2.5 mx-2 border-t border-sidebar-border" title={m.category} />
+    ) : (
+      <div className="mt-5 mb-1.5 px-3 flex items-center gap-2">
+        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider truncate">
+          {m.category}
+        </span>
+        <div className="flex-1 border-t border-sidebar-border" />
+      </div>
+    );
+  }
+
+  const Icon = m.icon;
+  if (!Icon) return null;
+
+  const active = isNavItemActive(m, pathname, searchStr, isSuperAdminMode);
+  const isDummy = Boolean(m.url?.startsWith("#"));
+  const [basePath, rawQuery] = (m.url || "/").split("?");
+  const searchObj = rawQuery ? Object.fromEntries(new URLSearchParams(rawQuery)) : undefined;
+
+  const linkContent = (
+    <Link
+      to={isDummy ? "/" : (basePath as any)}
+      search={isDummy ? undefined : (searchObj as any)}
+      aria-current={active ? "page" : undefined}
+      aria-label={isCollapsed ? m.title : undefined}
+      onClick={(e) => {
+        if (isDummy) {
+          e.preventDefault();
+          return;
+        }
+        onNavigate?.();
+      }}
+      className={cn(
+        "flex items-center rounded-xl transition-[background-color,color,transform] duration-150 group text-sm font-semibold active:scale-[0.98] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        isCollapsed ? "justify-center h-11 w-11 sm:h-10 sm:w-10 mx-auto" : "gap-3 px-3 py-2.5 min-h-11 sm:min-h-10",
+        active
+          ? "bg-primary text-primary-foreground shadow-sm"
+          : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent",
+      )}
+    >
+      <Icon
+        aria-hidden="true"
+        className={cn(
+          "h-4 w-4 flex-shrink-0",
+          active ? "text-primary-foreground" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground",
+        )}
+        strokeWidth={2.2}
+      />
+      {!isCollapsed && <span className="truncate">{m.title}</span>}
+    </Link>
+  );
+
+  return isCollapsed ? (
+    <Tooltip>
+      <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
+      <TooltipContent side="right" sideOffset={10} className="font-semibold">
+        {m.title}
+      </TooltipContent>
+    </Tooltip>
+  ) : (
+    linkContent
+  );
+}
+
+function SidebarBrandHeader({
+  isCollapsed,
+  isSuperAdminMode,
+  clinicName,
+  clinicTagline,
+}: {
+  isCollapsed?: boolean;
+  isSuperAdminMode: boolean;
+  clinicName?: string;
+  clinicTagline?: string;
+}) {
+  const brandTitle = isSuperAdminMode ? "Medizen SaaS" : clinicName || "Medizen";
+  return (
+    <div className={cn("h-16 flex items-center border-b border-sidebar-border shrink-0", isCollapsed ? "justify-center px-2" : "px-6 gap-3")}>
+      <div className="relative flex items-center justify-center">
+        <MedizenLogo className="h-8 w-8 flex-shrink-0 transition-transform duration-300" />
+        {isSuperAdminMode && (
+          <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary" />
+          </span>
+        )}
+      </div>
+      {!isCollapsed && (
+        <div className="flex flex-col min-w-0">
+          <span className="font-display font-bold text-lg tracking-tight text-sidebar-foreground truncate" title={brandTitle}>
+            {brandTitle}
+          </span>
+          {isSuperAdminMode ? (
+            <span className="text-[10px] font-bold tracking-wider uppercase text-primary -mt-0.5">
+              Super Administrador
+            </span>
+          ) : clinicTagline ? (
+            <span className="text-[10px] font-medium text-muted-foreground truncate -mt-0.5">
+              {clinicTagline}
+            </span>
+          ) : null}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const SidebarBody = memo(function SidebarBody({
   onNavigate,
   isCollapsed,
@@ -107,175 +316,46 @@ const SidebarBody = memo(function SidebarBody({
   return (
     <TooltipProvider delayDuration={150}>
       <div className="flex flex-col h-full bg-sidebar text-sidebar-foreground overflow-hidden">
-        {/* Logo Area */}
-        <div
-          className={cn(
-            "h-16 flex items-center border-b border-sidebar-border shrink-0",
-            isCollapsed ? "justify-center px-2" : "px-6 gap-3",
-          )}
-        >
-          <div className="relative flex items-center justify-center">
-            <MedizenLogo className="h-8 w-8 flex-shrink-0 transition-transform duration-300" />
-            {isSuperAdminMode && (
-              <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
-              </span>
-            )}
-          </div>
-          {!isCollapsed && (
-            <div className="flex flex-col min-w-0">
-              <span
-                className="font-display font-bold text-lg tracking-tight text-sidebar-foreground truncate"
-                title={isSuperAdminMode ? "Medizen SaaS" : clinic?.name || "Medizen"}
-              >
-                {isSuperAdminMode ? "Medizen SaaS" : clinic?.name || "Medizen"}
-              </span>
-              {isSuperAdminMode ? (
-                <span className="text-[10px] font-bold tracking-wider uppercase text-primary -mt-0.5">
-                  Super Administrador
-                </span>
-              ) : (
-                clinic?.tagline && (
-                  <span className="text-[10px] font-medium text-muted-foreground truncate -mt-0.5">
-                    {clinic.tagline}
-                  </span>
-                )
-              )}
-            </div>
-          )}
-        </div>
+        <SidebarBrandHeader
+          isCollapsed={isCollapsed}
+          isSuperAdminMode={isSuperAdminMode}
+          clinicName={clinic?.name}
+          clinicTagline={clinic?.tagline}
+        />
 
         {/* Workspace / Context Switcher for Superadmin when outside /superadmin */}
-        {isSuperAdmin && !isSuperAdminMode && !isCollapsed && (
-          <div className="mx-3 mt-3 p-2.5 rounded-xl bg-sidebar-accent/50 border border-sidebar-border flex items-center justify-between gap-2 shadow-xs">
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="w-2 h-2 rounded-full shrink-0 bg-emerald-500" />
-              <div className="flex flex-col min-w-0">
-                <span className="text-[11px] font-bold text-sidebar-foreground truncate leading-tight">
-                  {clinic?.name || "Clínica"}
-                </span>
-                <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-semibold">
-                  Modo Operativo
-                </span>
-              </div>
-            </div>
-            <Link
-              to="/superadmin"
-              onClick={onNavigate}
-              className="px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all shrink-0 active:scale-95 bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs"
-            >
-              Ver SaaS
-            </Link>
-          </div>
-        )}
-
-        {isSuperAdmin && !isSuperAdminMode && isCollapsed && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Link
-                to="/superadmin"
-                onClick={onNavigate}
-                className="my-2 mx-auto h-9 w-9 rounded-xl flex items-center justify-center transition-all active:scale-95 bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/80"
-              >
-                <Building2 className="h-4 w-4 text-primary" />
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={10} className="font-semibold text-xs">
-              Volver al Panel Super Admin
-            </TooltipContent>
-          </Tooltip>
+        {isSuperAdmin && !isSuperAdminMode && (
+          <SidebarSuperAdminSwitch
+            isCollapsed={isCollapsed}
+            clinicName={clinic?.name}
+            onNavigate={onNavigate}
+          />
         )}
 
         {/* Navigation List */}
         <nav className="flex-1 w-full overflow-y-auto overscroll-contain no-scrollbar px-3 pt-3 pb-4 flex flex-col gap-1">
-          {navList.map((m) => {
-            if (m.superAdminOnly && !isSuperAdmin) return null;
-            if (m.adminOnly && !isAdmin && !isSuperAdmin) return null;
-            if (m.receptionOrAdminOnly && !canViewAllDoctors && !isSuperAdmin) return null;
-            if (!isSuperAdminMode && m.minPlan === "pro" && !planConfig.includesFinance) return null;
-            if (!isSuperAdminMode && m.minPlan === "enterprise" && !planConfig.includesReportsAndAudit) return null;
-
-            if (m.category) {
-              if (isCollapsed) {
-                return (
-                  <div
-                    key={`cat-${m.category}`}
-                    className="my-2.5 mx-2 border-t border-sidebar-border"
-                    title={m.category}
-                  />
-                );
-              }
-              return (
-                <div key={`cat-${m.category}`} className="mt-5 mb-1.5 px-3 flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider truncate">
-                    {m.category}
-                  </span>
-                  <div className="flex-1 border-t border-sidebar-border" />
-                </div>
-              );
-            }
-
-            const currentFullUrl = `${pathname}${searchStr || ""}`;
-            const active = isSuperAdminMode
-              ? m.url === "/superadmin"
-                ? pathname === "/superadmin" && (!searchStr || !searchStr.includes("view="))
-                : currentFullUrl === m.url
-              : pathname === m.url ||
-                (m.url !== "/" && !m.url?.startsWith("#") && pathname.startsWith(m.url || ""));
-            const Icon = m.icon;
-            if (!Icon) return null;
-            const isDummy = m.url?.startsWith("#");
-            const [basePath, rawQuery] = (m.url || "/").split("?");
-            const searchObj = rawQuery ? Object.fromEntries(new URLSearchParams(rawQuery)) : undefined;
-
-            const linkContent = (
-              <Link
-                key={m.title}
-                to={isDummy ? "/" : (basePath as any)}
-                search={isDummy ? undefined : (searchObj as any)}
-                aria-current={active ? "page" : undefined}
-                aria-label={isCollapsed ? m.title : undefined}
-                onClick={(e) => {
-                  if (isDummy) e.preventDefault();
-                  else if (onNavigate) onNavigate();
-                }}
-                className={cn(
-                  "flex items-center rounded-xl transition-[background-color,color,transform] duration-150 group text-sm font-semibold active:scale-[0.98] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  isCollapsed
-                    ? "justify-center h-11 w-11 sm:h-10 sm:w-10 mx-auto"
-                    : "gap-3 px-3 py-2.5 min-h-11 sm:min-h-10",
-                  active
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent",
-                )}
-              >
-                <Icon
-                  aria-hidden="true"
-                  className={cn(
-                    "h-4 w-4 flex-shrink-0",
-                    active
-                      ? "text-primary-foreground"
-                      : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground",
-                  )}
-                  strokeWidth={2.2}
-                />
-                {!isCollapsed && <span className="truncate">{m.title}</span>}
-              </Link>
-            );
-
-            if (isCollapsed) {
-              return (
-                <Tooltip key={m.title}>
-                  <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
-                  <TooltipContent side="right" sideOffset={10} className="font-semibold">
-                    {m.title}
-                  </TooltipContent>
-                </Tooltip>
-              );
-            }
-            return linkContent;
-          })}
+          {navList
+            .filter((m) =>
+              isSidebarItemVisible(m, {
+                isSuperAdmin,
+                isAdmin,
+                canViewAllDoctors,
+                isSuperAdminMode,
+                includesFinance: planConfig.includesFinance,
+                includesReportsAndAudit: planConfig.includesReportsAndAudit,
+              }),
+            )
+            .map((m) => (
+              <SidebarNavItem
+                key={m.category ? `cat-${m.category}` : m.title}
+                m={m}
+                pathname={pathname}
+                searchStr={searchStr}
+                isSuperAdminMode={isSuperAdminMode}
+                isCollapsed={isCollapsed}
+                onNavigate={onNavigate}
+              />
+            ))}
         </nav>
 
         {/* Footer Area with crisp top divider line */}

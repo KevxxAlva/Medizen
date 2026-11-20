@@ -109,6 +109,7 @@ function PatientFormContent({
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (busy) return;
     if (!formState.full_name.trim()) {
       toast.error("Por favor ingrese el nombre completo del paciente");
       return;

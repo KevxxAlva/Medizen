@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -763,73 +763,241 @@ function useConfirmPaymentDialogState({
   };
 }
 
+function ConfirmPaymentSuccessView({
+  invCode,
+  patientName,
+  totalUsd,
+  activeRate,
+  methodLabel,
+  reference,
+  onClose,
+}: {
+  invCode: string;
+  patientName: string;
+  totalUsd: number;
+  activeRate: number;
+  methodLabel: string;
+  reference: string;
+  onClose: () => void;
+}) {
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-8 text-center animate-in fade-in zoom-in-95 duration-300">
+      <style>{`
+        @keyframes medizen-circle-draw {
+          0% { stroke-dashoffset: 264; transform: scale(0.88); opacity: 0; }
+          50% { opacity: 1; transform: scale(1.04); }
+          100% { stroke-dashoffset: 0; transform: scale(1); opacity: 1; }
+        }
+        @keyframes medizen-check-draw {
+          0% { stroke-dashoffset: 80; }
+          100% { stroke-dashoffset: 0; }
+        }
+        .medizen-success-circle {
+          stroke-dasharray: 264;
+          stroke-dashoffset: 264;
+          transform-origin: center;
+          animation: medizen-circle-draw 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        .medizen-success-check {
+          stroke-dasharray: 80;
+          stroke-dashoffset: 80;
+          animation: medizen-check-draw 0.42s cubic-bezier(0.22, 1, 0.36, 1) 0.35s forwards;
+        }
+      `}</style>
+
+      <div className="relative flex items-center justify-center mb-5">
+        <div className="absolute h-28 w-28 rounded-full bg-emerald-500/15 animate-ping [animation-duration:1.6s]" />
+        <div className="absolute h-24 w-24 rounded-full bg-emerald-500/10" />
+        <svg className="h-24 w-24 text-emerald-500 relative z-10" viewBox="0 0 96 96" fill="none">
+          <circle cx="48" cy="48" r="42" stroke="currentColor" strokeWidth="6" strokeLinecap="round" className="medizen-success-circle" />
+          <path d="M30 49.5L42.5 62L67 36.5" stroke="currentColor" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" className="medizen-success-check" />
+        </svg>
+      </div>
+
+      <span className="text-[11px] font-extrabold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-3 py-1 rounded-full">
+        Factura {invCode} · Pagada
+      </span>
+      <h3 className="text-xl sm:text-2xl font-black text-foreground mt-3">¡Cobro Confirmado!</h3>
+      <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-xs">
+        El pago de <strong className="text-foreground">{patientName}</strong> fue registrado y conciliado en tesorería.
+      </p>
+
+      <div className="mt-5 w-full max-w-xs rounded-2xl border border-emerald-500/25 bg-emerald-500/5 p-4 space-y-2 text-left">
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-muted-foreground font-medium">Monto acreditado:</span>
+          <span className="font-black text-foreground text-sm">${totalUsd.toFixed(2)} USD</span>
+        </div>
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-muted-foreground font-medium">Equivalente Bs.:</span>
+          <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatBs(totalUsd, activeRate)}</span>
+        </div>
+        <div className="flex items-center justify-between text-xs pt-1.5 border-t border-emerald-500/20">
+          <span className="text-muted-foreground font-medium">Método:</span>
+          <span className="font-bold text-foreground text-right">{methodLabel}</span>
+        </div>
+        {reference && (
+          <div className="flex items-start justify-between gap-2 text-xs pt-1.5 border-t border-emerald-500/20">
+            <span className="text-muted-foreground font-medium shrink-0">Referencia:</span>
+            <span className="font-mono font-semibold text-foreground text-right break-all">{reference}</span>
+          </div>
+        )}
+      </div>
+
+      <Button
+        type="button"
+        onClick={onClose}
+        className="mt-6 w-full max-w-xs h-10 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm shadow-emerald-500/20 cursor-pointer"
+      >
+        Listo, Cerrar Comprobante
+      </Button>
+    </div>
+  );
+}
+
+function ConfirmPaymentFormBody({
+  rates,
+  paymentMethod,
+  paymentReference,
+  setPaymentReference,
+  s,
+}: {
+  rates: ExchangeRates;
+  paymentMethod: string;
+  paymentReference: string;
+  setPaymentReference: (val: string) => void;
+  s: ReturnType<typeof useConfirmPaymentDialogState>;
+}) {
+  return (
+    <div className="flex-1 md:overflow-y-auto md:px-6 md:py-5 space-y-4 min-w-0">
+      <div className="space-y-1.5">
+        <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+          Tasa de Conversión Aplicada
+        </Label>
+        <ConfirmPaymentRateSelector
+          dialogRateType={s.dialogRateType}
+          setDialogRateType={s.setDialogRateType}
+          rates={rates}
+        />
+      </div>
+
+      <ConfirmPaymentSummaryCard
+        totalUsd={s.totalUsd}
+        rates={rates}
+        dialogRateType={s.dialogRateType}
+        activeRate={s.activeRate}
+        totalBs={s.totalBs}
+        copiedBs={s.copiedBs}
+        onCopyBs={s.handleCopyBs}
+      />
+
+      <ConfirmPaymentMethodSelector
+        methods={s.availableMethods}
+        selectedMethodName={paymentMethod || s.selectedMethodObj?.name || ""}
+        onSelectMethod={s.handleSelectMethod}
+      />
+
+      {s.hasReceiverDetails && (
+        <ConfirmPaymentReceiverCard
+          methodName={s.selectedMethodObj?.name || ""}
+          details={s.selectedDetails}
+          copiedDetails={s.copiedDetails}
+          onCopy={s.handleCopyClinicPaymentData}
+        />
+      )}
+
+      {s.selectedCategory === "Cashea" ? (
+        <CasheaCalculatorSection
+          casheaInitialPct={s.casheaInitialPct}
+          setCasheaInitialPct={s.setCasheaInitialPct}
+          casheaInitialUsd={s.casheaInitialUsd}
+          casheaInitialBs={s.casheaInitialBs}
+          casheaFinancedUsd={s.casheaFinancedUsd}
+          casheaInstallmentUsd={s.casheaInstallmentUsd}
+          casheaInitialMethod={s.casheaInitialMethod}
+          setCasheaInitialMethod={s.setCasheaInitialMethod}
+          casheaOrderNumber={s.casheaOrderNumber}
+          setCasheaOrderNumber={s.setCasheaOrderNumber}
+          activeRate={s.activeRate}
+          onCopyBs={s.handleCopyBs}
+        />
+      ) : (
+        <SplitPaymentSection
+          isSplitPayment={s.isSplitPayment}
+          setIsSplitPayment={s.setIsSplitPayment}
+          usdCashReceived={s.usdCashReceived}
+          setUsdCashReceived={s.setUsdCashReceived}
+          totalUsd={s.totalUsd}
+          remainingUsd={s.remainingUsd}
+          remainingBs={s.remainingBs}
+          activeRate={s.activeRate}
+          onCopyBs={s.handleCopyBs}
+        />
+      )}
+
+      <div className="grid gap-1.5">
+        <Label htmlFor="referencia" className="text-xs font-bold">
+          Referencia / Comprobante de Cobro
+        </Label>
+        <Input
+          id="referencia"
+          placeholder={getReferencePlaceholder(s.selectedCategory)}
+          value={paymentReference}
+          onChange={(e) => setPaymentReference(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              s.handleSubmitConfirm();
+            }
+          }}
+          className="rounded-xl bg-background/80 h-10 text-xs"
+        />
+      </div>
+    </div>
+  );
+}
+
 export function ConfirmPaymentDialog(props: ConfirmPaymentDialogProps) {
-  const {
-    open,
-    invoice,
-    rates,
-    paymentMethod,
-    paymentReference,
-    setPaymentReference,
-    isPending,
-  } = props;
-
+  const { open, invoice, rates, paymentMethod, paymentReference, setPaymentReference, isPending } = props;
   const s = useConfirmPaymentDialogState(props);
-
-  useEffect(() => {
-    if (open) {
-      const initialMethod = s.availableMethods[0];
-      if (!paymentMethod && initialMethod) {
-        s.handleSelectMethod(initialMethod);
-      }
-    }
-  }, [open]);
 
   if (!open || !invoice) return null;
 
   const invCode = `INV-${invoice.id_factura?.toString().padStart(4, "0")}`;
+  const closeDrawer = () => {
+    if (!isPending) s.handleOpenChange(false);
+  };
 
   return (
     <>
-      {/* Backdrop en Escritorio (md+) para el panel deslizable derecho */}
-      <div
-        onClick={() => {
-          if (!isPending) s.handleOpenChange(false);
-        }}
-        className="hidden md:block fixed inset-0 z-40 bg-black/45 backdrop-blur-[2px] animate-in fade-in duration-200"
+      <button
+        type="button"
+        aria-label="Cerrar panel de cobro"
+        onClick={closeDrawer}
+        className="hidden md:block fixed inset-0 z-40 bg-black/45 backdrop-blur-[2px] animate-in fade-in duration-200 cursor-default"
       />
 
-      {/* Contenedor Híbrido:
-          - En Móvil (< md): Vista de Página Completa nativa dentro del flujo (sin modal flotante).
-          - En Escritorio (md+): Panel Lateral Derecho (Slide-over Drawer) con scroll vertical propio. */}
-      <div
-        role="dialog"
+      <aside
         aria-label="Confirmar Cobro"
         className={cn(
           "bg-card text-foreground w-full min-w-0 flex flex-col",
-          // Móvil: página completa en flujo
           "border border-border rounded-3xl p-4 shadow-xs min-h-[calc(100vh-8rem)] animate-in fade-in duration-200",
-          // Escritorio: drawer fijo a la derecha con scroll interno
           "md:fixed md:inset-y-0 md:right-0 md:z-50 md:w-[520px] lg:w-[560px] md:min-h-0 md:h-dvh md:rounded-none md:rounded-l-3xl md:border-y-0 md:border-r-0 md:border-l md:border-border/80 md:p-0 md:shadow-2xl md:animate-in md:slide-in-from-right md:duration-250",
         )}
       >
-        {/* Cabecera Fija Superior */}
         <header className="pb-4 mb-4 md:mb-0 md:px-6 md:py-4 border-b border-border/60 shrink-0 bg-card/95 backdrop-blur-md md:rounded-tl-3xl">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5 min-w-0">
-              {/* Botón Volver en Móvil */}
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => s.handleOpenChange(false)}
+                onClick={closeDrawer}
                 disabled={isPending}
                 className="md:hidden h-8 px-2.5 rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground gap-1 shrink-0 cursor-pointer"
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
                 <span>Volver</span>
               </Button>
-
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <h2 className="text-base sm:text-lg font-bold tracking-tight text-foreground truncate">
@@ -842,20 +1010,14 @@ export function ConfirmPaymentDialog(props: ConfirmPaymentDialogProps) {
                 <p className="text-xs text-muted-foreground truncate mt-0.5 flex items-center gap-1.5">
                   <UserRound className="h-3 w-3 text-primary shrink-0" />
                   <span className="font-semibold text-foreground">{invoice.paciente_nombre}</span>
-                  {invoice.concepto && (
-                    <>
-                      <span>·</span>
-                      <span className="truncate">{invoice.concepto}</span>
-                    </>
-                  )}
+                  {invoice.concepto && <span className="truncate">· {invoice.concepto}</span>}
                 </p>
               </div>
             </div>
 
-            {/* Botón Cerrar (X) en Escritorio */}
             <button
               type="button"
-              onClick={() => s.handleOpenChange(false)}
+              onClick={closeDrawer}
               disabled={isPending}
               aria-label="Cerrar panel de cobro"
               className="hidden md:flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer shrink-0"
@@ -865,227 +1027,54 @@ export function ConfirmPaymentDialog(props: ConfirmPaymentDialogProps) {
           </div>
         </header>
 
-        {/* Cuerpo con Scroll Vertical en Escritorio y Flujo Nativo en Móvil */}
         {s.showSuccess ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-8 text-center animate-in fade-in zoom-in-95 duration-300">
-            <style>{`
-              @keyframes medizen-circle-draw {
-                0% { stroke-dashoffset: 264; transform: scale(0.88); opacity: 0; }
-                50% { opacity: 1; transform: scale(1.04); }
-                100% { stroke-dashoffset: 0; transform: scale(1); opacity: 1; }
-              }
-              @keyframes medizen-check-draw {
-                0% { stroke-dashoffset: 80; }
-                100% { stroke-dashoffset: 0; }
-              }
-              .medizen-success-circle {
-                stroke-dasharray: 264;
-                stroke-dashoffset: 264;
-                transform-origin: center;
-                animation: medizen-circle-draw 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-              }
-              .medizen-success-check {
-                stroke-dasharray: 80;
-                stroke-dashoffset: 80;
-                animation: medizen-check-draw 0.42s cubic-bezier(0.22, 1, 0.36, 1) 0.35s forwards;
-              }
-            `}</style>
+          <ConfirmPaymentSuccessView
+            invCode={invCode}
+            patientName={invoice.paciente_nombre || "Paciente"}
+            totalUsd={s.totalUsd}
+            activeRate={s.activeRate}
+            methodLabel={s.confirmedMethodLabel || paymentMethod || "Pago Móvil"}
+            reference={s.confirmedReference || ""}
+            onClose={closeDrawer}
+          />
+        ) : (
+          <ConfirmPaymentFormBody
+            rates={rates}
+            paymentMethod={paymentMethod}
+            paymentReference={paymentReference}
+            setPaymentReference={setPaymentReference}
+            s={s}
+          />
+        )}
 
-            {/* Anillo y Checkmark Animado */}
-            <div className="relative flex items-center justify-center mb-5">
-              <div className="absolute h-28 w-28 rounded-full bg-emerald-500/15 animate-ping [animation-duration:1.6s]" />
-              <div className="absolute h-24 w-24 rounded-full bg-emerald-500/10" />
-              <svg
-                className="h-24 w-24 text-emerald-500 relative z-10"
-                viewBox="0 0 96 96"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <circle
-                  cx="48"
-                  cy="48"
-                  r="42"
-                  stroke="currentColor"
-                  strokeWidth="6"
-                  strokeLinecap="round"
-                  className="medizen-success-circle"
-                />
-                <path
-                  d="M30 49.5L42.5 62L67 36.5"
-                  stroke="currentColor"
-                  strokeWidth="6.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="medizen-success-check"
-                />
-              </svg>
-            </div>
-
-            <span className="text-[11px] font-extrabold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-3 py-1 rounded-full">
-              Factura {invCode} · Pagada
-            </span>
-
-            <h3 className="text-xl sm:text-2xl font-black text-foreground mt-3">
-              ¡Cobro Confirmado!
-            </h3>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-xs">
-              El pago de <strong className="text-foreground">{invoice.paciente_nombre}</strong> fue registrado y conciliado en tesorería.
-            </p>
-
-            <div className="mt-5 w-full max-w-xs rounded-2xl border border-emerald-500/25 bg-emerald-500/5 p-4 space-y-2 text-left">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground font-medium">Monto acreditado:</span>
-                <span className="font-black text-foreground text-sm">
-                  ${s.totalUsd.toFixed(2)} USD
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground font-medium">Equivalente Bs.:</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                  {formatBs(s.totalUsd, s.activeRate)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-xs pt-1.5 border-t border-emerald-500/20">
-                <span className="text-muted-foreground font-medium">Método:</span>
-                <span className="font-bold text-foreground text-right">
-                  {s.confirmedMethodLabel || paymentMethod || "Pago Móvil"}
-                </span>
-              </div>
-              {s.confirmedReference && (
-                <div className="flex items-start justify-between gap-2 text-xs pt-1.5 border-t border-emerald-500/20">
-                  <span className="text-muted-foreground font-medium shrink-0">Referencia:</span>
-                  <span className="font-mono font-semibold text-foreground text-right break-all">
-                    {s.confirmedReference}
-                  </span>
-                </div>
-              )}
-            </div>
-
+        {!s.showSuccess && (
+          <footer className="pt-4 mt-4 md:mt-0 md:px-6 md:py-4 border-t border-border/60 shrink-0 bg-card/95 backdrop-blur-md md:rounded-bl-3xl flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2.5">
             <Button
               type="button"
-              onClick={() => s.handleOpenChange(false)}
-              className="mt-6 w-full max-w-xs h-10 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm shadow-emerald-500/20 cursor-pointer"
+              variant="ghost"
+              onClick={closeDrawer}
+              className="rounded-2xl h-10 text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer w-full sm:w-auto"
+              disabled={isPending}
             >
-              Listo, Cerrar Comprobante
+              Cancelar
             </Button>
-          </div>
-        ) : (
-        <div className="flex-1 md:overflow-y-auto md:px-6 md:py-5 space-y-4 min-w-0">
-          <div className="space-y-1.5">
-            <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-              Tasa de Conversión Aplicada
-            </Label>
-            <ConfirmPaymentRateSelector
-              dialogRateType={s.dialogRateType}
-              setDialogRateType={s.setDialogRateType}
-              rates={rates}
-            />
-          </div>
-
-          <ConfirmPaymentSummaryCard
-            totalUsd={s.totalUsd}
-            rates={rates}
-            dialogRateType={s.dialogRateType}
-            activeRate={s.activeRate}
-            totalBs={s.totalBs}
-            copiedBs={s.copiedBs}
-            onCopyBs={s.handleCopyBs}
-          />
-
-          <ConfirmPaymentMethodSelector
-            methods={s.availableMethods}
-            selectedMethodName={paymentMethod || s.selectedMethodObj?.name || ""}
-            onSelectMethod={s.handleSelectMethod}
-          />
-
-          {s.hasReceiverDetails && (
-            <ConfirmPaymentReceiverCard
-              methodName={s.selectedMethodObj?.name || ""}
-              details={s.selectedDetails}
-              copiedDetails={s.copiedDetails}
-              onCopy={s.handleCopyClinicPaymentData}
-            />
-          )}
-
-          {s.selectedCategory === "Cashea" ? (
-            <CasheaCalculatorSection
-              casheaInitialPct={s.casheaInitialPct}
-              setCasheaInitialPct={s.setCasheaInitialPct}
-              casheaInitialUsd={s.casheaInitialUsd}
-              casheaInitialBs={s.casheaInitialBs}
-              casheaFinancedUsd={s.casheaFinancedUsd}
-              casheaInstallmentUsd={s.casheaInstallmentUsd}
-              casheaInitialMethod={s.casheaInitialMethod}
-              setCasheaInitialMethod={s.setCasheaInitialMethod}
-              casheaOrderNumber={s.casheaOrderNumber}
-              setCasheaOrderNumber={s.setCasheaOrderNumber}
-              activeRate={s.activeRate}
-              onCopyBs={s.handleCopyBs}
-            />
-          ) : (
-            <SplitPaymentSection
-              isSplitPayment={s.isSplitPayment}
-              setIsSplitPayment={s.setIsSplitPayment}
-              usdCashReceived={s.usdCashReceived}
-              setUsdCashReceived={s.setUsdCashReceived}
-              totalUsd={s.totalUsd}
-              remainingUsd={s.remainingUsd}
-              remainingBs={s.remainingBs}
-              activeRate={s.activeRate}
-              onCopyBs={s.handleCopyBs}
-            />
-          )}
-
-          <div className="grid gap-1.5">
-            <Label htmlFor="referencia" className="text-xs font-bold">
-              Referencia / Comprobante de Cobro
-            </Label>
-            <Input
-              id="referencia"
-              placeholder={getReferencePlaceholder(s.selectedCategory)}
-              value={paymentReference}
-              onChange={(e) => setPaymentReference(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  s.handleSubmitConfirm();
-                }
-              }}
-              className="rounded-xl bg-background/80 h-10 text-xs"
-            />
-          </div>
-        </div>
+            <Button
+              type="button"
+              onClick={s.handleSubmitConfirm}
+              className="rounded-2xl bg-primary text-primary-foreground hover:bg-[#3451d6] shadow-sm shadow-primary/20 h-10 px-6 text-xs font-bold cursor-pointer w-full sm:w-auto"
+              disabled={isPending}
+            >
+              {isPending ? (
+                <span className="flex items-center justify-center gap-1.5">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Procesando Cobro…
+                </span>
+              ) : (
+                "Confirmar Cobro"
+              )}
+            </Button>
+          </footer>
         )}
-
-        {/* Pie Fijo Inferior */}
-        {!s.showSuccess && (
-        <footer className="pt-4 mt-4 md:mt-0 md:px-6 md:py-4 border-t border-border/60 shrink-0 bg-card/95 backdrop-blur-md md:rounded-bl-3xl flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2.5">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => s.handleOpenChange(false)}
-            className="rounded-2xl h-10 text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer w-full sm:w-auto"
-            disabled={isPending}
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="button"
-            onClick={s.handleSubmitConfirm}
-            className="rounded-2xl bg-primary text-primary-foreground hover:bg-[#3451d6] shadow-sm shadow-primary/20 h-10 px-6 text-xs font-bold cursor-pointer w-full sm:w-auto"
-            disabled={isPending}
-          >
-            {isPending ? (
-              <span className="flex items-center justify-center gap-1.5">
-                <Loader2 className="h-4 w-4 animate-spin" /> Procesando Cobro…
-              </span>
-            ) : (
-              "Confirmar Cobro"
-            )}
-          </Button>
-        </footer>
-        )}
-      </div>
+      </aside>
     </>
   );
 }

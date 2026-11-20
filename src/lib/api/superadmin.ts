@@ -425,6 +425,7 @@ export function useRemoveClinicStaffMember() {
 }
 
 export function useResetClinicUserPassword() {
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({
       auth_id,
@@ -481,6 +482,10 @@ export function useResetClinicUserPassword() {
       }
 
       return { mode: "direct" };
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["superadmin_clinic_staff"] });
+      qc.invalidateQueries({ queryKey: ["profiles_with_roles"] });
     },
   });
 }
@@ -808,9 +813,11 @@ export function useDeleteClinica() {
           "clinic_info",
           "horarios_medicos",
         ];
-        for (const table of leafTables) {
-          await supabase.from(table as any).delete().eq("id_clinica", id_clinica);
-        }
+        await Promise.all(
+          leafTables.map((table) =>
+            supabase.from(table as any).delete().eq("id_clinica", id_clinica)
+          )
+        );
 
         // Nivel 2: Consultas -> Citas -> Historias Clínicas -> Pacientes -> Servicios
         await supabase.from("consultas").delete().eq("id_clinica", id_clinica);

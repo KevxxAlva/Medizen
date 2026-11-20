@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { WorkspaceStepper, WorkspaceStepperFooter } from "@/components/ui/workspace-stepper";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -211,6 +212,167 @@ function SpecialtyMultiSelector({
   );
 }
 
+function DoctoresStaffListView({
+  q,
+  setQ,
+  filteredCount,
+  isLoading,
+  paginated,
+  meId,
+  togglePending,
+  currentPage,
+  totalPages,
+  itemsPerPage,
+  onPageChange,
+  onOpenCreate,
+  onEdit,
+  onToggleAdmin,
+  onToggleDoctor,
+  onToggleRecep,
+  onDelete,
+}: {
+  q: string;
+  setQ: (v: string) => void;
+  filteredCount: number;
+  isLoading: boolean;
+  paginated: ProfileWithRoles[];
+  meId?: string;
+  togglePending: boolean;
+  currentPage: number;
+  totalPages: number;
+  itemsPerPage: number;
+  onPageChange: (p: number) => void;
+  onOpenCreate: () => void;
+  onEdit: (p: ProfileWithRoles) => void;
+  onToggleAdmin: (p: ProfileWithRoles) => void;
+  onToggleDoctor: (p: ProfileWithRoles) => void;
+  onToggleRecep: (p: ProfileWithRoles) => void;
+  onDelete: (p: ProfileWithRoles) => void;
+}) {
+  return (
+    <>
+      <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border pb-6">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-bold text-primary uppercase tracking-wider">Control de Accesos</span>
+          </div>
+          <h1 className="text-2xl font-display font-bold text-foreground">Personal y Especialistas</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Administra médicos, especialidades (simples o múltiples), recepción y administradores.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 bg-muted/50 border border-border rounded-xl px-3 py-2 w-full md:w-64">
+            <Search className="h-4 w-4 text-muted-foreground shrink-0" />
+            <input
+              type="text"
+              value={q}
+              onChange={(e) => {
+                setQ(e.target.value);
+                onPageChange(1);
+              }}
+              placeholder="Buscar por nombre, correo o especialidad..."
+              aria-label="Buscar personal"
+              className="w-full bg-transparent text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/40 rounded-lg px-1 placeholder:text-muted-foreground text-foreground"
+            />
+            {q && (
+              <button
+                type="button"
+                aria-label="Limpiar búsqueda"
+                onClick={() => setQ("")}
+                className="text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="items-center gap-4 hidden md:flex">
+          <button
+            type="button"
+            onClick={onOpenCreate}
+            className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-xl text-xs font-bold shadow-md hover:bg-[#3451d6] transition cursor-pointer"
+          >
+            <Plus className="h-3.5 w-3.5" /> Añadir Personal
+          </button>
+        </div>
+      </header>
+
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-border pb-4 mt-2">
+        <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
+          <Users className="h-4 w-4" /> {filteredCount} miembros registrados
+        </div>
+        <div className="flex items-center gap-3 md:hidden">
+          <button
+            type="button"
+            onClick={onOpenCreate}
+            className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl text-xs font-bold shadow-md hover:bg-[#3451d6] transition cursor-pointer"
+          >
+            <Plus className="h-3.5 w-3.5" /> Añadir Personal
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 w-full min-w-0 overflow-x-auto border border-border rounded-2xl bg-card shadow-xs">
+        <table className="w-full text-left border-collapse min-w-[700px]">
+          <thead>
+            <tr className="bg-muted/70 text-[10px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border">
+              <th className="p-4 w-12 rounded-tl-xl">
+                <input type="checkbox" aria-label="Seleccionar todo el personal" className="rounded border-gray-300" />
+              </th>
+              <th className="p-4">Nombre</th>
+              <th className="p-4">Correo</th>
+              <th className="p-4">Especialidad(es)</th>
+              <th className="p-4">Rol</th>
+              <th className="p-4 rounded-tr-xl">Acciones</th>
+            </tr>
+          </thead>
+          <tbody className="text-sm">
+            {isLoading ? (
+              <tr>
+                <td colSpan={6} className="p-12 text-center">
+                  <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
+                </td>
+              </tr>
+            ) : paginated.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="p-12 text-center text-muted-foreground font-medium">
+                  No se encontró personal registrado.
+                </td>
+              </tr>
+            ) : (
+              paginated.map((p) => (
+                <DoctorTableRow
+                  key={p.id}
+                  profile={p}
+                  isMe={p.id === meId}
+                  togglePending={togglePending}
+                  onEdit={() => onEdit(p)}
+                  onToggleAdmin={() => onToggleAdmin(p)}
+                  onToggleDoctor={() => onToggleDoctor(p)}
+                  onToggleRecep={() => onToggleRecep(p)}
+                  onDelete={() => onDelete(p)}
+                />
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={filteredCount}
+        itemsPerPage={itemsPerPage}
+        entityLabel="miembros"
+        onPageChange={onPageChange}
+      />
+    </>
+  );
+}
+
 function DoctoresAdmin() {
   const { data: profiles = [], isLoading } = useAllProfilesWithRoles();
   const toggle = useToggleRole();
@@ -389,129 +551,24 @@ function DoctoresAdmin() {
 
   return (
     <div className="flex-1 w-full min-w-0 p-4 md:p-8 space-y-6">
-      {/* HEADER */}
-      <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border pb-6">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-bold text-primary uppercase tracking-wider">
-              Control de Accesos
-            </span>
-          </div>
-          <h1 className="text-2xl font-display font-bold text-foreground">
-            Personal y Especialistas
-          </h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Administra médicos, especialidades (simples o múltiples), recepción y administradores.
-          </p>
-        </div>
-
-        {/* SEARCH BAR */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-muted/50 border border-border rounded-xl px-3 py-2 w-full md:w-64">
-            <Search className="h-4 w-4 text-muted-foreground shrink-0" />
-            <input
-              type="text"
-              value={q}
-              onChange={(e) => {
-                setQ(e.target.value);
-                setCurrentPage(1);
-              }}
-              placeholder="Buscar por nombre, correo o especialidad..."
-              aria-label="Buscar personal"
-              className="w-full bg-transparent text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/40 rounded-lg px-1 placeholder:text-muted-foreground text-foreground"
-            />
-            {q && (
-              <button
-                type="button"
-                aria-label="Limpiar búsqueda"
-                onClick={() => setQ("")}
-                className="text-muted-foreground hover:text-foreground cursor-pointer"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4 hidden md:flex">
-          <button
-            onClick={() => setOpenCreate(true)}
-            className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-xl text-xs font-bold shadow-md hover:bg-[#3451d6] transition cursor-pointer"
-          >
-            <Plus className="h-3.5 w-3.5" /> Añadir Personal
-          </button>
-        </div>
-      </header>
-
-      {/* SECONDARY TOOLBAR */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-border pb-4 mt-2">
-        <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
-          <Users className="h-4 w-4" /> {filtered.length} miembros registrados
-        </div>
-        <div className="flex items-center gap-3 md:hidden">
-          <button
-            onClick={() => setOpenCreate(true)}
-            className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl text-xs font-bold shadow-md hover:bg-[#3451d6] transition cursor-pointer"
-          >
-            <Plus className="h-3.5 w-3.5" /> Añadir Personal
-          </button>
-        </div>
-      </div>
-
-      {/* TABLE */}
-      <div className="flex-1 w-full min-w-0 overflow-x-auto border border-border rounded-2xl bg-card shadow-xs">
-        <table className="w-full text-left border-collapse min-w-[700px]">
-          <thead>
-            <tr className="bg-muted/70 text-[10px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border">
-              <th className="p-4 w-12 rounded-tl-xl">
-                <input type="checkbox" aria-label="Seleccionar todo el personal" className="rounded border-gray-300" />
-              </th>
-              <th className="p-4">Nombre</th>
-              <th className="p-4">Correo</th>
-              <th className="p-4">Especialidad(es)</th>
-              <th className="p-4">Rol</th>
-              <th className="p-4 rounded-tr-xl">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="text-sm">
-            {isLoading ? (
-              <tr>
-                <td colSpan={6} className="p-12 text-center">
-                  <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
-                </td>
-              </tr>
-            ) : paginated.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="p-12 text-center text-muted-foreground font-medium">
-                  No se encontró personal registrado.
-                </td>
-              </tr>
-            ) : (
-              paginated.map((p) => (
-                <DoctorTableRow
-                  key={p.id}
-                  profile={p}
-                  isMe={p.id === me?.id}
-                  togglePending={toggle.isPending}
-                  onEdit={() => setToEdit(p)}
-                  onToggleAdmin={() => handleToggleAdmin(p)}
-                  onToggleDoctor={() => handleToggleDoctor(p)}
-                  onToggleRecep={() => handleToggleRecep(p)}
-                  onDelete={() => setToDelete(p)}
-                />
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <TablePagination
+      <DoctoresStaffListView
+        q={q}
+        setQ={setQ}
+        filteredCount={filtered.length}
+        isLoading={isLoading}
+        paginated={paginated}
+        meId={me?.id}
+        togglePending={toggle.isPending}
         currentPage={currentPage}
         totalPages={totalPages}
-        totalItems={filtered.length}
         itemsPerPage={itemsPerPage}
-        entityLabel="miembros"
         onPageChange={setCurrentPage}
+        onOpenCreate={() => setOpenCreate(true)}
+        onEdit={setToEdit}
+        onToggleAdmin={handleToggleAdmin}
+        onToggleDoctor={handleToggleDoctor}
+        onToggleRecep={handleToggleRecep}
+        onDelete={setToDelete}
       />
 
       <DeleteUserAlert
@@ -1067,129 +1124,14 @@ function CreateUserPageView({
       </header>
 
       <form onSubmit={onSubmit} className="flex-1 flex flex-col lg:flex-row min-w-0">
-        {/* Stepper Horizontal Móvil (< lg) */}
-        <div className="lg:hidden mb-5 rounded-2xl border border-border/60 bg-muted/30 p-3.5">
-          <div className="flex items-center justify-between relative">
-            {STAFF_STEPS.map((step, idx) => {
-              const isCompleted = isAllSealed || idx < activeIndex;
-              const isActive = !isAllSealed && idx === activeIndex;
-              const isLast = idx === STAFF_STEPS.length - 1;
-
-              return (
-                <div key={step.id} className="flex items-center flex-1 last:flex-none">
-                  <button
-                    type="button"
-                    disabled={isAllSealed}
-                    onClick={() => setActiveIndex(idx)}
-                    className={cn(
-                      "relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-extrabold transition-all cursor-pointer disabled:cursor-default",
-                      isCompleted
-                        ? "border-2 border-emerald-500 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                        : isActive
-                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/30 ring-4 ring-primary/15"
-                          : "border-2 border-border bg-background text-muted-foreground",
-                    )}
-                  >
-                    {isCompleted ? <Check className="h-4 w-4 stroke-[2.5]" /> : idx + 1}
-                  </button>
-                  {!isLast && (
-                    <div className="flex-1 mx-2 h-0.5 rounded-full bg-border overflow-hidden">
-                      <div
-                        className={cn(
-                          "h-full transition-all duration-300",
-                          isCompleted ? "w-full bg-emerald-500" : "w-0 bg-primary",
-                        )}
-                      />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          <div className="mt-3 flex items-center justify-between gap-2 pt-2.5 border-t border-border/50">
-            <div className="min-w-0">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-primary block">
-                {isAllSealed ? "Registro Completado" : `Paso ${activeIndex + 1} de ${STAFF_STEPS.length}`}
-              </span>
-              <p className="text-sm font-bold text-foreground truncate">
-                {isAllSealed ? "Credencial Activada" : currentStep.title}
-              </p>
-            </div>
-            <span className="text-xs font-mono font-bold text-muted-foreground bg-background px-2.5 py-1 rounded-xl border border-border/60 shrink-0">
-              {isAllSealed ? "2 / 2 ✓" : `${activeIndex + 1} / ${STAFF_STEPS.length}`}
-            </span>
-          </div>
-        </div>
-
-        {/* Stepper Vertical Lateral Escritorio (lg+) */}
-        <aside className="hidden lg:flex flex-col w-64 shrink-0 pr-7 border-r border-border/60 select-none">
-          <div className="relative py-2">
-            {STAFF_STEPS.map((step, idx) => {
-              const isCompleted = isAllSealed || idx < activeIndex;
-              const isActive = !isAllSealed && idx === activeIndex;
-              const isLast = idx === STAFF_STEPS.length - 1;
-
-              return (
-                <div key={step.id} className="relative flex items-start justify-end gap-4 pb-8 last:pb-0">
-                  {!isLast && (
-                    <div
-                      className={cn(
-                        "absolute right-[17px] top-9 bottom-0 w-[2px] transition-colors",
-                        isCompleted ? "bg-emerald-500/60" : "bg-border",
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          "absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full",
-                          isCompleted ? "bg-emerald-500" : "bg-muted-foreground/35",
-                        )}
-                      />
-                    </div>
-                  )}
-
-                  <button
-                    type="button"
-                    disabled={isAllSealed}
-                    onClick={() => setActiveIndex(idx)}
-                    className="text-right group cursor-pointer disabled:cursor-default focus:outline-none min-w-0 flex-1 pt-0.5"
-                  >
-                    <p
-                      className={cn(
-                        "text-xs font-bold transition-colors leading-snug",
-                        isActive
-                          ? "text-primary font-extrabold"
-                          : isCompleted
-                            ? "text-emerald-600 dark:text-emerald-400 font-bold"
-                            : "text-muted-foreground group-hover:text-foreground",
-                      )}
-                    >
-                      {step.title}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight">
-                      {step.subtitle}
-                    </p>
-                  </button>
-
-                  <button
-                    type="button"
-                    disabled={isAllSealed}
-                    onClick={() => setActiveIndex(idx)}
-                    className={cn(
-                      "relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-extrabold transition-all cursor-pointer disabled:cursor-default",
-                      isCompleted
-                        ? "border-2 border-emerald-500 bg-emerald-500/10 text-emerald-500 shadow-2xs"
-                        : isActive
-                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/30 ring-4 ring-primary/15"
-                          : "border-2 border-primary/30 bg-background text-muted-foreground hover:border-primary/60",
-                    )}
-                  >
-                    {isCompleted ? <Check className="h-4 w-4 stroke-[2.5]" /> : idx + 1}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </aside>
+        <WorkspaceStepper
+          steps={STAFF_STEPS}
+          activeIndex={activeIndex}
+          isAllCompleted={isAllSealed}
+          sealedBadge="Registro Completado"
+          sealedTitle="Credencial Activada"
+          onSelectStep={setActiveIndex}
+        />
 
         {/* Contenido Derecho: Paso Activo o Animación de Éxito */}
         <div className="flex-1 min-w-0 lg:pl-8 flex flex-col justify-between">
@@ -1339,52 +1281,16 @@ function CreateUserPageView({
                 )}
               </div>
 
-              {/* Pie de Navegación del Stepper */}
-              <div className="mt-6 border-t border-border/60 pt-4 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={onClose}
-                  disabled={busy}
-                  className="rounded-2xl w-full sm:w-auto h-10 text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer"
-                >
-                  Cancelar
-                </Button>
-
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setActiveIndex((i) => Math.max(0, i - 1))}
-                    disabled={isFirstStep || busy}
-                    className="rounded-2xl flex-1 sm:flex-initial h-10 px-4 text-xs font-bold gap-1 cursor-pointer"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    Anterior
-                  </Button>
-
-                  {!isLastStep ? (
-                    <Button
-                      type="button"
-                      onClick={handleNextStep}
-                      disabled={busy}
-                      className="rounded-2xl flex-1 sm:flex-initial bg-primary text-primary-foreground hover:bg-[#3451d6] shadow-sm shadow-primary/20 h-10 px-5 text-xs font-bold gap-1 cursor-pointer"
-                    >
-                      Siguiente
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button
-                      type="submit"
-                      disabled={busy}
-                      className="rounded-2xl flex-1 sm:flex-initial bg-primary text-primary-foreground hover:bg-[#3451d6] shadow-sm shadow-primary/20 hover:opacity-95 px-6 h-10 text-xs font-bold cursor-pointer"
-                    >
-                      {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Crear Personal
-                    </Button>
-                  )}
-                </div>
-              </div>
+              <WorkspaceStepperFooter
+                isFirstStep={isFirstStep}
+                isLastStep={isLastStep}
+                isPending={busy}
+                canQuickSubmit={false}
+                submitLabel="Crear Personal"
+                onCancel={onClose}
+                onPrev={() => setActiveIndex((i) => Math.max(0, i - 1))}
+                onNext={handleNextStep}
+              />
             </>
           )}
         </div>
@@ -1412,6 +1318,7 @@ function EditUserPageView({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (updateProfile.isPending) return;
     try {
       await updateProfile.mutateAsync({
         userId: profile.id,

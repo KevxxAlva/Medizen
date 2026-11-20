@@ -21,15 +21,18 @@ import {
   MessageSquare,
   Sparkles,
   Stethoscope,
-  ArrowLeft,
   UserRound,
-  Check,
   ChevronLeft,
   ChevronRight,
   CreditCard,
   FolderOpen,
   Calendar,
 } from "lucide-react";
+import {
+  WorkspaceHeaderTitle,
+  WorkspaceStepHeader,
+  WorkspaceStepper,
+} from "@/components/ui/workspace-stepper";
 import { useUserRoleScope } from "@/hooks/useUserRoleScope";
 import {
   getSpecialtyBadgeStyle,
@@ -143,29 +146,12 @@ function ConsultationTopHeader({
     <header className="mb-6 space-y-3.5 pb-5 border-b border-border/60">
       {/* Nivel 1: Navegación superior, Título y Plantillas Rápidas */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-start sm:items-center gap-3 min-w-0">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={onBack}
-            className="h-9 px-3 rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground gap-1.5 shrink-0 cursor-pointer shadow-2xs"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            <span>{backLabel}</span>
-          </Button>
-
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground truncate">
-                {isEdit ? "Editar Consulta Clínica" : "Registrar Nueva Consulta Clínica"}
-              </h1>
-              <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                Modo Consultorio
-              </span>
-            </div>
-          </div>
-        </div>
+        <WorkspaceHeaderTitle
+          backLabel={backLabel}
+          title={isEdit ? "Editar Consulta Clínica" : "Registrar Nueva Consulta Clínica"}
+          badge="Modo Consultorio"
+          onBack={onBack}
+        />
 
         {/* Selector de Plantillas Rápidas alineado arriba a la derecha */}
         <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
@@ -297,152 +283,124 @@ interface ConsultationStepItem {
   subtitle: string;
 }
 
-function ConsultationStepperSidebar({
-  steps,
-  activeIndex,
-  isAllSealed,
-  onSelectStep,
+function ConsultationSuccessView({
+  isEdit,
+  patientName,
+  patientId,
+  doctorFullName,
+  diagnosis,
+  nextAppointmentDate,
+  indications,
+  backLabel,
+  onExportRecipe,
+  onGoToSales,
+  onGoToPatient,
+  onClose,
 }: {
-  steps: ConsultationStepItem[];
-  activeIndex: number;
-  isAllSealed?: boolean;
-  onSelectStep: (idx: number) => void;
+  isEdit: boolean;
+  patientName?: string;
+  patientId?: string;
+  doctorFullName?: string | null;
+  diagnosis?: string;
+  nextAppointmentDate?: string;
+  indications?: string;
+  backLabel: string;
+  onExportRecipe: (mode: "print" | "whatsapp") => void;
+  onGoToSales: () => void;
+  onGoToPatient: () => void;
+  onClose: () => void;
 }) {
   return (
-    <>
-      {/* Vista Móvil (< lg): Stepper horizontal compacto con círculos conectados */}
-      <div className="lg:hidden mb-5 rounded-2xl border border-border/60 bg-muted/30 p-3.5">
-        <div className="flex items-center justify-between relative">
-          {steps.map((step, idx) => {
-            const isCompleted = Boolean(isAllSealed) || idx < activeIndex;
-            const isActive = !isAllSealed && idx === activeIndex;
-            const isLast = idx === steps.length - 1;
+    <div className="flex-1 flex flex-col items-center justify-center py-8 px-4 text-center animate-in fade-in zoom-in-95 duration-300">
+      <style>{`
+        @keyframes medizen-ecg-draw { 0% { stroke-dashoffset: 240; opacity: 0.2; } 100% { stroke-dashoffset: 0; opacity: 1; } }
+        @keyframes medizen-ring-draw { 0% { stroke-dashoffset: 264; transform: scale(0.9); opacity: 0; } 50% { opacity: 1; transform: scale(1.03); } 100% { stroke-dashoffset: 0; transform: scale(1); opacity: 1; } }
+        @keyframes medizen-badge-pop { 0% { transform: scale(0.3); opacity: 0; } 70% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+        .medizen-consult-ring { stroke-dasharray: 264; stroke-dashoffset: 264; transform-origin: center; animation: medizen-ring-draw 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        .medizen-consult-ecg { stroke-dasharray: 240; stroke-dashoffset: 240; animation: medizen-ecg-draw 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards; }
+        .medizen-consult-seal { transform-origin: 74px 72px; opacity: 0; animation: medizen-badge-pop 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.48s forwards; }
+      `}</style>
 
-            return (
-              <div key={step.id} className="flex items-center flex-1 last:flex-none">
-                <button
-                  type="button"
-                  disabled={isAllSealed}
-                  onClick={() => onSelectStep(idx)}
-                  aria-label={`Paso ${idx + 1}: ${step.title}`}
-                  className={cn(
-                    "relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-extrabold transition-all cursor-pointer disabled:cursor-default",
-                    isCompleted
-                      ? "border-2 border-emerald-500 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                      : isActive
-                        ? "bg-primary text-primary-foreground shadow-md shadow-primary/30 ring-4 ring-primary/15"
-                        : "border-2 border-border bg-background text-muted-foreground",
-                  )}
-                >
-                  {isCompleted ? <Check className="h-4 w-4 stroke-[2.5]" /> : idx + 1}
-                </button>
-                {!isLast && (
-                  <div className="flex-1 mx-1.5 h-0.5 rounded-full bg-border overflow-hidden">
-                    <div
-                      className={cn(
-                        "h-full transition-all duration-300",
-                        isCompleted ? "w-full bg-emerald-500" : "w-0 bg-primary",
-                      )}
-                    />
-                  </div>
-                )}
-              </div>
-            );
-          })}
+      <div className="relative flex items-center justify-center mb-5">
+        <div className="absolute h-28 w-28 rounded-full bg-emerald-500/15 animate-ping [animation-duration:1.8s]" />
+        <div className="absolute h-24 w-24 rounded-full bg-primary/5" />
+        <svg className="h-28 w-28 relative z-10" viewBox="0 0 100 100" fill="none">
+          <circle cx="48" cy="48" r="38" className="stroke-primary/85 fill-primary/5 medizen-consult-ring" strokeWidth="3.5" />
+          <path d="M20 48H33L38 35L45 63L52 29L58 55L62 48H75" className="stroke-primary medizen-consult-ecg" strokeWidth="3.8" strokeLinecap="round" strokeLinejoin="round" />
+          <g className="medizen-consult-seal">
+            <circle cx="74" cy="72" r="18" className="fill-emerald-500 stroke-card" strokeWidth="4" />
+            <path d="M66 72.5L71.5 78L82.5 66.5" stroke="white" strokeWidth="3.8" strokeLinecap="round" strokeLinejoin="round" />
+          </g>
+        </svg>
+      </div>
+
+      <span className="text-[11px] font-extrabold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-3.5 py-1 rounded-full">
+        {isEdit ? "Evolución Clínica Actualizada" : "Atención Médica Completada · Facturada"}
+      </span>
+      <h3 className="text-xl sm:text-2xl font-black text-foreground mt-3">
+        {isEdit ? "¡Consulta Actualizada!" : "¡Consulta Médica Finalizada!"}
+      </h3>
+      <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-md">
+        La evolución clínica de <strong className="text-foreground">{patientName || "la paciente"}</strong> quedó guardada y su orden de cobro ya está disponible en <strong>Ventas y Facturación</strong>.
+      </p>
+
+      <div className="mt-6 w-full max-w-md rounded-2xl border border-border/80 bg-muted/30 p-4 text-left shadow-xs space-y-3">
+        <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-border/60">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="h-10 w-10 rounded-xl bg-primary/15 text-primary font-black text-sm flex items-center justify-center shrink-0">
+              {(patientName || "P").slice(0, 2).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-extrabold text-foreground truncate">{patientName || "Paciente"}</p>
+              <p className="text-[11px] text-muted-foreground truncate">Dr(a). {formatDoctorDisplayName(doctorFullName)}</p>
+            </div>
+          </div>
+          <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-1 rounded-lg shrink-0">
+            Cita Completada
+          </span>
         </div>
 
-        <div className="mt-3 flex items-center justify-between gap-2 pt-2.5 border-t border-border/50">
-          <div className="min-w-0">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-primary block">
-              {isAllSealed ? "Consulta Finalizada" : `Paso ${activeIndex + 1} de ${steps.length}`}
-            </span>
-            <p className="text-sm font-bold text-foreground truncate">
-              {isAllSealed ? "5 de 5 Módulos Completados" : steps[activeIndex]?.title}
-            </p>
-            <p className="text-[11px] text-muted-foreground truncate">
-              {isAllSealed ? "Atención médica registrada y facturada" : steps[activeIndex]?.subtitle}
-            </p>
+        <div className="space-y-2 text-xs">
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">Diagnóstico Registrado</span>
+            <p className="font-bold text-foreground mt-0.5">{diagnosis?.trim() || "Evaluación clínica general completada"}</p>
           </div>
-          <span className="text-xs font-mono font-bold text-muted-foreground bg-background px-2.5 py-1 rounded-xl border border-border/60 shrink-0">
-            {isAllSealed ? "5 / 5 ✓" : `${activeIndex + 1} / ${steps.length}`}
-          </span>
+          {nextAppointmentDate && (
+            <div className="flex items-center justify-between pt-1.5 border-t border-border/50">
+              <span className="text-muted-foreground font-medium flex items-center gap-1">
+                <Calendar className="h-3.5 w-3.5 text-primary" /> Próximo Control:
+              </span>
+              <span className="font-bold text-foreground font-mono">{nextAppointmentDate}</span>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Vista Escritorio (lg+): Stepper vertical lateral izquierdo estilo Steps UI */}
-      <aside className="hidden lg:flex flex-col w-64 shrink-0 pr-7 border-r border-border/60 select-none">
-        <div className="relative py-2">
-          {steps.map((step, idx) => {
-            const isCompleted = Boolean(isAllSealed) || idx < activeIndex;
-            const isActive = !isAllSealed && idx === activeIndex;
-            const isLast = idx === steps.length - 1;
-
-            return (
-              <div key={step.id} className="relative flex items-start justify-end gap-4 pb-8 last:pb-0">
-                {/* Línea vertical conectora */}
-                {!isLast && (
-                  <div
-                    className={cn(
-                      "absolute right-[17px] top-9 bottom-0 w-[2px] transition-colors",
-                      isCompleted ? "bg-emerald-500/60" : "bg-border",
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full",
-                        isCompleted ? "bg-emerald-500" : "bg-muted-foreground/35",
-                      )}
-                    />
-                  </div>
-                )}
-
-                {/* Texto alineado a la derecha del nodo, igual al diseño de referencia */}
-                <button
-                  type="button"
-                  disabled={isAllSealed}
-                  onClick={() => onSelectStep(idx)}
-                  className="text-right group cursor-pointer disabled:cursor-default focus:outline-none min-w-0 flex-1 pt-0.5"
-                >
-                  <p
-                    className={cn(
-                      "text-xs font-bold transition-colors leading-snug",
-                      isActive
-                        ? "text-primary font-extrabold"
-                        : isCompleted
-                          ? "text-emerald-600 dark:text-emerald-400 font-bold"
-                          : "text-muted-foreground group-hover:text-foreground",
-                    )}
-                  >
-                    {step.title}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight">
-                    {step.subtitle}
-                  </p>
-                </button>
-
-                {/* Nodo circular (Check verde si completado, sólido primario si activo, borde si pendiente) */}
-                <button
-                  type="button"
-                  disabled={isAllSealed}
-                  onClick={() => onSelectStep(idx)}
-                  aria-label={`Ir al paso ${idx + 1}: ${step.title}`}
-                  className={cn(
-                    "relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-extrabold transition-all cursor-pointer disabled:cursor-default",
-                    isCompleted
-                      ? "border-2 border-emerald-500 bg-emerald-500/10 text-emerald-500 shadow-2xs"
-                      : isActive
-                        ? "bg-primary text-primary-foreground shadow-md shadow-primary/30 ring-4 ring-primary/15"
-                        : "border-2 border-primary/30 bg-background text-muted-foreground hover:border-primary/60",
-                  )}
-                >
-                  {isCompleted ? <Check className="h-4 w-4 stroke-[2.5]" /> : idx + 1}
-                </button>
-              </div>
-            );
-          })}
+      {indications?.trim() && (
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2 w-full max-w-md">
+          <Button type="button" variant="outline" onClick={() => onExportRecipe("print")} className="flex-1 h-10 rounded-2xl border-mauve text-primary hover:bg-primary/10 font-bold text-xs gap-1.5 cursor-pointer">
+            <Printer className="h-4 w-4" /> Imprimir Récipe PDF
+          </Button>
+          <Button type="button" variant="outline" onClick={() => onExportRecipe("whatsapp")} className="flex-1 h-10 rounded-2xl border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 font-bold text-xs gap-1.5 cursor-pointer">
+            <MessageSquare className="h-4 w-4 text-emerald-500" /> Enviar Récipe por WhatsApp
+          </Button>
         </div>
-      </aside>
-    </>
+      )}
+
+      <div className="mt-4 flex flex-col sm:flex-row flex-wrap items-center justify-center gap-2.5 w-full max-w-md">
+        <Button type="button" onClick={onGoToSales} className="w-full sm:w-auto flex-1 h-10 rounded-2xl bg-primary text-primary-foreground hover:bg-[#3451d6] font-bold text-xs gap-1.5 shadow-sm shadow-primary/20 cursor-pointer">
+          <CreditCard className="h-4 w-4" /> Ir a Cobrar en Ventas
+        </Button>
+        {patientId && (
+          <Button type="button" variant="outline" onClick={onGoToPatient} className="w-full sm:w-auto h-10 rounded-2xl font-bold text-xs gap-1.5 cursor-pointer">
+            <FolderOpen className="h-4 w-4 text-primary" /> Ver Expediente
+          </Button>
+        )}
+        <Button type="button" variant="ghost" onClick={onClose} className="w-full sm:w-auto h-10 rounded-2xl font-semibold text-xs text-muted-foreground hover:text-foreground cursor-pointer">
+          {backLabel}
+        </Button>
+      </div>
+    </div>
   );
 }
 
@@ -667,239 +625,51 @@ function ConsultationFormContent({
         className="flex-1 flex flex-col min-w-0"
       >
         <div className="flex-1 flex flex-col lg:flex-row min-w-0">
-          {/* Columna Izquierda (Desktop) / Barra Superior (Móvil): Stepper */}
-          <ConsultationStepperSidebar
+          <WorkspaceStepper
             steps={steps}
             activeIndex={activeStepIndex}
-            isAllSealed={state.isCompletedSuccess}
+            isAllCompleted={Boolean(state.isCompletedSuccess)}
+            sealedBadge="Consulta Finalizada"
+            sealedTitle="5 de 5 Módulos Completados"
             onSelectStep={setActiveStepIndex}
           />
 
-          {/* Columna Derecha: Contenido del Paso Activo o Animación de Consulta Finalizada */}
           <div className="flex-1 min-w-0 lg:pl-8 flex flex-col justify-between">
             {state.isCompletedSuccess ? (
-              <div className="flex-1 flex flex-col items-center justify-center py-8 px-4 text-center animate-in fade-in zoom-in-95 duration-300">
-                <style>{`
-                  @keyframes medizen-ecg-draw {
-                    0% { stroke-dashoffset: 240; opacity: 0.2; }
-                    100% { stroke-dashoffset: 0; opacity: 1; }
+              <ConsultationSuccessView
+                isEdit={state.isEdit}
+                patientName={appointment?.patient_name}
+                patientId={appointment?.patient_id}
+                doctorFullName={state.currentDoctor?.full_name}
+                diagnosis={state.diagnosis}
+                nextAppointmentDate={state.nextAppointmentDate}
+                indications={state.indications}
+                backLabel={backLabel}
+                onExportRecipe={(mode) => state.exportRecipeOnly(mode)}
+                onGoToSales={() => {
+                  onOpenChange(false);
+                  router.navigate({ to: "/facturacion" });
+                }}
+                onGoToPatient={() => {
+                  onOpenChange(false);
+                  if (appointment?.patient_id) {
+                    router.navigate({
+                      to: "/pacientes/$patientId",
+                      params: { patientId: String(appointment.patient_id) },
+                    });
                   }
-                  @keyframes medizen-ring-draw {
-                    0% { stroke-dashoffset: 264; transform: scale(0.9); opacity: 0; }
-                    50% { opacity: 1; transform: scale(1.03); }
-                    100% { stroke-dashoffset: 0; transform: scale(1); opacity: 1; }
-                  }
-                  @keyframes medizen-badge-pop {
-                    0% { transform: scale(0.3); opacity: 0; }
-                    70% { transform: scale(1.1); opacity: 1; }
-                    100% { transform: scale(1); opacity: 1; }
-                  }
-                  .medizen-consult-ring {
-                    stroke-dasharray: 264;
-                    stroke-dashoffset: 264;
-                    transform-origin: center;
-                    animation: medizen-ring-draw 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-                  }
-                  .medizen-consult-ecg {
-                    stroke-dasharray: 240;
-                    stroke-dashoffset: 240;
-                    animation: medizen-ecg-draw 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards;
-                  }
-                  .medizen-consult-seal {
-                    transform-origin: 74px 72px;
-                    opacity: 0;
-                    animation: medizen-badge-pop 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.48s forwards;
-                  }
-                `}</style>
-
-                {/* Ilustración SVG: Pulso Cardíaco Clínico (ECG) + Sello Esmeralda Checkmark */}
-                <div className="relative flex items-center justify-center mb-5">
-                  <div className="absolute h-28 w-28 rounded-full bg-emerald-500/15 animate-ping [animation-duration:1.8s]" />
-                  <div className="absolute h-24 w-24 rounded-full bg-primary/5" />
-                  <svg
-                    className="h-28 w-28 relative z-10"
-                    viewBox="0 0 100 100"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <circle
-                      cx="48"
-                      cy="48"
-                      r="38"
-                      className="stroke-primary/85 fill-primary/5 medizen-consult-ring"
-                      strokeWidth="3.5"
-                    />
-                    {/* Onda de Pulso Médico (ECG) */}
-                    <path
-                      d="M20 48H33L38 35L45 63L52 29L58 55L62 48H75"
-                      className="stroke-primary medizen-consult-ecg"
-                      strokeWidth="3.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    {/* Sello Circular Esmeralda con Checkmark */}
-                    <g className="medizen-consult-seal">
-                      <circle
-                        cx="74"
-                        cy="72"
-                        r="18"
-                        className="fill-emerald-500 stroke-card"
-                        strokeWidth="4"
-                      />
-                      <path
-                        d="M66 72.5L71.5 78L82.5 66.5"
-                        stroke="white"
-                        strokeWidth="3.8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </g>
-                  </svg>
-                </div>
-
-                <span className="text-[11px] font-extrabold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-3.5 py-1 rounded-full">
-                  {state.isEdit ? "Evolución Clínica Actualizada" : "Atención Médica Completada · Facturada"}
-                </span>
-
-                <h3 className="text-xl sm:text-2xl font-black text-foreground mt-3">
-                  {state.isEdit ? "¡Consulta Actualizada!" : "¡Consulta Médica Finalizada!"}
-                </h3>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-md">
-                  La evolución clínica de{" "}
-                  <strong className="text-foreground">{appointment?.patient_name || "la paciente"}</strong>{" "}
-                  quedó guardada y su orden de cobro ya está disponible en <strong>Ventas y Facturación</strong>.
-                </p>
-
-                {/* Tarjeta Resumen Clínico y Financiero */}
-                <div className="mt-6 w-full max-w-md rounded-2xl border border-border/80 bg-muted/30 p-4 text-left shadow-xs space-y-3">
-                  <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-border/60">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="h-10 w-10 rounded-xl bg-primary/15 text-primary font-black text-sm flex items-center justify-center shrink-0">
-                        {(appointment?.patient_name || "P").slice(0, 2).toUpperCase()}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-extrabold text-foreground truncate">
-                          {appointment?.patient_name || "Paciente"}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground truncate">
-                          Dr(a). {formatDoctorDisplayName(state.currentDoctor?.full_name)}
-                        </p>
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-1 rounded-lg shrink-0">
-                      Cita Completada
-                    </span>
-                  </div>
-
-                  <div className="space-y-2 text-xs">
-                    <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-                        Diagnóstico Registrado
-                      </span>
-                      <p className="font-bold text-foreground mt-0.5">
-                        {state.diagnosis?.trim() || "Evaluación clínica general completada"}
-                      </p>
-                    </div>
-
-                    {state.nextAppointmentDate && (
-                      <div className="flex items-center justify-between pt-1.5 border-t border-border/50">
-                        <span className="text-muted-foreground font-medium flex items-center gap-1">
-                          <Calendar className="h-3.5 w-3.5 text-primary" /> Próximo Control:
-                        </span>
-                        <span className="font-bold text-foreground font-mono">
-                          {state.nextAppointmentDate}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Acciones de Récipes (Imprimir PDF / Enviar por WhatsApp) si hay indicaciones */}
-                {state.indications?.trim() && (
-                  <div className="mt-4 flex flex-wrap items-center justify-center gap-2 w-full max-w-md">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => state.exportRecipeOnly("print")}
-                      className="flex-1 h-10 rounded-2xl border-mauve text-primary hover:bg-primary/10 font-bold text-xs gap-1.5 cursor-pointer"
-                    >
-                      <Printer className="h-4 w-4" />
-                      Imprimir Récipe PDF
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => state.exportRecipeOnly("whatsapp")}
-                      className="flex-1 h-10 rounded-2xl border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 font-bold text-xs gap-1.5 cursor-pointer"
-                    >
-                      <MessageSquare className="h-4 w-4 text-emerald-500" />
-                      Enviar Récipe por WhatsApp
-                    </Button>
-                  </div>
-                )}
-
-                {/* Navegación Post-Consulta (Ir a Cobrar en Ventas / Ver Expediente / Volver) */}
-                <div className="mt-4 flex flex-col sm:flex-row flex-wrap items-center justify-center gap-2.5 w-full max-w-md">
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      onOpenChange(false);
-                      router.navigate({ to: "/facturacion" });
-                    }}
-                    className="w-full sm:w-auto flex-1 h-10 rounded-2xl bg-primary text-primary-foreground hover:bg-[#3451d6] font-bold text-xs gap-1.5 shadow-sm shadow-primary/20 cursor-pointer"
-                  >
-                    <CreditCard className="h-4 w-4" />
-                    Ir a Cobrar en Ventas
-                  </Button>
-
-                  {appointment?.patient_id && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        onOpenChange(false);
-                        router.navigate({
-                          to: "/pacientes/$patientId",
-                          params: { patientId: String(appointment.patient_id) },
-                        });
-                      }}
-                      className="w-full sm:w-auto h-10 rounded-2xl font-bold text-xs gap-1.5 cursor-pointer"
-                    >
-                      <FolderOpen className="h-4 w-4 text-primary" />
-                      Ver Expediente
-                    </Button>
-                  )}
-
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => onOpenChange(false)}
-                    className="w-full sm:w-auto h-10 rounded-2xl font-semibold text-xs text-muted-foreground hover:text-foreground cursor-pointer"
-                  >
-                    {backLabel}
-                  </Button>
-                </div>
-              </div>
+                }}
+                onClose={() => onOpenChange(false)}
+              />
             ) : (
             <>
             <div className="min-w-0">
-              {/* Encabezado limpio del paso activo en Desktop */}
-              <div className="hidden lg:flex items-center justify-between pb-3.5 mb-5 border-b border-border/50">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary text-xs font-extrabold">
-                    {activeStepIndex + 1}
-                  </span>
-                  <div>
-                    <h2 className="text-base font-bold text-foreground leading-tight">
-                      {currentStep.title}
-                    </h2>
-                    <p className="text-xs text-muted-foreground">{currentStep.subtitle}</p>
-                  </div>
-                </div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground bg-muted/50 px-3 py-1 rounded-xl border border-border/60">
-                  Paso {activeStepIndex + 1} de {steps.length}
-                </span>
-              </div>
+              <WorkspaceStepHeader
+                stepNumber={activeStepIndex + 1}
+                totalSteps={steps.length}
+                title={currentStep.title}
+                subtitle={currentStep.subtitle}
+              />
 
               <div className="py-1">
                 <ConsultationAnamnesisTab

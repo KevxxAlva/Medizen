@@ -9,7 +9,7 @@ import {
 import { useAuthSession } from "@/hooks/useAuth";
 import { useUserRoleScope } from "@/hooks/useUserRoleScope";
 import type { Profile } from "@/lib/api/profiles";
-import type { Patient } from "@/lib/api/patients";
+import { usePatient, type Patient } from "@/lib/api/patients";
 import { toast } from "sonner";
 
 export interface SavedAppointmentSummary {
@@ -98,12 +98,8 @@ export function useAppointmentFormState({
   const [price, setPrice] = useState(String(appointment?.price ?? 0));
   const [selectedServiceId, setSelectedServiceId] = useState<string>("none");
   const [savedSummary, setSavedSummary] = useState<SavedAppointmentSummary | null>(null);
-
-  useEffect(() => {
-    if (!open) {
-      setSavedSummary(null);
-    }
-  }, [open]);
+  const { data: fetchedPatient } = usePatient(patient_id || undefined);
+  const effectivePatient = resolvedPatient?.id === patient_id ? resolvedPatient : (fetchedPatient ?? resolvedPatient);
 
   const selectedDoctor = useMemo(() => doctors.find((d) => d.id === doctor_id), [doctors, doctor_id]);
 
@@ -214,11 +210,11 @@ export function useAppointmentFormState({
       setSavedSummary({
         isEdit,
         patientName:
-          resolvedPatient?.full_name ||
+          effectivePatient?.full_name ||
           (appointment as any)?.patient_name ||
           "Paciente",
-        patientPhone: resolvedPatient?.phone || null,
-        patientDocumentId: resolvedPatient?.document_id || null,
+        patientPhone: effectivePatient?.phone || null,
+        patientDocumentId: effectivePatient?.document_id || null,
         doctorName: resolvedDocName,
         date,
         time,
@@ -257,7 +253,7 @@ export function useAppointmentFormState({
     setPrice,
     selectedServiceId,
     setSelectedServiceId,
-    savedSummary,
+    savedSummary: open ? savedSummary : null,
     resetForAnother,
     conflictingAppointment,
     isSlotOccupied,

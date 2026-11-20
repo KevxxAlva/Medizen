@@ -1024,7 +1024,11 @@ BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = t) THEN
       EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY;', t);
       EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I;', 'authenticated_all_' || t, t);
-      EXECUTE format('CREATE POLICY %I ON public.%I FOR ALL TO authenticated USING (true) WITH CHECK (true);', 'authenticated_all_' || t, t);
+      EXECUTE format(
+        'CREATE POLICY %I ON public.%I FOR ALL TO authenticated USING (public.is_superadmin() OR public.current_user_clinic_id() IS NOT NULL) WITH CHECK (public.is_superadmin() OR public.current_user_clinic_id() IS NOT NULL);',
+        'authenticated_all_' || t,
+        t
+      );
     END IF;
   END LOOP;
 
