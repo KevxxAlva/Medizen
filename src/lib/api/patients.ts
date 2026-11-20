@@ -337,13 +337,52 @@ export function usePaginatedPatients(
   status?: PatientStatus | string
 ) {
   const { user } = useAuthSession();
+  const qc = useQueryClient();
+  const queryKey = ["patients_paginated", user?.id, page, pageSize, search, status];
   return useQuery({
-    queryKey: ["patients_paginated", user?.id, page, pageSize, search, status],
+    queryKey,
     enabled: !!user,
     queryFn: async (): Promise<{ data: Patient[]; count: number }> => {
-      const clinicId = await resolveCurrentUserClinicId(user?.id);
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
+
+      if (isDeviceOffline()) {
+        const existingExact = qc.getQueryData<{ data: Patient[]; count: number }>(queryKey);
+        if (existingExact && Array.isArray(existingExact.data) && existingExact.data.length > 0) {
+          return existingExact;
+        }
+        // Recolectar pacientes cacheados localmente para soportar filtros y búsqueda offline
+        const byId = new Map<string, Patient>();
+        for (const [, d] of qc.getQueriesData<Patient[]>({ queryKey: ["patients"] })) {
+          if (Array.isArray(d)) d.forEach((p) => byId.set(p.id, p));
+        }
+        for (const [, d] of qc.getQueriesData<{ data: Patient[]; count: number }>({
+          queryKey: ["patients_paginated"],
+        })) {
+          if (d && Array.isArray(d.data)) d.data.forEach((p) => byId.set(p.id, p));
+        }
+        let list = Array.from(byId.values()).sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        );
+        if (search) {
+          const term = search.toLowerCase();
+          list = list.filter(
+            (p) =>
+              (p.full_name || "").toLowerCase().includes(term) ||
+              (p.email || "").toLowerCase().includes(term) ||
+              (p.document_id || "").toLowerCase().includes(term),
+          );
+        }
+        if (status) {
+          list = list.filter((p) => p.status === status);
+        }
+        return {
+          data: list.slice(from, to + 1),
+          count: list.length,
+        };
+      }
+
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
 
       let query = supabase
         .from("pacientes")
@@ -542,19 +581,24 @@ export function useCreatePatient() {
     onSuccess: (createdPatient) => {
       if (createdPatient) {
         qc.setQueriesData<Patient[]>({ queryKey: ["patients"] }, (old) =>
-          Array.isArray(old) ? [createdPatient, ...old.filter((p) => p.id !== createdPatient.id)] : old,
+          Array.isArray(old) ? [createdPatient, ...old.filter((p) => p.id !== createdPatient.id)] : [createdPatient],
         );
         qc.setQueriesData<Patient[]>({ queryKey: ["patients_recent"] }, (old) =>
-          Array.isArray(old) ? [createdPatient, ...old.filter((p) => p.id !== createdPatient.id)] : old,
+          Array.isArray(old) ? [createdPatient, ...old.filter((p) => p.id !== createdPatient.id)] : [createdPatient],
         );
-        qc.setQueriesData<any>({ queryKey: ["patients_paginated"] }, (old: any) => {
-          if (!old || !Array.isArray(old.data)) return old;
+        qc.setQueriesData<{ data: Patient[]; count: number }>({ queryKey: ["patients_paginated"] }, (old) => {
+          if (!old || !Array.isArray(old.data)) {
+            return { data: [createdPatient], count: 1 };
+          }
+          const filtered = old.data.filter((p) => p.id !== createdPatient.id);
           return {
-            ...old,
-            data: [createdPatient, ...old.data.filter((p: Patient) => p.id !== createdPatient.id)],
-            totalCount: typeof old.totalCount === "number" ? old.totalCount + 1 : old.totalCount,
+            data: [createdPatient, ...filtered],
+            count: (typeof old.count === "number" ? old.count : filtered.length) + 1,
           };
         });
+        qc.setQueriesData<number>({ queryKey: ["patients_count"] }, (old) =>
+          typeof old === "number" ? old + 1 : 1,
+        );
         qc.setQueryData(["patient", createdPatient.id], createdPatient);
       }
       if (!isDeviceOffline()) {
@@ -697,10 +741,17 @@ export function useDeletePatient() {
       qc.setQueriesData<Patient[]>({ queryKey: ["patients_recent"] }, (old) =>
         Array.isArray(old) ? old.filter((p) => p.id !== deletedId) : old,
       );
-      qc.setQueriesData<any>({ queryKey: ["patients_paginated"] }, (old: any) =>
-        old && Array.isArray(old.data)
-          ? { ...old, data: old.data.filter((p: Patient) => p.id !== deletedId) }
-          : old,
+      qc.setQueriesData<{ data: Patient[]; count: number }>({ queryKey: ["patients_paginated"] }, (old) => {
+        if (!old || !Array.isArray(old.data)) return old;
+        const nextData = old.data.filter((p) => p.id !== deletedId);
+        const removed = nextData.length < old.data.length ? 1 : 0;
+        return {
+          data: nextData,
+          count: Math.max(0, (typeof old.count === "number" ? old.count : old.data.length) - removed),
+        };
+      });
+      qc.setQueriesData<number>({ queryKey: ["patients_count"] }, (old) =>
+        typeof old === "number" ? Math.max(0, old - 1) : old,
       );
       if (!isDeviceOffline()) {
         qc.invalidateQueries({ queryKey: ["patients"] });

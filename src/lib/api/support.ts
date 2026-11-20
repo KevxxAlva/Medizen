@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { isDeviceOffline } from "@/lib/offline/networkState";
 
 export type SupportTicket = {
   id: string;
@@ -38,8 +39,15 @@ export function useCreateTicket() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["support_tickets"] });
+    onSuccess: (created) => {
+      if (created) {
+        qc.setQueriesData<SupportTicket[]>({ queryKey: ["support_tickets"] }, (old) =>
+          Array.isArray(old) ? [created as SupportTicket, ...old.filter((t) => t.id !== created.id)] : [created as SupportTicket],
+        );
+      }
+      if (!isDeviceOffline()) {
+        qc.invalidateQueries({ queryKey: ["support_tickets"] });
+      }
     },
   });
 }
@@ -57,8 +65,13 @@ export function useUpdateTicket() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["support_tickets"] });
+    onSuccess: (updated, vars) => {
+      qc.setQueriesData<SupportTicket[]>({ queryKey: ["support_tickets"] }, (old) =>
+        Array.isArray(old) ? old.map((t) => (t.id === vars.id ? { ...t, ...vars, ...(updated || {}) } : t)) : old,
+      );
+      if (!isDeviceOffline()) {
+        qc.invalidateQueries({ queryKey: ["support_tickets"] });
+      }
     },
   });
 }
@@ -73,8 +86,13 @@ export function useDeleteTicket() {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["support_tickets"] });
+    onSuccess: (_data, deletedId) => {
+      qc.setQueriesData<SupportTicket[]>({ queryKey: ["support_tickets"] }, (old) =>
+        Array.isArray(old) ? old.filter((t) => t.id !== deletedId) : old,
+      );
+      if (!isDeviceOffline()) {
+        qc.invalidateQueries({ queryKey: ["support_tickets"] });
+      }
     },
   });
 }

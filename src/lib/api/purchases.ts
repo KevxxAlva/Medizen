@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
+import { isDeviceOffline } from "@/lib/offline/networkState";
 
 export type FinancialPurchase = {
   id: string;
@@ -48,8 +49,15 @@ export function useCreatePurchase() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["financial_purchases"] });
+    onSuccess: (created) => {
+      if (created) {
+        qc.setQueriesData<FinancialPurchase[]>({ queryKey: ["financial_purchases"] }, (old) =>
+          Array.isArray(old) ? [...old.filter((p) => p.id !== created.id), created as FinancialPurchase] : [created as FinancialPurchase],
+        );
+      }
+      if (!isDeviceOffline()) {
+        qc.invalidateQueries({ queryKey: ["financial_purchases"] });
+      }
     },
   });
 }
@@ -72,8 +80,14 @@ export function useUpdatePurchase() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["financial_purchases"] });
+    onSuccess: (updated, vars) => {
+      const merged = (updated || vars) as FinancialPurchase;
+      qc.setQueriesData<FinancialPurchase[]>({ queryKey: ["financial_purchases"] }, (old) =>
+        Array.isArray(old) ? old.map((p) => (p.id === vars.id ? { ...p, ...merged } : p)) : old,
+      );
+      if (!isDeviceOffline()) {
+        qc.invalidateQueries({ queryKey: ["financial_purchases"] });
+      }
     },
   });
 }
@@ -88,8 +102,13 @@ export function useDeletePurchase() {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["financial_purchases"] });
+    onSuccess: (_data, deletedId) => {
+      qc.setQueriesData<FinancialPurchase[]>({ queryKey: ["financial_purchases"] }, (old) =>
+        Array.isArray(old) ? old.filter((p) => p.id !== deletedId) : old,
+      );
+      if (!isDeviceOffline()) {
+        qc.invalidateQueries({ queryKey: ["financial_purchases"] });
+      }
     },
   });
 }

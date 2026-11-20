@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
+import { isDeviceOffline } from "@/lib/offline/networkState";
 
 export interface Profile {
   id: string;
@@ -281,9 +282,24 @@ export function useUpdateProfile() {
       }
     },
     onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: ["profile", variables.userId] });
-      qc.invalidateQueries({ queryKey: ["profiles_with_roles"] });
-      qc.invalidateQueries({ queryKey: ["doctors"] });
+      qc.setQueriesData<any>({ queryKey: ["my_profile"] }, (old: any) =>
+        old && old.id === variables.userId
+          ? {
+              ...old,
+              full_name: variables.fullName,
+              specialty: variables.specialty,
+              university: variables.university,
+              mpps: variables.mpps,
+              cmc: variables.cmc,
+            }
+          : old,
+      );
+      if (!isDeviceOffline()) {
+        qc.invalidateQueries({ queryKey: ["profile", variables.userId] });
+        qc.invalidateQueries({ queryKey: ["my_profile"] });
+        qc.invalidateQueries({ queryKey: ["profiles_with_roles"] });
+        qc.invalidateQueries({ queryKey: ["doctors"] });
+      }
     },
   });
 }

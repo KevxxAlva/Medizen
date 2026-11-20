@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 import { broadcastSaasSync } from "@/hooks/useRealtimeSync";
+import { isDeviceOffline } from "@/lib/offline/networkState";
 
 export type SaasPlanId = "basico" | "pro" | "enterprise";
 
@@ -291,7 +292,7 @@ export function useUpdateClinicInfo() {
         }
       }
 
-      if (typeof window !== "undefined") {
+      if (typeof window !== "undefined" && !isDeviceOffline()) {
         try {
           Object.keys(localStorage).forEach((k) => {
             if (k.startsWith(CACHED_CLINIC_KEY_PREFIX)) {
@@ -303,10 +304,18 @@ export function useUpdateClinicInfo() {
         }
       }
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["clinic_info"] });
-      qc.invalidateQueries({ queryKey: ["superadmin_clinicas"] });
-      void broadcastSaasSync("clinicas");
+    onSuccess: (_data, info) => {
+      qc.setQueriesData<ClinicInfo | null>({ queryKey: ["clinic_info"] }, (old) => {
+        if (!old) return old;
+        const next = { ...old, ...info, updated_at: new Date().toISOString() };
+        if (user?.id) writeCachedClinicInfo(user.id, next);
+        return next;
+      });
+      if (!isDeviceOffline()) {
+        qc.invalidateQueries({ queryKey: ["clinic_info"] });
+        qc.invalidateQueries({ queryKey: ["superadmin_clinicas"] });
+        void broadcastSaasSync("clinicas");
+      }
     },
   });
 }

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
+import { isDeviceOffline } from "@/lib/offline/networkState";
 import type { RateType } from "@/hooks/useExchangeRate";
 
 export type VePaymentCategory =
@@ -370,8 +371,15 @@ export function useCreatePaymentMethod() {
       }
       return decodeMethodRow(result.data);
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["payment_methods"] });
+    onSuccess: (created) => {
+      if (created) {
+        qc.setQueriesData<PaymentMethod[]>({ queryKey: ["payment_methods"] }, (old) =>
+          Array.isArray(old) ? [...old.filter((m) => m.id !== created.id), created] : [created],
+        );
+      }
+      if (!isDeviceOffline()) {
+        qc.invalidateQueries({ queryKey: ["payment_methods"] });
+      }
     },
   });
 }
@@ -413,8 +421,14 @@ export function useUpdatePaymentMethod() {
       if (result.error) throw result.error;
       return decodeMethodRow(result.data);
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["payment_methods"] });
+    onSuccess: (updated, vars) => {
+      const merged = updated || vars;
+      qc.setQueriesData<PaymentMethod[]>({ queryKey: ["payment_methods"] }, (old) =>
+        Array.isArray(old) ? old.map((m) => (m.id === vars.id ? { ...m, ...merged } : m)) : old,
+      );
+      if (!isDeviceOffline()) {
+        qc.invalidateQueries({ queryKey: ["payment_methods"] });
+      }
     },
   });
 }
@@ -429,9 +443,14 @@ export function useDeletePaymentMethod() {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["payment_methods"] });
-      qc.invalidateQueries({ queryKey: ["financial_accounts"] });
+    onSuccess: (_data, deletedId) => {
+      qc.setQueriesData<PaymentMethod[]>({ queryKey: ["payment_methods"] }, (old) =>
+        Array.isArray(old) ? old.filter((m) => m.id !== deletedId) : old,
+      );
+      if (!isDeviceOffline()) {
+        qc.invalidateQueries({ queryKey: ["payment_methods"] });
+        qc.invalidateQueries({ queryKey: ["financial_accounts"] });
+      }
     },
   });
 }

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getStoredAppointmentPrice, resolveServiceFromReason } from "@/lib/api/appointments";
 import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
+import { isDeviceOffline } from "@/lib/offline/networkState";
 
 export type VisitType = "CONTROL" | "EMERGENCIA" | "CONSULTA_NUEVA" | "POST_TRATAMIENTO" | "OTRO";
 
@@ -484,16 +485,39 @@ export function useCreateConsultation() {
 
       return unpackConsultation(hc);
     },
-    onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: ["consultations"] });
-      qc.invalidateQueries({ queryKey: ["consultation", variables.appointment_id] });
-      qc.invalidateQueries({ queryKey: ["appointments"], refetchType: "all" });
-      qc.invalidateQueries({ queryKey: ["facturas"], refetchType: "all" });
-      qc.invalidateQueries({ queryKey: ["dashboard_stats"], refetchType: "all" });
-      qc.invalidateQueries({ queryKey: ["monthly_payments"], refetchType: "all" });
-      qc.invalidateQueries({ queryKey: ["patients"] });
-      qc.invalidateQueries({ queryKey: ["clinical-notes"] });
-      qc.invalidateQueries({ queryKey: ["inventory_stocks"] });
+    onSuccess: (createdConsultation, variables) => {
+      if (createdConsultation) {
+        const merged: Consultation = {
+          ...createdConsultation,
+          appointment_id: createdConsultation.appointment_id || variables.appointment_id,
+          patient_id: createdConsultation.patient_id || variables.patient_id,
+        };
+        qc.setQueriesData<Consultation[]>({ queryKey: ["consultations"] }, (old) =>
+          Array.isArray(old) ? [merged, ...old.filter((c) => c.id !== merged.id)] : [merged],
+        );
+        qc.setQueriesData<Consultation[]>({ queryKey: ["patient_consultations"] }, (old) =>
+          Array.isArray(old) ? [merged, ...old.filter((c) => c.id !== merged.id)] : [merged],
+        );
+        qc.setQueryData(["consultation", variables.appointment_id], merged);
+        qc.setQueriesData<any[]>({ queryKey: ["appointments"] }, (old) =>
+          Array.isArray(old)
+            ? old.map((a) =>
+                a.id === variables.appointment_id ? { ...a, status: "completada", has_consultation: true } : a,
+              )
+            : old,
+        );
+      }
+      if (!isDeviceOffline()) {
+        qc.invalidateQueries({ queryKey: ["consultations"] });
+        qc.invalidateQueries({ queryKey: ["consultation", variables.appointment_id] });
+        qc.invalidateQueries({ queryKey: ["appointments"], refetchType: "all" });
+        qc.invalidateQueries({ queryKey: ["facturas"], refetchType: "all" });
+        qc.invalidateQueries({ queryKey: ["dashboard_stats"], refetchType: "all" });
+        qc.invalidateQueries({ queryKey: ["monthly_payments"], refetchType: "all" });
+        qc.invalidateQueries({ queryKey: ["patients"] });
+        qc.invalidateQueries({ queryKey: ["clinical-notes"] });
+        qc.invalidateQueries({ queryKey: ["inventory_stocks"] });
+      }
     },
   });
 }
@@ -502,12 +526,30 @@ export function useUpdateConsultation() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, consumables, ...patch }: Partial<ConsultationInput> & { id: string }) => {
-      // 1. Fetch current consultation data before update
-      const { data: oldHc } = await supabase
-        .from("consultas")
-        .select("*, citas(id_paciente)")
-        .eq("id_consulta", parseInt(id))
-        .maybeSingle();
+      // 1. Fetch current consultation data before update (or use local cache when offline)
+      let oldHc: any = null;
+      if (!isDeviceOffline()) {
+        const { data } = await supabase
+          .from("consultas")
+          .select("*, citas(id_paciente)")
+          .eq("id_consulta", parseInt(id))
+          .maybeSingle();
+        oldHc = data;
+      }
+
+      if (!oldHc && isDeviceOffline()) {
+        const cachedList = qc
+          .getQueriesData<Consultation[]>({ queryKey: ["consultations"] })
+          .flatMap(([, d]) => (Array.isArray(d) ? d : []));
+        const found = cachedList.find((c) => c.id === id);
+        oldHc = {
+          id_consulta: parseInt(id),
+          id_cita: found?.appointment_id ? parseInt(found.appointment_id) : patch.appointment_id ? parseInt(patch.appointment_id) : null,
+          id_medico: found?.doctor_id ? parseInt(found.doctor_id) : null,
+          notas_medicas: found ? packObservaciones(found) : "{}",
+          citas: found?.patient_id ? { id_paciente: parseInt(found.patient_id) } : null,
+        };
+      }
 
       if (!oldHc) throw new Error("Consulta no encontrada");
 
@@ -645,17 +687,33 @@ export function useUpdateConsultation() {
 
       return unpackConsultation(hc);
     },
-    onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: ["consultations"] });
-      if (data?.appointment_id) {
-        qc.invalidateQueries({ queryKey: ["consultation", data.appointment_id] });
+    onSuccess: (data, vars) => {
+      if (data) {
+        const mergeC = (c: Consultation) => (c.id === vars.id ? { ...c, ...data } : c);
+        qc.setQueriesData<Consultation[]>({ queryKey: ["consultations"] }, (old) =>
+          Array.isArray(old) ? old.map(mergeC) : old,
+        );
+        qc.setQueriesData<Consultation[]>({ queryKey: ["patient_consultations"] }, (old) =>
+          Array.isArray(old) ? old.map(mergeC) : old,
+        );
+        if (data.appointment_id) {
+          qc.setQueryData<Consultation>(["consultation", data.appointment_id], (old) =>
+            old ? { ...old, ...data } : data,
+          );
+        }
       }
-      qc.invalidateQueries({ queryKey: ["appointments"], refetchType: "all" });
-      qc.invalidateQueries({ queryKey: ["facturas"], refetchType: "all" });
-      qc.invalidateQueries({ queryKey: ["dashboard_stats"], refetchType: "all" });
-      qc.invalidateQueries({ queryKey: ["monthly_payments"], refetchType: "all" });
-      qc.invalidateQueries({ queryKey: ["patients"] });
-      qc.invalidateQueries({ queryKey: ["clinical-notes"] });
+      if (!isDeviceOffline()) {
+        qc.invalidateQueries({ queryKey: ["consultations"] });
+        if (data?.appointment_id) {
+          qc.invalidateQueries({ queryKey: ["consultation", data.appointment_id] });
+        }
+        qc.invalidateQueries({ queryKey: ["appointments"], refetchType: "all" });
+        qc.invalidateQueries({ queryKey: ["facturas"], refetchType: "all" });
+        qc.invalidateQueries({ queryKey: ["dashboard_stats"], refetchType: "all" });
+        qc.invalidateQueries({ queryKey: ["monthly_payments"], refetchType: "all" });
+        qc.invalidateQueries({ queryKey: ["patients"] });
+        qc.invalidateQueries({ queryKey: ["clinical-notes"] });
+      }
     },
   });
 }

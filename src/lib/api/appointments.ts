@@ -106,14 +106,25 @@ export interface AppointmentFilters {
 
 export function useAppointments(filters?: AppointmentFilters, options?: { enabled?: boolean }) {
   const { user } = useAuthSession();
+  const qc = useQueryClient();
   const queryKey = filters ? ["appointments", filters, user?.id] : ["appointments", user?.id];
   return useQuery({
     queryKey,
     enabled: (options?.enabled ?? true) && !!user,
     staleTime: 0,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
+    refetchOnMount: () => (isDeviceOffline() ? false : "always"),
+    refetchOnWindowFocus: () => !isDeviceOffline(),
     queryFn: async (): Promise<AppointmentWithPatient[]> => {
+      if (isDeviceOffline()) {
+        const cached = qc.getQueryData<AppointmentWithPatient[]>(queryKey);
+        if (Array.isArray(cached)) return cached;
+        const anyCached = qc
+          .getQueriesData<AppointmentWithPatient[]>({ queryKey: ["appointments"] })
+          .flatMap(([, d]) => (Array.isArray(d) ? d : []));
+        const dedup = new Map<string, AppointmentWithPatient>();
+        anyCached.forEach((a) => dedup.set(a.id, a));
+        return Array.from(dedup.values());
+      }
       const clinicId = await resolveCurrentUserClinicId(user?.id);
       const ascending = filters?.ascending ?? true;
       const PAGE_SIZE = 1000;
@@ -479,7 +490,7 @@ export function useCreateAppointment() {
           has_consultation: false,
         };
         qc.setQueriesData<AppointmentWithPatient[]>({ queryKey: ["appointments"] }, (old) =>
-          Array.isArray(old) ? [optimisticAppt, ...old.filter((a) => a.id !== optimisticAppt.id)] : old,
+          Array.isArray(old) ? [optimisticAppt, ...old.filter((a) => a.id !== optimisticAppt.id)] : [optimisticAppt],
         );
       }
       if (!isDeviceOffline()) {

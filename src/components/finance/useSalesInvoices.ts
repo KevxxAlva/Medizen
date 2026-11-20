@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
+import { isDeviceOffline } from "@/lib/offline/networkState";
 import { toast } from "sonner";
 import { logAuditAction } from "@/lib/api/audit";
 import { inferCategoryFromMethod } from "@/lib/api/paymentMethods";
@@ -70,10 +71,14 @@ export function useSalesInvoices() {
     queryKey: ["facturas", user?.id],
     enabled: !!user,
     staleTime: 0, // Inmediato: siempre evaluar datos frescos
-    refetchOnMount: "always", // Cada vez que el usuario abre Ventas, consultar de inmediato a Supabase
-    refetchOnWindowFocus: true, // Si regresa a la pestaña o ventana, refresca
-    refetchInterval: 5000, // Sincronización en tiempo real cada 5 segundos
+    refetchOnMount: () => (isDeviceOffline() ? false : "always"),
+    refetchOnWindowFocus: () => !isDeviceOffline(),
+    refetchInterval: () => (isDeviceOffline() ? false : 5000), // Pausar polling sin internet
     queryFn: async () => {
+      if (isDeviceOffline()) {
+        const cached = queryClient.getQueryData<Invoice[]>(["facturas", user?.id]);
+        if (Array.isArray(cached)) return cached;
+      }
       const clinicId = await resolveCurrentUserClinicId(user?.id);
       let fQuery = supabase
         .from("facturas")
@@ -298,13 +303,29 @@ export function useSalesInvoices() {
         monto_usd: usdAmount || null,
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["facturas"] });
-      queryClient.invalidateQueries({ queryKey: ["financial_accounts"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard_stats"] });
-      queryClient.invalidateQueries({ queryKey: ["monthly_payments"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard_trends"] });
-      queryClient.invalidateQueries({ queryKey: ["appointments"] });
+    onSuccess: (_data, vars) => {
+      queryClient.setQueriesData<Invoice[]>({ queryKey: ["facturas"] }, (old) =>
+        Array.isArray(old)
+          ? old.map((inv) =>
+              inv.id_factura === vars.id
+                ? {
+                    ...inv,
+                    estado_pago: vars.status,
+                    metodo_pago: vars.method ?? inv.metodo_pago,
+                    referencia: vars.reference ?? inv.referencia,
+                  }
+                : inv,
+            )
+          : old,
+      );
+      if (!isDeviceOffline()) {
+        queryClient.invalidateQueries({ queryKey: ["facturas"] });
+        queryClient.invalidateQueries({ queryKey: ["financial_accounts"] });
+        queryClient.invalidateQueries({ queryKey: ["dashboard_stats"] });
+        queryClient.invalidateQueries({ queryKey: ["monthly_payments"] });
+        queryClient.invalidateQueries({ queryKey: ["dashboard_trends"] });
+        queryClient.invalidateQueries({ queryKey: ["appointments"] });
+      }
       toast.success("Factura cobrada y conciliada exitosamente");
     },
     onError: () => {
@@ -322,9 +343,14 @@ export function useSalesInvoices() {
       return id;
     },
     onSuccess: (id) => {
+      queryClient.setQueriesData<Invoice[]>({ queryKey: ["facturas"] }, (old) =>
+        Array.isArray(old) ? old.filter((inv) => inv.id_factura !== id) : old,
+      );
       toast.success(`Factura INV-${id.toString().padStart(4, "0")} eliminada`);
-      queryClient.invalidateQueries({ queryKey: ["facturas"] });
-      queryClient.invalidateQueries({ queryKey: ["financial_accounts"] });
+      if (!isDeviceOffline()) {
+        queryClient.invalidateQueries({ queryKey: ["facturas"] });
+        queryClient.invalidateQueries({ queryKey: ["financial_accounts"] });
+      }
     },
     onError: () => {
       toast.error("No se pudo eliminar la factura");

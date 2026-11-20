@@ -112,7 +112,7 @@ export function useCreateService() {
     onSuccess: (created) => {
       if (created) {
         queryClient.setQueriesData<Service[]>({ queryKey: ["services"] }, (old) =>
-          Array.isArray(old) ? [...old.filter((s) => s.id_servicio !== created.id_servicio), created as Service] : old,
+          Array.isArray(old) ? [...old.filter((s) => s.id_servicio !== created.id_servicio), created as Service] : [created as Service],
         );
       }
       if (!isDeviceOffline()) {

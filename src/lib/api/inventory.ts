@@ -52,7 +52,7 @@ export function useCreateStock() {
     onSuccess: (created) => {
       if (created) {
         qc.setQueriesData<StockItem[]>({ queryKey: ["inventory_stocks"] }, (old) =>
-          Array.isArray(old) ? [...old.filter((s) => s.id !== created.id), created as StockItem] : old,
+          Array.isArray(old) ? [...old.filter((s) => s.id !== created.id), created as StockItem] : [created as StockItem],
         );
       }
       if (!isDeviceOffline()) {

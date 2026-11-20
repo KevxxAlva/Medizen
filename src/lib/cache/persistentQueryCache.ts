@@ -41,6 +41,7 @@ const PERSISTABLE_ROOT_KEYS = new Set<string>([
   "patients_paginated",
   "appointments",
   "consultations",
+  "consultation",
   "patient_consultations",
   "consultation_by_appointment",
   "clinical_notes",
