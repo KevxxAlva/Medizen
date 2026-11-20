@@ -42,7 +42,7 @@ function PorLlegarColumn({
   onStageChange: (app: AppointmentWithPatient, nextStage: TriageStage) => void;
 }) {
   return (
-    <section className="rounded-2xl border border-border bg-muted/20 p-3 flex flex-col gap-3 min-h-[380px]">
+    <section className="rounded-2xl border border-border bg-muted/20 p-3 flex flex-col gap-3 h-[420px] xl:h-[calc(100vh-20.5rem)] min-h-[340px] max-h-[580px]">
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-blue-500" />
@@ -149,7 +149,7 @@ function EnEsperaColumn({
   onStageChange: (app: AppointmentWithPatient, nextStage: TriageStage) => void;
 }) {
   return (
-    <section className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.03] p-3 flex flex-col gap-3 min-h-[380px]">
+    <section className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.03] p-3 flex flex-col gap-3 h-[420px] xl:h-[calc(100vh-20.5rem)] min-h-[340px] max-h-[580px]">
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
@@ -242,7 +242,7 @@ function EnConsultaColumn({
   onOpenConsultation: (app: AppointmentWithPatient) => void;
 }) {
   return (
-    <section className="rounded-2xl border border-purple-500/25 bg-purple-500/[0.03] p-3 flex flex-col gap-3 min-h-[380px]">
+    <section className="rounded-2xl border border-purple-500/25 bg-purple-500/[0.03] p-3 flex flex-col gap-3 h-[420px] xl:h-[calc(100vh-20.5rem)] min-h-[340px] max-h-[580px]">
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-purple-500 animate-pulse" />
@@ -336,7 +336,7 @@ function AtendidosColumn({
   onGoToSales: () => void;
 }) {
   return (
-    <section className="rounded-2xl border border-emerald-500/25 bg-emerald-500/[0.03] p-3 flex flex-col gap-3 min-h-[380px]">
+    <section className="rounded-2xl border border-emerald-500/25 bg-emerald-500/[0.03] p-3 flex flex-col gap-3 h-[420px] xl:h-[calc(100vh-20.5rem)] min-h-[340px] max-h-[580px]">
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-emerald-500" />

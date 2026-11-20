@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useCallback, useEffectEvent } from "react";
-import { Lock, ShieldAlert, LogOut, ArrowRight, Delete } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect, useCallback, useEffectEvent } from "react";
+import { Lock, LockOpen, ShieldCheck, LogOut, Delete, Keyboard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { clearScreenLock } from "@/lib/auth/quickAccess";
 import { useNavigate } from "@tanstack/react-router";
@@ -12,6 +11,25 @@ interface InactivityLockOverlayProps {
   onUnlock: (pin: string) => Promise<boolean> | boolean;
   doctorName?: string;
   clinicName?: string;
+}
+
+const KEYPAD_KEYS: Array<{ digit: string; letters?: string }> = [
+  { digit: "1", letters: "" },
+  { digit: "2", letters: "ABC" },
+  { digit: "3", letters: "DEF" },
+  { digit: "4", letters: "GHI" },
+  { digit: "5", letters: "JKL" },
+  { digit: "6", letters: "MNO" },
+  { digit: "7", letters: "PQRS" },
+  { digit: "8", letters: "TUV" },
+  { digit: "9", letters: "WXYZ" },
+];
+
+function getInitials(name: string): string {
+  const parts = (name || "DR").trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "DR";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
 }
 
 export function InactivityLockOverlay(props: InactivityLockOverlayProps) {
@@ -26,22 +44,32 @@ function InactivityLockOverlayModal({
 }: InactivityLockOverlayProps) {
   const [pin, setPin] = useState("");
   const [shake, setShake] = useState(false);
+  const [unlockedAnim, setUnlockedAnim] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const navigate = useNavigate();
 
   const submitPin = useCallback(
     async (pinToSubmit: string) => {
-      const success = await onUnlock(pinToSubmit);
-      if (!success) {
-        setShake(true);
-        setErrorMsg("PIN incorrecto o bloqueado temporalmente. Intente nuevamente.");
-        toast.error("PIN incorrecto.");
-        setTimeout(() => {
-          setShake(false);
-          setPin("");
-        }, 500);
-      } else {
-        toast.success("Sesión clínica restaurada.");
+      setVerifying(true);
+      try {
+        const success = await onUnlock(pinToSubmit);
+        if (!success) {
+          setShake(true);
+          setErrorMsg("PIN incorrecto. Verifica e intenta nuevamente.");
+          toast.error("PIN incorrecto.");
+          setTimeout(() => {
+            setShake(false);
+            setPin("");
+            setVerifying(false);
+          }, 480);
+        } else {
+          setUnlockedAnim(true);
+          toast.success("Sesión clínica restaurada.");
+        }
+      } catch {
+        setVerifying(false);
+        setPin("");
       }
     },
     [onUnlock],
@@ -49,25 +77,26 @@ function InactivityLockOverlayModal({
 
   const handleDigitPress = useCallback(
     (digit: string) => {
-      if (pin.length >= 4) return;
+      if (verifying || unlockedAnim || pin.length >= 4) return;
       const newPin = pin + digit;
       setPin(newPin);
       setErrorMsg("");
 
       if (newPin.length === 4) {
-        // Auto-submit on 4th digit
         void submitPin(newPin);
       }
     },
-    [pin, submitPin],
+    [pin, verifying, unlockedAnim, submitPin],
   );
 
   const handleBackspace = useCallback(() => {
+    if (verifying || unlockedAnim) return;
     setPin((prev) => prev.slice(0, -1));
     setErrorMsg("");
-  }, []);
+  }, [verifying, unlockedAnim]);
 
   const onKeyDown = useEffectEvent((e: KeyboardEvent) => {
+    if (verifying || unlockedAnim) return;
     if (e.key >= "0" && e.key <= "9") {
       if (pin.length < 4) {
         handleDigitPress(e.key);
@@ -76,10 +105,10 @@ function InactivityLockOverlayModal({
       handleBackspace();
     } else if (e.key === "Escape") {
       setPin("");
+      setErrorMsg("");
     }
   });
 
-  // Support direct keyboard input
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       onKeyDown(e);
@@ -96,104 +125,218 @@ function InactivityLockOverlayModal({
     navigate({ to: "/auth" });
   };
 
+  const initials = getInitials(doctorName);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/85 backdrop-blur-2xl p-4 animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-3xl p-4 animate-in fade-in duration-300 overflow-y-auto">
+      {/* Subtle ambient glow behind card */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-24 left-1/2 -translate-x-1/2 h-80 w-[34rem] rounded-full bg-primary/15 blur-3xl" />
+        <div className="absolute -bottom-28 right-1/4 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl" />
+      </div>
+
+      <style>{`
+        @keyframes pin-dot-pop {
+          0% { transform: scale(0.4); opacity: 0; }
+          70% { transform: scale(1.2); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes pin-shake {
+          0%, 100% { transform: translateX(0); }
+          20% { transform: translateX(-8px); }
+          40% { transform: translateX(8px); }
+          60% { transform: translateX(-5px); }
+          80% { transform: translateX(5px); }
+        }
+        .pin-dot-anim {
+          animation: pin-dot-pop 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        .pin-shake-anim {
+          animation: pin-shake 0.38s ease-in-out;
+        }
+      `}</style>
+
       <div
         className={cn(
-          "w-full max-w-sm rounded-[2.5rem] border border-border/80 bg-card/95 p-6 sm:p-8 shadow-2xl flex flex-col items-center text-center space-y-5 transition-transform",
-          shake && "animate-shake",
+          "relative z-10 w-full max-w-[390px] rounded-[2rem] border border-border/70 bg-card/95 shadow-2xl ring-1 ring-primary/10 overflow-hidden transition-transform",
+          shake && "pin-shake-anim",
         )}
       >
-        {/* Lock Shield Icon */}
-        <div className="relative">
-          <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary/10 text-primary shadow-inner">
-            <Lock className="h-8 w-8 text-primary animate-pulse" />
+        {/* Top accent strip */}
+        <div
+          className={cn(
+            "h-1.5 w-full transition-colors duration-300",
+            unlockedAnim
+              ? "bg-emerald-500"
+              : shake
+                ? "bg-rose-500"
+                : "bg-gradient-to-r from-primary via-violet-500 to-primary",
+          )}
+        />
+
+        <div className="px-6 pt-6 pb-5 sm:px-7 sm:pt-7 flex flex-col items-center text-center">
+          {/* Clinic Pill */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/70 border border-border/60 text-[11px] font-bold text-muted-foreground mb-4">
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+            <span className="truncate max-w-[200px]">{clinicName}</span>
           </div>
-          <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white font-bold ring-4 ring-card">
-            ✓
-          </span>
-        </div>
 
-        {/* Lock Title */}
-        <div className="space-y-1">
-          <h2 className="text-xl font-bold tracking-tight text-foreground">Sesión Protegida</h2>
-          <p className="text-xs text-muted-foreground font-medium">
-            {clinicName} · {doctorName}
-          </p>
-          <p className="text-[11px] text-muted-foreground/80 pt-0.5">
-            Bloqueado por inactividad para resguardar la privacidad del paciente.
-          </p>
-        </div>
-
-        {/* PIN 4-Dots Display */}
-        <div className="flex items-center justify-center gap-3 py-2">
-          {[0, 1, 2, 3].map((index) => {
-            const isFilled = pin.length > index;
-            return (
-              <div
-                key={index}
-                className={cn(
-                  "h-4 w-4 rounded-full border-2 transition-colors duration-200",
-                  isFilled
-                    ? "scale-110 border-primary bg-primary shadow-sm shadow-primary/50"
-                    : "border-border/80 bg-muted/50",
-                )}
-              />
-            );
-          })}
-        </div>
-
-        {errorMsg && (
-          <p
-            role="alert"
-            aria-live="polite"
-            className="text-xs font-semibold text-rose-500 animate-in fade-in"
-          >
-            {errorMsg}
-          </p>
-        )}
-
-        {/* Numeric Keypad */}
-        <div className="grid grid-cols-3 gap-2.5 w-full max-w-[240px]">
-          {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((digit) => (
-            <button
-              key={digit}
-              type="button"
-              onClick={() => handleDigitPress(digit)}
-              className="h-12 rounded-2xl bg-muted/60 text-foreground font-bold text-lg hover:bg-primary hover:text-primary-foreground active:scale-95 transition-colors shadow-2xs cursor-pointer"
+          {/* Lock / Avatar Badge */}
+          <div className="relative mb-3">
+            <div
+              className={cn(
+                "flex h-16 w-16 items-center justify-center rounded-2xl border transition-all duration-300 shadow-sm",
+                unlockedAnim
+                  ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-500 scale-105"
+                  : shake
+                    ? "bg-rose-500/15 border-rose-500/40 text-rose-500"
+                    : "bg-gradient-to-br from-primary/15 to-violet-500/10 border-primary/25 text-primary",
+              )}
             >
-              {digit}
+              {unlockedAnim ? (
+                <LockOpen className="h-7 w-7" />
+              ) : (
+                <Lock className="h-7 w-7" />
+              )}
+            </div>
+            <span
+              className="absolute -bottom-1.5 -right-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-card border-2 border-card shadow-sm text-[10px] font-extrabold text-primary ring-1 ring-border"
+              title={doctorName}
+            >
+              {initials}
+            </span>
+          </div>
+
+          {/* Title & User */}
+          <div className="space-y-1 mb-5">
+            <h2 className="text-xl font-extrabold tracking-tight text-foreground">
+              {unlockedAnim ? "Acceso Concedido" : "Sesión Protegida"}
+            </h2>
+            <p className="text-xs font-bold text-foreground/80">{doctorName}</p>
+            <p className="text-[11px] text-muted-foreground max-w-[260px] mx-auto leading-relaxed">
+              Ingresa tu PIN de 4 dígitos para retomar la sesión clínica.
+            </p>
+          </div>
+
+          {/* 4 Individual PIN Boxes */}
+          <div className="flex items-center justify-center gap-3 mb-2">
+            {[0, 1, 2, 3].map((index) => {
+              const isFilled = pin.length > index;
+              const isNext = pin.length === index && !unlockedAnim && !shake;
+              return (
+                <div
+                  key={index}
+                  className={cn(
+                    "h-13 w-12 rounded-2xl border-2 flex items-center justify-center transition-all duration-200",
+                    unlockedAnim
+                      ? "border-emerald-500 bg-emerald-500/10"
+                      : shake
+                        ? "border-rose-500 bg-rose-500/10"
+                        : isFilled
+                          ? "border-primary bg-primary/10 shadow-xs"
+                          : isNext
+                            ? "border-primary/60 bg-background ring-4 ring-primary/10"
+                            : "border-border/70 bg-muted/35",
+                  )}
+                >
+                  {isFilled && (
+                    <span
+                      className={cn(
+                        "h-3 w-3 rounded-full pin-dot-anim",
+                        unlockedAnim
+                          ? "bg-emerald-500"
+                          : shake
+                            ? "bg-rose-500"
+                            : "bg-primary",
+                      )}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Fixed-height feedback slot so keypad never jumps */}
+          <div className="min-h-[22px] flex items-center justify-center mb-3">
+            {errorMsg ? (
+              <p
+                role="alert"
+                aria-live="polite"
+                className="text-[11px] font-bold text-rose-500 animate-in fade-in"
+              >
+                {errorMsg}
+              </p>
+            ) : (
+              <p className="text-[10px] font-medium text-muted-foreground/75 flex items-center gap-1">
+                <Keyboard className="h-3 w-3" />
+                También puedes escribir con el teclado
+              </p>
+            )}
+          </div>
+
+          {/* Tactile Keypad */}
+          <div className="grid grid-cols-3 gap-2.5 w-full max-w-[264px]">
+            {KEYPAD_KEYS.map(({ digit, letters }) => (
+              <button
+                key={digit}
+                type="button"
+                disabled={verifying || unlockedAnim}
+                onClick={() => handleDigitPress(digit)}
+                className="group h-14 rounded-2xl border border-border/60 bg-background/80 hover:bg-primary hover:border-primary hover:text-primary-foreground active:scale-95 transition-all duration-150 shadow-2xs flex flex-col items-center justify-center cursor-pointer disabled:opacity-60"
+              >
+                <span className="text-xl font-extrabold leading-none">{digit}</span>
+                {letters ? (
+                  <span className="text-[9px] font-bold tracking-widest text-muted-foreground group-hover:text-primary-foreground/80 mt-0.5 leading-none">
+                    {letters}
+                  </span>
+                ) : (
+                  <span className="text-[9px] opacity-0 mt-0.5 leading-none">·</span>
+                )}
+              </button>
+            ))}
+
+            <button
+              type="button"
+              disabled={verifying || unlockedAnim || pin.length === 0}
+              onClick={() => {
+                setPin("");
+                setErrorMsg("");
+              }}
+              className="h-14 rounded-2xl border border-transparent bg-muted/40 text-muted-foreground font-bold text-xs hover:bg-muted hover:text-foreground active:scale-95 transition-all cursor-pointer disabled:opacity-40"
+            >
+              Limpiar
             </button>
-          ))}
-          <button
-            type="button"
-            onClick={() => setPin("")}
-            className="h-12 rounded-2xl bg-muted/30 text-muted-foreground font-bold text-xs hover:bg-muted/80 active:scale-95 transition-colors cursor-pointer"
-          >
-            Limpiar
-          </button>
-          <button
-            type="button"
-            onClick={() => handleDigitPress("0")}
-            className="h-12 rounded-2xl bg-muted/60 text-foreground font-bold text-lg hover:bg-primary hover:text-primary-foreground active:scale-95 transition-colors shadow-2xs cursor-pointer"
-          >
-            0
-          </button>
-          <button
-            type="button"
-            onClick={handleBackspace}
-            aria-label="Borrar dígito"
-            className="h-12 rounded-2xl bg-muted/30 text-muted-foreground flex items-center justify-center hover:bg-muted/80 active:scale-95 transition-colors cursor-pointer"
-          >
-            <Delete className="h-5 w-5" />
-          </button>
+
+            <button
+              type="button"
+              disabled={verifying || unlockedAnim}
+              onClick={() => handleDigitPress("0")}
+              className="h-14 rounded-2xl border border-border/60 bg-background/80 hover:bg-primary hover:border-primary hover:text-primary-foreground active:scale-95 transition-all duration-150 shadow-2xs flex flex-col items-center justify-center cursor-pointer disabled:opacity-60"
+            >
+              <span className="text-xl font-extrabold leading-none">0</span>
+            </button>
+
+            <button
+              type="button"
+              disabled={verifying || unlockedAnim || pin.length === 0}
+              onClick={handleBackspace}
+              aria-label="Borrar dígito"
+              className="h-14 rounded-2xl border border-transparent bg-muted/40 text-muted-foreground flex items-center justify-center hover:bg-muted hover:text-foreground active:scale-95 transition-all cursor-pointer disabled:opacity-40"
+            >
+              <Delete className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
-        <div className="w-full pt-2 border-t border-border/40 flex items-center justify-between text-xs">
+        {/* Footer */}
+        <div className="px-6 py-3.5 bg-muted/30 border-t border-border/50 flex items-center justify-between text-xs">
+          <span className="text-[11px] text-muted-foreground font-medium">
+            Bloqueo por inactividad
+          </span>
           <button
             type="button"
             onClick={handleSignOut}
-            className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-rose-500 transition-colors font-semibold"
+            className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-rose-500 transition-colors font-bold cursor-pointer"
           >
             <LogOut className="h-3.5 w-3.5" /> Cerrar sesión
           </button>

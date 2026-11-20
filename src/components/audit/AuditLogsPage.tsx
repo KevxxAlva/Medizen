@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { useAuditLogs, type AuditLog } from "@/lib/api/audit";
 import { useUserRoleScope } from "@/hooks/useUserRoleScope";
 import { getClinicPdfConfig, drawPdfHeader, drawPdfFooter } from "@/lib/utils/pdfConfig";
@@ -147,6 +148,8 @@ export function AuditLogsPage({ isSuperAdminView = false }: { isSuperAdminView?:
   const [clinicFilter, setClinicFilter] = useState("all");
   const [actionFilter, setActionFilter] = useState("all");
   const [entityFilter, setEntityFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const availableClinics = useMemo(() => {
     const map = new Map<string, string>();
@@ -193,6 +196,13 @@ export function AuditLogsPage({ isSuperAdminView = false }: { isSuperAdminView?:
       }));
   }, [logs, clinicFilter, actionFilter, entityFilter, searchQ]);
 
+  const totalPages = Math.max(1, Math.ceil(filteredLogs.length / itemsPerPage));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedLogs = useMemo(() => {
+    const start = (safePage - 1) * itemsPerPage;
+    return filteredLogs.slice(start, start + itemsPerPage);
+  }, [filteredLogs, safePage, itemsPerPage]);
+
   const stats = useMemo(() => {
     const source = clinicFilter === "all" ? logs : logs.filter((l) => l.id_clinica === clinicFilter);
     const deletes = source.filter((l) => (l.action_type || "").toUpperCase() === "DELETE").length;
@@ -222,7 +232,7 @@ export function AuditLogsPage({ isSuperAdminView = false }: { isSuperAdminView?:
   }
 
   return (
-    <div className="bg-card border border-border rounded-3xl p-4 sm:p-6 shadow-xs min-h-[calc(100vh-8rem)] flex flex-col gap-6">
+    <div className="bg-card border border-border rounded-3xl p-4 sm:p-6 shadow-xs flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <span className="text-[11px] font-extrabold uppercase tracking-wider text-primary">
@@ -300,7 +310,10 @@ export function AuditLogsPage({ isSuperAdminView = false }: { isSuperAdminView?:
           <Search className="h-4 w-4 text-muted-foreground absolute left-3 top-2.5" />
           <Input
             value={searchQ}
-            onChange={(e) => setSearchQ(e.target.value)}
+            onChange={(e) => {
+              setSearchQ(e.target.value);
+              setCurrentPage(1);
+            }}
             placeholder={
               isSuperAdminView
                 ? "Filtrar por clínica, usuario, factura, paciente o detalle…"
@@ -311,7 +324,13 @@ export function AuditLogsPage({ isSuperAdminView = false }: { isSuperAdminView?:
         </div>
 
         {isSuperAdminView && (
-          <Select value={clinicFilter} onValueChange={setClinicFilter}>
+          <Select
+            value={clinicFilter}
+            onValueChange={(v) => {
+              setClinicFilter(v);
+              setCurrentPage(1);
+            }}
+          >
             <SelectTrigger className="w-[200px] h-9 rounded-xl text-xs font-semibold">
               <SelectValue placeholder="Todas las clínicas" />
             </SelectTrigger>
@@ -326,7 +345,13 @@ export function AuditLogsPage({ isSuperAdminView = false }: { isSuperAdminView?:
           </Select>
         )}
 
-        <Select value={actionFilter} onValueChange={setActionFilter}>
+        <Select
+          value={actionFilter}
+          onValueChange={(v) => {
+            setActionFilter(v);
+            setCurrentPage(1);
+          }}
+        >
           <SelectTrigger className="w-[180px] h-9 rounded-xl text-xs font-semibold">
             <SelectValue placeholder="Tipo de acción" />
           </SelectTrigger>
@@ -339,7 +364,13 @@ export function AuditLogsPage({ isSuperAdminView = false }: { isSuperAdminView?:
           </SelectContent>
         </Select>
 
-        <Select value={entityFilter} onValueChange={setEntityFilter}>
+        <Select
+          value={entityFilter}
+          onValueChange={(v) => {
+            setEntityFilter(v);
+            setCurrentPage(1);
+          }}
+        >
           <SelectTrigger className="w-[190px] h-9 rounded-xl text-xs font-semibold">
             <SelectValue placeholder="Módulo" />
           </SelectTrigger>
@@ -354,7 +385,7 @@ export function AuditLogsPage({ isSuperAdminView = false }: { isSuperAdminView?:
         </Select>
       </div>
 
-      <div className="rounded-2xl border border-border overflow-hidden flex-1">
+      <div className="rounded-2xl border border-border overflow-hidden">
         {filteredLogs.length === 0 ? (
           <div className="p-12 text-center text-muted-foreground text-sm">
             No se encontraron registros de auditoría para los filtros seleccionados.
@@ -373,7 +404,7 @@ export function AuditLogsPage({ isSuperAdminView = false }: { isSuperAdminView?:
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
-                {filteredLogs.map(({ log, formattedDate, meta, entityLabel, summary }) => {
+                {paginatedLogs.map(({ log, formattedDate, meta, entityLabel, summary }) => {
                   const Icon = meta.icon;
                   return (
                     <tr key={log.id} className="hover:bg-muted/30 transition-colors">
@@ -417,6 +448,15 @@ export function AuditLogsPage({ isSuperAdminView = false }: { isSuperAdminView?:
           </div>
         )}
       </div>
+
+      <TablePagination
+        currentPage={safePage}
+        totalPages={totalPages}
+        totalItems={filteredLogs.length}
+        itemsPerPage={itemsPerPage}
+        entityLabel="eventos"
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 }
