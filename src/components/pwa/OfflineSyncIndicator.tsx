@@ -1,13 +1,13 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   WifiOff,
   RefreshCw,
-  CloudUpload,
   AlertCircle,
   CheckCircle2,
   Trash2,
   RotateCcw,
   Cloud,
+  CloudUpload,
 } from "lucide-react";
 import { useOfflineSync } from "@/hooks/useOfflineSync";
 import {
@@ -31,6 +31,195 @@ function formatShortTime(ts: number): string {
   }
 }
 
+type OverlayMode = "offline" | "online" | null;
+
+function ConnectionTransitionOverlay({
+  mode,
+  pendingCount,
+  isSyncing,
+  onClose,
+}: {
+  mode: OverlayMode;
+  pendingCount: number;
+  isSyncing: boolean;
+  onClose: () => void;
+}) {
+  if (!mode) return null;
+
+  const isOffline = mode === "offline";
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-live="assertive"
+      onClick={onClose}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/55 backdrop-blur-md animate-in fade-in duration-250"
+    >
+      <style>{`
+        @keyframes medizen-net-circle-draw {
+          0% { stroke-dashoffset: 264; transform: scale(0.88); opacity: 0; }
+          50% { opacity: 1; transform: scale(1.04); }
+          100% { stroke-dashoffset: 0; transform: scale(1); opacity: 1; }
+        }
+        @keyframes medizen-net-icon-draw {
+          0% { stroke-dashoffset: 100; opacity: 0.2; }
+          100% { stroke-dashoffset: 0; opacity: 1; }
+        }
+        @keyframes medizen-net-slash-draw {
+          0% { stroke-dashoffset: 90; opacity: 0; }
+          100% { stroke-dashoffset: 0; opacity: 1; }
+        }
+        .medizen-net-circle {
+          stroke-dasharray: 264;
+          stroke-dashoffset: 264;
+          transform-origin: center;
+          animation: medizen-net-circle-draw 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        .medizen-net-stroke {
+          stroke-dasharray: 100;
+          stroke-dashoffset: 100;
+          animation: medizen-net-icon-draw 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.28s forwards;
+        }
+        .medizen-net-slash {
+          stroke-dasharray: 90;
+          stroke-dashoffset: 90;
+          animation: medizen-net-slash-draw 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.48s forwards;
+        }
+      `}</style>
+
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className={`relative w-full max-w-sm rounded-3xl border bg-card/95 backdrop-blur-xl p-6 sm:p-8 text-center shadow-2xl animate-in fade-in zoom-in-95 duration-300 ${
+          isOffline ? "border-amber-500/30 shadow-amber-500/10" : "border-emerald-500/30 shadow-emerald-500/10"
+        }`}
+      >
+        <div className="relative flex items-center justify-center mb-5">
+          <div
+            className={`absolute h-28 w-28 rounded-full animate-ping [animation-duration:1.6s] ${
+              isOffline ? "bg-amber-500/15" : "bg-emerald-500/15"
+            }`}
+          />
+          <div
+            className={`absolute h-24 w-24 rounded-full ${
+              isOffline ? "bg-amber-500/10" : "bg-emerald-500/10"
+            }`}
+          />
+
+          {isOffline ? (
+            <svg className="h-24 w-24 text-amber-500 relative z-10" viewBox="0 0 96 96" fill="none">
+              <circle
+                cx="48"
+                cy="48"
+                r="42"
+                stroke="currentColor"
+                strokeWidth="5.5"
+                strokeLinecap="round"
+                className="medizen-net-circle"
+              />
+              {/* Arcos de Wi-Fi */}
+              <path
+                d="M28 43C33.5 37.8 40.4 35 48 35C55.6 35 62.5 37.8 68 43"
+                stroke="currentColor"
+                strokeWidth="4.8"
+                strokeLinecap="round"
+                className="medizen-net-stroke"
+              />
+              <path
+                d="M35.5 51.5C38.8 48.3 43.2 46.5 48 46.5C52.8 46.5 57.2 48.3 60.5 51.5"
+                stroke="currentColor"
+                strokeWidth="4.8"
+                strokeLinecap="round"
+                className="medizen-net-stroke"
+              />
+              <circle cx="48" cy="60.5" r="3.2" fill="currentColor" className="medizen-net-stroke" />
+              {/* Diagonal de desconexión */}
+              <path
+                d="M27 27L69 69"
+                stroke="currentColor"
+                strokeWidth="5.5"
+                strokeLinecap="round"
+                className="medizen-net-slash"
+              />
+            </svg>
+          ) : (
+            <svg className="h-24 w-24 text-emerald-500 relative z-10" viewBox="0 0 96 96" fill="none">
+              <circle
+                cx="48"
+                cy="48"
+                r="42"
+                stroke="currentColor"
+                strokeWidth="5.5"
+                strokeLinecap="round"
+                className="medizen-net-circle"
+              />
+              <path
+                d="M30 49.5L42.5 62L67 36.5"
+                stroke="currentColor"
+                strokeWidth="6.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="medizen-net-stroke"
+              />
+            </svg>
+          )}
+        </div>
+
+        <span
+          className={`inline-block text-[11px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full border ${
+            isOffline
+              ? "text-amber-600 dark:text-amber-400 bg-amber-500/15 border-amber-500/30"
+              : "text-emerald-600 dark:text-emerald-400 bg-emerald-500/15 border-emerald-500/30"
+          }`}
+        >
+          {isOffline
+            ? "Modo Local · PWA Offline"
+            : isSyncing || pendingCount > 0
+              ? "Conexión Restablecida · Sincronizando"
+              : "Conexión Restablecida"}
+        </span>
+
+        <h3 className="text-xl sm:text-2xl font-black text-foreground mt-3">
+          {isOffline ? "Sin Conexión a Internet" : "¡De Vuelta en Línea!"}
+        </h3>
+
+        <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 leading-relaxed">
+          {isOffline ? (
+            <>
+              Puedes seguir trabajando normalmente. Tus registros se guardan de forma segura en{" "}
+              <strong className="text-foreground">este dispositivo</strong> y se subirán solos al reconectar.
+            </>
+          ) : pendingCount > 0 || isSyncing ? (
+            <>
+              Tu conexión ha vuelto. Estamos subiendo{" "}
+              <strong className="text-foreground">
+                {pendingCount} cambio{pendingCount === 1 ? "" : "s"} local{pendingCount === 1 ? "" : "es"}
+              </strong>{" "}
+              automáticamente a la nube.
+            </>
+          ) : (
+            <>
+              Conexión activa con <strong className="text-foreground">Medizen Cloud</strong>. Todos tus datos están sincronizados.
+            </>
+          )}
+        </p>
+
+        <Button
+          type="button"
+          onClick={onClose}
+          className={`mt-6 w-full h-10 rounded-2xl text-white font-bold text-xs shadow-sm cursor-pointer ${
+            isOffline
+              ? "bg-amber-600 hover:bg-amber-700 shadow-amber-500/20"
+              : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20"
+          }`}
+        >
+          {isOffline ? "Entendido, Seguir Trabajando" : "Continuar"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function OfflineSyncIndicator() {
   const {
     isOnline,
@@ -44,105 +233,107 @@ export function OfflineSyncIndicator() {
     retryItem,
     discardItem,
   } = useOfflineSync();
-  const [open, setOpen] = useState(false);
 
-  // Cuando está en línea, sin cambios pendientes ni errores y no sincronizando: 0 ruido visual
-  if (isOnline && totalCount === 0 && !isSyncing) {
-    return null;
-  }
+  const [queueOpen, setQueueOpen] = useState(false);
+  const [overlayMode, setOverlayMode] = useState<OverlayMode>(null);
+  const prevOnlineRef = useRef<boolean | null>(null);
 
+  useEffect(() => {
+    if (prevOnlineRef.current === null) {
+      prevOnlineRef.current = isOnline;
+      // Si el usuario abre la app ya estando sin internet, mostrar la animación offline una vez
+      if (!isOnline) {
+        setOverlayMode("offline");
+      }
+      return;
+    }
+
+    if (prevOnlineRef.current !== isOnline) {
+      prevOnlineRef.current = isOnline;
+      setOverlayMode(isOnline ? "online" : "offline");
+    }
+  }, [isOnline]);
+
+  // Auto-cerrar la animación después de unos segundos para no interrumpir el flujo clínico
+  useEffect(() => {
+    if (!overlayMode) return;
+    const ms = overlayMode === "offline" ? 4200 : 3200;
+    const timer = setTimeout(() => {
+      setOverlayMode(null);
+    }, ms);
+    return () => clearTimeout(timer);
+  }, [overlayMode]);
+
+  const showFloatingChip = !isOnline || totalCount > 0 || isSyncing;
   const hasFailures = failedCount > 0;
-  const toneClass = !isOnline
-    ? "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300"
-    : hasFailures
-      ? "bg-destructive/10 border-destructive/30 text-destructive"
-      : "bg-primary/10 border-primary/30 text-primary";
 
   return (
     <>
-      <div
-        role="status"
-        aria-live="polite"
-        className={`rounded-2xl border px-3.5 py-2.5 text-xs sm:text-sm font-medium flex flex-wrap items-center justify-between gap-2.5 shadow-xs transition-colors ${toneClass}`}
-      >
-        <div className="flex items-center gap-2.5 min-w-0">
+      <ConnectionTransitionOverlay
+        mode={overlayMode}
+        pendingCount={pendingCount}
+        isSyncing={isSyncing}
+        onClose={() => setOverlayMode(null)}
+      />
+
+      {/* Chip flotante discreto (solo aparece sin conexión o con cambios pendientes/errores) */}
+      {showFloatingChip && (
+        <button
+          type="button"
+          onClick={() => setQueueOpen(true)}
+          aria-label="Abrir centro de sincronización local"
+          className={`fixed bottom-20 md:bottom-5 right-4 md:right-6 z-40 flex items-center gap-2 px-3.5 py-2 rounded-full border backdrop-blur-md shadow-lg text-xs font-bold transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer ${
+            !isOnline
+              ? "bg-card/90 border-amber-500/40 text-amber-600 dark:text-amber-400 shadow-amber-500/10"
+              : hasFailures
+                ? "bg-card/90 border-destructive/40 text-destructive shadow-destructive/10"
+                : "bg-card/90 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 shadow-emerald-500/10"
+          }`}
+        >
           {!isOnline ? (
-            <WifiOff className="h-4 w-4 shrink-0" aria-hidden="true" />
-          ) : isSyncing ? (
-            <RefreshCw className="h-4 w-4 shrink-0 animate-spin" aria-hidden="true" />
-          ) : hasFailures ? (
-            <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
-          ) : (
-            <CloudUpload className="h-4 w-4 shrink-0" aria-hidden="true" />
-          )}
-
-          <span className="truncate">
-            {!isOnline ? (
-              <>
-                <strong>Modo sin conexión</strong>
-                <span className="hidden sm:inline">
-                  {" "}
-                  — Los cambios se guardan localmente y se sincronizarán al volver el internet.
+            <>
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
+              </span>
+              <WifiOff className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>Modo Local</span>
+              {totalCount > 0 && (
+                <span className="px-1.5 py-0.5 rounded-full bg-amber-500/20 text-[10px] font-extrabold">
+                  {totalCount}
                 </span>
-                {totalCount > 0 && (
-                  <span className="ml-1.5 font-bold">
-                    ({totalCount} pendiente{totalCount === 1 ? "" : "s"})
-                  </span>
-                )}
-              </>
-            ) : isSyncing ? (
-              <>
-                <strong>Sincronizando datos locales</strong> ({pendingCount} pendiente
-                {pendingCount === 1 ? "" : "s"})…
-              </>
-            ) : hasFailures ? (
-              <>
-                <strong>
-                  {failedCount} cambio{failedCount === 1 ? "" : "s"} con error al sincronizar
-                </strong>
-                {pendingCount > 0 ? ` y ${pendingCount} pendiente${pendingCount === 1 ? "" : "s"}` : ""}
-              </>
-            ) : (
-              <>
-                <strong>
-                  {pendingCount} cambio{pendingCount === 1 ? "" : "s"} pendiente
-                  {pendingCount === 1 ? "" : "s"}
-                </strong>{" "}
-                por subir a la nube
-              </>
-            )}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
-          {isOnline && !isSyncing && totalCount > 0 && (
-            <button
-              type="button"
-              onClick={() => void syncNow(true)}
-              className="px-2.5 py-1 rounded-xl bg-background/80 hover:bg-background text-foreground border border-border/60 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-              Sincronizar ahora
-            </button>
+              )}
+            </>
+          ) : isSyncing ? (
+            <>
+              <RefreshCw className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+              <span>Sincronizando…</span>
+              {pendingCount > 0 && (
+                <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-[10px] font-extrabold">
+                  {pendingCount}
+                </span>
+              )}
+            </>
+          ) : hasFailures ? (
+            <>
+              <AlertCircle className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>{failedCount} error{failedCount === 1 ? "" : "es"} sync</span>
+            </>
+          ) : (
+            <>
+              <CloudUpload className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>{pendingCount} pendiente{pendingCount === 1 ? "" : "s"}</span>
+            </>
           )}
-          {totalCount > 0 && (
-            <button
-              type="button"
-              onClick={() => setOpen(true)}
-              className="px-2.5 py-1 rounded-xl bg-background/60 hover:bg-background/90 text-current border border-current/20 text-xs font-semibold transition-colors cursor-pointer"
-            >
-              Ver cola ({totalCount})
-            </button>
-          )}
-        </div>
-      </div>
+        </button>
+      )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={queueOpen} onOpenChange={setQueueOpen}>
         <DialogContent className="sm:max-w-lg rounded-3xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {isOnline ? (
-                <Cloud className="h-5 w-5 text-primary" />
+                <Cloud className="h-5 w-5 text-emerald-500" />
               ) : (
                 <WifiOff className="h-5 w-5 text-amber-500" />
               )}
@@ -186,7 +377,7 @@ export function OfflineSyncIndicator() {
                             isFailed
                               ? "bg-destructive/15 text-destructive"
                               : item.status === "syncing"
-                                ? "bg-primary/15 text-primary"
+                                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                                 : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
                           }`}
                         >
@@ -239,7 +430,12 @@ export function OfflineSyncIndicator() {
           </div>
 
           <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/60">
-            <Button type="button" variant="outline" className="rounded-xl" onClick={() => setOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-xl"
+              onClick={() => setQueueOpen(false)}
+            >
               Cerrar
             </Button>
             {isOnline && items.length > 0 && (
