@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { isDeviceOffline } from "@/lib/offline/networkState";
 
 export interface SpecialtyItem {
   id_especialidad: number;
@@ -108,8 +109,15 @@ export function useCreateService() {
       }
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["services"] });
+    onSuccess: (created) => {
+      if (created) {
+        queryClient.setQueriesData<Service[]>({ queryKey: ["services"] }, (old) =>
+          Array.isArray(old) ? [...old.filter((s) => s.id_servicio !== created.id_servicio), created as Service] : old,
+        );
+      }
+      if (!isDeviceOffline()) {
+        queryClient.invalidateQueries({ queryKey: ["services"] });
+      }
       toast.success("Servicio médico añadido con éxito");
     },
   });
@@ -133,8 +141,15 @@ export function useUpdateService() {
       }
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["services"] });
+    onSuccess: (updated, params) => {
+      queryClient.setQueriesData<Service[]>({ queryKey: ["services"] }, (old) =>
+        Array.isArray(old)
+          ? old.map((s) => (s.id_servicio === params.id ? { ...s, ...params.data, ...(updated || {}) } : s))
+          : old,
+      );
+      if (!isDeviceOffline()) {
+        queryClient.invalidateQueries({ queryKey: ["services"] });
+      }
       toast.success("Servicio médico actualizado con éxito");
     },
   });
@@ -151,8 +166,13 @@ export function useDeleteService() {
         throw error;
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["services"] });
+    onSuccess: (_data, deletedId) => {
+      queryClient.setQueriesData<Service[]>({ queryKey: ["services"] }, (old) =>
+        Array.isArray(old) ? old.filter((s) => s.id_servicio !== deletedId) : old,
+      );
+      if (!isDeviceOffline()) {
+        queryClient.invalidateQueries({ queryKey: ["services"] });
+      }
       toast.success("Servicio médico eliminado con éxito");
     },
   });

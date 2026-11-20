@@ -23,6 +23,7 @@ import { ThemeCustomizer } from "@/components/ThemeCustomizer";
 import { MedizenLogo } from "@/components/MedizenLogo";
 import { useInactivityLock } from "@/hooks/useInactivityLock";
 import { InactivityLockOverlay } from "@/components/InactivityLockOverlay";
+import { OfflineSyncIndicator } from "@/components/pwa/OfflineSyncIndicator";
 
 const ADMIN_ONLY_PATHS = ["/doctores", "/cuentas", "/metodos-pago", "/stocks"];
 const PRO_PLAN_PATHS = ["/cuentas", "/facturacion", "/honorarios", "/metodos-pago", "/stocks"];
@@ -409,6 +410,7 @@ function AuthenticatedLayout() {
         className={`px-3 sm:px-4 md:px-6 pt-3 sm:pt-4 md:pt-6 pb-6 h-full flex-1 min-w-0 max-w-full transition-[margin] duration-300 ${isCollapsed ? "md:ml-[80px]" : "md:ml-[260px]"}`}
       >
         <div className="max-w-7xl mx-auto w-full min-w-0 space-y-3">
+          <OfflineSyncIndicator />
           <GlobalAnnouncementBanner
             globalAnnouncement={globalAnnouncement}
             isSuperAdminPath={isSuperAdminPath}

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
+import { isDeviceOffline } from "@/lib/offline/networkState";
 
 export type StockItem = {
   id: string;
@@ -48,8 +49,15 @@ export function useCreateStock() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["inventory_stocks"] });
+    onSuccess: (created) => {
+      if (created) {
+        qc.setQueriesData<StockItem[]>({ queryKey: ["inventory_stocks"] }, (old) =>
+          Array.isArray(old) ? [...old.filter((s) => s.id !== created.id), created as StockItem] : old,
+        );
+      }
+      if (!isDeviceOffline()) {
+        qc.invalidateQueries({ queryKey: ["inventory_stocks"] });
+      }
     },
   });
 }
@@ -72,8 +80,14 @@ export function useUpdateStock() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["inventory_stocks"] });
+    onSuccess: (updated, vars) => {
+      const merged = (updated || vars) as StockItem;
+      qc.setQueriesData<StockItem[]>({ queryKey: ["inventory_stocks"] }, (old) =>
+        Array.isArray(old) ? old.map((s) => (s.id === vars.id ? { ...s, ...merged } : s)) : old,
+      );
+      if (!isDeviceOffline()) {
+        qc.invalidateQueries({ queryKey: ["inventory_stocks"] });
+      }
     },
   });
 }
@@ -88,8 +102,13 @@ export function useDeleteStock() {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["inventory_stocks"] });
+    onSuccess: (_data, deletedId) => {
+      qc.setQueriesData<StockItem[]>({ queryKey: ["inventory_stocks"] }, (old) =>
+        Array.isArray(old) ? old.filter((s) => s.id !== deletedId) : old,
+      );
+      if (!isDeviceOffline()) {
+        qc.invalidateQueries({ queryKey: ["inventory_stocks"] });
+      }
     },
   });
 }

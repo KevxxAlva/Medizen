@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuthSession } from "@/hooks/useAuth";
+import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 import { broadcastSaasSync } from "@/hooks/useRealtimeSync";
 
 export type SaasPlanId = "basico" | "pro" | "enterprise";
@@ -238,14 +238,20 @@ export function useUpdateClinicInfo() {
     mutationFn: async (info: Partial<Omit<ClinicInfo, "id" | "updated_at">>) => {
       if (!user?.id) throw new Error("Usuario no autenticado");
 
-      const { data: usuarioData } = await supabase
-        .from("usuarios")
-        .select("id_clinica, es_superadmin")
-        .eq("auth_id", user.id)
-        .maybeSingle();
+      const resolvedClinicId = await resolveCurrentUserClinicId(user.id);
+      let isSuperAdmin = false;
+      try {
+        const { data: usuarioData } = await supabase
+          .from("usuarios")
+          .select("es_superadmin")
+          .eq("auth_id", user.id)
+          .maybeSingle();
+        isSuperAdmin = Boolean(usuarioData?.es_superadmin);
+      } catch {
+        isSuperAdmin = false;
+      }
 
-      const clinicId = usuarioData?.id_clinica || "c0000000-0000-0000-0000-000000000001";
-      const isSuperAdmin = Boolean(usuarioData?.es_superadmin);
+      const clinicId = resolvedClinicId || "c0000000-0000-0000-0000-000000000001";
 
       if (clinicId) {
         const clinicaUpdate: Record<string, any> = {

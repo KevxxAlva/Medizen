@@ -5,6 +5,27 @@ import type { Session, User } from "@supabase/supabase-js";
 import { setSessionPersistence, supabase } from "@/integrations/supabase/client";
 import { clearScreenLock } from "@/lib/auth/quickAccess";
 import { clearPersistentQueryCache } from "@/lib/cache/persistentQueryCache";
+import { isDeviceOffline } from "@/lib/offline/networkState";
+
+const CLINIC_ID_CACHE_PREFIX = "medizen_cached_clinic_id_";
+
+function readCachedClinicId(uid: string): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage.getItem(`${CLINIC_ID_CACHE_PREFIX}${uid}`);
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedClinicId(uid: string, clinicId: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(`${CLINIC_ID_CACHE_PREFIX}${uid}`, clinicId);
+  } catch {
+    // ignore
+  }
+}
 
 export type AppRole = "admin" | "doctor" | "recepcionista" | "medico" | "superadmin";
 
@@ -22,17 +43,28 @@ export function useCurrentClinicId() {
     queryKey: ["current_clinic_id", user?.id],
     enabled: !!user?.id,
     staleTime: 1000 * 60 * 10,
+    placeholderData: user?.id ? (readCachedClinicId(user.id) ?? undefined) : undefined,
     queryFn: async (): Promise<string | null> => {
       if (!user?.id) return null;
-      const { data: userData } = await supabase
-        .from("usuarios")
-        .select("id_clinica")
-        .eq("auth_id", user.id)
-        .maybeSingle();
-      return userData?.id_clinica ?? PRIMARY_CLINIC_ID;
+      const cached = readCachedClinicId(user.id);
+      if (isDeviceOffline()) {
+        return cached ?? PRIMARY_CLINIC_ID;
+      }
+      try {
+        const { data: userData } = await supabase
+          .from("usuarios")
+          .select("id_clinica")
+          .eq("auth_id", user.id)
+          .maybeSingle();
+        const resolved = userData?.id_clinica ?? cached ?? PRIMARY_CLINIC_ID;
+        writeCachedClinicId(user.id, resolved);
+        return resolved;
+      } catch {
+        return cached ?? PRIMARY_CLINIC_ID;
+      }
     },
   });
-  return data ?? null;
+  return data ?? (user?.id ? readCachedClinicId(user.id) : null) ?? null;
 }
 
 export async function resolveCurrentUserClinicId(userId?: string): Promise<string | null> {
@@ -42,12 +74,25 @@ export async function resolveCurrentUserClinicId(userId?: string): Promise<strin
     uid = sessionData.session?.user?.id;
   }
   if (!uid) return null;
-  const { data } = await supabase
-    .from("usuarios")
-    .select("id_clinica")
-    .eq("auth_id", uid)
-    .maybeSingle();
-  return data?.id_clinica ?? PRIMARY_CLINIC_ID;
+  const cached = readCachedClinicId(uid);
+  if (isDeviceOffline()) {
+    return cached ?? PRIMARY_CLINIC_ID;
+  }
+  try {
+    const { data, error } = await supabase
+      .from("usuarios")
+      .select("id_clinica")
+      .eq("auth_id", uid)
+      .maybeSingle();
+    if (error) {
+      return cached ?? PRIMARY_CLINIC_ID;
+    }
+    const resolved = data?.id_clinica ?? cached ?? PRIMARY_CLINIC_ID;
+    writeCachedClinicId(uid, resolved);
+    return resolved;
+  } catch {
+    return cached ?? PRIMARY_CLINIC_ID;
+  }
 }
 
 export async function requireAdminAccess() {
@@ -60,6 +105,27 @@ export async function requireAdminAccess() {
     throw redirect({ to: "/auth" });
   }
 
+  const metaRole = (user.user_metadata?.role || "").toLowerCase();
+
+  if (isDeviceOffline()) {
+    try {
+      const raw = localStorage.getItem(`medizen_cached_roles_${user.id}`);
+      const cachedRoles: string[] = raw ? JSON.parse(raw) : [];
+      const isCachedAdmin =
+        cachedRoles.includes("admin") ||
+        cachedRoles.includes("superadmin") ||
+        metaRole.includes("admin") ||
+        metaRole.includes("super");
+      if (!isCachedAdmin) {
+        throw redirect({ to: "/dashboard" });
+      }
+      return { user };
+    } catch (e) {
+      if (e && typeof e === "object" && "to" in e) throw e;
+      return { user };
+    }
+  }
+
   const { data } = await supabase
     .from("usuarios")
     .select("id_rol, es_superadmin, roles(nombre_rol)")
@@ -69,7 +135,6 @@ export async function requireAdminAccess() {
   const roleObj = data?.roles;
   const rawRoleName = Array.isArray(roleObj) ? roleObj[0]?.nombre_rol : (roleObj as any)?.nombre_rol;
   const roleName = (rawRoleName || "").toLowerCase();
-  const metaRole = (user.user_metadata?.role || "").toLowerCase();
 
   const isAdmin =
     Boolean(data?.es_superadmin) ||
@@ -112,7 +177,7 @@ function ensureAuthSubscription() {
       if (typeof window !== "undefined") {
         try {
           Object.keys(localStorage).forEach((k) => {
-            if (k.startsWith("medizen_cached_roles")) {
+            if (k.startsWith("medizen_cached_roles") || k.startsWith(CLINIC_ID_CACHE_PREFIX)) {
               localStorage.removeItem(k);
             }
           });

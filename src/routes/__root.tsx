@@ -83,7 +83,7 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
 
-    if (isChunkError && typeof window !== "undefined") {
+    if (isChunkError && typeof window !== "undefined" && navigator.onLine) {
       try {
         const lastReload = Number(sessionStorage.getItem(CHUNK_RELOAD_KEY) || "0");
         if (Date.now() - lastReload > CHUNK_RELOAD_COOLDOWN_MS) {
@@ -214,6 +214,7 @@ function RootComponent() {
     if (typeof window !== "undefined") {
       const handleVitePreloadError = (event: Event) => {
         event.preventDefault();
+        if (!navigator.onLine) return;
         try {
           const lastReload = Number(sessionStorage.getItem(CHUNK_RELOAD_KEY) || "0");
           if (Date.now() - lastReload > CHUNK_RELOAD_COOLDOWN_MS) {

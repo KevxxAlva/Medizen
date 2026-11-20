@@ -1,7 +1,9 @@
-// Medizen PWA Service Worker
-const CACHE_NAME = "medizen-cache-v5";
+// Medizen PWA Service Worker — Offline-First Edition
+const CACHE_NAME = "medizen-cache-v6";
+const APP_SHELL_KEY = "/__medizen_app_shell__";
 const STATIC_ASSETS = [
   "/",
+  "/dashboard",
   "/manifest.json",
   "/manifest.webmanifest",
   "/favicon.svg",
@@ -46,6 +48,19 @@ self.addEventListener("activate", (event) => {
       })
       .then(() => self.clients.claim()),
   );
+});
+
+// Background Sync: cuando el dispositivo recupera internet, avisar a las pestañas activas
+self.addEventListener("sync", (event) => {
+  if (event.tag === "medizen-offline-sync") {
+    event.waitUntil(
+      self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+        for (const client of clients) {
+          client.postMessage({ type: "MEDIZEN_TRIGGER_SYNC" });
+        }
+      }),
+    );
+  }
 });
 
 self.addEventListener("fetch", (event) => {
@@ -98,7 +113,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // HTML navigations and app shell scripts: Network First with cache update & offline fallback
+  // HTML navigations and app shell scripts: Network First with cache update & offline shell fallback
   event.respondWith(
     fetch(event.request)
       .then((networkResponse) => {
@@ -108,21 +123,25 @@ self.addEventListener("fetch", (event) => {
           url.origin === self.location.origin
         ) {
           const cloneForRequest = networkResponse.clone();
-          const cloneForRoot = event.request.mode === "navigate" ? networkResponse.clone() : null;
+          const cloneForShell = event.request.mode === "navigate" ? networkResponse.clone() : null;
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, cloneForRequest);
-            if (cloneForRoot) {
-              cache.put("/", cloneForRoot);
+            if (cloneForShell) {
+              cache.put(APP_SHELL_KEY, cloneForShell);
             }
           });
         }
         return networkResponse;
       })
       .catch(() => {
-        return caches.match(event.request).then((cached) => {
+        return caches.match(event.request).then(async (cached) => {
           if (cached) return cached;
           if (event.request.mode === "navigate") {
-            return caches.match("/");
+            const shell =
+              (await caches.match(APP_SHELL_KEY)) ||
+              (await caches.match("/dashboard")) ||
+              (await caches.match("/"));
+            if (shell) return shell;
           }
           return new Response("Sin conexión a Internet", {
             status: 503,

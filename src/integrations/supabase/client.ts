@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
+import { createOfflineAwareFetch } from '@/lib/offline/offlineFetch';
+import { registerSyncRuntime } from '@/lib/offline/syncEngine';
 
 function getEnvVar(name: string, viteAliases: string[]): string {
   // Client-side: Vite replaces import.meta.env.VITE_* at build time
@@ -122,14 +124,28 @@ function createSupabaseClient() {
     'VITE_SUPABASE_ANON_KEY',
   ]);
 
-  return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  const client = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     auth: {
       storage: typeof window !== 'undefined' ? authStorage : undefined,
       persistSession: true,
       autoRefreshToken: true,
       lock: acquireInProcessLock,
-    }
+    },
+    global: {
+      fetch: createOfflineAwareFetch(),
+    },
   });
+
+  if (typeof window !== 'undefined') {
+    registerSyncRuntime({
+      getAccessToken: async () => {
+        const { data } = await client.auth.getSession();
+        return data.session?.access_token ?? null;
+      },
+    });
+  }
+
+  return client;
 }
 
 let _supabase: ReturnType<typeof createSupabaseClient> | undefined;

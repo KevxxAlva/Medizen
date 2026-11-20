@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { logAuditAction } from "@/lib/api/audit";
 import { getSaasPlanConfig } from "@/lib/api/clinic";
 import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
+import { isDeviceOffline } from "@/lib/offline/networkState";
 
 export type PatientStatus = "activo" | "en_tratamiento" | "alta" | "nuevo";
 
@@ -437,30 +438,25 @@ export function useCreatePatient() {
 
       let idClinica: string | undefined;
       if (user?.id) {
-        const { data: userData } = await withTimeout<any>(
-          (supabase.from("usuarios") as any)
-            .select("id_clinica")
-            .eq("auth_id", user.id)
-            .maybeSingle(),
-          10000,
-          "La verificación de clínica"
-        );
-        if (userData?.id_clinica) {
-          idClinica = userData.id_clinica;
-          const [{ data: clinicaRow }, { count: currentPatientCount }] = await Promise.all([
-            (supabase.from("clinicas") as any)
-              .select("plan_suscripcion")
-              .eq("id_clinica", idClinica)
-              .maybeSingle(),
-            (supabase.from("pacientes") as any)
-              .select("id_paciente", { count: "exact", head: true })
-              .eq("id_clinica", idClinica),
-          ]);
-          const planCfg = getSaasPlanConfig(clinicaRow?.plan_suscripcion);
-          if (planCfg.maxPatients !== null && (currentPatientCount ?? 0) >= planCfg.maxPatients) {
-            throw new Error(
-              `El Plan ${planCfg.name} ($${planCfg.priceMonthlyUsd}/mes) permite hasta ${planCfg.maxPatients} pacientes. Actualiza tu suscripción a Plan Pro o Enterprise para pacientes ilimitados.`,
-            );
+        const resolvedClinic = await resolveCurrentUserClinicId(user.id);
+        if (resolvedClinic) {
+          idClinica = resolvedClinic;
+          if (!isDeviceOffline()) {
+            const [{ data: clinicaRow }, { count: currentPatientCount }] = await Promise.all([
+              (supabase.from("clinicas") as any)
+                .select("plan_suscripcion")
+                .eq("id_clinica", idClinica)
+                .maybeSingle(),
+              (supabase.from("pacientes") as any)
+                .select("id_paciente", { count: "exact", head: true })
+                .eq("id_clinica", idClinica),
+            ]);
+            const planCfg = getSaasPlanConfig(clinicaRow?.plan_suscripcion);
+            if (planCfg.maxPatients !== null && (currentPatientCount ?? 0) >= planCfg.maxPatients) {
+              throw new Error(
+                `El Plan ${planCfg.name} ($${planCfg.priceMonthlyUsd}/mes) permite hasta ${planCfg.maxPatients} pacientes. Actualiza tu suscripción a Plan Pro o Enterprise para pacientes ilimitados.`,
+              );
+            }
           }
         }
       }
@@ -543,12 +539,31 @@ export function useCreatePatient() {
 
       return mapPatient({ ...patientData, historias_clinicas: hcData });
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["patients"] });
-      qc.invalidateQueries({ queryKey: ["patients_count"] });
-      qc.invalidateQueries({ queryKey: ["patients_paginated"] });
-      qc.invalidateQueries({ queryKey: ["patients_recent"] });
-      qc.invalidateQueries({ queryKey: ["audit_logs"] });
+    onSuccess: (createdPatient) => {
+      if (createdPatient) {
+        qc.setQueriesData<Patient[]>({ queryKey: ["patients"] }, (old) =>
+          Array.isArray(old) ? [createdPatient, ...old.filter((p) => p.id !== createdPatient.id)] : old,
+        );
+        qc.setQueriesData<Patient[]>({ queryKey: ["patients_recent"] }, (old) =>
+          Array.isArray(old) ? [createdPatient, ...old.filter((p) => p.id !== createdPatient.id)] : old,
+        );
+        qc.setQueriesData<any>({ queryKey: ["patients_paginated"] }, (old: any) => {
+          if (!old || !Array.isArray(old.data)) return old;
+          return {
+            ...old,
+            data: [createdPatient, ...old.data.filter((p: Patient) => p.id !== createdPatient.id)],
+            totalCount: typeof old.totalCount === "number" ? old.totalCount + 1 : old.totalCount,
+          };
+        });
+        qc.setQueryData(["patient", createdPatient.id], createdPatient);
+      }
+      if (!isDeviceOffline()) {
+        qc.invalidateQueries({ queryKey: ["patients"] });
+        qc.invalidateQueries({ queryKey: ["patients_count"] });
+        qc.invalidateQueries({ queryKey: ["patients_paginated"] });
+        qc.invalidateQueries({ queryKey: ["patients_recent"] });
+        qc.invalidateQueries({ queryKey: ["audit_logs"] });
+      }
     },
   });
 }
@@ -612,7 +627,11 @@ export function useUpdatePatient() {
       if (consultation_reason !== undefined) extrasToMerge.consultation_reason = consultation_reason;
       if (current_illness !== undefined) extrasToMerge.current_illness = current_illness;
 
-      const { data: currentHc } = await supabase.from("historias_clinicas").select("*").eq("id_paciente", parseInt(id)).maybeSingle();
+      let currentHc: any = null;
+      if (!isDeviceOffline()) {
+        const { data } = await supabase.from("historias_clinicas").select("*").eq("id_paciente", parseInt(id)).maybeSingle();
+        currentHc = data;
+      }
       const currentExtras = typeof currentHc?.datos_extras === 'object' && currentHc?.datos_extras !== null ? currentHc.datos_extras : {};
       const newExtras = { ...currentExtras, ...extrasToMerge };
 
@@ -634,12 +653,29 @@ export function useUpdatePatient() {
 
       return mapPatient({ ...patientData, historias_clinicas: hcData || currentHc });
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["patients"] });
-      qc.invalidateQueries({ queryKey: ["patient"] });
-      qc.invalidateQueries({ queryKey: ["patients_count"] });
-      qc.invalidateQueries({ queryKey: ["patients_paginated"] });
-      qc.invalidateQueries({ queryKey: ["patients_recent"] });
+    onSuccess: (updatedPatient) => {
+      if (updatedPatient) {
+        const mergePatient = (p: Patient) => (p.id === updatedPatient.id ? { ...p, ...updatedPatient } : p);
+        qc.setQueriesData<Patient[]>({ queryKey: ["patients"] }, (old) =>
+          Array.isArray(old) ? old.map(mergePatient) : old,
+        );
+        qc.setQueriesData<Patient[]>({ queryKey: ["patients_recent"] }, (old) =>
+          Array.isArray(old) ? old.map(mergePatient) : old,
+        );
+        qc.setQueriesData<any>({ queryKey: ["patients_paginated"] }, (old: any) =>
+          old && Array.isArray(old.data) ? { ...old, data: old.data.map(mergePatient) } : old,
+        );
+        qc.setQueryData<Patient>(["patient", updatedPatient.id], (old) =>
+          old ? { ...old, ...updatedPatient } : updatedPatient,
+        );
+      }
+      if (!isDeviceOffline()) {
+        qc.invalidateQueries({ queryKey: ["patients"] });
+        qc.invalidateQueries({ queryKey: ["patient"] });
+        qc.invalidateQueries({ queryKey: ["patients_count"] });
+        qc.invalidateQueries({ queryKey: ["patients_paginated"] });
+        qc.invalidateQueries({ queryKey: ["patients_recent"] });
+      }
     },
   });
 }
@@ -654,12 +690,25 @@ export function useDeletePatient() {
       // Log audit action silently
       await logAuditAction("DELETE", "PATIENT", id, { message: "Paciente eliminado" });
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["patients"] });
-      qc.invalidateQueries({ queryKey: ["patients_count"] });
-      qc.invalidateQueries({ queryKey: ["patients_paginated"] });
-      qc.invalidateQueries({ queryKey: ["patients_recent"] });
-      qc.invalidateQueries({ queryKey: ["appointments"] });
+    onSuccess: (_data, deletedId) => {
+      qc.setQueriesData<Patient[]>({ queryKey: ["patients"] }, (old) =>
+        Array.isArray(old) ? old.filter((p) => p.id !== deletedId) : old,
+      );
+      qc.setQueriesData<Patient[]>({ queryKey: ["patients_recent"] }, (old) =>
+        Array.isArray(old) ? old.filter((p) => p.id !== deletedId) : old,
+      );
+      qc.setQueriesData<any>({ queryKey: ["patients_paginated"] }, (old: any) =>
+        old && Array.isArray(old.data)
+          ? { ...old, data: old.data.filter((p: Patient) => p.id !== deletedId) }
+          : old,
+      );
+      if (!isDeviceOffline()) {
+        qc.invalidateQueries({ queryKey: ["patients"] });
+        qc.invalidateQueries({ queryKey: ["patients_count"] });
+        qc.invalidateQueries({ queryKey: ["patients_paginated"] });
+        qc.invalidateQueries({ queryKey: ["patients_recent"] });
+        qc.invalidateQueries({ queryKey: ["appointments"] });
+      }
     },
   });
 }

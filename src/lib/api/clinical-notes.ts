@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { isDeviceOffline } from "@/lib/offline/networkState";
 
 export interface ClinicalAttachment {
   path: string;
@@ -100,7 +101,8 @@ export function useCreateClinicalNote() {
   return useMutation({
     mutationFn: async (input: ClinicalNoteInput) => {
       const pid = parseInt(input.patient_id, 10);
-      const { data: u } = await supabase.auth.getUser();
+      const { data: sessionRes } = await supabase.auth.getSession();
+      const authorId = sessionRes.session?.user?.id || null;
       const now = new Date().toISOString();
 
       const newNote: ClinicalNote = {
@@ -109,7 +111,7 @@ export function useCreateClinicalNote() {
             ? crypto.randomUUID()
             : `note-${Date.now()}`,
         patient_id: input.patient_id,
-        author_id: u.user?.id || null,
+        author_id: authorId,
         title: input.title,
         content: input.content || "",
         note_date: input.note_date || now,
@@ -132,11 +134,15 @@ export function useCreateClinicalNote() {
         );
       }
 
-      const { data: currentHc } = await supabase
-        .from("historias_clinicas")
-        .select("*")
-        .eq("id_paciente", pid)
-        .maybeSingle();
+      let currentHc: any = null;
+      if (!isDeviceOffline()) {
+        const { data } = await supabase
+          .from("historias_clinicas")
+          .select("*")
+          .eq("id_paciente", pid)
+          .maybeSingle();
+        currentHc = data;
+      }
 
       const currentExtras =
         typeof currentHc?.datos_extras === "object" &&
@@ -144,9 +150,10 @@ export function useCreateClinicalNote() {
           ? (currentHc.datos_extras as Record<string, any>)
           : {};
 
+      const cachedNotes = qc.getQueryData<ClinicalNote[]>(["clinical_notes", input.patient_id]) ?? [];
       const existingNotes = Array.isArray(currentExtras.clinical_notes)
         ? currentExtras.clinical_notes
-        : [];
+        : cachedNotes;
 
       const updatedExtras = {
         ...currentExtras,
@@ -165,9 +172,16 @@ export function useCreateClinicalNote() {
       if (error) throw error;
       return newNote;
     },
-    onSuccess: (_d, v) => {
-      qc.invalidateQueries({ queryKey: ["clinical_notes", v.patient_id] });
-      qc.invalidateQueries({ queryKey: ["patient", v.patient_id] });
+    onSuccess: (createdNote, v) => {
+      if (createdNote) {
+        qc.setQueryData<ClinicalNote[]>(["clinical_notes", v.patient_id], (old) =>
+          Array.isArray(old) ? [createdNote, ...old.filter((n) => n.id !== createdNote.id)] : [createdNote],
+        );
+      }
+      if (!isDeviceOffline()) {
+        qc.invalidateQueries({ queryKey: ["clinical_notes", v.patient_id] });
+        qc.invalidateQueries({ queryKey: ["patient", v.patient_id] });
+      }
     },
   });
 }
@@ -234,8 +248,13 @@ export function useDeleteClinicalNote() {
       if (error) throw error;
     },
     onSuccess: (_d, v) => {
-      qc.invalidateQueries({ queryKey: ["clinical_notes", v.patient_id] });
-      qc.invalidateQueries({ queryKey: ["patient", v.patient_id] });
+      qc.setQueryData<ClinicalNote[]>(["clinical_notes", v.patient_id], (old) =>
+        Array.isArray(old) ? old.filter((n) => n.id !== v.id) : old,
+      );
+      if (!isDeviceOffline()) {
+        qc.invalidateQueries({ queryKey: ["clinical_notes", v.patient_id] });
+        qc.invalidateQueries({ queryKey: ["patient", v.patient_id] });
+      }
     },
   });
 }

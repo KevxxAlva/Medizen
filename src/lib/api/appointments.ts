@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { logAuditAction } from "@/lib/api/audit";
+import { isDeviceOffline } from "@/lib/offline/networkState";
 
 const APPOINTMENT_PRICE_STORAGE_KEY = "medizen_cita_prices";
 
@@ -293,6 +294,7 @@ async function assertNoDoctorTimeConflict({
   clinicId?: string | null;
 }) {
   if (!doctorId || !scheduledAt) return;
+  if (isDeviceOffline()) return;
   const safeIso = scheduledAt.replace(" ", "T");
   const datePart = safeIso.slice(0, 10);
   const newStart = new Date(safeIso).getTime();
@@ -455,11 +457,37 @@ export function useCreateAppointment() {
 
       return citaData;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["appointments"] });
-      qc.invalidateQueries({ queryKey: ["facturas"] });
-      qc.invalidateQueries({ queryKey: ["dashboard_top_treatments"] });
-      qc.invalidateQueries({ queryKey: ["audit_logs"] });
+    onSuccess: (createdCita, input) => {
+      if (createdCita?.id_cita) {
+        const cachedPatients = qc.getQueriesData<any[]>({ queryKey: ["patients"] }).flatMap(([, d]) => (Array.isArray(d) ? d : []));
+        const matchedPatient = cachedPatients.find((p) => String(p.id) === String(input.patient_id));
+        const optimisticAppt: AppointmentWithPatient = {
+          id: String(createdCita.id_cita),
+          patient_id: String(input.patient_id),
+          doctor_id: String(input.doctor_id),
+          scheduled_at: input.scheduled_at,
+          duration_minutes: input.duration_minutes || 30,
+          status: (input.status || "programada").toLowerCase(),
+          reason: input.reason ?? null,
+          notes: input.notes ?? null,
+          price: input.price ?? null,
+          payment_method: input.payment_method ?? null,
+          payment_reference: input.payment_reference ?? null,
+          created_at: input.scheduled_at,
+          updated_at: input.scheduled_at,
+          patient_name: matchedPatient?.full_name || "Paciente",
+          has_consultation: false,
+        };
+        qc.setQueriesData<AppointmentWithPatient[]>({ queryKey: ["appointments"] }, (old) =>
+          Array.isArray(old) ? [optimisticAppt, ...old.filter((a) => a.id !== optimisticAppt.id)] : old,
+        );
+      }
+      if (!isDeviceOffline()) {
+        qc.invalidateQueries({ queryKey: ["appointments"] });
+        qc.invalidateQueries({ queryKey: ["facturas"] });
+        qc.invalidateQueries({ queryKey: ["dashboard_top_treatments"] });
+        qc.invalidateQueries({ queryKey: ["audit_logs"] });
+      }
     },
   });
 }
@@ -683,13 +711,32 @@ export function useUpdateAppointment() {
 
       return { id };
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["appointments"], refetchType: "all" });
-      qc.invalidateQueries({ queryKey: ["facturas"], refetchType: "all" });
-      qc.invalidateQueries({ queryKey: ["financial_accounts"], refetchType: "all" });
-      qc.invalidateQueries({ queryKey: ["dashboard_stats"], refetchType: "all" });
-      qc.invalidateQueries({ queryKey: ["monthly_payments"], refetchType: "all" });
-      qc.invalidateQueries({ queryKey: ["audit_logs"], refetchType: "all" });
+    onSuccess: (_res, vars) => {
+      qc.setQueriesData<AppointmentWithPatient[]>({ queryKey: ["appointments"] }, (old) =>
+        Array.isArray(old)
+          ? old.map((a) =>
+              a.id === vars.id
+                ? {
+                    ...a,
+                    ...(vars.scheduled_at !== undefined ? { scheduled_at: vars.scheduled_at } : {}),
+                    ...(vars.status !== undefined ? { status: vars.status.toLowerCase() } : {}),
+                    ...(vars.reason !== undefined ? { reason: vars.reason } : {}),
+                    ...(vars.doctor_id !== undefined ? { doctor_id: vars.doctor_id } : {}),
+                    ...(vars.price !== undefined ? { price: vars.price } : {}),
+                    ...(vars.payment_method !== undefined ? { payment_method: vars.payment_method } : {}),
+                  }
+                : a,
+            )
+          : old,
+      );
+      if (!isDeviceOffline()) {
+        qc.invalidateQueries({ queryKey: ["appointments"], refetchType: "all" });
+        qc.invalidateQueries({ queryKey: ["facturas"], refetchType: "all" });
+        qc.invalidateQueries({ queryKey: ["financial_accounts"], refetchType: "all" });
+        qc.invalidateQueries({ queryKey: ["dashboard_stats"], refetchType: "all" });
+        qc.invalidateQueries({ queryKey: ["monthly_payments"], refetchType: "all" });
+        qc.invalidateQueries({ queryKey: ["audit_logs"], refetchType: "all" });
+      }
     },
   });
 }
@@ -707,6 +754,13 @@ export function useDeleteAppointment() {
       // Log audit action silently
       await logAuditAction("DELETE", "APPOINTMENT", id, { message: "Cita eliminada" });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["appointments"] }),
+    onSuccess: (_data, deletedId) => {
+      qc.setQueriesData<AppointmentWithPatient[]>({ queryKey: ["appointments"] }, (old) =>
+        Array.isArray(old) ? old.filter((a) => a.id !== deletedId) : old,
+      );
+      if (!isDeviceOffline()) {
+        qc.invalidateQueries({ queryKey: ["appointments"] });
+      }
+    },
   });
 }
