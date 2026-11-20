@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,18 +34,37 @@ import { useAppointmentFormState } from "./appointment/useAppointmentFormState";
 
 const STATUSES = ["programada", "completada", "cancelada"] as const;
 
-const QUICK_TIME_SLOTS = [
-  { value: "08:00", label: "8:00 AM" },
-  { value: "08:30", label: "8:30 AM" },
-  { value: "09:00", label: "9:00 AM" },
-  { value: "09:30", label: "9:30 AM" },
-  { value: "10:00", label: "10:00 AM" },
-  { value: "11:00", label: "11:00 AM" },
-  { value: "14:00", label: "2:00 PM" },
-  { value: "15:00", label: "3:00 PM" },
-  { value: "16:00", label: "4:00 PM" },
-  { value: "17:00", label: "5:00 PM" },
+type TimeShiftKey = "madrugada" | "manana" | "tarde" | "noche";
+
+const TIME_SHIFTS: Array<{ key: TimeShiftKey; label: string; startHour: number; endHour: number }> = [
+  { key: "madrugada", label: "Madrugada", startHour: 0, endHour: 5 },
+  { key: "manana", label: "Mañana", startHour: 6, endHour: 11 },
+  { key: "tarde", label: "Tarde", startHour: 12, endHour: 17 },
+  { key: "noche", label: "Noche", startHour: 18, endHour: 23 },
 ];
+
+function buildShiftSlots(startHour: number, endHour: number) {
+  const slots: Array<{ value: string; label: string }> = [];
+  for (let h = startHour; h <= endHour; h++) {
+    for (const m of [0, 30]) {
+      const value = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+      const suffix = h >= 12 ? "PM" : "AM";
+      const h12 = h % 12 === 0 ? 12 : h % 12;
+      const label = `${h12}:${String(m).padStart(2, "0")} ${suffix}`;
+      slots.push({ value, label });
+    }
+  }
+  return slots;
+}
+
+function getShiftForTime(hhmm: string): TimeShiftKey {
+  const h = Number((hhmm || "09:00").split(":")[0]);
+  if (Number.isNaN(h)) return "manana";
+  if (h < 6) return "madrugada";
+  if (h < 12) return "manana";
+  if (h < 18) return "tarde";
+  return "noche";
+}
 
 const QUICK_DURATIONS = ["15", "30", "45", "60"];
 
@@ -152,6 +171,12 @@ export function AppointmentForm({
     doctors,
     onOpenChange,
   });
+
+  const [activeShift, setActiveShift] = useState<TimeShiftKey>(() => getShiftForTime(time));
+
+  useEffect(() => {
+    setActiveShift(getShiftForTime(time));
+  }, [time]);
 
   useEffect(() => {
     if (!open) return;
@@ -565,8 +590,33 @@ export function AppointmentForm({
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-5 gap-1.5">
-                    {QUICK_TIME_SLOTS.map((slot) => {
+                  {/* Pestañas de turno 24/7 */}
+                  <div className="grid grid-cols-4 gap-1 bg-muted/60 p-1 rounded-xl border border-border/40">
+                    {TIME_SHIFTS.map((sh) => {
+                      const isCurrent = activeShift === sh.key;
+                      return (
+                        <button
+                          key={sh.key}
+                          type="button"
+                          onClick={() => setActiveShift(sh.key)}
+                          className={cn(
+                            "py-1 px-1.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer truncate",
+                            isCurrent
+                              ? "bg-card text-foreground shadow-2xs border border-border/50"
+                              : "text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          {sh.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {buildShiftSlots(
+                      TIME_SHIFTS.find((s) => s.key === activeShift)?.startHour ?? 6,
+                      TIME_SHIFTS.find((s) => s.key === activeShift)?.endHour ?? 11
+                    ).map((slot) => {
                       const active = time === slot.value;
                       const occupied = isSlotOccupied(slot.value);
                       return (

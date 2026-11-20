@@ -406,28 +406,36 @@ export function AgendaWeekDayGrid({
           calendarView !== "Diaria" ? "min-w-[640px] sm:min-w-full" : "min-w-full",
         )}
       >
-        {/* Y-Axis Hours */}
+        {/* Y-Axis Hours (24h: 12 AM - 11 PM) */}
         <div className="w-16 shrink-0 border-r border-border bg-card relative z-10">
-          {HOURS.map((h, i) => (
-            <div
-              key={h}
-              className={cn(
-                "border-b border-transparent relative flex items-start justify-center pt-2",
-                compactMode ? "h-12" : "h-24",
-              )}
-            >
-              {i > 0 && (
+          {HOURS.map((h, i) => {
+            const label =
+              h === 0
+                ? "12 AM"
+                : h < 12
+                  ? `${h} AM`
+                  : h === 12
+                    ? "12 PM"
+                    : `${h - 12} PM`;
+            return (
+              <div
+                key={h}
+                className={cn(
+                  "border-b border-transparent relative flex items-start justify-center pt-2",
+                  compactMode ? "h-12" : "h-24",
+                )}
+              >
                 <span
                   className={cn(
                     "text-[10px] font-bold text-muted-foreground bg-card px-1",
-                    compactMode ? "-mt-3" : "-mt-4",
+                    i === 0 ? "mt-0" : compactMode ? "-mt-3" : "-mt-4",
                   )}
                 >
-                  {h < 12 ? h : h === 12 ? 12 : h - 12} {h < 12 ? "AM" : "PM"}
+                  {label}
                 </span>
-              )}
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
 
         {/* Main Grid */}

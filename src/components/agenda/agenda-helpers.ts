@@ -71,5 +71,5 @@ export const MONTHS_ES = [
   "Diciembre",
 ];
 
-export const WEEKDAYS_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-export const HOURS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+export const WEEKDAYS_SHORT = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+export const HOURS = Array.from({ length: 24 }, (_, i) => i);

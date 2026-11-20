@@ -60,7 +60,6 @@ export function useAgendaGridEvents(
         const mins = date.getMinutes();
 
         const startFloat = hour + mins / 60;
-        const startFrom8 = startFloat - 8;
         const durationHours = Math.max(0.5, (app.duration_minutes || 60) / 60);
 
         const isCompletada = app.status?.toLowerCase() === "completada";
@@ -80,7 +79,7 @@ export function useAgendaGridEvents(
           ...app,
           dateStr,
           dayIndex: date.getDay() === 0 ? 6 : date.getDay() - 1,
-          topHours: Math.max(0, startFrom8),
+          topHours: Math.max(0, startFloat),
           durationHours,
           theme,
           overlapIndex: 0,

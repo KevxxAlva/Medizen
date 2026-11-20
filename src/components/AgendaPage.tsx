@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   useAppointments,
   useDeleteAppointment,
@@ -39,6 +39,14 @@ export function AgendaPage() {
   const [calendarView, setCalendarView] = useState("Semanal");
   const [statusFilter, setStatusFilter] = useState("todas");
   const [showAllSidebarApps, setShowAllSidebarApps] = useState(false);
+  const timetableScrollRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (calendarView === "Mensual" || !timetableScrollRef.current) return;
+    const pxPerHour = compactMode ? 48 : 96;
+    // Scroll to 7:00 AM by default so daytime clinics see their day immediately, while 00:00–23:59 are all reachable
+    timetableScrollRef.current.scrollTop = 7 * pxPerHour;
+  }, [calendarView, compactMode]);
 
   const weekDays = useMemo(() => getWeekDays(currentDate), [currentDate]);
   const monthDays = useMemo(() => getCalendarMonthDays(currentDate), [currentDate]);
@@ -193,7 +201,10 @@ export function AgendaPage() {
             />
 
             {/* Timetable Body Container */}
-            <div className="flex-1 overflow-y-auto overflow-x-auto relative bg-card">
+            <div
+              ref={timetableScrollRef}
+              className="flex-1 max-h-[72vh] overflow-y-auto overflow-x-auto relative bg-card"
+            >
               {calendarView === "Mensual" ? (
                 <AgendaMonthView
                   currentDate={currentDate}
