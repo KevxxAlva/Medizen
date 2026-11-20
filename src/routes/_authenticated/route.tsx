@@ -24,6 +24,7 @@ import { MedizenLogo } from "@/components/MedizenLogo";
 import { useInactivityLock } from "@/hooks/useInactivityLock";
 import { InactivityLockOverlay } from "@/components/InactivityLockOverlay";
 import { OfflineSyncIndicator } from "@/components/pwa/OfflineSyncIndicator";
+import { getEffectiveSession } from "@/lib/offline/offlineAuth";
 
 const ADMIN_ONLY_PATHS = ["/doctores", "/cuentas", "/metodos-pago", "/stocks"];
 const PRO_PLAN_PATHS = ["/cuentas", "/facturacion", "/honorarios", "/metodos-pago", "/stocks"];
@@ -75,8 +76,8 @@ export const Route = createFileRoute("/_authenticated")({
     }
     let sessionUser = null;
     try {
-      const { data } = await supabase.auth.getSession();
-      sessionUser = data.session?.user ?? null;
+      const session = await getEffectiveSession();
+      sessionUser = session?.user ?? null;
     } catch {
       // If reading session fails, sessionUser remains null
     }
@@ -319,10 +320,10 @@ function AuthenticatedLayout() {
   useEffect(() => {
     if (!authLoading && !user) {
       let cancelled = false;
-      supabase.auth.getSession().then(({ data }) => {
+      getEffectiveSession().then((session) => {
         if (cancelled) return;
-        if (data.session) {
-          setAuthSessionManually(data.session);
+        if (session) {
+          setAuthSessionManually(session);
         } else {
           router.navigate({ to: "/auth", replace: true });
         }

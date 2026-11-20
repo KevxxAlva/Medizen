@@ -6,6 +6,11 @@ import { setSessionPersistence, supabase } from "@/integrations/supabase/client"
 import { clearScreenLock } from "@/lib/auth/quickAccess";
 import { clearPersistentQueryCache } from "@/lib/cache/persistentQueryCache";
 import { isDeviceOffline } from "@/lib/offline/networkState";
+import {
+  clearActiveOfflineSession,
+  getEffectiveSession,
+  getActiveOfflineSession,
+} from "@/lib/offline/offlineAuth";
 
 const CLINIC_ID_CACHE_PREFIX = "medizen_cached_clinic_id_";
 
@@ -160,10 +165,10 @@ function ensureAuthSubscription() {
   if (authInitialized || typeof window === "undefined") return;
   authInitialized = true;
 
-  supabase.auth.getSession().then(({ data }) => {
+  getEffectiveSession().then((session) => {
     sharedAuthState = {
-      session: data.session,
-      user: data.session?.user ?? null,
+      session,
+      user: session?.user ?? null,
       loading: false,
     };
     authListeners.forEach((fn) => fn(sharedAuthState));
@@ -171,9 +176,12 @@ function ensureAuthSubscription() {
 
   supabase.auth.onAuthStateChange((event, session) => {
     if (event === "SIGNED_OUT") {
+      clearActiveOfflineSession();
       setSessionPersistence(true);
       clearScreenLock();
-      clearPersistentQueryCache();
+      if (!isDeviceOffline()) {
+        clearPersistentQueryCache();
+      }
       if (typeof window !== "undefined") {
         try {
           Object.keys(localStorage).forEach((k) => {
@@ -184,9 +192,10 @@ function ensureAuthSubscription() {
         } catch {}
       }
     }
+    const effective = session ?? (event === "SIGNED_OUT" ? null : getActiveOfflineSession());
     sharedAuthState = {
-      session,
-      user: session?.user ?? null,
+      session: effective,
+      user: effective?.user ?? null,
       loading: false,
     };
     authListeners.forEach((fn) => fn(sharedAuthState));
@@ -217,23 +226,23 @@ export function useAuthSession(): AuthState {
   return state;
 }
 
+function readCachedRolesSync(userId?: string): AppRole[] | undefined {
+  if (typeof window === "undefined" || !userId) return undefined;
+  try {
+    const raw = localStorage.getItem(`medizen_cached_roles_${userId}`);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed as AppRole[];
+    }
+  } catch {
+    // ignore
+  }
+  return undefined;
+}
+
 export function useRoles() {
   const { user } = useAuthSession();
-  const [cachedRoles, setCachedRoles] = useState<AppRole[] | undefined>(undefined);
-
-  useEffect(() => {
-    if (typeof window !== "undefined" && user?.id) {
-      try {
-        const raw = localStorage.getItem(`medizen_cached_roles_${user.id}`);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed)) setCachedRoles(parsed as AppRole[]);
-        }
-      } catch {
-        // ignore storage errors
-      }
-    }
-  }, [user?.id]);
+  const cachedRoles = readCachedRolesSync(user?.id);
 
   return useQuery({
     queryKey: ["user_roles", user?.id],
@@ -247,6 +256,11 @@ export function useRoles() {
         defaultRoles = [metaRole as AppRole];
       }
 
+      if (isDeviceOffline()) {
+        if (cachedRoles && cachedRoles.length > 0) return cachedRoles;
+        return defaultRoles;
+      }
+
       const { data, error } = await supabase
         .from("usuarios")
         .select("id_rol, es_superadmin, roles(nombre_rol)")
@@ -254,6 +268,7 @@ export function useRoles() {
         .maybeSingle();
 
       if (error) {
+        if (cachedRoles && cachedRoles.length > 0) return cachedRoles;
         if (defaultRoles.length > 0) return defaultRoles;
         throw error;
       }

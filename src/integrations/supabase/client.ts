@@ -139,8 +139,8 @@ function createSupabaseClient() {
   if (typeof window !== 'undefined') {
     registerSyncRuntime({
       getAccessToken: async () => {
-        const { data } = await client.auth.getSession();
-        return data.session?.access_token ?? null;
+        const { hydrateSupabaseSessionIfNeeded } = await import('@/lib/offline/offlineAuth');
+        return hydrateSupabaseSessionIfNeeded();
       },
     });
   }

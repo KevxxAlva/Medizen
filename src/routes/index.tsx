@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { getEffectiveSession } from "@/lib/offline/offlineAuth";
 import { LandingPage } from "@/components/landing/LandingPage";
 
 export const Route = createFileRoute("/")({
@@ -23,8 +23,8 @@ function RootIndexRoute() {
   const [hasSession, setHasSession] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
+    getEffectiveSession().then((session) => {
+      if (session) {
         setHasSession(true);
         navigate({ to: "/dashboard", replace: true });
       } else {

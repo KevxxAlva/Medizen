@@ -23,7 +23,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useIsAdmin, useIsSuperAdmin } from "@/hooks/useAuth";
+import { setAuthSessionManually, useIsAdmin, useIsSuperAdmin } from "@/hooks/useAuth";
+import { isDeviceOffline } from "@/lib/offline/networkState";
+import { clearActiveOfflineSession } from "@/lib/offline/offlineAuth";
 import { useUserRoleScope } from "@/hooks/useUserRoleScope";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -308,8 +310,14 @@ const SidebarBody = memo(function SidebarBody({
   const handleLogout = async () => {
     if (onNavigate) onNavigate();
     await qc.cancelQueries();
-    qc.clear();
-    await supabase.auth.signOut();
+    clearActiveOfflineSession();
+    setAuthSessionManually(null);
+    if (!isDeviceOffline()) {
+      qc.clear();
+      await supabase.auth.signOut().catch(() => {});
+    } else {
+      await supabase.auth.signOut({ scope: "local" }).catch(() => {});
+    }
     router.navigate({ to: "/auth", replace: true });
   };
 

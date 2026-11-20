@@ -3,6 +3,13 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { setSessionPersistence, supabase } from "@/integrations/supabase/client";
 import { setAuthSessionManually } from "@/hooks/useAuth";
+import { isDeviceOffline, isOfflineError } from "@/lib/offline/networkState";
+import {
+  getEffectiveSession,
+  getOfflineAccountSnapshotByUserId,
+  saveOfflineAccountSnapshot,
+  verifyOfflinePasswordLogin,
+} from "@/lib/offline/offlineAuth";
 import { toast } from "sonner";
 import { MedizenLogo } from "@/components/MedizenLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -105,8 +112,9 @@ function useAuthPageLogic() {
   useEffect(() => {
     const hash = window.location.hash;
     const params = new URLSearchParams(window.location.search);
+    const isRecovery = Boolean(hash && hash.includes("type=recovery"));
 
-    if (hash && hash.includes("type=recovery")) {
+    if (isRecovery) {
       setMode("reset-password");
     } else if (params.get("bootstrap") === "true") {
       setMode("bootstrap");
@@ -120,41 +128,96 @@ function useAuthPageLogic() {
       }
     }
 
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (data.session && !hash.includes("type=recovery") && mode !== "reset-password") {
-        try {
-          const { data: dbUser } = await supabase
-            .from("usuarios")
-            .select("es_superadmin, roles(nombre_rol)")
-            .eq("auth_id", data.session.user.id)
-            .maybeSingle();
-          const roleName = (
-            Array.isArray(dbUser?.roles)
-              ? dbUser?.roles[0]?.nombre_rol
-              : (dbUser?.roles as any)?.nombre_rol || ""
-          ).toLowerCase();
-          if (dbUser?.es_superadmin || roleName.includes("super")) {
-            router.navigate({ to: "/superadmin", replace: true });
-            return;
+    if (isRecovery) return;
+
+    let cancelled = false;
+    getEffectiveSession().then(async (session) => {
+      if (cancelled || !session) return;
+
+      if (isDeviceOffline()) {
+        const snap = getOfflineAccountSnapshotByUserId(session.user.id);
+        let isSuper = Boolean(snap?.isSuperAdmin);
+        if (!snap) {
+          try {
+            const rawRoles = localStorage.getItem(`medizen_cached_roles_${session.user.id}`);
+            const roles = rawRoles ? JSON.parse(rawRoles) : [];
+            isSuper = Array.isArray(roles) && roles.includes("superadmin");
+          } catch {
+            isSuper = false;
           }
-        } catch {}
+        }
+        router.navigate({ to: isSuper ? "/superadmin" : "/dashboard", replace: true });
+        return;
+      }
+
+      try {
+        const { data: dbUser } = await supabase
+          .from("usuarios")
+          .select("es_superadmin, roles(nombre_rol)")
+          .eq("auth_id", session.user.id)
+          .maybeSingle();
+        if (cancelled) return;
+        const roleName = (
+          Array.isArray(dbUser?.roles)
+            ? dbUser?.roles[0]?.nombre_rol
+            : (dbUser?.roles as any)?.nombre_rol || ""
+        ).toLowerCase();
+        if (dbUser?.es_superadmin || roleName.includes("super")) {
+          router.navigate({ to: "/superadmin", replace: true });
+          return;
+        }
+      } catch {}
+      if (!cancelled) {
         router.navigate({ to: "/dashboard", replace: true });
       }
     });
-  }, [router, mode]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setSessionPersistence(rememberMe);
+
+    const completeOfflineLogin = async () => {
+      const offlineRes = await verifyOfflinePasswordLogin(email, password);
+      if (!offlineRes.success || !offlineRes.session) {
+        toast.error(offlineRes.error || "No se pudo iniciar sesión sin conexión.");
+        return;
+      }
+      setAuthSessionManually(offlineRes.session);
+      const destination = offlineRes.isSuperAdmin ? "/superadmin" : "/dashboard";
+      toast.success(
+        offlineRes.isSuperAdmin
+          ? "Modo offline · Super Administrador"
+          : `Modo offline · ¡Bienvenido/a, ${offlineRes.fullName || ""}!`,
+      );
+      router.navigate({ to: destination, replace: true });
+    };
+
     try {
+      if (isDeviceOffline()) {
+        await completeOfflineLogin();
+        return;
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
+        if (isOfflineError(error)) {
+          await completeOfflineLogin();
+          return;
+        }
         if (!rememberMe) {
           setSessionPersistence(true);
         }
         return toast.error(error.message);
       }
+
+      let resolvedRoleName = "";
+      let resolvedFullName = "";
 
       if (rememberMe) {
         try {
@@ -167,24 +230,27 @@ function useAuthPageLogic() {
               .maybeSingle();
 
             const userPin = dbUser?.pin_seguridad || user.user_metadata?.security_pin;
-            if (userPin && /^\d{4}$/.test(String(userPin))) {
-              const roleObj = dbUser?.roles;
-              const dbRole = Array.isArray(roleObj)
-                ? roleObj[0]?.nombre_rol
-                : (roleObj as { nombre_rol?: string } | null)?.nombre_rol;
-              const medObj = dbUser?.medicos;
-              const doc = Array.isArray(medObj) ? medObj[0] : medObj;
-              const docName = doc ? `${doc.nombre} ${doc.apellido}`.trim() : "";
+            const roleObj = dbUser?.roles;
+            const dbRole = Array.isArray(roleObj)
+              ? roleObj[0]?.nombre_rol
+              : (roleObj as { nombre_rol?: string } | null)?.nombre_rol;
+            const medObj = dbUser?.medicos;
+            const doc = Array.isArray(medObj) ? medObj[0] : medObj;
+            const docName = doc ? `${doc.nombre} ${doc.apellido}`.trim() : "";
 
+            resolvedRoleName = dbRole || (user.user_metadata?.role as string | undefined) || "";
+            resolvedFullName =
+              docName ||
+              (user.user_metadata?.full_name as string | undefined) ||
+              dbUser?.nombre_usuario ||
+              email.split("@")[0];
+
+            if (userPin && /^\d{4}$/.test(String(userPin))) {
               await saveQuickAccessAccount({
                 userId: user.id,
                 email: user.email || email,
-                fullName:
-                  docName ||
-                  (user.user_metadata?.full_name as string | undefined) ||
-                  dbUser?.nombre_usuario ||
-                  email.split("@")[0],
-                role: dbRole || (user.user_metadata?.role as string | undefined),
+                fullName: resolvedFullName,
+                role: resolvedRoleName,
                 password,
                 pin: String(userPin),
               });
@@ -208,6 +274,8 @@ function useAuthPageLogic() {
 
       // Detectar si el usuario es Superadmin o si su clínica está suspendida
       let destination = "/dashboard";
+      let isSuper = false;
+      let clinicId: string | null = null;
       try {
         const { data: dbUser } = await supabase
           .from("usuarios")
@@ -221,7 +289,8 @@ function useAuthPageLogic() {
             : (dbUser?.roles as any)?.nombre_rol || ""
         ).toLowerCase();
 
-        const isSuper = !!dbUser?.es_superadmin || roleName.includes("super");
+        clinicId = dbUser?.id_clinica ?? null;
+        isSuper = !!dbUser?.es_superadmin || roleName.includes("super");
         if (isSuper) {
           destination = "/superadmin";
         } else if (dbUser?.id_clinica) {
@@ -241,8 +310,26 @@ function useAuthPageLogic() {
         }
       } catch {}
 
+      if (data.session) {
+        await saveOfflineAccountSnapshot({
+          session: data.session,
+          email: data.user.email || email,
+          password,
+          fullName: resolvedFullName,
+          role: resolvedRoleName || (isSuper ? "Superadmin" : "Usuario"),
+          isSuperAdmin: isSuper,
+          clinicId,
+        });
+      }
+
       toast.success(destination === "/superadmin" ? "¡Bienvenido, Super Administrador!" : "¡Bienvenido/a de nuevo!");
-      router.navigate({ to: destination });
+      router.navigate({ to: destination, replace: true });
+    } catch (err) {
+      if (isOfflineError(err)) {
+        await completeOfflineLogin();
+      } else {
+        toast.error(err instanceof Error ? err.message : "Error al iniciar sesión");
+      }
     } finally {
       setLoading(false);
     }
@@ -259,10 +346,24 @@ function useAuthPageLogic() {
         if (result.session) {
           setAuthSessionManually(result.session);
         }
+
+        if (result.offline || isDeviceOffline()) {
+          const destination = result.isSuperAdmin ? "/superadmin" : "/dashboard";
+          toast.success(
+            destination === "/superadmin"
+              ? "Modo offline · Super Administrador"
+              : `Modo offline · Sesión restaurada como ${selectedAccount.fullName}`,
+          );
+          router.navigate({ to: destination, replace: true });
+          return;
+        }
+
         qc.clear();
         await qc.invalidateQueries();
 
         let destination = "/dashboard";
+        let isSuper = false;
+        let clinicId: string | null = null;
         try {
           const { data: dbUser } = await supabase
             .from("usuarios")
@@ -276,7 +377,8 @@ function useAuthPageLogic() {
               : (dbUser?.roles as any)?.nombre_rol || ""
           ).toLowerCase();
 
-          const isSuper = !!dbUser?.es_superadmin || roleName.includes("super");
+          clinicId = dbUser?.id_clinica ?? null;
+          isSuper = !!dbUser?.es_superadmin || roleName.includes("super");
           if (isSuper) {
             destination = "/superadmin";
           } else if (dbUser?.id_clinica) {
@@ -296,8 +398,19 @@ function useAuthPageLogic() {
           }
         } catch {}
 
+        if (result.session) {
+          await saveOfflineAccountSnapshot({
+            session: result.session,
+            email: selectedAccount.email,
+            fullName: selectedAccount.fullName,
+            role: selectedAccount.role || (isSuper ? "Superadmin" : "Usuario"),
+            isSuperAdmin: isSuper,
+            clinicId,
+          });
+        }
+
         toast.success(destination === "/superadmin" ? "Sesión restaurada como Super Administrador" : `Sesión restaurada como ${selectedAccount.fullName}`);
-        router.navigate({ to: destination });
+        router.navigate({ to: destination, replace: true });
         return;
       }
 

@@ -1,5 +1,7 @@
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { isDeviceOffline, isOfflineError } from "@/lib/offline/networkState";
+import { activateOfflineSessionForUser } from "@/lib/offline/offlineAuth";
 
 export interface QuickAccessProfile {
   userId: string;
@@ -487,7 +489,7 @@ export function removeQuickAccessAccount(userId: string): void {
 export async function unlockQuickAccessAccount(
   userId: string,
   pin: string
-): Promise<{ success: boolean; user?: User; session?: Session | null; error?: string }> {
+): Promise<{ success: boolean; user?: User; session?: Session | null; isSuperAdmin?: boolean; offline?: boolean; error?: string }> {
   const lockout = checkPinLockout(userId);
   if (lockout.locked) {
     return {
@@ -503,20 +505,66 @@ export async function unlockQuickAccessAccount(
     return { success: false, error: "No se encontró el registro de esta cuenta en este equipo." };
   }
 
+  let credentials: { email?: string; password?: string } | null = null;
   try {
-    const credentials = await decryptData(entry.vault, pin);
-
-    if (!credentials || !credentials.email || !credentials.password) {
-      return { success: false, error: "Credenciales corruptas en este equipo." };
+    credentials = await decryptData(entry.vault, pin);
+  } catch {
+    const status = recordFailedPinAttempt(userId);
+    if (status.locked) {
+      return {
+        success: false,
+        error: `Demasiados intentos fallidos. Bloqueado temporalmente por ${status.remainingSeconds}s.`,
+      };
     }
+    return { success: false, error: "Clave de seguridad incorrecta. Verifica los 4 dígitos." };
+  }
 
-    // Authenticate with Supabase Auth
+  if (!credentials || !credentials.email || !credentials.password) {
+    return { success: false, error: "Credenciales corruptas en este equipo." };
+  }
+
+  // Si el dispositivo está sin internet, el PIN ya validó la bóveda localmente: restaurar sesión offline
+  if (isDeviceOffline()) {
+    const offlineRes = activateOfflineSessionForUser(userId);
+    if (!offlineRes.success) {
+      return { success: false, error: offlineRes.error };
+    }
+    clearPinAttempts(userId);
+    entry.profile.lastLogin = new Date().toISOString();
+    vault[userId] = entry;
+    setStoredVault(vault);
+    localStorage.setItem(LAST_ACCOUNT_KEY, userId);
+    return {
+      success: true,
+      user: offlineRes.user,
+      session: offlineRes.session,
+      isSuperAdmin: offlineRes.isSuperAdmin,
+      offline: true,
+    };
+  }
+
+  // Authenticate with Supabase Auth
+  try {
     const { data, error } = await supabase.auth.signInWithPassword({
       email: credentials.email,
       password: credentials.password,
     });
 
     if (error) {
+      if (isOfflineError(error)) {
+        const offlineRes = activateOfflineSessionForUser(userId);
+        if (offlineRes.success) {
+          clearPinAttempts(userId);
+          return {
+            success: true,
+            user: offlineRes.user,
+            session: offlineRes.session,
+            isSuperAdmin: offlineRes.isSuperAdmin,
+            offline: true,
+          };
+        }
+        return { success: false, error: offlineRes.error };
+      }
       if (error.message.includes("Invalid login credentials")) {
         return {
           success: false,
@@ -537,13 +585,20 @@ export async function unlockQuickAccessAccount(
 
     return { success: true, user: data.user, session: data.session };
   } catch (err: any) {
-    const status = recordFailedPinAttempt(userId);
-    if (status.locked) {
-      return {
-        success: false,
-        error: `Demasiados intentos fallidos. Bloqueado temporalmente por ${status.remainingSeconds}s.`,
-      };
+    if (isOfflineError(err)) {
+      const offlineRes = activateOfflineSessionForUser(userId);
+      if (offlineRes.success) {
+        clearPinAttempts(userId);
+        return {
+          success: true,
+          user: offlineRes.user,
+          session: offlineRes.session,
+          isSuperAdmin: offlineRes.isSuperAdmin,
+          offline: true,
+        };
+      }
+      return { success: false, error: offlineRes.error };
     }
-    return { success: false, error: "Clave de seguridad incorrecta. Verifica los 4 dígitos." };
+    return { success: false, error: err?.message || "No se pudo iniciar sesión. Intenta nuevamente." };
   }
 }
