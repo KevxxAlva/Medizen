@@ -24,7 +24,9 @@ import {
   Scale,
 } from "lucide-react";
 import { COLOR_THEMES, type ColorTheme, updateFaviconColor } from "@/components/ThemeCustomizer";
-import { useAuthSession, useIsAdmin, useRoles } from "@/hooks/useAuth";
+import { setAuthSessionManually, useAuthSession, useIsAdmin, useRoles } from "@/hooks/useAuth";
+import { isDeviceOffline } from "@/lib/offline/networkState";
+import { clearActiveOfflineSession } from "@/lib/offline/offlineAuth";
 import { useMyProfile, useUpdateProfile } from "@/lib/api/profiles";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -357,8 +359,14 @@ function UserProfileSection({
             variant="outline"
             onClick={async () => {
               await qc.cancelQueries();
-              qc.clear();
-              await supabase.auth.signOut();
+              clearActiveOfflineSession();
+              setAuthSessionManually(null);
+              if (!isDeviceOffline()) {
+                qc.clear();
+                await supabase.auth.signOut().catch(() => {});
+              } else {
+                await supabase.auth.signOut({ scope: "local" }).catch(() => {});
+              }
               router.navigate({ to: "/auth", replace: true });
             }}
             className="rounded-xl border-destructive/30 text-destructive hover:bg-destructive/10 h-11 px-4 flex items-center gap-2 font-bold text-xs sm:text-sm cursor-pointer"
@@ -516,9 +524,11 @@ function SecuritySection() {
 
     setLoading(true);
     try {
-      await supabase.auth.updateUser({
-        data: { security_pin: pin },
-      });
+      if (!isDeviceOffline()) {
+        await supabase.auth.updateUser({
+          data: { security_pin: pin },
+        }).catch(() => {});
+      }
 
       if (user?.id) {
         await supabase.from("usuarios").update({ pin_seguridad: pin }).eq("auth_id", user.id);
@@ -557,9 +567,11 @@ function SecuritySection() {
 
     setLoading(true);
     try {
-      await supabase.auth.updateUser({
-        data: { security_pin: null },
-      });
+      if (!isDeviceOffline()) {
+        await supabase.auth.updateUser({
+          data: { security_pin: null },
+        }).catch(() => {});
+      }
 
       if (user?.id) {
         await supabase.from("usuarios").update({ pin_seguridad: null }).eq("auth_id", user.id);

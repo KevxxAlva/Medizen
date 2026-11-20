@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 import { isDeviceOffline } from "@/lib/offline/networkState";
+import { shouldServeLocalCacheOnly } from "@/lib/offline/syncEngine";
 import {
   VE_PAYMENT_PRESETS,
   inferCategoryFromMethod,
@@ -187,10 +188,16 @@ function decodeAccountRow(row: any): FinancialAccount {
 
 export function useAccounts() {
   const { user } = useAuthSession();
+  const qc = useQueryClient();
+  const queryKey = ["financial_accounts", user?.id];
   return useQuery({
-    queryKey: ["financial_accounts", user?.id],
+    queryKey,
     enabled: !!user,
     queryFn: async (): Promise<FinancialAccount[]> => {
+      if (shouldServeLocalCacheOnly()) {
+        const cached = qc.getQueryData<FinancialAccount[]>(queryKey);
+        if (Array.isArray(cached)) return cached;
+      }
       const clinicId = await resolveCurrentUserClinicId(user?.id);
       let query = supabase
         .from("financial_accounts")
@@ -217,9 +224,17 @@ export function useCreateAccount() {
       const encodedType = encodeTypeWithMeta(acc.type, acc.meta);
       writeLocalAccountMeta(acc.name, acc.meta);
 
+      const safeDbType =
+        acc.type === "CashVES"
+          ? "Cash"
+          : acc.type === "Cashea"
+          ? "Digital"
+          : acc.type;
+      const dbType = encodedType.length <= 50 && !isDeviceOffline() ? encodedType : safeDbType;
+
       const basePayload: Record<string, any> = {
         name: acc.name,
-        type: encodedType,
+        type: dbType,
         balance: acc.balance,
         status: acc.status,
       };
@@ -280,11 +295,19 @@ export function useUpdateAccount() {
       writeLocalAccountMeta(acc.id, acc.meta);
       writeLocalAccountMeta(acc.name, acc.meta);
 
+      const safeDbType =
+        acc.type === "CashVES"
+          ? "Cash"
+          : acc.type === "Cashea"
+          ? "Digital"
+          : acc.type;
+      const dbType = encodedType.length <= 50 && !isDeviceOffline() ? encodedType : safeDbType;
+
       let res = await supabase
         .from("financial_accounts")
         .update({
           name: acc.name,
-          type: encodedType,
+          type: dbType,
           balance: acc.balance,
           status: acc.status,
         })
@@ -373,6 +396,7 @@ export function useDeleteAccount() {
  */
 export function useSyncVenezuelanAccountsAndMethods() {
   const qc = useQueryClient();
+  const { user } = useAuthSession();
   return useMutation({
     mutationFn: async ({
       accounts,
@@ -381,6 +405,7 @@ export function useSyncVenezuelanAccountsAndMethods() {
       accounts: FinancialAccount[];
       methods: PaymentMethod[];
     }) => {
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
       const currentAccounts = [...accounts];
 
       const ensureAccount = async (
@@ -396,14 +421,25 @@ export function useSyncVenezuelanAccountsAndMethods() {
         const encodedType = encodeTypeWithMeta(targetType, meta);
         writeLocalAccountMeta(defaultName, meta);
 
+        const safeDbType =
+          targetType === "CashVES"
+            ? "Cash"
+            : targetType === "Cashea"
+            ? "Digital"
+            : targetType;
+        const dbType = encodedType.length <= 50 && !isDeviceOffline() ? encodedType : safeDbType;
+
+        const basePayload: Record<string, any> = {
+          name: defaultName,
+          type: dbType,
+          balance: 0,
+          status: "Active",
+        };
+        if (clinicId) basePayload.id_clinica = clinicId;
+
         let res = await supabase
           .from("financial_accounts")
-          .insert({
-            name: defaultName,
-            type: encodedType,
-            balance: 0,
-            status: "Active",
-          })
+          .insert(basePayload as any)
           .select()
           .single();
 
@@ -414,14 +450,16 @@ export function useSyncVenezuelanAccountsAndMethods() {
               : targetType === "Cashea"
               ? "Digital"
               : targetType;
+          const fallbackPayload: Record<string, any> = {
+            name: defaultName,
+            type: safeDbType,
+            balance: 0,
+            status: "Active",
+          };
+          if (clinicId) fallbackPayload.id_clinica = clinicId;
           res = await supabase
             .from("financial_accounts")
-            .insert({
-              name: defaultName,
-              type: safeDbType,
-              balance: 0,
-              status: "Active",
-            })
+            .insert(fallbackPayload as any)
             .select()
             .single();
         }
@@ -470,8 +508,9 @@ export function useSyncVenezuelanAccountsAndMethods() {
       };
 
       // 2. Crear los métodos de Venezuela que falten y vincular todos a su cuenta
+      const nextMethods: PaymentMethod[] = [...methods];
       const existingByCat = new Map<string, PaymentMethod>();
-      for (const m of methods) {
+      for (const m of nextMethods) {
         const cat = inferCategoryFromMethod(m.name, m.category);
         if (!existingByCat.has(cat)) {
           existingByCat.set(cat, m);
@@ -483,13 +522,31 @@ export function useSyncVenezuelanAccountsAndMethods() {
         const existingMethod = existingByCat.get(preset.category);
 
         if (!existingMethod) {
-          return supabase.from("payment_methods").insert({
+          const insertPayload: Record<string, any> = {
             name: preset.name,
             category: preset.category,
             account_id: targetAccId || null,
             status: "Active",
-          });
+          };
+          if (clinicId) insertPayload.id_clinica = clinicId;
+          const res = await supabase
+            .from("payment_methods")
+            .insert(insertPayload as any)
+            .select()
+            .single();
+          if (!res.error && res.data) {
+            nextMethods.push({
+              id: res.data.id,
+              name: res.data.name,
+              category: preset.category,
+              account_id: targetAccId || null,
+              status: "Active",
+              details: preset.details,
+            });
+          }
+          return res;
         } else if (!existingMethod.account_id && targetAccId) {
+          existingMethod.account_id = targetAccId;
           return supabase
             .from("payment_methods")
             .update({ account_id: targetAccId })
@@ -499,12 +556,13 @@ export function useSyncVenezuelanAccountsAndMethods() {
       await Promise.all(presetSyncPromises);
 
       // También vincular cualquier otro método existente sin cuenta
-      const unlinkedSyncPromises = methods
+      const unlinkedSyncPromises = nextMethods
         .filter((m) => !m.account_id)
         .map(async (m) => {
           const cat = inferCategoryFromMethod(m.name, m.category);
           const targetAccId = categoryToAccountMap[cat];
           if (targetAccId) {
+            m.account_id = targetAccId;
             return supabase
               .from("payment_methods")
               .update({ account_id: targetAccId })
@@ -512,10 +570,18 @@ export function useSyncVenezuelanAccountsAndMethods() {
           }
         });
       await Promise.all(unlinkedSyncPromises);
+
+      return { accounts: currentAccounts, methods: nextMethods };
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["financial_accounts"] });
-      qc.invalidateQueries({ queryKey: ["payment_methods"] });
+    onSuccess: (result) => {
+      if (result) {
+        qc.setQueriesData<FinancialAccount[]>({ queryKey: ["financial_accounts"] }, () => result.accounts);
+        qc.setQueriesData<PaymentMethod[]>({ queryKey: ["payment_methods"] }, () => result.methods);
+      }
+      if (!shouldServeLocalCacheOnly()) {
+        qc.invalidateQueries({ queryKey: ["financial_accounts"] });
+        qc.invalidateQueries({ queryKey: ["payment_methods"] });
+      }
     },
   });
 }

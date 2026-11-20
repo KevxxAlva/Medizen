@@ -45,6 +45,8 @@ export function getOnlineSnapshot(): boolean {
 }
 
 export function markNetworkOffline(): void {
+  // Solo marcar offline si el navegador realmente reporta sin conexión;
+  // si navigator.onLine es true, un fallo puntual puede ser DNS reconectándose.
   if (typeof navigator !== "undefined" && !navigator.onLine) {
     emitOnlineState(false);
   }

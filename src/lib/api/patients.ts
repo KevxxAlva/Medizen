@@ -4,6 +4,7 @@ import { logAuditAction } from "@/lib/api/audit";
 import { getSaasPlanConfig } from "@/lib/api/clinic";
 import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 import { isDeviceOffline } from "@/lib/offline/networkState";
+import { shouldServeLocalCacheOnly } from "@/lib/offline/syncEngine";
 
 export type PatientStatus = "activo" | "en_tratamiento" | "alta" | "nuevo";
 
@@ -346,7 +347,7 @@ export function usePaginatedPatients(
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
 
-      if (isDeviceOffline()) {
+      if (shouldServeLocalCacheOnly()) {
         const existingExact = qc.getQueryData<{ data: Patient[]; count: number }>(queryKey);
         if (existingExact && Array.isArray(existingExact.data) && existingExact.data.length > 0) {
           return existingExact;
@@ -433,9 +434,26 @@ export const fetchPatientById = async (id: string): Promise<Patient | null> => {
 };
 
 export function usePatient(id: string | undefined | null) {
+  const qc = useQueryClient();
   return useQuery({
     queryKey: ["patient", id],
-    queryFn: () => fetchPatientById(id as string),
+    queryFn: async () => {
+      if (!id) return null;
+      if (shouldServeLocalCacheOnly()) {
+        const direct = qc.getQueryData<Patient | null>(["patient", id]);
+        if (direct) return direct;
+        const fromLists = [
+          ...qc.getQueriesData<Patient[]>({ queryKey: ["patients"] }).flatMap(([, d]) => (Array.isArray(d) ? d : [])),
+          ...qc.getQueriesData<Patient[]>({ queryKey: ["patients_recent"] }).flatMap(([, d]) => (Array.isArray(d) ? d : [])),
+          ...qc
+            .getQueriesData<{ data?: Patient[] }>({ queryKey: ["patients_paginated"] })
+            .flatMap(([, d]) => (Array.isArray(d?.data) ? d.data : [])),
+        ];
+        const found = fromLists.find((p) => String(p.id) === String(id));
+        if (found) return found;
+      }
+      return fetchPatientById(id as string);
+    },
     enabled: !!id,
   });
 }
@@ -599,6 +617,9 @@ export function useCreatePatient() {
         qc.setQueriesData<number>({ queryKey: ["patients_count"] }, (old) =>
           typeof old === "number" ? old + 1 : 1,
         );
+        qc.setQueriesData<number>({ queryKey: ["patients_count_range"] }, (old) =>
+          typeof old === "number" ? old + 1 : 1,
+        );
         qc.setQueryData(["patient", createdPatient.id], createdPatient);
       }
       if (!isDeviceOffline()) {
@@ -751,6 +772,9 @@ export function useDeletePatient() {
         };
       });
       qc.setQueriesData<number>({ queryKey: ["patients_count"] }, (old) =>
+        typeof old === "number" ? Math.max(0, old - 1) : old,
+      );
+      qc.setQueriesData<number>({ queryKey: ["patients_count_range"] }, (old) =>
         typeof old === "number" ? Math.max(0, old - 1) : old,
       );
       if (!isDeviceOffline()) {

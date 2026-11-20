@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { isDeviceOffline } from "@/lib/offline/networkState";
+import { shouldServeLocalCacheOnly } from "@/lib/offline/syncEngine";
 
 export type SupportTicket = {
   id: string;
@@ -13,9 +14,14 @@ export type SupportTicket = {
 };
 
 export function useTickets() {
+  const qc = useQueryClient();
   return useQuery({
     queryKey: ["support_tickets"],
     queryFn: async (): Promise<SupportTicket[]> => {
+      if (shouldServeLocalCacheOnly()) {
+        const cached = qc.getQueryData<SupportTicket[]>(["support_tickets"]);
+        if (Array.isArray(cached)) return cached;
+      }
       const { data, error } = await supabase
         .from("support_tickets")
         .select("*")

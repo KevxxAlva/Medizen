@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  clearFailedOutboxItems,
   discardOutboxItem,
   getSyncSnapshot,
   refreshOutboxSnapshot,
@@ -23,5 +24,6 @@ export function useOfflineSync() {
     syncNow: (includeFailed = true) => syncOutboxNow({ includeFailed }),
     retryItem: retryFailedItem,
     discardItem: discardOutboxItem,
+    clearAll: clearFailedOutboxItems,
   };
 }

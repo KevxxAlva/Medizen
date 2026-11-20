@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getStoredAppointmentPrice, resolveServiceFromReason } from "@/lib/api/appointments";
 import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 import { isDeviceOffline } from "@/lib/offline/networkState";
+import { shouldServeLocalCacheOnly } from "@/lib/offline/syncEngine";
 
 export type VisitType = "CONTROL" | "EMERGENCIA" | "CONSULTA_NUEVA" | "POST_TRATAMIENTO" | "OTRO";
 
@@ -265,10 +266,26 @@ export function usePatientConsultations(patientId: string | undefined) {
 }
 
 export function useConsultationByAppointment(appointmentId: string | undefined) {
+  const qc = useQueryClient();
   return useQuery({
     queryKey: ["consultation", appointmentId],
     queryFn: async (): Promise<Consultation | null> => {
       if (!appointmentId) return null;
+      if (shouldServeLocalCacheOnly()) {
+        const direct = qc.getQueryData<Consultation | null>(["consultation", appointmentId]);
+        if (direct) return direct;
+        const fromAll = qc
+          .getQueriesData<Consultation[]>({ queryKey: ["consultations"] })
+          .flatMap(([, d]) => (Array.isArray(d) ? d : []));
+        const fromPatient = qc
+          .getQueriesData<Consultation[]>({ queryKey: ["patient_consultations"] })
+          .flatMap(([, d]) => (Array.isArray(d) ? d : []));
+        return (
+          [...fromAll, ...fromPatient].find(
+            (c) => String(c.appointment_id) === String(appointmentId),
+          ) ?? null
+        );
+      }
       const { data, error } = await supabase
         .from("consultas")
         .select("*, citas(id_paciente, pacientes(nombre, apellido))")
@@ -304,15 +321,25 @@ export function useCreateConsultation() {
   return useMutation({
     mutationFn: async ({ consumables, ...consultationData }: ConsultationInput) => {
       const clinicId = await resolveCurrentUserClinicId(user?.id);
-      // 1. Get or Create historias_clinicas
-      const { data: hcList } = await supabase.from("historias_clinicas").select("id_historia").eq("id_paciente", parseInt(consultationData.patient_id));
-      let id_historia = hcList?.[0]?.id_historia;
+      // 1. Get or Create historias_clinicas (usando upsert idempotente para no duplicar offline)
+      let id_historia: number | undefined;
+      if (!isDeviceOffline()) {
+        const { data: hcList } = await supabase
+          .from("historias_clinicas")
+          .select("id_historia")
+          .eq("id_paciente", parseInt(consultationData.patient_id));
+        id_historia = hcList?.[0]?.id_historia;
+      }
       if (!id_historia) {
-         const hcInsert: Record<string, any> = { id_paciente: parseInt(consultationData.patient_id) };
-         if (clinicId) hcInsert.id_clinica = clinicId;
-         const { data: newHc, error: hcError } = await supabase.from("historias_clinicas").insert(hcInsert as any).select().single();
-         if (hcError) throw hcError;
-         id_historia = newHc.id_historia;
+        const hcInsert: Record<string, any> = { id_paciente: parseInt(consultationData.patient_id) };
+        if (clinicId) hcInsert.id_clinica = clinicId;
+        const { data: newHc, error: hcError } = await supabase
+          .from("historias_clinicas")
+          .upsert(hcInsert as any, { onConflict: "id_paciente" })
+          .select()
+          .single();
+        if (hcError) throw hcError;
+        id_historia = newHc.id_historia;
       }
 
       // 2. Insert consultation
@@ -388,27 +415,56 @@ export function useCreateConsultation() {
         .eq("id_cita", citaId);
 
       // 5. Emitir automáticamente la factura como Pendiente con el monto exacto del servicio de la cita
-      const { data: origCita } = await supabase
-        .from("citas")
-        .select("fecha_hora, motivo, id_medico")
-        .eq("id_cita", citaId)
-        .maybeSingle();
+      let origCita: any = null;
+      if (!isDeviceOffline()) {
+        const { data } = await supabase
+          .from("citas")
+          .select("fecha_hora, motivo, id_medico")
+          .eq("id_cita", citaId)
+          .maybeSingle();
+        origCita = data;
+      }
+      if (!origCita) {
+        const cachedAppt = qc
+          .getQueriesData<any[]>({ queryKey: ["appointments"] })
+          .flatMap(([, d]) => (Array.isArray(d) ? d : []))
+          .find((a) => String(a.id) === String(citaId));
+        if (cachedAppt) {
+          origCita = {
+            fecha_hora: cachedAppt.scheduled_at,
+            motivo: cachedAppt.reason,
+            id_medico: cachedAppt.doctor_id ? parseInt(cachedAppt.doctor_id, 10) : null,
+            patient_name: cachedAppt.patient_name,
+          };
+        }
+      }
 
       const invoiceDate = origCita?.fecha_hora || new Date().toISOString();
 
-      const { data: existingFacs } = await supabase
-        .from("facturas")
-        .select("id_factura")
-        .eq("id_paciente", patientId)
-        .eq("fecha_emision", invoiceDate)
-        .limit(1);
+      let existingFacs: any[] | null = null;
+      if (!isDeviceOffline()) {
+        const { data } = await supabase
+          .from("facturas")
+          .select("id_factura")
+          .eq("id_paciente", patientId)
+          .eq("fecha_emision", invoiceDate)
+          .limit(1);
+        existingFacs = data;
+      }
 
       if (!existingFacs || existingFacs.length === 0) {
-        const { data: allServices } = await supabase
-          .from("servicios")
-          .select("id_servicio, nombre_servicio, costo_base")
-          .order("id_servicio", { ascending: true });
-        const servicesList = allServices || [];
+        let servicesList: any[] = [];
+        if (!isDeviceOffline()) {
+          const { data: allServices } = await supabase
+            .from("servicios")
+            .select("id_servicio, nombre_servicio, costo_base")
+            .order("id_servicio", { ascending: true });
+          servicesList = allServices || [];
+        } else {
+          servicesList = qc
+            .getQueriesData<any[]>({ queryKey: ["services"] })
+            .flatMap(([, d]) => (Array.isArray(d) ? d : []));
+        }
 
         const matchedServ =
           resolveServiceFromReason(origCita?.motivo, servicesList) ||
@@ -432,27 +488,80 @@ export function useCreateConsultation() {
           finalPrice = 35;
         }
 
+        const facturaPayload: Record<string, any> = {
+          id_paciente: patientId,
+          total_general: finalPrice,
+          subtotal: finalPrice,
+          monto_paciente: finalPrice,
+          estado_pago: "Pendiente",
+          fecha_emision: invoiceDate,
+        };
+        if (clinicId) facturaPayload.id_clinica = clinicId;
+
         const { data: newF } = await supabase
           .from("facturas")
-          .insert({
-            id_paciente: patientId,
-            total_general: finalPrice,
-            subtotal: finalPrice,
-            monto_paciente: finalPrice,
-            estado_pago: "Pendiente",
-            fecha_emision: invoiceDate,
-          })
+          .insert(facturaPayload as any)
           .select("id_factura")
           .single();
 
         if (newF?.id_factura && matchedServiceId) {
-          await supabase.from("detalles_factura").insert({
+          const detPayload: Record<string, any> = {
             id_factura: newF.id_factura,
             id_servicio: matchedServiceId,
             cantidad: 1,
             precio_unitario: finalPrice,
             subtotal: finalPrice,
-          });
+          };
+          if (clinicId) detPayload.id_clinica = clinicId;
+          await supabase.from("detalles_factura").insert(detPayload as any);
+        }
+
+        // Reflejar inmediatamente la factura recién emitida en Ventas / Facturación (incluso offline)
+        if (newF?.id_factura) {
+          const directPatient = qc.getQueryData<any>(["patient", String(patientId)]);
+          const cachedPatients = [
+            ...qc.getQueriesData<any[]>({ queryKey: ["patients"] }).flatMap(([, d]) => (Array.isArray(d) ? d : [])),
+            ...qc
+              .getQueriesData<{ data?: any[] }>({ queryKey: ["patients_paginated"] })
+              .flatMap(([, d]) => (Array.isArray(d?.data) ? d.data : [])),
+          ];
+          const matchedPatient =
+            directPatient || cachedPatients.find((p) => String(p.id) === String(patientId));
+          const patientName =
+            matchedPatient?.full_name || origCita?.patient_name || "Paciente";
+          const concepto =
+            matchedServ?.nombre_servicio ||
+            origCita?.motivo ||
+            consultationData.specialty_name ||
+            "Consulta Médica Especializada";
+
+          const optimisticInvoice = {
+            id_factura: newF.id_factura,
+            id_paciente: patientId,
+            paciente_nombre: patientName,
+            fecha_emision: invoiceDate,
+            subtotal: finalPrice,
+            monto_paciente: finalPrice,
+            total_general: finalPrice,
+            estado_pago: "Pendiente",
+            metodo_pago: null,
+            referencia: null,
+            concepto,
+            items: [
+              {
+                descripcion: concepto,
+                cantidad: 1,
+                precio_unitario: finalPrice,
+                subtotal: finalPrice,
+              },
+            ],
+          };
+
+          qc.setQueriesData<any[]>({ queryKey: ["facturas"] }, (old) =>
+            Array.isArray(old)
+              ? [optimisticInvoice, ...old.filter((f) => f.id_factura !== optimisticInvoice.id_factura)]
+              : [optimisticInvoice],
+          );
         }
       }
 
@@ -506,6 +615,20 @@ export function useCreateConsultation() {
               )
             : old,
         );
+        qc.setQueriesData<any>({ queryKey: ["dashboard_stats"] }, (old: any) => {
+          if (!old || !old.offlineWork) return old;
+          const nextSpark = Array.isArray(old.offlineWork.sparkline)
+            ? [...old.offlineWork.sparkline.slice(0, -1), (old.offlineWork.sparkline[old.offlineWork.sparkline.length - 1] || 0) + 1]
+            : old.offlineWork.sparkline;
+          return {
+            ...old,
+            offlineWork: {
+              ...old.offlineWork,
+              total: (old.offlineWork.total || 0) + 1,
+              sparkline: nextSpark,
+            },
+          };
+        });
       }
       if (!isDeviceOffline()) {
         qc.invalidateQueries({ queryKey: ["consultations"] });

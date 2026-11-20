@@ -24,7 +24,7 @@ import { generateIndividualInvoice } from "@/lib/utils/generateIndividualInvoice
 import { toast } from "sonner";
 import { APP_LOCALE, APP_TIME_ZONE } from "@/lib/constants/locale";
 import type { Invoice } from "./ViewInvoiceDialog";
-import type { InvoiceSortField, SortDirection } from "./useSalesInvoices";
+import { formatInvoiceCode, type InvoiceSortField, type SortDirection } from "./useSalesInvoices";
 
 export interface SalesInvoiceTableProps {
   paginated: Invoice[];
@@ -253,6 +253,7 @@ function InvoiceRowActions({
 
 function SalesInvoiceTableRow({
   invoice: f,
+  allInvoices,
   rate,
   rates,
   copiedId,
@@ -262,6 +263,7 @@ function SalesInvoiceTableRow({
   onDelete,
 }: {
   invoice: Invoice;
+  allInvoices: Invoice[];
   rate: number;
   rates: ExchangeRates;
   copiedId: number | null;
@@ -270,17 +272,26 @@ function SalesInvoiceTableRow({
   onView: (invoice: Invoice) => void;
   onDelete: (id: number) => void;
 }) {
+  const invoiceCode = formatInvoiceCode(f.id_factura, allInvoices);
+  const isOfflineLocal = f.id_factura < 0;
   return (
     <tr className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors group">
       <td className="p-4">
         <input
           type="checkbox"
-          aria-label={`Seleccionar factura INV-${f.id_factura.toString().padStart(4, "0")}`}
+          aria-label={`Seleccionar factura ${invoiceCode}`}
           className="rounded border-gray-300"
         />
       </td>
       <td className="p-4 font-bold text-primary">
-        INV-{f.id_factura.toString().padStart(4, "0")}
+        <div className="flex items-center gap-1.5">
+          <span>{invoiceCode}</span>
+          {isOfflineLocal && (
+            <span className="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400">
+              Local
+            </span>
+          )}
+        </div>
       </td>
       <td className="p-4">
         <div className="font-semibold text-foreground">{f.paciente_nombre}</div>
@@ -422,6 +433,7 @@ export function SalesInvoiceTable({
               <SalesInvoiceTableRow
                 key={f.id_factura}
                 invoice={f}
+                allInvoices={paginated}
                 rate={rate}
                 rates={rates}
                 copiedId={copiedId}

@@ -115,11 +115,20 @@ function runTx<T>(
         const tx = db.transaction(storeName, mode);
         const store = tx.objectStore(storeName);
         const req = executor(store);
-        req.onsuccess = () => resolve(req.result ?? null);
+        let result: T | null = null;
+        req.onsuccess = () => {
+          result = req.result ?? null;
+          if (mode === "readonly") resolve(result);
+        };
         req.onerror = () => {
           console.warn(`[OfflineDB] Error en ${storeName}:`, req.error);
           resolve(null);
         };
+        if (mode !== "readonly") {
+          tx.oncomplete = () => resolve(result);
+          tx.onerror = () => resolve(null);
+          tx.onabort = () => resolve(null);
+        }
       } catch (err) {
         console.warn(`[OfflineDB] Excepción en ${storeName}:`, err);
         resolve(null);

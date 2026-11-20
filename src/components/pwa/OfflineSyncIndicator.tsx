@@ -232,6 +232,7 @@ export function OfflineSyncIndicator() {
     syncNow,
     retryItem,
     discardItem,
+    clearAll,
   } = useOfflineSync();
 
   const [queueOpen, setQueueOpen] = useState(false);
@@ -429,26 +430,45 @@ export function OfflineSyncIndicator() {
             )}
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/60">
-            <Button
-              type="button"
-              variant="outline"
-              className="rounded-xl"
-              onClick={() => setQueueOpen(false)}
-            >
-              Cerrar
-            </Button>
-            {isOnline && items.length > 0 && (
+          <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/60">
+            <div>
+              {hasFailures && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="rounded-xl text-xs text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer"
+                  onClick={async () => {
+                    await clearAll();
+                    if (pendingCount === 0) {
+                      setQueueOpen(false);
+                    }
+                  }}
+                >
+                  Descartar errores
+                </Button>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
               <Button
                 type="button"
-                className="rounded-xl gap-2"
-                disabled={isSyncing}
-                onClick={() => void syncNow(true)}
+                variant="outline"
+                className="rounded-xl"
+                onClick={() => setQueueOpen(false)}
               >
-                <RefreshCw className={`h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} />
-                {isSyncing ? "Sincronizando…" : "Sincronizar todo"}
+                Cerrar
               </Button>
-            )}
+              {isOnline && items.length > 0 && (
+                <Button
+                  type="button"
+                  className="rounded-xl gap-2"
+                  disabled={isSyncing}
+                  onClick={() => void syncNow(true)}
+                >
+                  <RefreshCw className={`h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} />
+                  {isSyncing ? "Sincronizando…" : "Sincronizar todo"}
+                </Button>
+              )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>

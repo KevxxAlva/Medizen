@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 import { isDeviceOffline } from "@/lib/offline/networkState";
+import { shouldServeLocalCacheOnly } from "@/lib/offline/syncEngine";
 
 export type StockItem = {
   id: string;
@@ -13,10 +14,16 @@ export type StockItem = {
 
 export function useStocks() {
   const { user } = useAuthSession();
+  const qc = useQueryClient();
+  const queryKey = ["inventory_stocks", user?.id];
   return useQuery({
-    queryKey: ["inventory_stocks", user?.id],
+    queryKey,
     enabled: !!user,
     queryFn: async (): Promise<StockItem[]> => {
+      if (shouldServeLocalCacheOnly()) {
+        const cached = qc.getQueryData<StockItem[]>(queryKey);
+        if (Array.isArray(cached)) return cached;
+      }
       const clinicId = await resolveCurrentUserClinicId(user?.id);
       let query = supabase
         .from("inventory_stocks")

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 import { isDeviceOffline } from "@/lib/offline/networkState";
+import { getSyncSnapshot } from "@/lib/offline/syncEngine";
 import { toast } from "sonner";
 import { logAuditAction } from "@/lib/api/audit";
 import { inferCategoryFromMethod } from "@/lib/api/paymentMethods";
@@ -71,11 +72,11 @@ export function useSalesInvoices() {
     queryKey: ["facturas", user?.id],
     enabled: !!user,
     staleTime: 0, // Inmediato: siempre evaluar datos frescos
-    refetchOnMount: () => (isDeviceOffline() ? false : "always"),
-    refetchOnWindowFocus: () => !isDeviceOffline(),
-    refetchInterval: () => (isDeviceOffline() ? false : 5000), // Pausar polling sin internet
+    refetchOnMount: () => (isDeviceOffline() || getSyncSnapshot().pendingCount > 0 ? false : "always"),
+    refetchOnWindowFocus: () => !isDeviceOffline() && getSyncSnapshot().pendingCount === 0,
+    refetchInterval: () => (isDeviceOffline() || getSyncSnapshot().pendingCount > 0 ? false : 5000), // Pausar polling sin internet o mientras haya cambios pendientes
     queryFn: async () => {
-      if (isDeviceOffline()) {
+      if (isDeviceOffline() || getSyncSnapshot().pendingCount > 0) {
         const cached = queryClient.getQueryData<Invoice[]>(["facturas", user?.id]);
         if (Array.isArray(cached)) return cached;
       }
@@ -318,6 +319,15 @@ export function useSalesInvoices() {
             )
           : old,
       );
+      if (vars.status === "Pagado" && vars.usdAmount && vars.usdAmount > 0) {
+        queryClient.setQueriesData<any>({ queryKey: ["monthly_payments"] }, (old: any) => {
+          if (!old || typeof old.total !== "number") return old;
+          return {
+            ...old,
+            total: Number((old.total + vars.usdAmount!).toFixed(2)),
+          };
+        });
+      }
       if (!isDeviceOffline()) {
         queryClient.invalidateQueries({ queryKey: ["facturas"] });
         queryClient.invalidateQueries({ queryKey: ["financial_accounts"] });
@@ -346,7 +356,7 @@ export function useSalesInvoices() {
       queryClient.setQueriesData<Invoice[]>({ queryKey: ["facturas"] }, (old) =>
         Array.isArray(old) ? old.filter((inv) => inv.id_factura !== id) : old,
       );
-      toast.success(`Factura INV-${id.toString().padStart(4, "0")} eliminada`);
+      toast.success(`Factura ${formatInvoiceCode(id)} eliminada`);
       if (!isDeviceOffline()) {
         queryClient.invalidateQueries({ queryKey: ["facturas"] });
         queryClient.invalidateQueries({ queryKey: ["financial_accounts"] });
@@ -365,6 +375,38 @@ export function useSalesInvoices() {
     updatePaymentStatus,
     deleteInvoice,
   };
+}
+
+export function getInvoiceSortRank(idFactura: number | undefined | null): number {
+  const id = Number(idFactura || 0);
+  // Facturas creadas offline (ID negativo temporal) son las más recientes -> van arriba de todo
+  if (id < 0) return 1_000_000_000_000 + Math.abs(id);
+  return id;
+}
+
+export function formatInvoiceCode(
+  idFactura: number | undefined | null,
+  allInvoices?: readonly { id_factura: number }[],
+): string {
+  const id = Number(idFactura || 0);
+  if (id > 0) {
+    return `INV-${id.toString().padStart(4, "0")}`;
+  }
+  if (id < 0 && allInvoices && allInvoices.length > 0) {
+    const maxPositive = allInvoices.reduce(
+      (max, inv) => (inv.id_factura > max ? inv.id_factura : max),
+      0,
+    );
+    const offlineIds = allInvoices
+      .filter((inv) => inv.id_factura < 0)
+      .map((inv) => inv.id_factura)
+      .sort((a, b) => Math.abs(a) - Math.abs(b));
+    const idx = offlineIds.indexOf(id);
+    if (idx !== -1) {
+      return `INV-${(maxPositive + idx + 1).toString().padStart(4, "0")}`;
+    }
+  }
+  return "INV-LOCAL";
 }
 
 export type InvoiceSortField =
@@ -425,13 +467,13 @@ export function useSalesFilteredStats({
     return list.sort((a, b) => {
       let comparison = 0;
       if (sortField === "id_factura") {
-        comparison = (a.id_factura || 0) - (b.id_factura || 0);
+        comparison = getInvoiceSortRank(a.id_factura) - getInvoiceSortRank(b.id_factura);
       } else if (sortField === "fecha_emision") {
         const timeA = new Date(a.fecha_emision).getTime() || 0;
         const timeB = new Date(b.fecha_emision).getTime() || 0;
         comparison = timeA - timeB;
         if (comparison === 0) {
-          comparison = (a.id_factura || 0) - (b.id_factura || 0);
+          comparison = getInvoiceSortRank(a.id_factura) - getInvoiceSortRank(b.id_factura);
         }
       } else if (sortField === "paciente_nombre") {
         comparison = (a.paciente_nombre || "").localeCompare(b.paciente_nombre || "");

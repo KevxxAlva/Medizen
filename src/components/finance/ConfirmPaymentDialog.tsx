@@ -32,6 +32,7 @@ import {
 import { getCategoryIcon, getCategoryBadgeStyle } from "./PaymentMethodsPage";
 import { toast } from "sonner";
 import type { Invoice } from "./ViewInvoiceDialog";
+import { formatInvoiceCode } from "./useSalesInvoices";
 
 export interface ConfirmPaymentDialogProps {
   open: boolean;
@@ -962,7 +963,7 @@ export function ConfirmPaymentDialog(props: ConfirmPaymentDialogProps) {
 
   if (!open || !invoice) return null;
 
-  const invCode = `INV-${invoice.id_factura?.toString().padStart(4, "0")}`;
+  const invCode = formatInvoiceCode(invoice.id_factura);
   const closeDrawer = () => {
     if (!isPending) s.handleOpenChange(false);
   };

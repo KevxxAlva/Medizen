@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 import { isDeviceOffline } from "@/lib/offline/networkState";
+import { shouldServeLocalCacheOnly } from "@/lib/offline/syncEngine";
 import type { RateType } from "@/hooks/useExchangeRate";
 
 export type VePaymentCategory =
@@ -305,10 +306,16 @@ export function formatPaymentMethodCopyText(
 
 export function usePaymentMethods() {
   const { user } = useAuthSession();
+  const qc = useQueryClient();
+  const queryKey = ["payment_methods", user?.id];
   return useQuery({
-    queryKey: ["payment_methods", user?.id],
+    queryKey,
     enabled: !!user,
     queryFn: async (): Promise<PaymentMethod[]> => {
+      if (shouldServeLocalCacheOnly()) {
+        const cached = qc.getQueryData<PaymentMethod[]>(queryKey);
+        if (Array.isArray(cached)) return cached;
+      }
       const clinicId = await resolveCurrentUserClinicId(user?.id);
       let query = supabase
         .from("payment_methods")
@@ -335,9 +342,12 @@ export function useCreatePaymentMethod() {
       const encodedCategory = encodeCategoryWithDetails(method.category, method.details);
       writeLocalDetails(method.name, method.details);
 
+      const cleanCategory = method.category.split(CATEGORY_DELIMITER)[0].trim().slice(0, 50);
+      const dbCategory = encodedCategory.length <= 50 && !isDeviceOffline() ? encodedCategory : cleanCategory;
+
       const basePayload: Record<string, any> = {
         name: method.name,
-        category: encodedCategory,
+        category: dbCategory,
         account_id: method.account_id || null,
         status: method.status,
       };
@@ -392,11 +402,14 @@ export function useUpdatePaymentMethod() {
       writeLocalDetails(method.id, method.details);
       writeLocalDetails(method.name, method.details);
 
+      const cleanCategory = method.category.split(CATEGORY_DELIMITER)[0].trim().slice(0, 50);
+      const dbCategory = encodedCategory.length <= 50 && !isDeviceOffline() ? encodedCategory : cleanCategory;
+
       let result = await supabase
         .from("payment_methods")
         .update({
           name: method.name,
-          category: encodedCategory,
+          category: dbCategory,
           account_id: method.account_id || null,
           status: method.status,
         })
@@ -457,8 +470,10 @@ export function useDeletePaymentMethod() {
 
 export function useSeedVenezuelanPaymentMethods() {
   const qc = useQueryClient();
+  const { user } = useAuthSession();
   return useMutation({
     mutationFn: async (existingMethods: PaymentMethod[]) => {
+      const clinicId = await resolveCurrentUserClinicId(user?.id);
       const existingCategories = new Set(
         existingMethods.map((m) => inferCategoryFromMethod(m.name, m.category))
       );
@@ -474,26 +489,36 @@ export function useSeedVenezuelanPaymentMethods() {
           const encodedCategory = encodeCategoryWithDetails(preset.category, preset.details);
           writeLocalDetails(preset.name, preset.details);
 
+          const dbCategory =
+            encodedCategory.length <= 50 && !isDeviceOffline()
+              ? encodedCategory
+              : preset.category.slice(0, 50);
+
+          const basePayload: Record<string, any> = {
+            name: preset.name,
+            category: dbCategory,
+            account_id: null,
+            status: "Active",
+          };
+          if (clinicId) basePayload.id_clinica = clinicId;
+
           let res = await supabase
             .from("payment_methods")
-            .insert({
-              name: preset.name,
-              category: encodedCategory,
-              account_id: null,
-              status: "Active",
-            })
+            .insert(basePayload as any)
             .select()
             .single();
 
           if (res.error) {
+            const fallbackPayload: Record<string, any> = {
+              name: preset.name,
+              category: preset.category,
+              account_id: null,
+              status: "Active",
+            };
+            if (clinicId) fallbackPayload.id_clinica = clinicId;
             res = await supabase
               .from("payment_methods")
-              .insert({
-                name: preset.name,
-                category: preset.category,
-                account_id: null,
-                status: "Active",
-              })
+              .insert(fallbackPayload as any)
               .select()
               .single();
           }
@@ -508,8 +533,18 @@ export function useSeedVenezuelanPaymentMethods() {
 
       return results.filter((item): item is PaymentMethod => item !== null);
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["payment_methods"] });
+    onSuccess: (createdMethods) => {
+      if (createdMethods && createdMethods.length > 0) {
+        qc.setQueriesData<PaymentMethod[]>({ queryKey: ["payment_methods"] }, (old) => {
+          const base = Array.isArray(old) ? old : [];
+          const byId = new Map(base.map((m) => [m.id, m]));
+          for (const m of createdMethods) byId.set(m.id, m);
+          return Array.from(byId.values());
+        });
+      }
+      if (!shouldServeLocalCacheOnly()) {
+        qc.invalidateQueries({ queryKey: ["payment_methods"] });
+      }
     },
   });
 }

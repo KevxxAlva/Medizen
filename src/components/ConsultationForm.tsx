@@ -88,7 +88,7 @@ export function ConsultationForm({
         </div>
       ) : (
         <ConsultationFormContent
-          key={existingConsultation?.id ?? appointment?.id ?? "new"}
+          key={appointment?.id ?? existingConsultation?.id ?? "new"}
           appointment={appointment}
           existingConsultation={existingConsultation}
           onOpenChange={onOpenChange}

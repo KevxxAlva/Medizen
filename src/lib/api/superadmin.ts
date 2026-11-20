@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { shouldServeLocalCacheOnly } from "@/lib/offline/syncEngine";
 import { getSaasPlanConfig } from "./clinic";
 import { broadcastSaasSync } from "@/hooks/useRealtimeSync";
 
@@ -218,9 +219,9 @@ export function useClinicas() {
   return useQuery({
     queryKey: ["superadmin_clinicas"],
     staleTime: 0,
-    refetchInterval: 6000,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
+    refetchInterval: () => (shouldServeLocalCacheOnly() ? false : 6000),
+    refetchOnMount: () => (shouldServeLocalCacheOnly() ? false : "always"),
+    refetchOnWindowFocus: () => !shouldServeLocalCacheOnly(),
     queryFn: async (): Promise<Clinica[]> => {
       const { data: clinicasData, error } = await supabase
         .from("clinicas")
@@ -496,9 +497,9 @@ export function useGlobalAnnouncement() {
   return useQuery({
     queryKey: ["global_saas_announcement"],
     staleTime: 0,
-    refetchInterval: 6000,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
+    refetchInterval: () => (shouldServeLocalCacheOnly() ? false : 6000),
+    refetchOnMount: () => (shouldServeLocalCacheOnly() ? false : "always"),
+    refetchOnWindowFocus: () => !shouldServeLocalCacheOnly(),
     queryFn: async (): Promise<GlobalAnnouncement | null> => {
       try {
         // Consultar las filas de clinicas visibles para el usuario actual (su propia clínica por RLS, o todas si es Super Admin)

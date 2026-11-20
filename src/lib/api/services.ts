@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { isDeviceOffline } from "@/lib/offline/networkState";
+import { shouldServeLocalCacheOnly } from "@/lib/offline/syncEngine";
 
 export interface SpecialtyItem {
   id_especialidad: number;
@@ -42,10 +43,16 @@ export function useSpecialties() {
 
 export function useServices() {
   const { user } = useAuthSession();
+  const qc = useQueryClient();
+  const queryKey = ["services", user?.id];
   return useQuery({
-    queryKey: ["services", user?.id],
+    queryKey,
     enabled: !!user,
     queryFn: async (): Promise<Service[]> => {
+      if (shouldServeLocalCacheOnly()) {
+        const cached = qc.getQueryData<Service[]>(queryKey);
+        if (Array.isArray(cached)) return cached;
+      }
       const clinicId = await resolveCurrentUserClinicId(user?.id);
       // 1. Fetch all raw services
       let servQ = supabase

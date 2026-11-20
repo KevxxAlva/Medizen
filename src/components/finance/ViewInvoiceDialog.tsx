@@ -25,6 +25,7 @@ import { getCategoryIcon, getCategoryBadgeStyle } from "./PaymentMethodsPage";
 import { generateIndividualInvoice } from "@/lib/utils/generateIndividualInvoice";
 import { toast } from "sonner";
 import { APP_LOCALE, APP_TIME_ZONE } from "@/lib/constants/locale";
+import { formatInvoiceCode } from "./useSalesInvoices";
 
 export interface InvoiceItem {
   id?: number | string;
@@ -335,7 +336,7 @@ export function ViewInvoiceDialog({
     }
   };
 
-  const invoiceNumber = `INV-${invoice.id_factura.toString().padStart(4, "0")}`;
+  const invoiceNumber = formatInvoiceCode(invoice.id_factura);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

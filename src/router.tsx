@@ -16,7 +16,7 @@ function makeQueryClient() {
         gcTime: 1000 * 60 * 60 * 24, // 24 horas de retención en memoria para modo offline
         refetchOnWindowFocus: false, // Evita re-consultar al cambiar de pestaña/aplicación
         refetchOnMount: false, // Usa la caché existente; Supabase Realtime invalida cuando hay cambios
-        refetchOnReconnect: true,
+        refetchOnReconnect: false, // syncEngine invalida DESPUÉS de subir la cola offline para evitar sobrescribir cambios pendientes
         retry: (failureCount, error) => !isOfflineError(error) && failureCount < 1,
       },
       mutations: {

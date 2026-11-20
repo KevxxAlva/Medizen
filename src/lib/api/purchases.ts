@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 import { isDeviceOffline } from "@/lib/offline/networkState";
+import { shouldServeLocalCacheOnly } from "@/lib/offline/syncEngine";
 
 export type FinancialPurchase = {
   id: string;
@@ -13,10 +14,16 @@ export type FinancialPurchase = {
 
 export function usePurchases() {
   const { user } = useAuthSession();
+  const qc = useQueryClient();
+  const queryKey = ["financial_purchases", user?.id];
   return useQuery({
-    queryKey: ["financial_purchases", user?.id],
+    queryKey,
     enabled: !!user,
     queryFn: async (): Promise<FinancialPurchase[]> => {
+      if (shouldServeLocalCacheOnly()) {
+        const cached = qc.getQueryData<FinancialPurchase[]>(queryKey);
+        if (Array.isArray(cached)) return cached;
+      }
       const clinicId = await resolveCurrentUserClinicId(user?.id);
       let query = supabase
         .from("financial_purchases")

@@ -24,6 +24,7 @@ import { MedizenLogo } from "@/components/MedizenLogo";
 import { useInactivityLock } from "@/hooks/useInactivityLock";
 import { InactivityLockOverlay } from "@/components/InactivityLockOverlay";
 import { OfflineSyncIndicator } from "@/components/pwa/OfflineSyncIndicator";
+import { OfflineDataWarmup } from "@/components/pwa/OfflineDataWarmup";
 import { getEffectiveSession } from "@/lib/offline/offlineAuth";
 
 const ADMIN_ONLY_PATHS = ["/doctores", "/cuentas", "/metodos-pago", "/stocks"];
@@ -427,6 +428,7 @@ function AuthenticatedLayout() {
 
       <CommandMenu />
       <BottomNavBar />
+      <OfflineDataWarmup disabled={isSuperAdminPath} />
 
       {/* Full-Screen Inactivity & Privacy Screen Lock */}
       <InactivityLockOverlay

@@ -4,6 +4,7 @@ import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { logAuditAction } from "@/lib/api/audit";
 import { isDeviceOffline } from "@/lib/offline/networkState";
+import { getSyncSnapshot } from "@/lib/offline/syncEngine";
 
 const APPOINTMENT_PRICE_STORAGE_KEY = "medizen_cita_prices";
 
@@ -112,10 +113,10 @@ export function useAppointments(filters?: AppointmentFilters, options?: { enable
     queryKey,
     enabled: (options?.enabled ?? true) && !!user,
     staleTime: 0,
-    refetchOnMount: () => (isDeviceOffline() ? false : "always"),
-    refetchOnWindowFocus: () => !isDeviceOffline(),
+    refetchOnMount: () => (isDeviceOffline() || getSyncSnapshot().pendingCount > 0 ? false : "always"),
+    refetchOnWindowFocus: () => !isDeviceOffline() && getSyncSnapshot().pendingCount === 0,
     queryFn: async (): Promise<AppointmentWithPatient[]> => {
-      if (isDeviceOffline()) {
+      if (isDeviceOffline() || getSyncSnapshot().pendingCount > 0) {
         const cached = qc.getQueryData<AppointmentWithPatient[]>(queryKey);
         if (Array.isArray(cached)) return cached;
         const anyCached = qc
@@ -470,8 +471,21 @@ export function useCreateAppointment() {
     },
     onSuccess: (createdCita, input) => {
       if (createdCita?.id_cita) {
-        const cachedPatients = qc.getQueriesData<any[]>({ queryKey: ["patients"] }).flatMap(([, d]) => (Array.isArray(d) ? d : []));
-        const matchedPatient = cachedPatients.find((p) => String(p.id) === String(input.patient_id));
+        const directPatient = qc.getQueryData<any>(["patient", String(input.patient_id)]);
+        const fromPatients = qc
+          .getQueriesData<any[]>({ queryKey: ["patients"] })
+          .flatMap(([, d]) => (Array.isArray(d) ? d : []));
+        const fromRecent = qc
+          .getQueriesData<any[]>({ queryKey: ["patients_recent"] })
+          .flatMap(([, d]) => (Array.isArray(d) ? d : []));
+        const fromPaginated = qc
+          .getQueriesData<{ data?: any[] }>({ queryKey: ["patients_paginated"] })
+          .flatMap(([, d]) => (Array.isArray(d?.data) ? d.data : []));
+        const matchedPatient =
+          directPatient ||
+          [...fromPatients, ...fromPaginated, ...fromRecent].find(
+            (p) => String(p.id) === String(input.patient_id),
+          );
         const optimisticAppt: AppointmentWithPatient = {
           id: String(createdCita.id_cita),
           patient_id: String(input.patient_id),
@@ -513,12 +527,31 @@ export function useUpdateAppointment() {
         saveStoredAppointmentPrice(idCita, Number(patch.price));
       }
 
-      // Fetch existing cita to get patient_id, motivo, and fecha_hora for Facturas
-      const { data: existingCita } = await supabase
-        .from("citas")
-        .select("id_paciente, id_medico, motivo, fecha_hora, estado")
-        .eq("id_cita", idCita)
-        .single();
+      // Fetch existing cita to get patient_id, motivo, and fecha_hora for Facturas (con respaldo en caché local offline)
+      let existingCita: any = null;
+      if (!isDeviceOffline()) {
+        const { data } = await supabase
+          .from("citas")
+          .select("id_paciente, id_medico, motivo, fecha_hora, estado")
+          .eq("id_cita", idCita)
+          .single();
+        existingCita = data;
+      }
+      if (!existingCita) {
+        const cachedAppts = qc
+          .getQueriesData<AppointmentWithPatient[]>({ queryKey: ["appointments"] })
+          .flatMap(([, d]) => (Array.isArray(d) ? d : []));
+        const found = cachedAppts.find((a) => String(a.id) === String(id));
+        if (found) {
+          existingCita = {
+            id_paciente: found.patient_id ? parseInt(found.patient_id, 10) : 0,
+            id_medico: found.doctor_id ? parseInt(found.doctor_id, 10) : 0,
+            motivo: found.reason,
+            fecha_hora: found.scheduled_at,
+            estado: found.status,
+          };
+        }
+      }
 
       // Validate doctor schedule conflict when changing date/time or doctor (unless cancelling)
       const nextStatus = (patch.status || existingCita?.estado || "").toLowerCase();
@@ -548,8 +581,13 @@ export function useUpdateAppointment() {
         if (error) throw error;
       }
 
-      // 2. Handle Facturas and Pagos
-      if (patch.price !== undefined || patch.payment_method !== undefined || patch.status !== undefined || patch.scheduled_at !== undefined) {
+      // 2. Handle Facturas and Pagos (solo si tenemos un id_paciente válido, evitando FK inválida = 0 offline)
+      const targetPatientIdCheck = patch.patient_id ? parseInt(patch.patient_id, 10) : (existingCita?.id_paciente || 0);
+      if (
+        targetPatientIdCheck !== 0 &&
+        !Number.isNaN(targetPatientIdCheck) &&
+        (patch.price !== undefined || patch.payment_method !== undefined || patch.status !== undefined || patch.scheduled_at !== undefined)
+      ) {
         let facturaId: number | undefined;
         const statusLower = (patch.status || existingCita?.estado || "").toLowerCase();
         const targetPatientId = patch.patient_id ? parseInt(patch.patient_id) : (existingCita?.id_paciente || 0);

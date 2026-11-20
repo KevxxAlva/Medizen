@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 import { broadcastSaasSync } from "@/hooks/useRealtimeSync";
 import { isDeviceOffline } from "@/lib/offline/networkState";
+import { shouldServeLocalCacheOnly } from "@/lib/offline/syncEngine";
 
 export type SaasPlanId = "basico" | "pro" | "enterprise";
 
@@ -150,17 +151,23 @@ function mapClinicaToClinicInfo(c: any): ClinicInfo {
 export function useClinicInfo(options?: { includeLogo?: boolean }) {
   const includeLogo = options?.includeLogo ?? false;
   const { user } = useAuthSession();
+  const qc = useQueryClient();
+  const queryKey = includeLogo ? ["clinic_info", user?.id, "with_logo"] : ["clinic_info", user?.id];
 
   return useQuery({
-    queryKey: includeLogo ? ["clinic_info", user?.id, "with_logo"] : ["clinic_info", user?.id],
+    queryKey,
     enabled: !!user?.id,
     staleTime: 0,
-    refetchInterval: 6000,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
-    placeholderData: () => (!includeLogo ? readCachedClinicInfo(user?.id) : undefined),
+    refetchInterval: () => (shouldServeLocalCacheOnly() ? false : 6000),
+    refetchOnMount: () => (shouldServeLocalCacheOnly() ? false : "always"),
+    refetchOnWindowFocus: () => !shouldServeLocalCacheOnly(),
+    placeholderData: () => readCachedClinicInfo(user?.id),
     queryFn: async (): Promise<ClinicInfo | null> => {
       if (!user?.id) return null;
+      if (shouldServeLocalCacheOnly()) {
+        const cached = qc.getQueryData<ClinicInfo | null>(queryKey) ?? readCachedClinicInfo(user.id);
+        if (cached) return cached;
+      }
       try {
         // 1. Obtener el id_clinica del usuario autenticado
         const { data: usuarioData, error: userErr } = await supabase

@@ -1,5 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveCurrentUserClinicId } from "@/hooks/useAuth";
+import { getEffectiveSession } from "@/lib/offline/offlineAuth";
+import { getBoundQueryClient, shouldServeLocalCacheOnly } from "@/lib/offline/syncEngine";
 
 export type AuditLog = {
   id: string;
@@ -28,19 +31,11 @@ export async function logAuditAction(
   details: any = {}
 ) {
   try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const session = await getEffectiveSession();
+    const user = session?.user;
     if (!user) return null;
 
-    let idClinica: string | null = null;
-    const { data: userData } = await (supabase.from("usuarios") as any)
-      .select("id_clinica")
-      .eq("auth_id", user.id)
-      .maybeSingle();
-    if (userData?.id_clinica) {
-      idClinica = userData.id_clinica;
-    }
+    const idClinica = await resolveCurrentUserClinicId(user.id);
 
     const enrichedDetails =
       typeof details === "object" && details !== null
@@ -67,6 +62,34 @@ export async function logAuditAction(
       console.error("Audit Log Error:", error);
       return null;
     }
+
+    // Reflejar inmediatamente el nuevo registro en la pantalla de Auditoría (incluso sin conexión)
+    const qc = getBoundQueryClient();
+    if (qc && data) {
+      const optimisticLog: AuditLog = {
+        id: String(data.id || `local-audit-${Date.now()}`),
+        action_type: actionType,
+        entity_type: entityType,
+        entity_id: String(entityId),
+        user_id: user.id,
+        details: enrichedDetails,
+        created_at: data.created_at || new Date().toISOString(),
+        id_clinica: idClinica,
+        perfiles: {
+          full_name: (user.user_metadata?.full_name as string) || user.email || "Usuario",
+          email: user.email || null,
+          role: (user.user_metadata?.role as string) || null,
+          id_clinica: idClinica,
+        },
+      };
+      const prependLog = (old: AuditLog[] | undefined) =>
+        Array.isArray(old) ? [optimisticLog, ...old.filter((l) => l.id !== optimisticLog.id)] : [optimisticLog];
+      qc.setQueriesData<AuditLog[]>({ queryKey: ["audit_logs"] }, prependLog);
+      // Asegurar también la clave exacta usada por AuditLogsPage aunque aún no se haya visitado
+      qc.setQueryData<AuditLog[]>(["audit_logs", 250], prependLog);
+      qc.setQueryData<AuditLog[]>(["audit_logs", 200], prependLog);
+    }
+
     return data;
   } catch (error) {
     console.error("Audit Log Exception:", error);
@@ -76,13 +99,30 @@ export async function logAuditAction(
 
 // Hook to fetch logs for admin / superadmin
 export function useAuditLogs(limit = 200) {
+  const qc = useQueryClient();
+  const queryKey = ["audit_logs", limit];
   return useQuery({
-    queryKey: ["audit_logs", limit],
+    queryKey,
     staleTime: 0,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
-    refetchInterval: 8000,
+    refetchOnMount: () => (shouldServeLocalCacheOnly() ? false : "always"),
+    refetchOnWindowFocus: () => !shouldServeLocalCacheOnly(),
+    refetchInterval: () => (shouldServeLocalCacheOnly() ? false : 8000),
     queryFn: async (): Promise<AuditLog[]> => {
+      if (shouldServeLocalCacheOnly()) {
+        const cached = qc.getQueryData<AuditLog[]>(queryKey);
+        if (Array.isArray(cached) && cached.length > 0) return cached;
+        const anyCached = qc
+          .getQueriesData<AuditLog[]>({ queryKey: ["audit_logs"] })
+          .flatMap(([, d]) => (Array.isArray(d) ? d : []));
+        if (anyCached.length > 0) {
+          const dedup = new Map<string, AuditLog>();
+          anyCached.forEach((l) => dedup.set(l.id, l));
+          return Array.from(dedup.values()).sort(
+            (a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime(),
+          );
+        }
+        return [];
+      }
       const [
         { data: sessionData },
         { data, error },

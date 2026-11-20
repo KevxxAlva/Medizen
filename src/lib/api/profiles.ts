@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
 import { isDeviceOffline } from "@/lib/offline/networkState";
+import { shouldServeLocalCacheOnly } from "@/lib/offline/syncEngine";
 
 export interface Profile {
   id: string;
@@ -44,10 +45,16 @@ const mapProfile = (u: any, fallbackEmail?: string): Profile => {
 };
 
 export function useMyProfile(userId: string | undefined) {
+  const qc = useQueryClient();
+  const queryKey = ["profile", userId];
   return useQuery({
-    queryKey: ["profile", userId],
+    queryKey,
     enabled: !!userId,
     queryFn: async (): Promise<Profile | null> => {
+      if (shouldServeLocalCacheOnly()) {
+        const cached = qc.getQueryData<Profile | null>(queryKey);
+        if (cached) return cached;
+      }
       // First try to match by auth_id (UUID from Supabase Auth)
       const { data, error } = await supabase
         .from("usuarios")
@@ -234,7 +241,27 @@ export function useUpdateProfile() {
       const parts = fullName.trim().split(" ");
       const nombre = parts[0] || "";
       const apellido = parts.slice(1).join(" ");
-      
+
+      if (isDeviceOffline()) {
+        // En modo offline, actualizar directamente por auth_id (encolado en syncOutbox) sin requerir SELECT previo
+        await supabase.from("usuarios").update({ nombre_usuario: fullName }).eq("auth_id", userId);
+        const cachedProfile = qc.getQueryData<Profile | null>(["profile", userId]);
+        const cachedDoctorId = cachedProfile?.doctor_id ? parseInt(cachedProfile.doctor_id, 10) : null;
+        if (cachedDoctorId && !Number.isNaN(cachedDoctorId)) {
+          await supabase
+            .from("medicos")
+            .update({
+              nombre,
+              apellido,
+              numero_licencia: mpps,
+              universidad: university,
+              cmc: cmc,
+            })
+            .eq("id_medico", cachedDoctorId);
+        }
+        return;
+      }
+
       const { data: usuario } = await supabase
         .from("usuarios")
         .select("id_usuario, id_clinica, nombre_usuario, email")
@@ -282,8 +309,8 @@ export function useUpdateProfile() {
       }
     },
     onSuccess: (_, variables) => {
-      qc.setQueriesData<any>({ queryKey: ["my_profile"] }, (old: any) =>
-        old && old.id === variables.userId
+      const patchProfile = (old: any) =>
+        old
           ? {
               ...old,
               full_name: variables.fullName,
@@ -292,9 +319,10 @@ export function useUpdateProfile() {
               mpps: variables.mpps,
               cmc: variables.cmc,
             }
-          : old,
-      );
-      if (!isDeviceOffline()) {
+          : old;
+      qc.setQueryData(["profile", variables.userId], patchProfile);
+      qc.setQueriesData<any>({ queryKey: ["my_profile"] }, patchProfile);
+      if (!shouldServeLocalCacheOnly()) {
         qc.invalidateQueries({ queryKey: ["profile", variables.userId] });
         qc.invalidateQueries({ queryKey: ["my_profile"] });
         qc.invalidateQueries({ queryKey: ["profiles_with_roles"] });

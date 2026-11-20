@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession, resolveCurrentUserClinicId } from "@/hooks/useAuth";
+import { shouldServeLocalCacheOnly } from "@/lib/offline/syncEngine";
 import { getInvoicesForDoctor } from "@/lib/utils/invoiceDoctorPartition";
 
 // Helper to get dates for the last 7 days (including today)
@@ -20,13 +21,19 @@ export function useDashboardStats(options?: {
   isDoctorOnly?: boolean;
 }) {
   const { user } = useAuthSession();
+  const qc = useQueryClient();
   const doctorId = options?.doctorId ? Number(options.doctorId) : undefined;
   const isDoctorOnly = options?.isDoctorOnly;
+  const queryKey = ["dashboard_stats", user?.id, doctorId, isDoctorOnly];
 
   return useQuery({
-    queryKey: ["dashboard_stats", user?.id, doctorId, isDoctorOnly],
+    queryKey,
     enabled: (options?.enabled ?? true) && !!user,
     queryFn: async () => {
+      if (shouldServeLocalCacheOnly()) {
+        const cached = qc.getQueryData<any>(queryKey);
+        if (cached) return cached;
+      }
       // Si el rol es exclusivo de doctor y no tiene ID médico asignado o resuelto, retornar 0
       if (isDoctorOnly && !doctorId) {
         return {
@@ -308,17 +315,23 @@ export function useMonthlyPayments(options?: {
   isDoctorOnly?: boolean;
 }) {
   const { user } = useAuthSession();
+  const qc = useQueryClient();
   const doctorId = options?.doctorId ? Number(options.doctorId) : undefined;
   const isDoctorOnly = options?.isDoctorOnly;
+  const queryKey = ["monthly_payments", user?.id, doctorId, isDoctorOnly];
 
   return useQuery({
-    queryKey: ["monthly_payments", user?.id, doctorId, isDoctorOnly],
+    queryKey,
     enabled: (options?.enabled ?? true) && !!user,
     staleTime: 0,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
-    refetchInterval: 3000,
+    refetchOnMount: () => (shouldServeLocalCacheOnly() ? false : "always"),
+    refetchOnWindowFocus: () => !shouldServeLocalCacheOnly(),
+    refetchInterval: () => (shouldServeLocalCacheOnly() ? false : 3000),
     queryFn: async () => {
+      if (shouldServeLocalCacheOnly()) {
+        const cached = qc.getQueryData<any>(queryKey);
+        if (cached) return cached;
+      }
       // 1. Si el usuario es doctor y no tiene ID médico resuelto (cuenta nueva sin citas),
       // sus ingresos son única y exclusivamente los suyos (inicia en 0).
       if (isDoctorOnly && !doctorId) {
@@ -488,8 +501,15 @@ export function useAddDailyGoal() {
       if (error) throw error;
       return data;
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["daily_goals", variables.date] });
+    onSuccess: (created, variables) => {
+      if (created) {
+        queryClient.setQueriesData<DailyGoal[]>({ queryKey: ["daily_goals", variables.date] }, (old) =>
+          Array.isArray(old) ? [...old.filter((g) => g.id !== created.id), created as DailyGoal] : [created as DailyGoal],
+        );
+      }
+      if (!shouldServeLocalCacheOnly()) {
+        queryClient.invalidateQueries({ queryKey: ["daily_goals", variables.date] });
+      }
     }
   });
 }
@@ -507,8 +527,15 @@ export function useIncrementDailyGoal() {
       if (error) throw error;
       return data;
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["daily_goals", variables.date] });
+    onSuccess: (_data, variables) => {
+      queryClient.setQueriesData<DailyGoal[]>({ queryKey: ["daily_goals", variables.date] }, (old) =>
+        Array.isArray(old)
+          ? old.map((g) => (g.id === variables.id ? { ...g, current_value: variables.currentValue + 1 } : g))
+          : old,
+      );
+      if (!shouldServeLocalCacheOnly()) {
+        queryClient.invalidateQueries({ queryKey: ["daily_goals", variables.date] });
+      }
     }
   });
 }

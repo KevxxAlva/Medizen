@@ -330,6 +330,14 @@ export function createOfflineAwareFetch(): typeof fetch {
     const restTable = isWriteMethod ? extractRestTable(url) : null;
 
     if (!restTable) {
+      // Para lecturas REST, llamadas de Auth (refresh_token/getUser) o Edge Functions cuando
+      // ya sabemos que no hay internet: fallar en 0 ms para evitar esperas de 15-30s por timeout.
+      if (
+        isDeviceOffline() &&
+        (url.includes("/rest/v1/") || url.includes("/auth/v1/") || url.includes("/functions/v1/"))
+      ) {
+        throw new TypeError("Failed to fetch (offline)");
+      }
       try {
         const res = await baseFetch(input, init);
         if (res.ok) markNetworkOnline();

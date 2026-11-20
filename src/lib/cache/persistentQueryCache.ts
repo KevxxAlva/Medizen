@@ -16,9 +16,11 @@ const SAVE_DEBOUNCE_MS = 600;
 const FAST_SYNC_KEYS = new Set<string>([
   "clinic_info",
   "my_profile",
+  "profile",
   "user_roles",
   "current_clinic_id",
   "roles",
+  "audit_logs",
 ]);
 
 /**
@@ -27,9 +29,11 @@ const FAST_SYNC_KEYS = new Set<string>([
 const PERSISTABLE_ROOT_KEYS = new Set<string>([
   "clinic_info",
   "my_profile",
+  "profile",
   "user_roles",
   "current_clinic_id",
   "roles",
+  "audit_logs",
   "doctors",
   "profiles_with_roles",
   "patients",

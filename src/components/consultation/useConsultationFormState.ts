@@ -9,6 +9,8 @@ import {
 import { useUpdateAppointment } from "@/lib/api/appointments";
 import { usePatient } from "@/lib/api/patients";
 import { useDoctors } from "@/lib/api/profiles";
+import { shouldServeLocalCacheOnly } from "@/lib/offline/syncEngine";
+import { isDeviceOffline } from "@/lib/offline/networkState";
 import { useStocks } from "@/lib/api/inventory";
 import { useClinicInfo } from "@/lib/api/clinic";
 import { supabase } from "@/integrations/supabase/client";
@@ -645,12 +647,13 @@ async function executeConsultationSave(params: {
       if (appointment?.id) {
         await updateAppointment.mutateAsync({
           id: appointment.id,
+          patient_id: appointment.patient_id,
           status: "completada",
           price: appointment.price ?? undefined,
           reason: appointment.reason ?? undefined,
         });
       }
-      if (queryClient) {
+      if (queryClient && !shouldServeLocalCacheOnly()) {
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: ["facturas"] }),
           queryClient.invalidateQueries({ queryKey: ["appointments"] }),
@@ -662,13 +665,18 @@ async function executeConsultationSave(params: {
       toast.success("Consulta actualizada con éxito");
     } else {
       await createConsultation.mutateAsync(payload);
-      await updateAppointment.mutateAsync({
-        id: appointment.id,
-        status: "completada",
-        price: appointment.price ?? undefined,
-        reason: appointment.reason ?? undefined,
-      });
-      if (queryClient) {
+      // En modo offline, useCreateConsultation ya marca la cita como Completada y crea la factura;
+      // evitar llamar updateAppointment evita crear una segunda factura duplicada offline.
+      if (!isDeviceOffline()) {
+        await updateAppointment.mutateAsync({
+          id: appointment.id,
+          patient_id: appointment.patient_id,
+          status: "completada",
+          price: appointment.price ?? undefined,
+          reason: appointment.reason ?? undefined,
+        });
+      }
+      if (queryClient && !shouldServeLocalCacheOnly()) {
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: ["facturas"] }),
           queryClient.invalidateQueries({ queryKey: ["appointments"] }),
