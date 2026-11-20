@@ -1,5 +1,5 @@
 // Medizen PWA Service Worker — Offline-First Edition
-const CACHE_NAME = "medizen-cache-v6";
+const CACHE_NAME = "medizen-cache-v7";
 const APP_SHELL_KEY = "/__medizen_app_shell__";
 const STATIC_ASSETS = [
   "/",

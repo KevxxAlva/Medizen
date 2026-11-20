@@ -46,7 +46,9 @@ function isDynamicImportError(message: string): boolean {
     lower.includes("importing a module script failed") ||
     lower.includes("error loading dynamically imported module") ||
     lower.includes("chunkloaderror") ||
-    lower.includes("unable to preload css")
+    lower.includes("unable to preload css") ||
+    lower.includes("reading 'component'") ||
+    lower.includes("reading \"component\"")
   );
 }
 
@@ -96,15 +98,23 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
     }
   }, [error, isChunkError]);
 
+  const isOfflineNow = typeof navigator !== "undefined" && !navigator.onLine;
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-2xl text-center bg-card p-8 rounded-3xl border border-destructive/20 shadow-xl">
         <h1 className="text-xl font-bold text-destructive">
-          {isChunkError ? "Actualizando versión de la aplicación…" : "Algo salió mal"}
+          {isChunkError
+            ? isOfflineNow
+              ? "Pantalla pendiente de descarga offline"
+              : "Actualizando versión de la aplicación…"
+            : "Algo salió mal"}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {isChunkError
-            ? "Se detectó una nueva actualización desplegada. Recarga para cargar los módulos más recientes:"
+            ? isOfflineNow
+              ? "Este módulo aún no estaba guardado en caché para abrirse sin internet. Vuelve al Dashboard o conéctate unos segundos a Wi-Fi para descargarlo."
+              : "Se detectó una nueva actualización desplegada. Recarga para cargar los módulos más recientes:"
             : "Error detectado en la aplicación:"}
         </p>
 
@@ -115,10 +125,21 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
           )}
         </div>
 
-        <div className="mt-6 flex justify-center gap-3">
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          {isOfflineNow && (
+            <button
+              onClick={() => {
+                router.navigate({ to: "/dashboard" });
+                reset();
+              }}
+              className="rounded-2xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-95 cursor-pointer"
+            >
+              Volver al Dashboard
+            </button>
+          )}
           <button
             onClick={() => {
-              if (isChunkError) {
+              if (isChunkError && !isOfflineNow) {
                 void clearServiceWorkerCachesAndReload();
                 return;
               }
@@ -129,14 +150,16 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
           >
             Reintentar
           </button>
-          <button
-            onClick={() => {
-              void clearServiceWorkerCachesAndReload();
-            }}
-            className="rounded-2xl border border-border px-4 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-muted cursor-pointer"
-          >
-            Forzar Recarga (F5)
-          </button>
+          {!isOfflineNow && (
+            <button
+              onClick={() => {
+                void clearServiceWorkerCachesAndReload();
+              }}
+              className="rounded-2xl border border-border px-4 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-muted cursor-pointer"
+            >
+              Forzar Recarga (F5)
+            </button>
+          )}
         </div>
       </div>
     </div>

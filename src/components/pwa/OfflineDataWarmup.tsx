@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useRouter } from "@tanstack/react-router";
 import { useAuthSession, useIsAdmin } from "@/hooks/useAuth";
 import { useOfflineSync } from "@/hooks/useOfflineSync";
 import { usePatients, usePaginatedPatients } from "@/lib/api/patients";
@@ -34,13 +35,31 @@ function WarmupAdminQueries() {
   return null;
 }
 
+const ROUTES_TO_PRELOAD = [
+  "/dashboard",
+  "/sala-espera",
+  "/agenda",
+  "/pacientes",
+  "/servicios",
+  "/doctores",
+  "/cuentas",
+  "/facturacion",
+  "/honorarios",
+  "/metodos-pago",
+  "/stocks",
+  "/reportes",
+  "/auditoria",
+  "/configuracion",
+  "/auth",
+] as const;
+
 /**
  * Precarga silenciosamente en segundo plano (una sola vez por sesión en línea)
- * los datos de todos los módulos hacia IndexedDB para que el usuario pueda
- * abrir Pacientes, Agenda, Servicios, Cuentas, Ventas, Métodos de Pago,
- * Inventario y Auditoría en modo offline aunque no los haya visitado antes.
+ * tanto los chunks JS/CSS de TODAS las rutas (para el Service Worker) como los datos
+ * de todos los módulos hacia IndexedDB para que nunca falle una ruta en modo offline.
  */
 export function OfflineDataWarmup({ disabled = false }: { disabled?: boolean }) {
+  const router = useRouter();
   const { user } = useAuthSession();
   const isAdmin = useIsAdmin();
   const { isOnline } = useOfflineSync();
@@ -49,13 +68,17 @@ export function OfflineDataWarmup({ disabled = false }: { disabled?: boolean }) 
   useEffect(() => {
     if (disabled || !user?.id || !isOnline || phase !== "idle") return;
 
-    // Esperar 3s tras el arranque para no competir con la carga inicial de la pantalla actual
+    // Esperar 2.5s tras el arranque para no competir con la carga inicial de la pantalla actual
     const startTimer = window.setTimeout(() => {
       setPhase("warming");
-    }, 3000);
+      // Precargar todos los chunks JS/CSS de rutas en el Service Worker para navegación 100% offline
+      void Promise.allSettled(
+        ROUTES_TO_PRELOAD.map((to) => router.preloadRoute({ to: to as any })),
+      );
+    }, 2500);
 
     return () => window.clearTimeout(startTimer);
-  }, [disabled, user?.id, isOnline, phase]);
+  }, [disabled, user?.id, isOnline, phase, router]);
 
   useEffect(() => {
     if (phase !== "warming") return;
