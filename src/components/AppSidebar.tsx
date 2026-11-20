@@ -128,7 +128,7 @@ function SidebarSuperAdminSwitch({
 }
 
 function isSidebarItemVisible(
-  m: NavItem,
+  m: ModuleDef,
   opts: {
     isSuperAdmin: boolean;
     isAdmin: boolean;
@@ -147,7 +147,7 @@ function isSidebarItemVisible(
 }
 
 function isNavItemActive(
-  m: NavItem,
+  m: ModuleDef,
   pathname: string,
   searchStr: string,
   isSuperAdminMode: boolean,
@@ -169,7 +169,7 @@ function SidebarNavItem({
   isCollapsed,
   onNavigate,
 }: {
-  m: NavItem;
+  m: ModuleDef;
   pathname: string;
   searchStr: string;
   isSuperAdminMode: boolean;
